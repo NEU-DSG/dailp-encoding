@@ -171,17 +171,17 @@ pub struct Creator {
     pub name: String,
 }
 
-#[async_graphql::ComplexObject]
-impl Creator {
-    /// Creators of this document
-    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::CreatorsForDocument(self.id))
-            .await?
-            .unwrap_or_default())
-    }
+// For updating creators
+#[derive(async_graphql::InputObject, Clone)]
+pub struct CreatorUpdate {
+    /// UUID for the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
 }
+
+#[async_graphql::ComplexObject]
+impl Creator {}
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that

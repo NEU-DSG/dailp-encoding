@@ -4,7 +4,7 @@ use crate::{
 };
 
 use crate::doc_metadata::ApprovalStatus;
-use crate::person::{Contributor, Creator, SourceAttribution};
+use crate::person::{Contributor, Creator, CreatorUpdate, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -223,18 +223,11 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Internal field accessor for creators
-    async fn creators_ids(&self) -> Option<&Vec<Uuid>> {
-        self.meta.creators_ids.as_ref()
-    }
-
-    // GraphQL resolver for creators
+    /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::CreatorsForDocument(self.meta.id.0))
-            .await?
-            .unwrap_or_default())
+        let db = context.data::<Database>()?;
+        let creators = db.creators_for_document(self.meta.id.0).await?;
+        Ok(creators)
     }
 }
 
@@ -334,7 +327,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
-    pub creators_ids: MaybeUndefined<Vec<Uuid>>,
+    pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
 }
 
 #[async_graphql::ComplexObject]

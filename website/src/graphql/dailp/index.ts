@@ -59,9 +59,8 @@ export type AnnotatedDoc = {
    * author, translators, and annotators
    */
   readonly contributors: ReadonlyArray<Contributor>
+  /** Creators of this document */
   readonly creators: ReadonlyArray<Creator>
-  /** Internal field accessor for creators */
-  readonly creatorsIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
   readonly formCount: Scalars["Int"]
@@ -426,9 +425,14 @@ export type CreateEditedCollectionInput = {
 /** The creator of a document */
 export type Creator = {
   readonly __typename?: "Creator"
-  /** Creators of this document */
-  readonly creators: ReadonlyArray<Creator>
   /** UUID of the creator */
+  readonly id: Scalars["UUID"]
+  /** Name of the creator */
+  readonly name: Scalars["String"]
+}
+
+export type CreatorUpdate = {
+  /** UUID for the creator */
   readonly id: Scalars["UUID"]
   /** Name of the creator */
   readonly name: Scalars["String"]
@@ -508,7 +512,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** The creator(s) of the document */
-  readonly creatorsIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -1559,9 +1563,12 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title" | "creatorsIds"> & {
+} & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly creators: ReadonlyArray<
+      { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
     >
   }
 
@@ -2857,7 +2864,10 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    creatorsIds
+    creators {
+      id
+      name
+    }
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

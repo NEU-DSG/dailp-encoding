@@ -41,6 +41,14 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Creator, "queries/get_creators_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -782,22 +790,22 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
         // Update creators
-        if let MaybeUndefined::Value(creators_ids) = &document.creators_ids {
+        if let MaybeUndefined::Value(creators) = &document.creators {
             query_file!("queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            query_file!(
-                "queries/insert_document_creator.sql",
-                document.id,
-                creators_ids
-            )
-            .execute(&mut *tx)
-            .await?;
+            // Convert Vec<CreatorUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = creators.iter().map(|cr| cr.id).collect();
+
+            // Write new IDs
+            query_file!("queries/insert_document_creator.sql", document.id, &ids[..])
+                .execute(&mut *tx)
+                .await?;
         }
 
         // Commit updates
@@ -2496,38 +2504,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<CreatorsForDocument> for Database {
-    type Value = Vec<Creator>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[CreatorsForDocument],
-    ) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!("queries/many_creators_for_documents.sql", &document_ids)
-            .fetch_all(&self.client)
-            .await?;
-
-        for key in keys {
-            let creators = rows
-                .iter()
-                .map(|row| Creator {
-                    id: row.id,
-                    name: row.name.clone(),
-                })
-                .collect::<Vec<_>>();
-
-            results.insert(key.clone(), creators);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2795,9 +2771,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct CreatorsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

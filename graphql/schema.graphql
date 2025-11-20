@@ -82,9 +82,8 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
-	Internal field accessor for creators
+	Creators of this document
 	"""
-	creatorsIds: [UUID!]
 	creators: [Creator!]!
 }
 
@@ -522,10 +521,17 @@ type Creator {
 	Name of the creator
 	"""
 	name: String!
+}
+
+input CreatorUpdate {
 	"""
-	Creators of this document
+	UUID for the creator
 	"""
-	creators: [Creator!]!
+	id: UUID!
+	"""
+	Name of the creator
+	"""
+	name: String!
 }
 
 """
@@ -651,7 +657,7 @@ input DocumentMetadataUpdate {
 	"""
 	The creator(s) of the document
 	"""
-	creatorsIds: [UUID!]
+	creators: [CreatorUpdate!]
 }
 
 type DocumentPage {
