@@ -43,20 +43,13 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn genre_for_document(
-        &self,
-        doc_id: Uuid,
-    ) -> Result<Genre, sqlx::Error> {
-        let genre = sqlx::query_file_as!(
-            Genre,
-            "queries/get_genre_by_document_id.sql",
-            doc_id
-        )
-        .fetch_one(&self.client)
-        .await?;
-    
+    pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Genre, sqlx::Error> {
+        let genre = sqlx::query_file_as!(Genre, "queries/get_genre_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
         Ok(genre)
-    }    
+    }
 
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;

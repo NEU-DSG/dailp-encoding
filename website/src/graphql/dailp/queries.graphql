@@ -129,6 +129,7 @@ fragment DocFormFields on AnnotatedDoc {
   }
   genre {
     id
+    name
   }
 }
 

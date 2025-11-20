@@ -83,6 +83,7 @@ pub struct GenreUpdate {
 /// Get all approved genres
 #[async_graphql::ComplexObject]
 impl Genre {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }

@@ -68,7 +68,7 @@ export type AnnotatedDoc = {
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Genre>
+  readonly genre: Genre
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /**
@@ -501,7 +501,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** Term that contextualizes the social practice surrounding the document */
-  readonly genreId: InputMaybe<Scalars["UUID"]>
+  readonly genre: InputMaybe<GenreUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -602,13 +602,19 @@ export type Gallery = {
 /** Stores the genre associated with a document */
 export type Genre = {
   readonly __typename?: "Genre"
-  readonly approved: Scalars["Boolean"]
   /** UUID for the genre */
   readonly id: Scalars["UUID"]
   /** Name of the genre */
   readonly name: Scalars["String"]
   /** Status (pending, approved, rejected) of a genre */
   readonly status: ApprovalStatus
+}
+
+export type GenreUpdate = {
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
 }
 
 /**
@@ -1568,7 +1574,7 @@ export type DocFormFieldsFragment = {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
-    readonly genre: Maybe<{ readonly __typename?: "Genre" } & Pick<Genre, "id">>
+    readonly genre: { readonly __typename?: "Genre" } & Pick<Genre, "id">
   }
 
 export type ParagraphFormFieldsFragment = {

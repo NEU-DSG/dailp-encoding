@@ -34,7 +34,7 @@ type AnnotatedDoc {
 	"""
 	The genre of the document, used to group similar ones
 	"""
-	genre: Genre
+	genre: Genre!
 	"""
 	Images of each source document page, in order
 	"""
@@ -637,7 +637,7 @@ input DocumentMetadataUpdate {
 	"""
 	Term that contextualizes the social practice surrounding the document
 	"""
-	genreId: UUID
+	genre: GenreUpdate
 }
 
 type DocumentPage {
@@ -784,7 +784,17 @@ type Genre {
 	Status (pending, approved, rejected) of a genre
 	"""
 	status: ApprovalStatus!
-	approved: Boolean!
+}
+
+input GenreUpdate {
+	"""
+	UUID for the genre
+	"""
+	id: UUID!
+	"""
+	Name of the genre
+	"""
+	name: String!
 }
 
 """

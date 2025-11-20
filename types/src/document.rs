@@ -118,10 +118,7 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones
-    async fn genre(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Genre> {
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Genre> {
         let db = context.data::<Database>()?;
         let genre = db.genre_for_document(self.meta.id.0).await?;
         Ok(genre)
