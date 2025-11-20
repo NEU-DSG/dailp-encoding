@@ -71,6 +71,15 @@ pub struct Genre {
     pub status: ApprovalStatus,
 }
 
+// For updating genres
+#[derive(async_graphql::InputObject)]
+pub struct GenreUpdate {
+    /// UUID for the genre
+    pub id: Uuid,
+    /// Name of the genre
+    pub name: String,
+}
+
 /// Get all approved genres
 #[async_graphql::ComplexObject]
 impl Genre {

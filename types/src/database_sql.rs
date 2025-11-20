@@ -43,6 +43,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn genre_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Genre, sqlx::Error> {
+        let genre = sqlx::query_file_as!(
+            Genre,
+            "queries/get_genre_by_document_id.sql",
+            doc_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+    
+        Ok(genre)
+    }    
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -2481,44 +2496,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<GenreById> for Database {
-    type Value = Option<Genre>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[GenreById],
-    ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
-        // Collect UUID
-        let id: Uuid = keys.iter().next().map(|k| k.0).expect("No keys found");
-
-        // Query genre by ID
-        let rows = query_file!("queries/get_genre_by_id.sql", id)
-            .fetch_all(&self.client)
-            .await?;
-
-        // Map results by ID
-        let mut results = HashMap::new();
-        for key in keys {
-            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
-                results.insert(
-                    key.clone(),
-                    Some(Genre {
-                        id: row.id,
-                        name: row.name.clone(),
-                        status: row.status.clone(),
-                    }),
-                );
-            } else {
-                results.insert(key.clone(), None);
-            }
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2786,9 +2763,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct GenreById(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
