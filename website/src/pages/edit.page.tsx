@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import Markdown from "react-markdown"
+//import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
@@ -126,7 +126,9 @@ const NewPage = () => {
                 {isHtml ? (
                   <div dangerouslySetInnerHTML={{ __html: content }} />
                 ) : (
-                  <Markdown>{content}</Markdown>
+                  {
+                    /* <Markdown>{content}</Markdown> */
+                  }
                 )}
               </div>
             </div>
