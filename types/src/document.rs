@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, SpatialCoverage};
+use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -223,21 +223,14 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Internal field accessor for spatial coverages
-    async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
-        &self.meta.spatial_coverage_ids
-    }
-
-    /// GraphQL resolver for spatial coverages
+    /// The locations associated with this document
     async fn spatial_coverage(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SpatialCoverage>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::SpatialCoverageForDocument(self.meta.id.0))
-            .await?
-            .unwrap_or_default())
+        let db = context.data::<Database>()?;
+        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
+        Ok(coverages)
     }
 }
 
@@ -337,7 +330,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The physical locations associated with a document (e.g. where it was written, found)
-    pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
+    pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
 }
 
 #[async_graphql::ComplexObject]

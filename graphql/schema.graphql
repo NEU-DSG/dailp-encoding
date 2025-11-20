@@ -82,11 +82,7 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
-	Internal field accessor for spatial coverages
-	"""
-	spatialCoverageIds: [UUID!]
-	"""
-	GraphQL resolver for spatial coverages
+	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
 }
@@ -645,7 +641,7 @@ input DocumentMetadataUpdate {
 	"""
 	The physical locations associated with a document (e.g. where it was written, found)
 	"""
-	spatialCoverageIds: [UUID!]
+	spatialCoverage: [SpatialCoverageUpdate!]
 }
 
 type DocumentPage {
@@ -1305,7 +1301,17 @@ type SpatialCoverage {
 	Status (pending, approved, rejected) of a spatial coverage
 	"""
 	status: ApprovalStatus!
-	approved: Boolean!
+}
+
+input SpatialCoverageUpdate {
+	"""
+	UUID for the spatial coverage
+	"""
+	id: UUID!
+	"""
+	Name of the spatial coverage
+	"""
+	name: String!
 }
 
 

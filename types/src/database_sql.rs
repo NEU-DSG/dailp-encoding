@@ -41,6 +41,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn spatial_coverage_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -786,15 +801,19 @@ impl Database {
         .await?;
 
         // Update spatial coverages
-        if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
             query_file!(
                 "queries/insert_document_spatial_coverage.sql",
                 document.id,
-                spatial_coverage_ids
+                &ids[..]
             )
             .execute(&mut *tx)
             .await?;
@@ -2497,41 +2516,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<SpatialCoverageForDocument> for Database {
-    type Value = Vec<SpatialCoverage>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[SpatialCoverageForDocument],
-    ) -> Result<HashMap<SpatialCoverageForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!(
-            "queries/many_spatial_coverages_for_documents.sql",
-            &document_ids
-        )
-        .fetch_all(&self.client)
-        .await?;
-
-        for key in keys {
-            let coverages = rows
-                .iter()
-                .map(|row| SpatialCoverage {
-                    id: row.id,
-                    name: row.name.clone(),
-                    status: row.status.clone(),
-                })
-                .collect::<Vec<_>>();
-            results.insert(key.clone(), coverages);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2799,9 +2783,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct SpatialCoverageForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

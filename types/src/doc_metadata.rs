@@ -99,9 +99,19 @@ pub struct SpatialCoverage {
     pub status: ApprovalStatus,
 }
 
+// For updating spatial coverages
+#[derive(async_graphql::InputObject)]
+pub struct SpatialCoverageUpdate {
+    /// UUID for the spatial coverage
+    pub id: Uuid,
+    /// Name of the spatial coverage
+    pub name: String,
+}
+
 /// Get all approved spatial coverages
 #[async_graphql::ComplexObject]
 impl SpatialCoverage {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }
