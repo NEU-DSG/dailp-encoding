@@ -36,8 +36,6 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
     let mut reader = ReaderBuilder::new().from_reader(file);
 
     let mut pages = Vec::new();
-<<<<<<< HEAD
-=======
     for result in reader.deserialize() {
         let row: CsvRow = result?;
         //println!("row: {:?}", row);
@@ -49,7 +47,6 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
         //println!("result: {:?}", page);
         pages.push(page);
     }
->>>>>>> c35472ed84f9e69c13d75af588cac124b579f82c
     for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
             Ok(row) => {
@@ -73,18 +70,10 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
 }
 
 pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
-<<<<<<< HEAD
-    //println!("Migrating pages...");
-    let pages = load_pages("pages.csv")?;
-    //for page in pages {
-    //db.insert_page(NewPageInput::from(page.clone())).await?;
-    //}
-=======
     // Resolve pages.csv relative to this crate's directory so running from target/ works
     let csv_path = concat!(env!("CARGO_MANIFEST_DIR"), "/pages.csv");
     let pages = load_pages(csv_path)?;
 
->>>>>>> c35472ed84f9e69c13d75af588cac124b579f82c
     for page in pages {
         db.upsert_page(NewPageInput::from(page.clone())).await?;
     }

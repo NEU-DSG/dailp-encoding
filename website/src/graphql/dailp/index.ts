@@ -643,7 +643,6 @@ export type ImageSource = {
 /** Stores a language associated with a document */
 export type Language = {
   readonly __typename?: "Language"
-  readonly approved: Scalars["Boolean"]
   readonly autonym: Maybe<Scalars["String"]>
   /** UUID for the language */
   readonly id: Scalars["UUID"]

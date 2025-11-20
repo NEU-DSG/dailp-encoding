@@ -1968,7 +1968,7 @@ impl Database {
             Ok(None)
         }
     }
-    
+
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
