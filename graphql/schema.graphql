@@ -84,7 +84,6 @@ type AnnotatedDoc {
 	"""
 	The languages present in this document
 	"""
-	languagesIds: [UUID!]
 	languages: [Language!]!
 }
 
@@ -642,7 +641,7 @@ input DocumentMetadataUpdate {
 	"""
 	The languages present in the document
 	"""
-	languagesIds: [UUID!]
+	languages: [LanguageUpdate!]
 }
 
 type DocumentPage {
@@ -839,7 +838,20 @@ type Language {
 	Status (pending, approved, rejected) of a language
 	"""
 	status: ApprovalStatus!
-	approved: Boolean!
+}
+
+"""
+For updating languages
+"""
+input LanguageUpdate {
+	"""
+	UUID for the language
+	"""
+	id: UUID!
+	"""
+	Name of the language
+	"""
+	name: String!
 }
 
 """

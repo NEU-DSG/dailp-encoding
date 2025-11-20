@@ -41,17 +41,11 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn languages_for_document(
-        &self,
-        doc_id: Uuid,
-    ) -> Result<Vec<Language>, sqlx::Error> {
-        let rows = sqlx::query_file_as!(
-            Language,
-            "queries/get_languages_by_document_id.sql",
-            doc_id
-        )
-        .fetch_all(&self.client)
-        .await?;
+    pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
+        let rows =
+            sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
+                .fetch_all(&self.client)
+                .await?;
 
         Ok(rows)
     }
@@ -806,10 +800,14 @@ impl Database {
                 .execute(&mut *tx)
                 .await?;
 
+            // Convert Vec<LanguageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+
+            // Write new IDs
             query_file!(
                 "queries/insert_document_languages.sql",
                 document.id,
-                languages
+                &ids[..]
             )
             .execute(&mut *tx)
             .await?;

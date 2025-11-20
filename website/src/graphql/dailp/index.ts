@@ -76,9 +76,8 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
-  readonly languages: ReadonlyArray<Language>
   /** The languages present in this document */
-  readonly languagesIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly languages: ReadonlyArray<Language>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -506,7 +505,7 @@ export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** The languages present in the document */
-  readonly languagesIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly languages: InputMaybe<ReadonlyArray<LanguageUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -652,6 +651,14 @@ export type Language = {
   readonly name: Scalars["String"]
   /** Status (pending, approved, rejected) of a language */
   readonly status: ApprovalStatus
+}
+
+/** For updating languages */
+export type LanguageUpdate = {
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
 }
 
 /** Start of a new line */
@@ -1568,9 +1575,15 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title" | "languagesIds"> & {
+} & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly languages: ReadonlyArray<
+      { readonly __typename?: "Language" } & Pick<
+        Language,
+        "id" | "name" | "autonym" | "status"
+      >
     >
   }
 
@@ -2866,7 +2879,12 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    languagesIds
+    languages {
+      id
+      name
+      autonym
+      status
+    }
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

@@ -224,10 +224,7 @@ impl AnnotatedDoc {
     }
 
     /// The languages present in this document
-    async fn languages(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Language>> {
+    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
         let db = context.data::<Database>()?;
         let languages = db.languages_for_document(self.meta.id.0).await?;
         Ok(languages)

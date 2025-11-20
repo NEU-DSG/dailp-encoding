@@ -96,6 +96,7 @@ pub struct LanguageUpdate {
 /// Get all approved languages
 #[async_graphql::ComplexObject]
 impl Language {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }
