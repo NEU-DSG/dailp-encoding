@@ -1,6 +1,5 @@
 import React from "react"
 import Markdown from "react-markdown"
-import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
@@ -70,7 +69,14 @@ export const DailpPageContents = (props: { path: string }) => {
             <Link href={`/edit${props.path}`}>Edit</Link>
           )}
         </header>
-        <Markdown>{content}</Markdown>
+        {/* html chceking here please*/}
+        {
+          content.charAt(0) === "<" ? (
+            <div dangerouslySetInnerHTML={{ __html: content }} />
+          ) : (
+            <Markdown>{content}</Markdown>
+          )
+        }
       </>
     )
   } else {
@@ -93,7 +99,13 @@ export const DailpPageContents = (props: { path: string }) => {
           <Link href={`/edit${props.path}`}>Edit</Link>
         )}
       </header>
-      <Markdown>{content}</Markdown>
+        {
+          content.charAt(0) === "<" ? (
+            <div dangerouslySetInnerHTML={{ __html: content }} />
+          ) : (
+            <Markdown>{content}</Markdown>
+          )
+        }
     </>
   )
 }
