@@ -790,8 +790,8 @@ impl Database {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
 
-        let genre_id = match document.genre_id {
-            MaybeUndefined::Value(id) => Some(id),
+        let genre: Option<Uuid> = match document.genre {
+            MaybeUndefined::Value(genre_update) => Some(genre_update.id),
             _ => None,
         };
 
@@ -800,7 +800,7 @@ impl Database {
             document.id,
             &title as _,
             &written_at as _,
-            genre_id,
+            genre,
         )
         .execute(&self.client)
         .await?;

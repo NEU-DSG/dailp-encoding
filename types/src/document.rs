@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, Genre};
+use crate::doc_metadata::{ApprovalStatus, Genre, GenreUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -325,7 +325,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Term that contextualizes the social practice surrounding the document
-    pub genre_id: MaybeUndefined<Uuid>,
+    pub genre: MaybeUndefined<GenreUpdate>,
 }
 
 #[async_graphql::ComplexObject]
