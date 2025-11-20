@@ -1574,7 +1574,10 @@ export type DocFormFieldsFragment = {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
-    readonly genre: { readonly __typename?: "Genre" } & Pick<Genre, "id">
+    readonly genre: { readonly __typename?: "Genre" } & Pick<
+      Genre,
+      "id" | "name"
+    >
   }
 
 export type ParagraphFormFieldsFragment = {
@@ -2871,6 +2874,7 @@ export const DocFormFieldsFragmentDoc = gql`
     }
     genre {
       id
+      name
     }
   }
 `
