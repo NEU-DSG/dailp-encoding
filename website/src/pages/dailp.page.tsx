@@ -2,10 +2,10 @@ import React from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
-import { PageContents } from "src/components/wordpress"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
+import Markdown from "react-markdown"
 
 interface DailpPageProps {
   "*": string
@@ -13,6 +13,7 @@ interface DailpPageProps {
 
 const DailpPage = (props: DailpPageProps) => (
   <Layout>
+    <p> DAILP APGEJk</p>
     <main className={edgePadded}>
       <article className={fullWidth}>
         <DailpPageContents path={"/" + props["*"]} />
@@ -27,6 +28,7 @@ export const DailpPageContents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: props.path },
   })
+  console.log(props.path)
 
   const [{ data: menuData }] = useMenuBySlugQuery({
     variables: { slug: "default-nav" },
@@ -70,7 +72,7 @@ export const DailpPageContents = (props: { path: string }) => {
             <Link href={`/edit${props.path}`}>Edit</Link>
           )}
         </header>
-        <PageContents content={content} />
+        <Markdown>{content}</Markdown>
       </>
     )
   } else {
@@ -93,7 +95,7 @@ export const DailpPageContents = (props: { path: string }) => {
           <Link href={`/edit${props.path}`}>Edit</Link>
         )}
       </header>
-      <PageContents content={content} />
+      <Markdown>{content}</Markdown>
     </>
   )
 }
