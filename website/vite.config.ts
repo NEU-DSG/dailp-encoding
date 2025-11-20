@@ -23,7 +23,7 @@ export default defineConfig({
     }),
   ],
   ssr: {
-    noExternal: ['lodash', 'react-markdown']
+    noExternal: ["lodash", "react-markdown"],
   },
   css: {
     postcss: {

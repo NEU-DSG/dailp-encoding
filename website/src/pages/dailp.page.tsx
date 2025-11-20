@@ -13,7 +13,6 @@ interface DailpPageProps {
 
 const DailpPage = (props: DailpPageProps) => (
   <Layout>
-    <p> DAILP APGEJk</p>
     <main className={edgePadded}>
       <article className={fullWidth}>
         <DailpPageContents path={"/" + props["*"]} />
@@ -28,7 +27,6 @@ export const DailpPageContents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: props.path },
   })
-  console.log(props.path)
 
   const [{ data: menuData }] = useMenuBySlugQuery({
     variables: { slug: "default-nav" },
