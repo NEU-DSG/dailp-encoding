@@ -3,7 +3,7 @@ import "react-calendar/dist/Calendar.css"
 import "react-date-picker/dist/DatePicker.css"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
-import { MdFileUpload, MdUploadFile } from "react-icons/md"
+import { MdFileUpload, MdUploadFile } from "react-icons/md/index"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
