@@ -1115,7 +1115,7 @@ impl Database {
         let collection_id = query_file_scalar!(
             "queries/insert_edited_collection.sql",
             collection.title,
-            slug::slugify(&collection.title),
+            slug::slugify(&collection.title).replace("-", "_"),
             collection.description,
             collection.thumbnail_url,
         )
@@ -1704,30 +1704,17 @@ impl Database {
 
     /// Insert a document into an edited collection and create a new chapter for it
     /// Returns (document_id, chapter_id)
+    /// dennis todo : please clean this up
     pub async fn insert_document_into_edited_collection(
         &self,
         document: AnnotatedDoc,
-        _collection_id: Uuid,
+        collection_id: Uuid,
     ) -> Result<(DocumentId, Uuid)> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
         let next_index = -1;
 
-        // All user-created documents go to the user_documents document group
-        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
-        {
-            Some(id) => id,
-            None => {
-                // Create the user_documents document_group if it doesn't exist
-                query_file_scalar!(
-                    "queries/insert_document_group.sql",
-                    "user_documents",
-                    "User-Created Documents"
-                )
-                .fetch_one(&mut *tx)
-                .await?
-            }
-        };
+        let user_group_id = self.document_group_id_by_slug("user_documents").await?;
 
         // Insert the document using the user_documents document group ID
         let document_uuid = query_file_scalar!(
@@ -1736,7 +1723,7 @@ impl Database {
             meta.title,
             meta.is_reference,
             &meta.date as &Option<Date>,
-            user_documents_group_id,
+            user_group_id,
             next_index
         )
         .fetch_one(&mut *tx)
@@ -1768,9 +1755,10 @@ impl Database {
             }
         }
 
+        let collection_slug = self.collection_slug_by_id(collection_id).await?;
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
-        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+        let chapter_path = PgLTree::from_str(&format!("{}.{}", collection_slug.unwrap().replace("-", "_"), chapter_slug))?;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",

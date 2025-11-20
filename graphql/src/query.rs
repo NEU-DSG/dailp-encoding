@@ -796,11 +796,13 @@ impl Mutation {
             .insert_document_contents(updated_annotated_doc)
             .await?;
 
+        let collection_slug = database.collection_slug_by_id(input.collection_id).await?;
+
         Ok(AddDocumentPayload {
             id: document_id.0,
             title,
             slug: short_name.clone(),
-            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
+            collection_slug: collection_slug.ok_or_else(|| anyhow::format_err!("Failed to load collection"))?.to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
     }
