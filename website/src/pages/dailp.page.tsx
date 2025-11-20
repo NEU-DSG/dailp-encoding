@@ -70,13 +70,11 @@ export const DailpPageContents = (props: { path: string }) => {
           )}
         </header>
         {/* html chceking here please*/}
-        {
-          content.charAt(0) === "<" ? (
-            <div dangerouslySetInnerHTML={{ __html: content }} />
-          ) : (
-            <Markdown>{content}</Markdown>
-          )
-        }
+        {content.charAt(0) === "<" ? (
+          <div dangerouslySetInnerHTML={{ __html: content }} />
+        ) : (
+          <Markdown>{content}</Markdown>
+        )}
       </>
     )
   } else {
@@ -99,13 +97,11 @@ export const DailpPageContents = (props: { path: string }) => {
           <Link href={`/edit${props.path}`}>Edit</Link>
         )}
       </header>
-        {
-          content.charAt(0) === "<" ? (
-            <div dangerouslySetInnerHTML={{ __html: content }} />
-          ) : (
-            <Markdown>{content}</Markdown>
-          )
-        }
+      {content.charAt(0) === "<" ? (
+        <div dangerouslySetInnerHTML={{ __html: content }} />
+      ) : (
+        <Markdown>{content}</Markdown>
+      )}
     </>
   )
 }
