@@ -728,8 +728,8 @@ impl Mutation {
             link: input.source_url,
         };
         let mut sections = Vec::new();
-        for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
-            let translation = Some(eng_words.join(" "));
+        for (i, _raw_text_line) in input.raw_text_lines.iter().enumerate() {
+            let translation: Option<String> = Some(input.english_translation_lines[i].join(" "));
             let mut segs = Vec::new();
             for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
                 let form = AnnotatedForm {
@@ -739,7 +739,7 @@ impl Mutation {
                     simple_phonetics: None,
                     phonemic: None,
                     segments: None,
-                    english_gloss: vec![eng_words.get(j).cloned().unwrap_or_default()],
+                    english_gloss: vec![],
                     commentary: None,
                     line_break: None,
                     page_break: None,
@@ -802,7 +802,9 @@ impl Mutation {
             id: document_id.0,
             title,
             slug: short_name.clone(),
-            collection_slug: collection_slug.ok_or_else(|| anyhow::format_err!("Failed to load collection"))?.to_string(), // All user-created documents go to user_documents collection
+            collection_slug: collection_slug
+                .ok_or_else(|| anyhow::format_err!("Failed to load collection"))?
+                .to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
     }

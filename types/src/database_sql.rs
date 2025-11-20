@@ -1758,7 +1758,11 @@ impl Database {
         let collection_slug = self.collection_slug_by_id(collection_id).await?;
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
-        let chapter_path = PgLTree::from_str(&format!("{}.{}", collection_slug.unwrap().replace("-", "_"), chapter_slug))?;
+        let chapter_path = PgLTree::from_str(&format!(
+            "{}.{}",
+            collection_slug.unwrap().replace("-", "_"),
+            chapter_slug
+        ))?;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",
