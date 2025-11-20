@@ -14,10 +14,10 @@ if git-staged "types/queries/**.sql" && ! git-staged "types/.sqlx/**.json"; then
 fi
 
 # Require database docs to stay updated with schema changes.
-#if git-staged "types/migrations/**.sql" && ! git-staged "doc/database/**.md"; then
-#    printf "\nDatabase schema changed without documentation.\nPlease update database documentation in the doc/database directory.\n"
-#    HOOKS_FAILED=1
-#fi
+if git-staged "types/migrations/**.sql" && ! git-staged "doc/database/**.md"; then
+    printf "\nDatabase schema changed without documentation.\nPlease update database documentation in the doc/database directory.\n"
+    HOOKS_FAILED=1
+fi
 
 # Require GraphQL query changes to come with the generated type changes.
 if git-staged "website/src/graphql/**.graphql" && ! git-staged "website/src/graphql/**.ts"; then
