@@ -26,7 +26,7 @@ export function RecordDocumentAudioPanel(p: {
             const result = await contributeAudio({
               input: {
                 documentId: p.document.id,
-                contributorAudioUrl: resourceUrl,
+                contributorAudioUrl: `https://${resourceUrl}`,
               },
             })
             return result.error === undefined
