@@ -84,7 +84,7 @@ type AnnotatedDoc {
 	"""
 	The format of the original artifact
 	"""
-	format: Format
+	format: Format!
 }
 
 """
@@ -641,7 +641,7 @@ input DocumentMetadataUpdate {
 	"""
 	The format of the original artifact
 	"""
-	formatId: UUID
+	format: FormatUpdate
 }
 
 type DocumentPage {
@@ -775,7 +775,17 @@ type Format {
 	Status (pending, approved, rejected) of a format
 	"""
 	status: ApprovalStatus!
-	approved: Boolean!
+}
+
+input FormatUpdate {
+	"""
+	UUID for the format
+	"""
+	id: UUID!
+	"""
+	Name of the format
+	"""
+	name: String!
 }
 
 type FormsInTime {

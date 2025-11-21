@@ -129,6 +129,7 @@ fragment DocFormFields on AnnotatedDoc {
   }
   format {
     id
+    name
   }
 }
 

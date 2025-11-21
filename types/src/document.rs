@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, Format};
+use crate::doc_metadata::{ApprovalStatus, Format, FormatUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -224,17 +224,10 @@ impl AnnotatedDoc {
     }
 
     /// The format of the original artifact
-    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
-        // Get the format ID from this document
-        let format_id_opt = self.meta.format_id.as_ref();
-
-        if let Some(id) = format_id_opt {
-            let db = context.data::<DataLoader<Database>>()?;
-            let format = db.load_one(crate::FormatById(*id)).await?.flatten();
-            Ok(format)
-        } else {
-            Ok(None)
-        }
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Format> {
+        let db = context.data::<Database>()?;
+        let format = db.format_for_document(self.meta.id.0).await?;
+        Ok(format)
     }
 }
 
@@ -334,8 +327,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The format of the original artifact
-    #[graphql(name = "formatId")]
-    pub format_id: MaybeUndefined<Uuid>,
+    pub format: MaybeUndefined<FormatUpdate>,
 }
 
 #[async_graphql::ComplexObject]

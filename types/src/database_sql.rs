@@ -43,6 +43,14 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Format, sqlx::Error> {
+        let format = sqlx::query_file_as!(Format, "queries/get_format_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(format)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -777,8 +785,8 @@ impl Database {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
 
-        let format_id = match document.format_id {
-            MaybeUndefined::Value(id) => Some(id),
+        let format: Option<Uuid> = match document.format {
+            MaybeUndefined::Value(format_update) => Some(format_update.id),
             _ => None,
         };
 
@@ -787,7 +795,7 @@ impl Database {
             document.id,
             &title as _,
             &written_at as _,
-            format_id,
+            format,
         )
         .execute(&self.client)
         .await?;
@@ -2482,44 +2490,6 @@ impl Loader<PageId> for Database {
 
     async fn load(&self, _keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
         todo!("Implement content pages")
-    }
-}
-
-#[async_trait]
-impl Loader<FormatById> for Database {
-    type Value = Option<Format>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[FormatById],
-    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
-        // Collect UUID
-        let id: Uuid = keys.iter().next().map(|k| k.0).expect("No keys found");
-
-        // Query all formats by IDs
-        let rows = query_file!("queries/get_format_by_id.sql", id)
-            .fetch_all(&self.client)
-            .await?;
-
-        // Map results by ID
-        let mut results = HashMap::new();
-        for key in keys {
-            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
-                results.insert(
-                    key.clone(),
-                    Some(Format {
-                        id: row.id,
-                        name: row.name.clone(),
-                        status: row.status.clone(),
-                    }),
-                );
-            } else {
-                results.insert(key.clone(), None);
-            }
-        }
-
-        Ok(results)
     }
 }
 

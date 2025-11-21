@@ -60,9 +60,19 @@ pub struct Format {
     pub status: ApprovalStatus,
 }
 
+// For updating formats
+#[derive(async_graphql::InputObject)]
+pub struct FormatUpdate {
+    /// UUID for the format
+    pub id: Uuid,
+    /// Name of the format
+    pub name: String,
+}
+
 /// Get all approved formats
 #[async_graphql::ComplexObject]
 impl Format {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }

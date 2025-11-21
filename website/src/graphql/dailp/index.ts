@@ -63,7 +63,7 @@ export type AnnotatedDoc = {
   readonly date: Maybe<Date>
   readonly formCount: Scalars["Int"]
   /** The format of the original artifact */
-  readonly format: Maybe<Format>
+  readonly format: Format
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
@@ -503,7 +503,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** The format of the original artifact */
-  readonly formatId: InputMaybe<Scalars["UUID"]>
+  readonly format: InputMaybe<FormatUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -591,13 +591,19 @@ export type EditedCollection = {
 /** Stores the physical or digital medium associated with a document */
 export type Format = {
   readonly __typename?: "Format"
-  readonly approved: Scalars["Boolean"]
   /** UUID for the format */
   readonly id: Scalars["UUID"]
   /** Name of the format */
   readonly name: Scalars["String"]
   /** Status (pending, approved, rejected) of a format */
   readonly status: ApprovalStatus
+}
+
+export type FormatUpdate = {
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
 }
 
 export type FormsInTime = {
@@ -1570,9 +1576,7 @@ export type DocFormFieldsFragment = {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
-    readonly format: Maybe<
-      { readonly __typename?: "Format" } & Pick<Format, "id">
-    >
+    readonly format: { readonly __typename?: "Format" } & Pick<Format, "id">
   }
 
 export type ParagraphFormFieldsFragment = {
