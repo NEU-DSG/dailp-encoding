@@ -6,11 +6,11 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
-    UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
+    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
+    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
+    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
+    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
@@ -636,7 +636,7 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
-    /// Decide if a piece audio should be included in edited collection
+    /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn curate_word_audio(
         &self,
@@ -650,7 +650,7 @@ impl Mutation {
         let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_audio_visibility(
+            .update_word_audio_visibility(
                 &input.word_id,
                 &input.audio_slice_id,
                 input.include_in_edited_collection,
@@ -662,6 +662,35 @@ impl Mutation {
             .loader()
             .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
             .await?)
+    }
+
+    /// Decide if a piece of document audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_document_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateDocumentAudioInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let document_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_document_audio_visibility(
+                &input.document_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(
+                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?,
+            ))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     /// Attach audio that has already been uploaded to S3 to a particular word
@@ -686,6 +715,31 @@ impl Mutation {
             .loader()
             .word_by_id(&input.word_id)
             .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular document
+    /// Assumes user requesting mutation recorded the audio
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn attach_audio_to_document(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToDocumentInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let _media_slice_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_document(&input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(input.document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
