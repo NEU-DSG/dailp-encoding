@@ -352,6 +352,8 @@ export type ContentBlock = Gallery | Markdown
 export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
+  /** UUID of the contributor */
+  readonly id: Scalars["UUID"]
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
@@ -391,9 +393,7 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
-  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
-  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }
@@ -493,6 +493,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The editors, translators, etc. of the document */
+  readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -1161,6 +1163,8 @@ export type UserInfo = {
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
   readonly id: Scalars["UUID"]
+  readonly name: Scalars["String"]
+  readonly role: ContributorRole
 }
 
 export type UserUpdate = {
@@ -1546,6 +1550,12 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
     >
   }
 
@@ -2840,6 +2850,11 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    contributors {
+      id
+      name
+      role
     }
   }
 `
