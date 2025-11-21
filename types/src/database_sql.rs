@@ -1041,22 +1041,28 @@ impl Database {
         .await?;
 
         {
-            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            // Use the ID returned from inserting the document to satisfy FK constraints
+            let doc_id: Vec<Uuid> = vec![document_uuid];
+            let roles: Vec<String> = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
-                .multiunzip();
-            // Convert roles to Option<String> for SQL
-            let role_strings: Vec<Option<String>> =
-                role.iter().map(|r| r.map(|r| r.to_string())).collect();
-            query_file!(
-                "queries/upsert_document_contributors.sql",
-                &*name as _,
-                &*doc,
-                &role_strings as _
-            )
-            .execute(&mut *tx)
-            .await?;
+                .map(|c| match c.role {
+                    Some(r) => r.to_string(),
+                    None => ContributorRole::Author.to_string(),
+                })
+                .collect();
+
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &name,
+                    &doc_id,
+                    &roles
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
         }
 
         tx.commit().await?;
@@ -1166,7 +1172,7 @@ impl Database {
         let collection_id = query_file_scalar!(
             "queries/insert_edited_collection.sql",
             collection.title,
-            slug::slugify(&collection.title),
+            slug::slugify(&collection.title).replace("-", "_"),
             collection.description,
             collection.thumbnail_url,
         )
@@ -1755,30 +1761,17 @@ impl Database {
 
     /// Insert a document into an edited collection and create a new chapter for it
     /// Returns (document_id, chapter_id)
+    /// dennis todo : please clean this up
     pub async fn insert_document_into_edited_collection(
         &self,
         document: AnnotatedDoc,
-        _collection_id: Uuid,
+        collection_id: Uuid,
     ) -> Result<(DocumentId, Uuid)> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
         let next_index = -1;
 
-        // All user-created documents go to the user_documents document group
-        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
-        {
-            Some(id) => id,
-            None => {
-                // Create the user_documents document_group if it doesn't exist
-                query_file_scalar!(
-                    "queries/insert_document_group.sql",
-                    "user_documents",
-                    "User-Created Documents"
-                )
-                .fetch_one(&mut *tx)
-                .await?
-            }
-        };
+        let user_group_id = self.document_group_id_by_slug("user_documents").await?;
 
         // Insert the document using the user_documents document group ID
         let document_uuid = query_file_scalar!(
@@ -1787,7 +1780,7 @@ impl Database {
             meta.title,
             meta.is_reference,
             &meta.date as &Option<Date>,
-            user_documents_group_id,
+            user_group_id,
             next_index
         )
         .fetch_one(&mut *tx)
@@ -1796,14 +1789,13 @@ impl Database {
         // Attribute contributors to the document
         {
             let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            // Use the ID returned from inserting the document to satisfy FK constraints
+            let doc_id: Vec<Uuid> = vec![document_uuid];
             let roles: Vec<String> = meta
                 .contributors
                 .iter()
                 .map(|c| match c.role {
                     Some(r) => r.to_string(),
-                    // not sure what to default to, also not sure why contributor role is an
-                    // option
                     None => ContributorRole::Author.to_string(),
                 })
                 .collect();
@@ -1820,9 +1812,14 @@ impl Database {
             }
         }
 
+        let collection_slug = self.collection_slug_by_id(collection_id).await?;
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
-        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+        let chapter_path = PgLTree::from_str(&format!(
+            "{}.{}",
+            collection_slug.unwrap().replace("-", "_"),
+            chapter_slug
+        ))?;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",

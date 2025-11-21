@@ -3049,7 +3049,7 @@ export type AddDocumentMutationVariables = Exact<{
 export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
   readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
     AddDocumentPayload,
-    "id" | "title" | "slug"
+    "id" | "title" | "slug" | "collectionSlug" | "chapterSlug"
   >
 }
 
@@ -4172,6 +4172,8 @@ export const AddDocumentDocument = gql`
       id
       title
       slug
+      collectionSlug
+      chapterSlug
     }
   }
 `
