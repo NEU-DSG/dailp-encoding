@@ -579,8 +579,10 @@ export const DocumentTitleHeader = (p: {
                   )}
                 </div>
               ))}
-              <RecordDocumentAudioPanel document={p.doc} />
             </>
+          )}
+          {(role === UserRole.Editor || role === UserRole.Contributor) && (
+            <RecordDocumentAudioPanel document={p.doc} />
           )}
         </div>
       </div>
