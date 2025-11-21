@@ -717,7 +717,7 @@ impl Mutation {
         let contributor = Contributor {
             id: user.id,
             name: user.name.to_string(),
-            role: Somee(user.role),
+            role: Some(user.role),
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
