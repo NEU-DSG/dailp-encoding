@@ -1,5 +1,5 @@
 /// Document metadata
-use crate::{document::DocumentReference, ContributorReference};
+use crate::document::DocumentReference;
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};

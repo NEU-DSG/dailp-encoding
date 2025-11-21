@@ -62,35 +62,6 @@ pub struct ContributorDetails {
     pub is_visible: bool,
 }
 
-/// A Contributor registered in the DAILP database
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, SimpleObject)]
-pub struct RegisteredContributor {
-    /// UUID of the contributor
-    pub id: uuid::Uuid,
-    /// Name or identifier of the contributor
-    pub name: String,
-    /// Roles of the contributor
-    pub roles: Vec<ContributorRole>,
-}
-
-/// A Contributor not registered in the DAILP database
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
-pub struct UnregisteredContributor {
-    /// Name or identifier of the contributor
-    pub name: String,
-    /// Roles of the contributor
-    pub roles: Vec<ContributorRole>,
-}
-
-/// Used to reference a Contributor that may or may not be registered in the DAILP database
-#[derive(Clone, Debug, Serialize, Deserialize, Union)]
-pub enum ContributorReference {
-    /// A linked contributor in the database
-    Registered(RegisteredContributor),
-    /// Unregistered or historical person
-    Unregistered(UnregisteredContributor),
-}
-
 /// A contributor can have to any number of roles, which define most of their
 /// contributions to the associated item (add or revise as needed)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum, Type)]
