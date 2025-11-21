@@ -523,26 +523,24 @@ export const DocumentTitleHeader = (p: {
               ))}
             </>
           )}
+          {/* contributos can see all user contributed audio, do we want to mark the ones that are public? */}
           {role === UserRole.Contributor && (
             <>
               <h3>User-contributed Audio:</h3>
-              {p.doc.userContributedAudio.map(
-                (audio, index) =>
-                  audio.recordedBy?.id === userId && (
-                    <div key={index}>
-                      <AudioPlayer
-                        contributor={"you"}
-                        recordedAt={
-                          audio.recordedAt?.formattedDate
-                            ? new Date(audio.recordedAt.formattedDate)
-                            : undefined
-                        }
-                        audioUrl={audio.resourceUrl}
-                        showProgress
-                      />
-                    </div>
-                  )
-              )}
+              {p.doc.userContributedAudio.map((audio, index) => (
+                <div key={index}>
+                  <AudioPlayer
+                    contributor={"you"}
+                    recordedAt={
+                      audio.recordedAt?.formattedDate
+                        ? new Date(audio.recordedAt.formattedDate)
+                        : undefined
+                    }
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                </div>
+              ))}
             </>
           )}
           {role === UserRole.Editor && (
@@ -581,6 +579,29 @@ export const DocumentTitleHeader = (p: {
               ))}
             </>
           )}
+
+          {role === UserRole.Reader && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio
+                .filter((audio) => audio.includeInEditedCollection)
+                .map((audio, index) => (
+                  <div key={index}>
+                    <AudioPlayer
+                      contributor={"you"}
+                      recordedAt={
+                        audio.recordedAt?.formattedDate
+                          ? new Date(audio.recordedAt.formattedDate)
+                          : undefined
+                      }
+                      audioUrl={audio.resourceUrl}
+                      showProgress
+                    />
+                  </div>
+                ))}
+            </>
+          )}
+
           {(role === UserRole.Editor || role === UserRole.Contributor) && (
             <RecordDocumentAudioPanel document={p.doc} />
           )}
