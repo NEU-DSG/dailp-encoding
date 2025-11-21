@@ -15,8 +15,8 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             sources: Vec::new(),
             collection: Some("Lexical Resources".to_string()),
             contributors: vec![
-                Some(Contributor::new_author("Feeling, Durbin".to_string())),
-                Some(Contributor::new_author("Pulte, William".to_string())),
+                //Some(Contributor::new_author("Feeling, Durbin".to_string())),
+                //Some(Contributor::new_author("Pulte, William".to_string())),
             ],
             date: Some(dailp::Date::from_ymd(1975, 1, 1)),
             genre: None,
