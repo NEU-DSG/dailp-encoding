@@ -1,5 +1,9 @@
 import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { CognitoUser } from "amazon-cognito-identity-js"
 import { v4 } from "uuid"
@@ -59,6 +63,15 @@ export class S3Uploader {
       resourceUrl: `${process.env["CF_URL"]}/${key}`,
       key,
     }
+  }
+
+  async deleteFile(bucket: string, key: string): Promise<void> {
+    await this.s3Client.send(
+      new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      })
+    )
   }
 
   // Convenience methods for common upload types
