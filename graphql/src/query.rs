@@ -769,9 +769,9 @@ impl Mutation {
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let contributor = Contributor {
-            name: user.id.to_string(),
-            // defaulting to editor
-            role: Some(ContributorRole::Editor),
+            id: user.id,
+            name: user.name.to_string(),
+            role: Some(user.role),
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
@@ -824,7 +824,7 @@ impl Mutation {
             sources: vec![source],
             collection: None,
             genre: None,
-            contributors: vec![contributor],
+            contributors: Some(vec![contributor]),
             translation: None,
             page_images: None,
             date: Some(document_date),

@@ -3,11 +3,14 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::{ApprovalStatus, SpatialCoverage};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
-use itertools::Itertools;
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
+use sqlx::{PgPool, Row};
+use tokio::fs::read_to_string;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -347,6 +350,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The editors, translators, etc. of the document
+    pub contributors: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -496,7 +501,7 @@ pub struct DocumentMetadata {
     pub genre: Option<String>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors: Option<Vec<Contributor>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -514,6 +519,47 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    async fn contributors<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Contributor>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+
+        // Load SQL from file
+        let sql = read_to_string("queries/get_contributors_by_document_id.sql")
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+        let mut rows = sqlx::query(&sql).bind(self.id.0).fetch(pool);
+
+        let mut contributors = Vec::new();
+
+        while let Some(row) = rows
+            .try_next()
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        {
+            let id: uuid::Uuid = row
+                .try_get("id")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let name: String = row
+                .try_get("name")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let role_str: Option<String> = row
+                .try_get("role")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+            let role = role_str.and_then(|s| s.parse::<ContributorRole>().ok());
+
+            contributors.push(Contributor { id, name, role });
+        }
+
+        Ok(contributors)
+    }
 }
 
 /// Database ID for one document
