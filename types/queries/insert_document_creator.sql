@@ -1,3 +1,4 @@
--- Insert the new set of creator IDs
+-- Insert a creator for a document
 insert into document_creator (document_id, creator_id)
-select $1, unnest($2::uuid[]);
+values ($1, $2);
+
