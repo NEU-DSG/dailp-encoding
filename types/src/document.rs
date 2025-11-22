@@ -148,11 +148,6 @@ impl AnnotatedDoc {
         self.meta.is_reference
     }
 
-    /// The audio recording resource for this entire document
-    async fn audio_recording(&self) -> &Option<AudioSlice> {
-        // TODO: Allow for multiple audio sources
-        &self.meta.audio_recording
-    }
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     async fn order_index(&self) -> i64 {
@@ -223,6 +218,40 @@ impl AnnotatedDoc {
             .loader()
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
+    }
+
+    /// The audio for this document that was ingested from GoogleSheets, if there is any.
+    async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
+        Ok(self.meta.audio_recording.to_owned())
+    }
+
+    /// A slices of audio associated with this word in the context of a document.
+    /// This audio has been selected by an editor from contributions, or is the
+    /// same as the ingested audio track, if one is available.
+    async fn edited_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let mut all_audio = self.user_contributed_audio(context).await?;
+        // add ingested audio track as first element if it should be shown
+        if let Some(ingested_audio_track) = self.meta.audio_recording.to_owned() {
+            all_audio.insert(0, ingested_audio_track);
+        }
+        return Ok(all_audio
+            .into_iter()
+            .filter(|audio| audio.include_in_edited_collection)
+            .collect_vec());
+    }
+
+    /// Audio for this word that has been recorded by community members. Will be
+    /// empty if user does not have access to uncurated contributions.
+    /// TODO! User guard for contributors only
+    async fn user_contributed_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db.document_contributor_audio(&self.meta.id.0).await?)
     }
 }
 
