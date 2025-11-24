@@ -1,4 +1,3 @@
-use crate::person::ContributorRole;
 use async_graphql::{Guard, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
@@ -9,8 +8,6 @@ use uuid::Uuid;
 pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     pub id: Uuid,
-    pub name: String,
-    pub role: ContributorRole,
     email: String,
     groups: Vec<UserGroup>,
 }
@@ -24,8 +21,6 @@ pub struct UserInfo {
 pub struct JWTUserInfoDef {
     #[serde(default, rename = "sub")]
     id: Uuid,
-    name: String,
-    role: ContributorRole,
     email: String,
     #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
@@ -45,8 +40,6 @@ pub struct ApiGatewayUserInfoDef {
     #[serde(default, rename = "sub")]
     id: Uuid,
     email: String,
-    name: String,
-    role: ContributorRole,
     #[serde(
         default,
         rename = "cognito:groups",
