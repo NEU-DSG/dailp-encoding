@@ -269,6 +269,16 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Input for updating a single chapter's order */
+export type ChapterOrderInput = {
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The new index of this chapter within its parent (1-indexed) */
+  readonly indexInParent: Scalars["Int"]
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+}
+
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -817,6 +827,7 @@ export type Mutation = {
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
   readonly updateAnnotation: Scalars["Boolean"]
+  readonly updateCollectionChapterOrder: Scalars["String"]
   /** Update a comment */
   readonly updateComment: CommentParent
   /** Mutation for adding/changing contributor attributions */
@@ -829,6 +840,7 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  readonly upsertEditedCollection: Scalars["String"]
   readonly upsertPage: Scalars["String"]
 }
 
@@ -886,6 +898,10 @@ export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
 }
 
+export type MutationUpdateCollectionChapterOrderArgs = {
+  input: UpdateCollectionChapterOrderInput
+}
+
 export type MutationUpdateCommentArgs = {
   comment: CommentUpdate
 }
@@ -916,6 +932,10 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUpsertEditedCollectionArgs = {
+  input: UpsertChapterInput
 }
 
 export type MutationUpsertPageArgs = {
@@ -1164,6 +1184,14 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** Input for bulk updating collection chapter order */
+export type UpdateCollectionChapterOrderInput = {
+  /** Ordered list of chapters with their new indices */
+  readonly chapters: ReadonlyArray<ChapterOrderInput>
+  /** The slug of the collection */
+  readonly collectionSlug: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1172,6 +1200,24 @@ export type UpdateContributorAttribution = {
   readonly contributorId: Scalars["UUID"]
   /** The document to perfom this operation on */
   readonly documentId: Scalars["UUID"]
+}
+
+/** Input for upserting an edited collection */
+export type UpsertChapterInput = {
+  /** Description of the collection */
+  readonly description: InputMaybe<Scalars["String"]>
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The index of this chapter within its parent */
+  readonly indexInParent: InputMaybe<Scalars["Int"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: InputMaybe<CollectionSection>
+  /** The slug of the collection */
+  readonly slug: InputMaybe<Scalars["String"]>
+  /** URL of the thumbnail image for the collection */
+  readonly thumbnailUrl: InputMaybe<Scalars["String"]>
+  /** The title of the collection */
+  readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -3061,6 +3107,14 @@ export type AddEditedCollectionMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "createEditedCollection">
 
+export type UpdateCollectionChapterOrderMutationVariables = Exact<{
+  input: UpdateCollectionChapterOrderInput
+}>
+
+export type UpdateCollectionChapterOrderMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateCollectionChapterOrder">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -4194,6 +4248,20 @@ export function useAddEditedCollectionMutation() {
     AddEditedCollectionMutation,
     AddEditedCollectionMutationVariables
   >(AddEditedCollectionDocument)
+}
+export const UpdateCollectionChapterOrderDocument = gql`
+  mutation UpdateCollectionChapterOrder(
+    $input: UpdateCollectionChapterOrderInput!
+  ) {
+    updateCollectionChapterOrder(input: $input)
+  }
+`
+
+export function useUpdateCollectionChapterOrderMutation() {
+  return Urql.useMutation<
+    UpdateCollectionChapterOrderMutation,
+    UpdateCollectionChapterOrderMutationVariables
+  >(UpdateCollectionChapterOrderDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {

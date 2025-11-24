@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::AnnotatedDoc;
 use {
-    crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
+    crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, MaybeUndefined},
     crate::slugify,
     crate::Database,
     crate::DocumentCollection,
@@ -122,4 +122,43 @@ pub struct CreateEditedCollectionInput {
     pub description: String,
     /// URL of the thumbnail image for the collection
     pub thumbnail_url: String,
+}
+
+/// Input for upserting an edited collection
+#[derive(async_graphql::InputObject)]
+pub struct UpsertChapterInput {
+    /// The id of the chapter
+    pub id: Uuid,
+    /// The title of the collection
+    pub title: MaybeUndefined<String>,
+    /// The slug of the collection
+    pub slug: MaybeUndefined<String>,
+    /// Description of the collection
+    pub description: MaybeUndefined<String>,
+    /// URL of the thumbnail image for the collection
+    pub thumbnail_url: MaybeUndefined<String>,
+    /// The section of the collection, Intro | Body | Credit
+    pub section: MaybeUndefined<CollectionSection>,
+    /// The index of this chapter within its parent
+    pub index_in_parent: MaybeUndefined<i64>,
+}
+
+/// Input for updating a single chapter's order
+#[derive(async_graphql::InputObject)]
+pub struct ChapterOrderInput {
+    /// The id of the chapter
+    pub id: Uuid,
+    /// The new index of this chapter within its parent (1-indexed)
+    pub index_in_parent: i64,
+    /// The section of the collection, Intro | Body | Credit
+    pub section: CollectionSection,
+}
+
+/// Input for bulk updating collection chapter order
+#[derive(async_graphql::InputObject)]
+pub struct UpdateCollectionChapterOrderInput {
+    /// The slug of the collection
+    pub collection_slug: String,
+    /// Ordered list of chapters with their new indices
+    pub chapters: Vec<ChapterOrderInput>,
 }

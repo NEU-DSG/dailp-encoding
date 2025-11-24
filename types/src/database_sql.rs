@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use anyhow::Error;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -9,7 +8,7 @@ use std::str::FromStr;
 use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
-use crate::collection::EditedCollection;
+use crate::collection::{CollectionSection, EditedCollection, UpdateCollectionChapterOrderInput};
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
@@ -1158,6 +1157,57 @@ impl Database {
                     }
                 }
             }
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn upsert_collection_chapter(&self, collection: UpsertChapterInput) -> Result<()> {
+        let title: Option<String> = if collection.title.is_undefined() {
+            None
+        } else {
+            collection.title.take()
+        };
+        let section: Option<CollectionSection> = if collection.section.is_undefined() {
+            None
+        } else {
+            collection.section.take()
+        };
+        let index_in_parent: Option<i64> = if collection.index_in_parent.is_undefined() {
+            None
+        } else {
+            collection.index_in_parent.take()
+        };
+        query_file!(
+            "queries/upsert_collection_chapter.sql",
+            collection.id,
+            title,
+            section as _,
+            index_in_parent,
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_collection_chapter_order(
+        &self,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+
+        // Update each chapter's index_in_parent and section within a transaction
+        // Use a dedicated query that only updates these fields without touching title
+        for chapter in input.chapters {
+            query_file!(
+                "queries/update_chapter_order.sql",
+                chapter.id,
+                chapter.section as CollectionSection,
+                chapter.index_in_parent,
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;

@@ -6,11 +6,12 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
+    CurateDocumentAudioInput, AttachAudioToDocumentInput,
 };
 use itertools::{Itertools, Position};
 
@@ -927,6 +928,39 @@ impl Mutation {
             .insert_edited_collection(input)
             .await?
             .to_string())
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn upsert_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: UpsertChapterInput,
+    ) -> FieldResult<String> {
+        let chapter_id = input.id;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_collection_chapter(input)
+            .await?;
+        Ok(chapter_id.to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_collection_chapter_order(
+        &self,
+        context: &Context<'_>,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> FieldResult<String> {
+        let collection_slug = input.collection_slug.clone();
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_collection_chapter_order(input)
+            .await?;
+        Ok(collection_slug)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]

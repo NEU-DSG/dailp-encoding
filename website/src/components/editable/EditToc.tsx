@@ -34,12 +34,13 @@ const groupBySection = (nodes: readonly any[] | undefined) => {
 }
 
 export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
-  const [{ data }] = Dailp.useEditedCollectionQuery({
+  const [{ data, fetching }, refetch] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug },
   })
   const collection = data?.editedCollection
-  // TODO: Add mutation for updating collection chapters
+  const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState({
     intro: [] as any[],
     body: [] as any[],
@@ -62,26 +63,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     return null
   }
 
-  const reorder = (list: any[], startIndex: number, endIndex: number) => {
-    const result = Array.from(list)
-    const [removed] = result.splice(startIndex, 1)
-    result.splice(endIndex, 0, removed)
-    return result
-  }
 
-  const findChapterInSection = (
-    id: string
-  ): { section: keyof typeof chaptersBySection; index: number } | null => {
-    for (const section in chaptersBySection) {
-      const index = chaptersBySection[
-        section as keyof typeof chaptersBySection
-      ].findIndex((ch) => idOf(ch) === id)
-      if (index !== -1) {
-        return { section: section as keyof typeof chaptersBySection, index }
-      }
-    }
-    return null
-  }
 
   const handleDragEnd = (result: any) => {
     const { source, destination } = result
@@ -121,16 +103,63 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     })
   }
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setErrorMessage(null)
-    // TODO: Implement save mutation
-    console.log(
-      "save",
-      chaptersBySection,
-      collectionTitle,
-      collectionDescription
-    )
+    setIsSaving(true)
+
+    try {
+      // Collect all chapters from all sections with their new indices
+      const chapters: Dailp.ChapterOrderInput[] = []
+
+      // Process each section
+      ;(["intro", "body", "credit"] as const).forEach((sectionKey) => {
+        const sectionChapters = chaptersBySection[sectionKey]
+        const section =
+          sectionKey === "intro"
+            ? CollectionSection.Intro
+            : sectionKey === "body"
+            ? CollectionSection.Body
+            : CollectionSection.Credit
+
+        sectionChapters.forEach((chapter, index) => {
+          // Only include chapters that have been persisted (have an id)
+          // New chapters without ids will need to be created separately
+          if (chapter.id) {
+            chapters.push({
+              id: chapter.id,
+              indexInParent: index + 1, // 1-indexed
+              section: section,
+            })
+          }
+        })
+      })
+
+      if (chapters.length === 0) {
+        setErrorMessage("No chapters to save. Please add chapters first.")
+        setIsSaving(false)
+        return
+      }
+
+      const result = await updateOrder({
+        input: {
+          collectionSlug: collectionSlug,
+          chapters: chapters,
+        },
+      })
+
+      if (result.error) {
+        setErrorMessage(result.error.message || "Failed to save chapter order")
+      } else {
+        // Refetch the collection to get updated data
+        await refetch()
+        setErrorMessage(null)
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "An unexpected error occurred")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleAddNewChapter = (e: React.FormEvent<HTMLFormElement>) => {
@@ -163,7 +192,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       ...prev,
       [section]: [...prev[section], newChapter],
     }))
-    
     ;(e.target as HTMLFormElement).reset()
   }
 
@@ -237,111 +265,124 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                   <h5 style={{ marginTop: 0, marginBottom: 8 }}>
                     {sectionName}
                   </h5>
-                <div
-                  key={sectionKey}
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: 8,
-                    borderRadius: 4,
-                    ...(sectionKey === "body" ? { height: "50vh", overflow:"scroll" } : {}),
-                  }}
-                >
-                  <Droppable droppableId={sectionKey} direction="vertical">
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        style={{ minHeight: 40 }}
-                      >
-                        {chapters.map((chapter, index) => (
-                          <Draggable
-                            key={idOf(chapter)}
-                            draggableId={idOf(chapter)}
-                            index={index}
-                          >
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                style={{
-                                  ...provided.draggableProps.style,
-                                  background: snapshot.isDragging
-                                    ? "#fafafa"
-                                    : "#f9f9f9",
-                                  border: "1px solid #ddd",
-                                  borderRadius: 4,
-                                  padding: 8,
-                                  marginBottom: 8,
-                                }}
-                              >
+                  <div
+                    key={sectionKey}
+                    style={{
+                      border: "1px solid #ddd",
+                      padding: 8,
+                      borderRadius: 4,
+                      ...(sectionKey === "body"
+                        ? { height: "50vh", overflow: "scroll" }
+                        : {}),
+                    }}
+                  >
+                    <Droppable droppableId={sectionKey} direction="vertical">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          style={{ minHeight: 40 }}
+                        >
+                          {chapters.map((chapter, index) => (
+                            <Draggable
+                              key={idOf(chapter)}
+                              draggableId={idOf(chapter)}
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
                                 <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
                                   style={{
-                                    display: "flex",
-                                    gap: 6,
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
+                                    ...provided.draggableProps.style,
+                                    background: snapshot.isDragging
+                                      ? "#fafafa"
+                                      : "#f9f9f9",
+                                    border: "1px solid #ddd",
+                                    borderRadius: 4,
+                                    padding: 8,
+                                    marginBottom: 8,
                                   }}
                                 >
-                                  <span
-                                    {...provided.dragHandleProps}
-                                    style={{ cursor: "grab", color: "#666" }}
-                                  >
-                                    <MdDragIndicator size={16} />
-                                  </span>
-                                  <input
-                                    type="text"
-                                    placeholder="Title"
-                                    value={chapter.title ?? ""}
-                                    onChange={(e) =>
-                                      handleUpdate(sectionKey, idOf(chapter), {
-                                        title: e.target.value,
-                                      })
-                                    }
+                                  <div
                                     style={{
-                                      flex: 1,
-                                      minWidth: 150,
-                                      height: 28,
+                                      display: "flex",
+                                      gap: 6,
+                                      alignItems: "center",
+                                      flexWrap: "wrap",
                                     }}
-                                  />
-                                  <input
-                                    type="text"
-                                    placeholder="Slug"
-                                    value={chapter.slug ?? ""}
-                                    onChange={(e) =>
-                                      handleUpdate(sectionKey, idOf(chapter), {
-                                        slug: e.target.value,
-                                      })
-                                    }
-                                    style={{
-                                      flex: 1,
-                                      minWidth: 100,
-                                      height: 28,
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleRemove(
-                                        sectionKey,
-                                        idOf(chapter),
-                                        chapter.title
-                                      )
-                                    }
-                                    style={{ padding: "4px 8px", fontSize: 12 }}
                                   >
-                                    Delete
-                                  </button>
+                                    <span
+                                      {...provided.dragHandleProps}
+                                      style={{ cursor: "grab", color: "#666" }}
+                                    >
+                                      <MdDragIndicator size={16} />
+                                    </span>
+                                    <input
+                                      type="text"
+                                      placeholder="Title"
+                                      value={chapter.title ?? ""}
+                                      onChange={(e) =>
+                                        handleUpdate(
+                                          sectionKey,
+                                          idOf(chapter),
+                                          {
+                                            title: e.target.value,
+                                          }
+                                        )
+                                      }
+                                      style={{
+                                        flex: 1,
+                                        minWidth: 150,
+                                        height: 28,
+                                      }}
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="Slug"
+                                      value={chapter.slug ?? ""}
+                                      onChange={(e) =>
+                                        handleUpdate(
+                                          sectionKey,
+                                          idOf(chapter),
+                                          {
+                                            slug: e.target.value,
+                                          }
+                                        )
+                                      }
+                                      style={{
+                                        flex: 1,
+                                        minWidth: 100,
+                                        height: 28,
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRemove(
+                                          sectionKey,
+                                          idOf(chapter),
+                                          chapter.title
+                                        )
+                                      }
+                                      style={{
+                                        padding: "4px 8px",
+                                        fontSize: 12,
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-</>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                </>
               )
             })}
           </div>
@@ -361,13 +402,16 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         <button type="submit">Add Chapter</button>
       </form>
       <form onSubmit={handleSave}>
-        <button type="submit">Save</button>
+        <button type="submit" disabled={isSaving || fetching}>
+          {isSaving ? "Saving..." : "Save"}
+        </button>
         <button
           type="button"
           onClick={() =>
             collection?.chapters &&
             setChaptersBySection(groupBySection(collection.chapters as any))
           }
+          disabled={isSaving || fetching}
         >
           Reset
         </button>
