@@ -5,6 +5,7 @@ use crate::{
 
 use crate::doc_metadata::{ApprovalStatus, SpatialCoverage};
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
+use itertools::Itertools;
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use futures::TryStreamExt;
