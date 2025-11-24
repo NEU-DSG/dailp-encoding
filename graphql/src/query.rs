@@ -765,13 +765,20 @@ impl Mutation {
         input: CreateDocumentFromFormInput,
     ) -> FieldResult<AddDocumentPayload> {
         let title = input.document_name;
+        // Get info for the user currently signed in
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let user_profile_data = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&user.id)
+            .await?;
         let contributor = Contributor {
             id: user.id,
-            name: user.name.to_string(),
-            role: Some(user.role),
+            name: user_profile_data.display_name,
+            // get users display name. TODO we should more rigorously check this value for errors
+            role: Some(ContributorRole::Transcriber), // TODO Ask Ellen, Cara, Shireen about this terminology
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
