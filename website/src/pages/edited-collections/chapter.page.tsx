@@ -6,6 +6,7 @@ import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
+import { DailpPageContents } from "../dailp.page"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
@@ -14,7 +15,7 @@ const ChapterPage = (props: {
   collectionSlug: string
   chapterSlug: string
 }) => {
-  const [{ data }] = Dailp.useCollectionChapterQuery({
+  const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
     variables: {
       collectionSlug: props.collectionSlug,
       chapterSlug: props.chapterSlug,
@@ -27,8 +28,21 @@ const ChapterPage = (props: {
 
   const chapter = data?.chapter
 
-  if (!chapter) {
+  if (fetching) {
     return <>Loading...</>
+  }
+
+  if (error) {
+    return <>Error: {error.message}</>
+  }
+
+  if (!chapter) {
+    return (
+      <>
+        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
+        {props.chapterSlug}
+      </>
+    )
   }
 
   const { document, wordpressId } = chapter
@@ -64,7 +78,13 @@ const ChapterPage = (props: {
                     )}
                 </Breadcrumbs>
               </header>
-              <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+              {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
+              <DailpPageContents
+                path={`/${props.collectionSlug}/${chapter.slug.replace(
+                  /_/g,
+                  "-"
+                )}`}
+              />
             </>
           ) : null}
 
