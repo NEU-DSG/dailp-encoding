@@ -78,8 +78,6 @@ pub struct Language {
     pub id: Uuid,
     /// Name of the language
     pub name: String,
-    // Name a language uses for itself
-    pub autonym: Option<String>,
     /// Status (pending, approved, rejected) of a language
     pub status: ApprovalStatus,
 }

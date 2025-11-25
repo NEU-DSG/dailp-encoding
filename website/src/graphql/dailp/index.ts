@@ -643,7 +643,6 @@ export type ImageSource = {
 /** Stores a language associated with a document */
 export type Language = {
   readonly __typename?: "Language"
-  readonly autonym: Maybe<Scalars["String"]>
   /** UUID for the language */
   readonly id: Scalars["UUID"]
   /** Name of the language */
@@ -1581,7 +1580,7 @@ export type DocFormFieldsFragment = {
     readonly languages: ReadonlyArray<
       { readonly __typename?: "Language" } & Pick<
         Language,
-        "id" | "name" | "autonym" | "status"
+        "id" | "name" | "status"
       >
     >
   }
@@ -2881,7 +2880,6 @@ export const DocFormFieldsFragmentDoc = gql`
     languages {
       id
       name
-      autonym
       status
     }
   }

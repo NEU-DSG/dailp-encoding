@@ -26,7 +26,6 @@ select
         jsonb_build_object(
           'id', l.id,
           'name', l.name,
-          'autonym', l.autonym,
           'status', l.status
         )
       ),

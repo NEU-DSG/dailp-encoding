@@ -833,7 +833,6 @@ type Language {
 	Name of the language
 	"""
 	name: String!
-	autonym: String
 	"""
 	Status (pending, approved, rejected) of a language
 	"""

@@ -519,7 +519,6 @@ impl DocumentMetadata {
             .map(|row| Language {
                 id: row.id,
                 name: row.name,
-                autonym: row.autonym,
                 status: row.status,
             })
             .collect())

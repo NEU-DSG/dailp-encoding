@@ -130,7 +130,6 @@ fragment DocFormFields on AnnotatedDoc {
   languages {
     id
     name
-    autonym
     status
   }
 }

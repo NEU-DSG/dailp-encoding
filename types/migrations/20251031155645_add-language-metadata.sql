@@ -2,7 +2,6 @@
 create table if not exists language (
   id autouuid primary key,
   name text not null,
-  autonym text NULL,
   status approval_status default 'pending'
 );
 
