@@ -1757,8 +1757,8 @@ export type DocFormFieldsFragment = {
       { readonly __typename?: "Contributor" } & Pick<
         Contributor,
         "id" | "name" | "role"
-        >
       >
+    >
     readonly spatialCoverage: ReadonlyArray<
       { readonly __typename?: "SpatialCoverage" } & Pick<
         SpatialCoverage,
