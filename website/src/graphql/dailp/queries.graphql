@@ -123,6 +123,11 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  contributors {
+    id
+    name
+    role
+  }
   spatialCoverage {
     id
     name

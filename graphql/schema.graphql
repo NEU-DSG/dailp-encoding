@@ -463,6 +463,10 @@ that specifies the type of their contributions.
 """
 type Contributor {
 	"""
+	UUID of the contributor
+	"""
+	id: UUID!
+	"""
 	Full name of the contributor
 	"""
 	name: String!
@@ -510,10 +514,8 @@ contributions to the associated item (add or revise as needed)
 enum ContributorRole {
 	TRANSCRIBER
 	TRANSLATOR
-	EDITOR
 	ANNOTATOR
 	CULTURAL_ADVISOR
-	AUTHOR
 }
 
 input CreateDocumentFromFormInput {
@@ -683,7 +685,11 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
-	The physical locations associated with a document (e.g. where it was written, found)
+	The editors, translators, etc. of the document
+	"""
+	contributors: [UUID!]
+  """
+  The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
 }
@@ -1453,6 +1459,8 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
+	name: String!
+	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }

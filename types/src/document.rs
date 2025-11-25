@@ -4,12 +4,13 @@ use crate::{
 };
 
 use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
-use crate::person::{Contributor, SourceAttribution};
-
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+use futures::TryStreamExt;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file, query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool, Row};
+use tokio::fs::read_to_string;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -358,6 +359,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The editors, translators, etc. of the document
+    pub contributors: MaybeUndefined<Vec<Uuid>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
 }
@@ -509,7 +512,7 @@ pub struct DocumentMetadata {
     pub genre: Option<String>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors: Option<Vec<Contributor>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
@@ -533,6 +536,44 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
+    async fn contributors<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Contributor>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+
+        // Load SQL from file
+        let sql = read_to_string("queries/get_contributors_by_document_id.sql")
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+        let mut rows = sqlx::query(&sql).bind(self.id.0).fetch(pool);
+
+        let mut contributors = Vec::new();
+
+        while let Some(row) = rows
+            .try_next()
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        {
+            let id: uuid::Uuid = row
+                .try_get("id")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let name: String = row
+                .try_get("name")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let role_str: Option<String> = row
+                .try_get("role")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+            let role = role_str.and_then(|s| s.parse::<ContributorRole>().ok());
+
+            contributors.push(Contributor { id, name, role });
+        }
+
+        Ok(contributors)
+    }
+
     /// Fetch all spatial coverages linked to this document
     async fn spatial_coverage<'a>(
         &'a self,

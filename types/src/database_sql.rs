@@ -1083,28 +1083,29 @@ impl Database {
         .await?;
 
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
                 })
-                .collect();
+                .multiunzip();
 
-            if !name.is_empty() {
-                query_file!(
-                    "queries/upsert_document_contributors.sql",
-                    &name,
-                    &doc_id,
-                    &roles
-                )
-                .execute(&mut *tx)
-                .await?;
-            }
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
+
+            query_file!(
+                "queries/upsert_document_contributors.sql",
+                &*name as _,
+                &*doc,
+                &role_strings as _
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;
@@ -1830,22 +1831,22 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = contributors
+                .clone()
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
                 })
                 .collect();
 
-            if !name.is_empty() {
+            if !names.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &name,
+                    &names,
                     &doc_id,
                     &roles
                 )
@@ -1876,7 +1877,7 @@ impl Database {
         .await?;
 
         // Attribute contributors to the new chapter
-        for contributor in &meta.contributors {
+        for contributor in meta.contributors.iter().flatten() {
             query_file!("queries/upsert_contributor.sql", &contributor.name)
                 .execute(&mut *tx)
                 .await?;
@@ -1884,15 +1885,15 @@ impl Database {
                 query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
                     .fetch_one(&mut *tx)
                     .await?;
-            let role = contributor
-                .role
-                .unwrap_or(ContributorRole::Author)
-                .to_string();
+            // Use map to handle Option<String> without fallback
+            let role = contributor.role.as_ref().map(|r| r.to_string());
+
+            let role_str: &str = role.as_deref().unwrap_or("");
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
                 &contributor_id,
-                &role
+                role_str
             )
             .execute(&mut *tx)
             .await?;
@@ -2517,6 +2518,7 @@ impl Loader<ContributorsForDocument> for Database {
                 (
                     ContributorsForDocument(x.document_id),
                     Contributor {
+                        id: x.id,
                         name: x.full_name,
                         role: x
                             .contribution_role
