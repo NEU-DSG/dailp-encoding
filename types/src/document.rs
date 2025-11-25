@@ -227,7 +227,7 @@ impl AnnotatedDoc {
         let db = context.data::<Database>()?;
         let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
         Ok(coverages)
-  }
+    }
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
