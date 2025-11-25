@@ -46,7 +46,7 @@ const NewEditedCollectionPage = () => {
         input: {
           title: formData.title,
           description: formData.description,
-          thumbnailUrl: uploadResult.resourceUrl,
+          thumbnailUrl: `https://${uploadResult.resourceUrl}`,
         },
       })
 

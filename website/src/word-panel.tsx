@@ -28,7 +28,7 @@ import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
-import { RecordAudioPanel } from "./components/edit-word-audio/record"
+import { RecordWordAudioPanel } from "./components/edit-word-audio/record"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
@@ -166,7 +166,7 @@ export const WordPanel = (p: {
               <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
             }
           />
-          <RecordAudioPanel word={p.word} />
+          <RecordWordAudioPanel word={p.word} />
         </>
       )}
       <CollapsiblePanel
@@ -581,6 +581,14 @@ export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
     <>
       {p.word.editedAudio.map((audioTrack) => (
         <AudioPlayer
+          contributor={
+            audioTrack.recordedBy?.displayName ?? "Unknown Contributor"
+          }
+          recordedAt={
+            audioTrack.recordedAt?.formattedDate
+              ? new Date(audioTrack.recordedAt.formattedDate)
+              : new Date()
+          }
           audioUrl={audioTrack.resourceUrl}
           slices={
             audioTrack.startTime !== undefined &&
