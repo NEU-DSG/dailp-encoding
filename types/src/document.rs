@@ -501,7 +501,7 @@ impl DocumentMetadata {
             None => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
+        let row = query_file_as!(Genre, "queries/get_genre_by_document_id.sql", genre_id)
             .fetch_optional(pool)
             .await?;
         Ok(row)
