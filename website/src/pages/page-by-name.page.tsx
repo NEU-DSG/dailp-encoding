@@ -1,12 +1,14 @@
 import React, { ReactNode, useMemo } from "react"
-//import Markdown from "react-markdown"
+import Markdown from "react-markdown"
 import { usePageByPathQuery } from "src/graphql/dailp"
 import Layout from "src/layout"
 
 export const DELIM = "^"
 export const splitMarkdown = (content: string): ReactNode => {
-  return content.split(DELIM).map((s) => s.trim())
-  //.map((s) => <Markdown>{s}</Markdown>)
+  return content
+    .split(DELIM)
+    .map((s) => s.trim())
+    .map((s) => <Markdown>{s}</Markdown>)
 }
 
 const PageByName = ({ pageName }: { pageName: string }) => {

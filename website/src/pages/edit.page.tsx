@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react"
-//import Markdown from "react-markdown"
+import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
-import { WordpressPageContents } from "src/components/wordpress"
+import { PageContents } from "src/components/wordpress"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
@@ -126,9 +126,7 @@ const NewPage = () => {
                 {isHtml ? (
                   <div dangerouslySetInnerHTML={{ __html: content }} />
                 ) : (
-                  {
-                    /* <Markdown>{content}</Markdown> */
-                  }
+                  <Markdown>{content}</Markdown>
                 )}
               </div>
             </div>
