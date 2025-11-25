@@ -123,6 +123,11 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  spatialCoverage {
+    id
+    name
+    status
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
@@ -694,6 +699,7 @@ query pageByPath($path: String!) {
     }
   }
 }
+
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
