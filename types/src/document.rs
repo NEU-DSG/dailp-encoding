@@ -5,12 +5,9 @@ use crate::{
 
 use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
-
-use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
-use itertools::Itertools;
-
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use futures::TryStreamExt;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
 use tokio::fs::read_to_string;
