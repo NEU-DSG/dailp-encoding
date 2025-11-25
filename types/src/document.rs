@@ -508,7 +508,7 @@ impl DocumentMetadata {
             None => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
+        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
             .fetch_optional(pool)
             .await?;
         Ok(row)

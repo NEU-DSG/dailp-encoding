@@ -784,6 +784,7 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         let format: Option<Uuid> = match document.format {
             MaybeUndefined::Value(format_update) => Some(format_update.id),
@@ -797,7 +798,7 @@ impl Database {
             &written_at as _,
             format,
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
         Ok(document.id)
