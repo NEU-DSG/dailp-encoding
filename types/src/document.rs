@@ -3,11 +3,13 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::ApprovalStatus;
+use crate::person::{Contributor, Creator, CreatorUpdate, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -217,6 +219,12 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        let db = context.data::<Database>()?;
+        let creators = db.creators_for_document(self.meta.id.0).await?;
+        Ok(creators)
+    }
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -347,6 +355,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The creator(s) of the document
+    pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -495,6 +505,8 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
     /// Rough translation of the document, broken down by paragraph.
@@ -516,6 +528,32 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch all creators linked to this document
+    async fn creators<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Creator>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Creator,
+            "queries/get_creators_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Creator {
+                id: row.id,
+                name: row.name,
+            })
+            .collect())
+    }
+}
+
 /// Database ID for one document
 #[derive(
     Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
@@ -534,6 +572,7 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
+
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server

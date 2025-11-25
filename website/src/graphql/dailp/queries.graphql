@@ -123,6 +123,10 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  creators {
+    id
+    name
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {

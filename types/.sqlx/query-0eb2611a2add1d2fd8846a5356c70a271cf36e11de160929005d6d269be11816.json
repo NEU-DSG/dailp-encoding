@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from document_creator\nwhere document_id = $1 and creator_id = $2;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0eb2611a2add1d2fd8846a5356c70a271cf36e11de160929005d6d269be11816"
+}

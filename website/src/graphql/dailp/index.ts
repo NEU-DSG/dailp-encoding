@@ -57,6 +57,8 @@ export type AnnotatedDoc = {
    * author, translators, and annotators
    */
   readonly contributors: ReadonlyArray<Contributor>
+  /** Creators of this document */
+  readonly creators: ReadonlyArray<Creator>
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
   /**
@@ -443,6 +445,22 @@ export type CreateEditedCollectionInput = {
   readonly title: Scalars["String"]
 }
 
+/** The creator of a document */
+export type Creator = {
+  readonly __typename?: "Creator"
+  /** UUID of the creator */
+  readonly id: Scalars["UUID"]
+  /** Name of the creator */
+  readonly name: Scalars["String"]
+}
+
+export type CreatorUpdate = {
+  /** UUID for the creator */
+  readonly id: Scalars["UUID"]
+  /** Name of the creator */
+  readonly name: Scalars["String"]
+}
+
 /** Request to update if a piece of document audio should be included in an edited collection */
 export type CurateDocumentAudioInput = {
   /** Audio to include/exclude */
@@ -526,6 +544,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The creator(s) of the document */
+  readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -1720,6 +1740,9 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly creators: ReadonlyArray<
+      { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
     >
   }
 
@@ -3269,6 +3292,10 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    creators {
+      id
+      name
     }
   }
 `
