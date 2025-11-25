@@ -1004,6 +1004,7 @@ impl SheetInterpretation {
             collection: source.pop().filter(|s| !s.trim().is_empty()),
             contributors: Some(people),
             genre: genre.pop().filter(|s| !s.trim().is_empty()),
+            spatial_coverage_ids: None,
             translation,
             page_images,
             date: parsed_date,

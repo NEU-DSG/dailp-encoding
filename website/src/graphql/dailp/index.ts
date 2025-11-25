@@ -93,6 +93,8 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /** The locations associated with this document */
+  readonly spatialCoverage: ReadonlyArray<SpatialCoverage>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -219,6 +221,12 @@ export type AnnotatedFormUpdate = {
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 /** Request to attach user-recorded audio to a document */
 export type AttachAudioToDocumentInput = {
   /**
@@ -530,6 +538,8 @@ export type DocumentMetadataUpdate = {
   readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The physical locations associated with a document (e.g. where it was written, found) */
+  readonly spatialCoverage: InputMaybe<ReadonlyArray<SpatialCoverageUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -1166,6 +1176,24 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** Stores a spatial coverage associated with a document */
+export type SpatialCoverage = {
+  readonly __typename?: "SpatialCoverage"
+  /** UUID for the place */
+  readonly id: Scalars["UUID"]
+  /** Name of the place */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a spatial coverage */
+  readonly status: ApprovalStatus
+}
+
+export type SpatialCoverageUpdate = {
+  /** UUID for the spatial coverage */
+  readonly id: Scalars["UUID"]
+  /** Name of the spatial coverage */
+  readonly name: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1729,6 +1757,12 @@ export type DocFormFieldsFragment = {
       { readonly __typename?: "Contributor" } & Pick<
         Contributor,
         "id" | "name" | "role"
+        >
+      >
+    readonly spatialCoverage: ReadonlyArray<
+      { readonly __typename?: "SpatialCoverage" } & Pick<
+        SpatialCoverage,
+        "id" | "name" | "status"
       >
     >
   }
@@ -3284,6 +3318,11 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
       role
+    }
+    spatialCoverage {
+      id
+      name
+      status
     }
   }
 `

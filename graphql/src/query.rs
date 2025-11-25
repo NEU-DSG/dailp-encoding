@@ -832,6 +832,7 @@ impl Mutation {
             collection: None,
             genre: None,
             contributors: Some(vec![contributor]),
+            spatial_coverage_ids: None,
             translation: None,
             page_images: None,
             date: Some(document_date),

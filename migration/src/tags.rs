@@ -123,6 +123,7 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
             //.collect(),
             collection: Some("Reference Materials".to_owned()),
             genre: None,
+            spatial_coverage_ids: None,
             is_reference: true,
             page_images: None,
             sources: Vec::new(),

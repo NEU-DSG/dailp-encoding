@@ -3,15 +3,17 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, SpatialCoverage};
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
+use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
+
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use itertools::Itertools;
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, Row};
 use tokio::fs::read_to_string;
+use sqlx::{query_file, query_file_as, PgPool, Row};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -221,6 +223,15 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// The locations associated with this document
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        let db = context.data::<Database>()?;
+        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
+        Ok(coverages)
+    }
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -353,6 +364,8 @@ pub struct DocumentMetadataUpdate {
     pub written_at: MaybeUndefined<DateInput>,
     /// The editors, translators, etc. of the document
     pub contributors: MaybeUndefined<Vec<Uuid>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -503,6 +516,8 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Option<Vec<Contributor>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -560,6 +575,30 @@ impl DocumentMetadata {
         }
 
         Ok(contributors)
+  }
+
+    /// Fetch all spatial coverages linked to this document
+    async fn spatial_coverage<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SpatialCoverage>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SpatialCoverage {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
     }
 }
 
