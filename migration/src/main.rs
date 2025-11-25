@@ -64,9 +64,6 @@ async fn main() -> Result<()> {
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;
 
-    println!("Creating user documents collection...");
-    user_documents::create_user_documents_collection(&db).await?;
-
     Ok(())
 }
 

@@ -797,7 +797,7 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
         // Update spatial coverages
