@@ -3,8 +3,8 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -12,8 +12,8 @@ use itertools::Itertools;
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
-use tokio::fs::read_to_string;
 use sqlx::{query_file, query_file_as, PgPool, Row};
+use tokio::fs::read_to_string;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -575,7 +575,7 @@ impl DocumentMetadata {
         }
 
         Ok(contributors)
-  }
+    }
 
     /// Fetch all spatial coverages linked to this document
     async fn spatial_coverage<'a>(
