@@ -2762,9 +2762,6 @@ pub struct ChaptersInCollection(pub String);
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct FormatById(pub uuid::Uuid);
-
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
 pub struct MorphemeReference {
