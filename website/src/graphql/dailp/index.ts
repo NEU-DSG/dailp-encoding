@@ -227,6 +227,7 @@ export enum ApprovalStatus {
   Pending = "PENDING",
   Rejected = "REJECTED",
 }
+
 /** Request to attach user-recorded audio to a document */
 export type AttachAudioToDocumentInput = {
   /**
@@ -881,6 +882,7 @@ export type MutationDeleteContributorAttributionArgs = {
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
+  system: Scalars["String"]
   tag: Scalars["String"]
   title: Scalars["String"]
 }
@@ -1238,8 +1240,6 @@ export type UserInfo = {
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
   readonly id: Scalars["UUID"]
-  readonly name: Scalars["String"]
-  readonly role: ContributorRole
 }
 
 export type UserUpdate = {
@@ -4318,7 +4318,7 @@ export const InsertCustomMorphemeTagDocument = gql`
     $title: String!
     $system: String!
   ) {
-    insertCustomMorphemeTag(tag: $tag, title: $title)
+    insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
   }
 `
 

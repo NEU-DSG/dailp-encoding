@@ -81,8 +81,8 @@ type AnnotatedDoc {
 	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
-  """
-  The audio for this document that was ingested from GoogleSheets, if there is any.
+	"""
+	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
 	"""
@@ -235,7 +235,8 @@ enum ApprovalStatus {
 	PENDING
 	APPROVED
 	REJECTED
- }
+}
+
 """
 Request to attach user-recorded audio to a document
 """
@@ -688,8 +689,8 @@ input DocumentMetadataUpdate {
 	The editors, translators, etc. of the document
 	"""
 	contributors: [UUID!]
-  """
-  The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
 }
@@ -1114,7 +1115,7 @@ type Mutation {
 	Minimal mutation to add a document with only essential fields
 	"""
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
-	insertCustomMorphemeTag(tag: String!, title: String!): Boolean!
+	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
@@ -1459,8 +1460,6 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
-	name: String!
-	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }
