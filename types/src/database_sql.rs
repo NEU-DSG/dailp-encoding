@@ -928,10 +928,9 @@ impl Database {
             paragraph.id,
             &translation as _
         )
-        .execute(&mut *tx)
+        .execute(&self.client)
         .await?;
 
-        tx.commit().await?;
         self.paragraph_by_id(&paragraph.id).await
     }
 
