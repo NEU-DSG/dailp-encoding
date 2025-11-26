@@ -5,10 +5,9 @@ import parse, {
   HTMLReactParserOptions,
   attributesToProps,
   domToReact,
-  htmlToDOM,
 } from "html-react-parser"
 import React from "react"
-import { Tab, TabList, TabPanel, useTabState } from "reakit"
+import { Tab, TabList, TabPanel } from "reakit"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"

@@ -1,6 +1,5 @@
 import React from "react"
-import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUserRole } from "src/auth"
+import { useUserRole } from "src/auth"
 import { Dashboard } from "src/components/dashboard/dashboard"
 import Layout from "../layout"
 

@@ -1,7 +1,6 @@
 import React from "react"
 import { Group } from "reakit"
 import { Link } from "src/components"
-import { fullWidth } from "src/style/utils.css"
 import { card, cardHeader, cardImage, cardText } from "./card.css"
 
 export const Card = (props: {

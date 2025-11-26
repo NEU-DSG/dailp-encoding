@@ -1,4 +1,4 @@
-import { style, styleVariants } from "@vanilla-extract/css"
+import { style } from "@vanilla-extract/css"
 import { border, padding, position, rgba } from "polished"
 import {
   colors,

@@ -1,6 +1,5 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import { Client } from "urql"
 import { clientSideGraphqlClient, clientSsrExchange } from "src/graphql"
 import { PageContext, PageShell, rootElementId } from "./PageShell"
 

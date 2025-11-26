@@ -1,4 +1,3 @@
-import cx from "classnames"
 import React from "react"
 import {
   Button,
@@ -6,7 +5,6 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
-import { button, cleanButton, iconButton } from "src/components/button.css"
 import { fonts } from "src/style/theme-contract.css"
 import {
   FormFields,

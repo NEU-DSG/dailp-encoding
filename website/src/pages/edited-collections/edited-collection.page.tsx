@@ -1,7 +1,6 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUserRole } from "src/auth"
+import { useUserRole } from "src/auth"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"

@@ -19,7 +19,7 @@
 //! reference.
 
 pub mod annotation;
-mod audio;
+pub mod audio;
 
 /// This module contains types related to authentication
 ///

@@ -1,5 +1,3 @@
-import { NewPageDocument } from "src/graphql/dailp"
-
 // type CustomBlockTemplate = BlockTemplate & { key?: string }
 // type CustomField = Field & { templates?: Record<string, CustomBlockTemplate> }
 
