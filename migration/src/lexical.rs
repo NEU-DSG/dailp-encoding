@@ -14,12 +14,14 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             title: "Cherokee–English Dictionary".to_string(),
             sources: Vec::new(),
             collection: Some("Lexical Resources".to_string()),
-            contributors: vec![
-                Contributor::new_author("Feeling, Durbin".to_string()),
-                Contributor::new_author("Pulte, William".to_string()),
-            ],
+            contributors: None,
+            //contributors: vec![
+            //Some(Contributor::new_author("Feeling, Durbin".to_string())),
+            //Some(Contributor::new_author("Pulte, William".to_string())),
+            //],
             date: Some(dailp::Date::from_ymd(1975, 1, 1)),
             genre: None,
+            spatial_coverage_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -34,9 +36,11 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             title: "A handbook of the Cherokee verb: a preliminary study".to_string(),
             sources: Vec::new(),
             collection: Some("Lexical Resources".to_string()),
-            contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
+            contributors: None, // temporary fix
+            //contributors: vec![Some(Contributor::new_author("Feeling, Durbin".to_string()))],
             date: Some(dailp::Date::from_ymd(2003, 1, 1)),
             genre: None,
+            spatial_coverage_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -254,11 +258,13 @@ async fn insert_document_from_sheet(
         sources: Vec::new(),
         collection: Some(collection.to_owned()),
         genre: None,
-        contributors: authors
-            .into_iter()
-            .skip(1)
-            .map(Contributor::new_author)
-            .collect(),
+        contributors: None,
+        //contributors: authors
+        //.into_iter()
+        //.skip(1)
+        //.map(Contributor::new_author)
+        //.collect(),
+        spatial_coverage_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,

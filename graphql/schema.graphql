@@ -78,7 +78,11 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
-	The audio for this document that was ingested from GoogleSheets, if there is any.
+	The locations associated with this document
+	"""
+	spatialCoverage: [SpatialCoverage!]!
+  """
+  The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
 	"""
@@ -224,6 +228,14 @@ Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
 
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+ }
 """
 Request to attach user-recorded audio to a document
 """
@@ -451,6 +463,10 @@ that specifies the type of their contributions.
 """
 type Contributor {
 	"""
+	UUID of the contributor
+	"""
+	id: UUID!
+	"""
 	Full name of the contributor
 	"""
 	name: String!
@@ -498,10 +514,8 @@ contributions to the associated item (add or revise as needed)
 enum ContributorRole {
 	TRANSCRIBER
 	TRANSLATOR
-	EDITOR
 	ANNOTATOR
 	CULTURAL_ADVISOR
-	AUTHOR
 }
 
 input CreateDocumentFromFormInput {
@@ -670,6 +684,14 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The editors, translators, etc. of the document
+	"""
+	contributors: [UUID!]
+  """
+  The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	spatialCoverage: [SpatialCoverageUpdate!]
 }
 
 type DocumentPage {
@@ -1322,6 +1344,35 @@ type SourceAttribution {
 	link: String!
 }
 
+"""
+Stores a spatial coverage associated with a document
+"""
+type SpatialCoverage {
+	"""
+	UUID for the place
+	"""
+	id: UUID!
+	"""
+	Name of the place
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a spatial coverage
+	"""
+	status: ApprovalStatus!
+}
+
+input SpatialCoverageUpdate {
+	"""
+	UUID for the spatial coverage
+	"""
+	id: UUID!
+	"""
+	Name of the spatial coverage
+	"""
+	name: String!
+}
+
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
@@ -1408,6 +1459,8 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
+	name: String!
+	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }

@@ -1,5 +1,7 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -10,6 +12,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::SpatialCoverage;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -38,6 +41,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn spatial_coverage_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -314,6 +332,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -452,6 +471,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -826,6 +846,7 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -833,8 +854,30 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
+
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
@@ -1040,28 +1083,29 @@ impl Database {
         .await?;
 
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
                 })
-                .collect();
+                .multiunzip();
 
-            if !name.is_empty() {
-                query_file!(
-                    "queries/upsert_document_contributors.sql",
-                    &name,
-                    &doc_id,
-                    &roles
-                )
-                .execute(&mut *tx)
-                .await?;
-            }
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
+
+            query_file!(
+                "queries/upsert_document_contributors.sql",
+                &*name as _,
+                &*doc,
+                &role_strings as _
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;
@@ -1787,22 +1831,22 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = contributors
+                .clone()
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
                 })
                 .collect();
 
-            if !name.is_empty() {
+            if !names.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &name,
+                    &names,
                     &doc_id,
                     &roles
                 )
@@ -1833,7 +1877,7 @@ impl Database {
         .await?;
 
         // Attribute contributors to the new chapter
-        for contributor in &meta.contributors {
+        for contributor in meta.contributors.iter().flatten() {
             query_file!("queries/upsert_contributor.sql", &contributor.name)
                 .execute(&mut *tx)
                 .await?;
@@ -1841,15 +1885,15 @@ impl Database {
                 query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
                     .fetch_one(&mut *tx)
                     .await?;
-            let role = contributor
-                .role
-                .unwrap_or(ContributorRole::Author)
-                .to_string();
+            // Use map to handle Option<String> without fallback
+            let role = contributor.role.as_ref().map(|r| r.to_string());
+
+            let role_str: &str = role.as_deref().unwrap_or("");
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
                 &contributor_id,
-                &role
+                role_str
             )
             .execute(&mut *tx)
             .await?;
@@ -1985,6 +2029,7 @@ impl Database {
             Ok(None)
         }
     }
+
     //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
@@ -2097,6 +2142,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2169,6 +2215,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2471,6 +2518,7 @@ impl Loader<ContributorsForDocument> for Database {
                 (
                     ContributorsForDocument(x.document_id),
                     Contributor {
+                        id: x.id,
                         name: x.full_name,
                         role: x
                             .contribution_role
