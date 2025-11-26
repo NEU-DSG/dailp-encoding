@@ -1,5 +1,5 @@
 /// Document metadata
-use crate::{document::DocumentReference, ContributorReference};
+use crate::document::DocumentReference;
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
@@ -112,18 +112,38 @@ pub struct Language {
 }
 
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
-    /*
-    Tag for the spatial coverage within the DAILP system
-    Could be useful for managing places with similar names or places
-    with multiple names
-    */
-    pub dailpTag: String,
-    /// Documents associated with the spatial coverage
-    pub documents: Vec<DocumentReference>,
     /// Name of the place
     pub name: String,
+    /// Status (pending, approved, rejected) of a spatial coverage
+    pub status: ApprovalStatus,
+}
+
+// For updating spatial coverages
+#[derive(async_graphql::InputObject)]
+pub struct SpatialCoverageUpdate {
+    /// UUID for the spatial coverage
+    pub id: Uuid,
+    /// Name of the spatial coverage
+    pub name: String,
+}
+
+/// Get all approved spatial coverages
+#[async_graphql::ComplexObject]
+impl SpatialCoverage {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts SpatialCoverage struct to corresponding Uuid
+impl From<&SpatialCoverage> for Uuid {
+    fn from(s: &SpatialCoverage) -> Self {
+        s.id
+    }
 }

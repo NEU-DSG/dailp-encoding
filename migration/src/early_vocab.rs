@@ -115,11 +115,13 @@ async fn parse_early_vocab(
         collection: Some(COLLECTION_NAME.to_owned()),
         genre: None,
         subject_headings_ids: None,
-        contributors: authors
-            .into_iter()
-            .skip(1)
-            .map(Contributor::new_author)
-            .collect(),
+        contributors: None, // temporary fix
+        //contributors: authors
+        //.into_iter()
+        //.skip(1)
+        //.map(Contributor::new_author)
+        //.collect(),
+        spatial_coverage_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,
