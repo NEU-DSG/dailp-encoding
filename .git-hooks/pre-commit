@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Allows glob patterns in checks.
+unset GIT_LITERAL_PATHSPECS
+
+git-staged() {
+    ! git diff --no-patch --staged --exit-code "$@"
+}
+
+# Require sqlx data to be generated when a SQL query is modified.
+if git-staged "types/queries/**.sql" && ! git-staged "types/.sqlx/**.json"; then
+    printf "\nDatabase queries changed without generating sqlx types.\nPlease run 'dev-check' or 'dev-generate-types'.\n"
+    HOOKS_FAILED=1
+fi
+
+# Require database docs to stay updated with schema changes.
+if git-staged "types/migrations/**.sql" && ! git-staged "doc/database/**.md"; then
+    printf "\nDatabase schema changed without documentation.\nPlease update database documentation in the doc/database directory.\n"
+    HOOKS_FAILED=1
+fi
+
+# Require GraphQL query changes to come with the generated type changes.
+if git-staged "website/src/graphql/**.graphql" && ! git-staged "website/src/graphql/**.ts"; then
+    printf "\nGraphQL queries changed without generating TypeScript types.\nPlease run 'dev-check'.\n"
+    HOOKS_FAILED=1
+fi
+
+# Reqire frontend formatting
+if git-staged "website/*" && cd website && ! yarn prettier -c --config package.json src; then
+    printf "Frontend code edited but not formatted.\nPlease run 'dev-check' \nor\n'cd website; prettier -w --config package.json src'.\n"
+    HOOKS_FAILED=1
+fi
+
+# Require formatting for rust code
+if git-staged "*.rs" && [[ -n "$(cargo fmt --check)" ]]; then
+    printf "Rust code edited but not formatted.\nPlease run 'dev-check'.\n"
+    HOOKS_FAILED=1
+fi
+
+exit $HOOKS_FAILED
