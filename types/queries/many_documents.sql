@@ -19,21 +19,19 @@ select
     ) filter (where contributor is not null),
     '[]'
   ) as contributors,
-  
-  -- Subject Headings
-  (
-    select coalesce(jsonb_agg(jsonb_build_object(
-      'id', sh.id,
-      'name', sh.name,
-      'status', sh.status
+  ( -- Subject Headings
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', sh.id,
+          'name', sh.name,
+          'status', sh.status
     )), '[]')
     from document_subject_heading dsh
     join subject_heading sh on sh.id = dsh.subject_heading_id
     where dsh.document_id = d.id
-  ) as subject_headings
-
--- Spatial Coverage
-  (
+  ) as subject_headings,
+  ( -- Spatial Coverage
     select coalesce(
       jsonb_agg(
         jsonb_build_object(
