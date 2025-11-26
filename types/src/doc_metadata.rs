@@ -1,10 +1,9 @@
 /// Document metadata
-use crate::{document::DocumentReference, ContributorReference};
+use crate::document::DocumentReference;
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgValueRef, Decode, Postgres};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor

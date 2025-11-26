@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use anyhow::Error;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};

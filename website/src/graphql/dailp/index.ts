@@ -869,7 +869,6 @@ export type MutationDeleteContributorAttributionArgs = {
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
-  system: Scalars["String"]
   tag: Scalars["String"]
   title: Scalars["String"]
 }
@@ -4265,7 +4264,7 @@ export const InsertCustomMorphemeTagDocument = gql`
     $title: String!
     $system: String!
   ) {
-    insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+    insertCustomMorphemeTag(tag: $tag, title: $title)
   }
 `
 
