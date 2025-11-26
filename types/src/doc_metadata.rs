@@ -4,7 +4,6 @@ use crate::document::DocumentReference;
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
 
