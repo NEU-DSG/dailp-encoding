@@ -673,7 +673,7 @@ mutation InsertCustomMorphemeTag(
   $title: String!
   $system: String!
 ) {
-  insertCustomMorphemeTag(tag: $tag, title: $title)
+  insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
 
 mutation UpsertPage($pageInput: NewPageInput!) {
