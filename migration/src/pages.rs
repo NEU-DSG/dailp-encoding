@@ -4,6 +4,7 @@ use dailp::page::Markdown;
 use dailp::page::NewPageInput;
 use dailp::{page::Page, Database};
 use serde::Deserialize;
+use std::fs::File;
 
 // CSV row structure (includes all fields even though we skip some)
 #[derive(Debug, Deserialize)]

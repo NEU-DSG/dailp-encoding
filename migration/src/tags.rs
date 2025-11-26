@@ -114,14 +114,16 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
                 1,
                 1,
             )),
-            contributors: values
-                .next()?
-                .into_iter()
-                .skip(1)
-                .map(dailp::Contributor::new_author)
-                .collect(),
+            contributors: None,
+            //contributors: values
+            //.next()?
+            //.into_iter()
+            //.skip(1)
+            //.map(dailp::Contributor::new_author)
+            //.collect(),
             collection: Some("Reference Materials".to_owned()),
             genre: None,
+            spatial_coverage_ids: None,
             is_reference: true,
             page_images: None,
             sources: Vec::new(),
