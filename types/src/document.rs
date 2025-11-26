@@ -1,9 +1,11 @@
+use crate::doc_metadata::{
+    ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
 };
-use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate};
-use crate::person::{Contributor, ContributorRole, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 
@@ -231,7 +233,7 @@ impl AnnotatedDoc {
         let headings = db.subject_headings_for_document(self.meta.id.0).await?;
         Ok(headings)
     }
-  
+
     /// The locations associated with this document
     async fn spatial_coverage(
         &self,
@@ -241,7 +243,7 @@ impl AnnotatedDoc {
         let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
         Ok(coverages)
     }
-  
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -566,17 +568,17 @@ impl DocumentMetadata {
         )
         .fetch_all(pool)
         .await?;
-      
+
         Ok(rows
             .into_iter()
             .map(|row| SubjectHeading {
-              id: row.id,
-              name: row.name,
-              status: row.status,
+                id: row.id,
+                name: row.name,
+                status: row.status,
             })
             .collect())
     }
-  
+
     async fn contributors<'a>(
         &'a self,
         ctx: &Context<'a>,

@@ -55,7 +55,7 @@ impl Database {
 
         Ok(rows)
     }
-  
+
     pub async fn spatial_coverage_for_document(
         &self,
         doc_id: Uuid,
@@ -63,14 +63,14 @@ impl Database {
         let rows = sqlx::query_file_as!(
             SpatialCoverage,
             "queries/get_spatial_coverage_by_document_id.sql",
-          doc_id
+            doc_id
         )
         .fetch_all(&self.client)
         .await?;
 
         Ok(rows)
     }
-            
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -910,7 +910,6 @@ impl Database {
             .execute(&mut *tx)
             .await?;
         }
-                
 
         // Commit updates
         tx.commit().await?;
