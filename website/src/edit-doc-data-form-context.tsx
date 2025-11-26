@@ -53,6 +53,7 @@ export const FormProvider = (props: { children: any }) => {
                 (values.document["date"] as unknown as Array<any>).length - 1
               ][0]
             : {},
+          subjectHeadings: values.document["subjectHeadings"],
           contributors: values.document["contributors"],
           spatialCoverage: values.document["spatialCoverage"] ?? [],
         },

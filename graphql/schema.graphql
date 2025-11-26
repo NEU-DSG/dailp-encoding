@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	Terms that that reflects Indigenous knowledge practices associated with a document
+	"""
+	subjectHeadings: [SubjectHeading!]!
+  """
 	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
@@ -235,7 +239,8 @@ enum ApprovalStatus {
 	PENDING
 	APPROVED
 	REJECTED
- }
+}
+
 """
 Request to attach user-recorded audio to a document
 """
@@ -685,6 +690,10 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
+  Terms that reflect Indigenous knowledge practices associated with the document
+	"""
+	subjectHeadings: [SubjectHeadingUpdate!]
+  """
 	The editors, translators, etc. of the document
 	"""
 	contributors: [UUID!]
@@ -1373,6 +1382,36 @@ input SpatialCoverageUpdate {
 	name: String!
 }
 
+
+"""
+Record to store a subject heading that reflects Indigenous knowledge
+practices associated with a document
+"""
+type SubjectHeading {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a subject heading
+	"""
+	status: ApprovalStatus!
+}
+
+input SubjectHeadingUpdate {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+}
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as

@@ -41,6 +41,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn subject_headings_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub async fn spatial_coverage_for_document(
         &self,
         doc_id: Uuid,
@@ -332,6 +347,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
@@ -471,6 +487,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
                 spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
@@ -857,6 +874,24 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
         // Update spatial coverages
         if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
@@ -882,7 +917,10 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -896,7 +934,7 @@ impl Database {
         self.paragraph_by_id(&paragraph.id).await
     }
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
 
@@ -2142,6 +2180,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
@@ -2215,6 +2254,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
@@ -2839,6 +2879,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

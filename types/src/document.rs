@@ -1,15 +1,19 @@
+use crate::doc_metadata::{
+    ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate};
-use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
-use futures::TryStreamExt;
-use itertools::Itertools;
+
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
+
+use futures::TryStreamExt;
+use itertools::Itertools;
 use tokio::fs::read_to_string;
 use uuid::Uuid;
 
@@ -220,6 +224,16 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// Terms that that reflects Indigenous knowledge practices associated with a document
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<Database>()?;
+        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
+        Ok(headings)
+    }
+
     /// The locations associated with this document
     async fn spatial_coverage(
         &self,
@@ -229,6 +243,7 @@ impl AnnotatedDoc {
         let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
         Ok(coverages)
     }
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -359,6 +374,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
     /// The editors, translators, etc. of the document
     pub contributors: MaybeUndefined<Vec<Uuid>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
@@ -511,6 +528,8 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Option<Vec<Contributor>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
@@ -536,6 +555,30 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
+    /// Fetch all subject headings linked to this document
+    async fn subject_headings<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SubjectHeading>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SubjectHeading {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+
     async fn contributors<'a>(
         &'a self,
         ctx: &Context<'a>,

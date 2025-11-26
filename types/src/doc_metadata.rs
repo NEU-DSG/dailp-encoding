@@ -36,16 +36,40 @@ impl FromStr for ApprovalStatus {
 
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
-    /// Documents associated with the subject heading
-    pub documents: Vec<DocumentReference>,
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
     pub status: ApprovalStatus,
+}
+
+// For updating subject headings
+#[derive(async_graphql::InputObject)]
+pub struct SubjectHeadingUpdate {
+    /// UUID for the subject heading
+    pub id: Uuid,
+    /// Name of the subject heading
+    pub name: String,
+}
+
+/// Get all approved subject headings
+#[async_graphql::ComplexObject]
+impl SubjectHeading {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts SubjectHeading struct to corresponding Uuid
+impl From<&SubjectHeading> for Uuid {
+    fn from(s: &SubjectHeading) -> Self {
+        s.id
+    }
 }
 
 /// Stores the physical or digital medium associated with a document

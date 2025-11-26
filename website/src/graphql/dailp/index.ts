@@ -95,6 +95,8 @@ export type AnnotatedDoc = {
   readonly sources: ReadonlyArray<SourceAttribution>
   /** The locations associated with this document */
   readonly spatialCoverage: ReadonlyArray<SpatialCoverage>
+  /** Terms that that reflects Indigenous knowledge practices associated with a document */
+  readonly subjectHeadings: ReadonlyArray<SubjectHeading>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -227,6 +229,7 @@ export enum ApprovalStatus {
   Pending = "PENDING",
   Rejected = "REJECTED",
 }
+
 /** Request to attach user-recorded audio to a document */
 export type AttachAudioToDocumentInput = {
   /**
@@ -540,6 +543,8 @@ export type DocumentMetadataUpdate = {
   readonly id: Scalars["UUID"]
   /** The physical locations associated with a document (e.g. where it was written, found) */
   readonly spatialCoverage: InputMaybe<ReadonlyArray<SpatialCoverageUpdate>>
+  /** Terms that reflect Indigenous knowledge practices associated with the document */
+  readonly subjectHeadings: InputMaybe<ReadonlyArray<SubjectHeadingUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -1194,6 +1199,27 @@ export type SpatialCoverageUpdate = {
   readonly name: Scalars["String"]
 }
 
+/**
+ * Record to store a subject heading that reflects Indigenous knowledge
+ * practices associated with a document
+ */
+export type SubjectHeading = {
+  readonly __typename?: "SubjectHeading"
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a subject heading */
+  readonly status: ApprovalStatus
+}
+
+export type SubjectHeadingUpdate = {
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1752,6 +1778,12 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly subjectHeadings: ReadonlyArray<
+      { readonly __typename?: "SubjectHeading" } & Pick<
+        SubjectHeading,
+        "id" | "name" | "status"
+      >
     >
     readonly contributors: ReadonlyArray<
       { readonly __typename?: "Contributor" } & Pick<
@@ -3313,6 +3345,11 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    subjectHeadings {
+      id
+      name
+      status
     }
     contributors {
       id

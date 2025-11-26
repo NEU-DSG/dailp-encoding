@@ -831,6 +831,7 @@ impl Mutation {
             sources: vec![source],
             collection: None,
             genre: None,
+            subject_headings_ids: None,
             contributors: Some(vec![contributor]),
             spatial_coverage_ids: None,
             translation: None,
