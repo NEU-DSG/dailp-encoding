@@ -587,6 +587,29 @@ input CurateWordAudioInput {
 	includeInEditedCollection: Boolean!
 }
 
+input CurrentUserUpdate {
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+}
+
 type Date {
 	"""
 	The year of this date
@@ -1093,6 +1116,10 @@ type Mutation {
 	"""
 	updateUser(user: UserUpdate!): User!
 	"""
+	Updates the current logged in user's information
+	"""
+	updateCurrentUser(user: CurrentUserUpdate!): User!
+	"""
 	Adds a bookmark to the user's list of bookmarks.
 	"""
 	addBookmark(documentId: UUID!): AnnotatedDoc!
@@ -1335,6 +1362,10 @@ type Query {
 	dailpUserById(id: UUID!): User!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
+	"""
+	Gets the current dailp_user, if authenticated
+	"""
+	currentUser: User!
 }
 
 """

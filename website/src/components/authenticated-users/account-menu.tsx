@@ -32,7 +32,11 @@ export const AccountMenu = () => {
 }
 
 const AccountActionsMenu = (p: { groups?: readonly Dailp.UserGroup[] }) => {
-  let actions = [<Link href="/dashboard">Dashboard</Link>, <ConfirmLogout />]
+  let actions = [
+    <Link href="/profile">My Profile</Link>,
+    <Link href="/dashboard">Dashboard</Link>,
+    <ConfirmLogout />,
+  ]
   let groups: string[] =
     p.groups && p.groups.length > 0
       ? p.groups.map((x) => x.toLowerCase().slice(0, x.length - 1))

@@ -1,13 +1,23 @@
-import { Tab, TabList, TabPanel, useDialogState } from "reakit"
+import {
+  unstable_Form as Form,
+  Tab,
+  TabList,
+  TabPanel,
+  useDialogState,
+} from "reakit"
 import { UserRole, useUserRole } from "src/auth"
+import { useMediaQuery } from "src/custom-hooks"
 import {
   DocumentFieldsFragment,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
+import { mediaQueries } from "src/style/constants"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
+import { FormProvider } from "./edit-profile-sidebar-form-context"
+import { LayoutVariant, ProfileSidebarLayout } from "./profile-sidebar-layout"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -18,51 +28,66 @@ enum Tabs {
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
   const curRole = useUserRole()
+  const isDesktop = useMediaQuery(mediaQueries.medium)
+
   return (
     <>
-      <h1 className={css.dashboardHeader}>Dashboard</h1>
-      <div className={css.wideAndTop}>
-        <TabList
-          {...tabs}
-          id="document-tabs-header"
-          className={css.dashboardTabs}
-          aria-label="Document View Types"
-        >
-          <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
-            Bookmarked Documents
-          </Tab>
-          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-            Recent Activity
-          </Tab>
-          {curRole == UserRole.Admin && (
-            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
-              Admin tools
+      {/* Container for the ProfileSidebar and main dashboard content*/}
+      <div className={css.dashboardLayout}>
+        {/* Profile sidebar - 1/4 width */}
+
+        {isDesktop && (
+          <FormProvider>
+            <ProfileSidebarLayout layout={LayoutVariant.Sidebar} />
+          </FormProvider>
+        )}
+
+        {/* Main dashboard content - 3/4 width */}
+        <div className={css.mainContent}>
+          <h1 className={css.dashboardHeader}>Dashboard</h1>
+          <TabList
+            {...tabs}
+            id="document-tabs-header"
+            className={css.dashboardTabs}
+            aria-label="Document View Types"
+          >
+            <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
+              Bookmarked Documents
             </Tab>
-          )}
-        </TabList>
+            <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+              Recent Activity
+            </Tab>
+            {curRole == UserRole.Admin && (
+              <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+                Admin tools
+              </Tab>
+            )}
+          </TabList>
 
-        <TabPanel
-          {...tabs}
-          id={Tabs.BOOKMARKS}
-          className={css.dashboardTabPanel}
-        >
-          <BookmarksTab />
-        </TabPanel>
+          <TabPanel
+            {...tabs}
+            id={Tabs.BOOKMARKS}
+            className={css.dashboardTabPanel}
+          >
+            <BookmarksTab />
+          </TabPanel>
 
-        <TabPanel
-          {...tabs}
-          id={Tabs.ACTIVITY}
-          className={css.dashboardTabPanel}
-        >
-          <ActivityTab />
-        </TabPanel>
-        <TabPanel
-          {...tabs}
-          id={Tabs.ADMIN_TOOLS}
-          className={css.dashboardTabPanel}
-        >
-          <AdminToolsTab />
-        </TabPanel>
+          <TabPanel
+            {...tabs}
+            id={Tabs.ACTIVITY}
+            className={css.dashboardTabPanel}
+          >
+            <ActivityTab />
+          </TabPanel>
+
+          <TabPanel
+            {...tabs}
+            id={Tabs.ADMIN_TOOLS}
+            className={css.dashboardTabPanel}
+          >
+            <AdminToolsTab />
+          </TabPanel>
+        </div>
       </div>
     </>
   )
