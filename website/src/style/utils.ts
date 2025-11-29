@@ -1,16 +1,6 @@
 import { StyleRule } from "@vanilla-extract/css"
 import cx from "classnames"
 import React from "react"
-import {
-  colors,
-  fonts,
-  hsize,
-  hspace,
-  mediaQueries,
-  rhythm,
-  thickness,
-  vspace,
-} from "src/style/constants"
 
 export function withClass<T extends { className?: string }>(
   css: string,

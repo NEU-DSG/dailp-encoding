@@ -6,7 +6,7 @@ import {
   Slider,
 } from "pure-react-carousel"
 import "pure-react-carousel/dist/react-carousel.es.css"
-import React, { ReactElement, ReactNode } from "react"
+import React from "react"
 import { BiLeftArrow, BiRightArrow } from "react-icons/bi/index"
 import * as css from "./carousel.css"
 

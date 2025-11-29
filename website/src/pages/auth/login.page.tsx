@@ -4,7 +4,7 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUser, useUserRole } from "src/auth"
+import { useUser } from "src/auth"
 import {
   FormFields,
   FormSubmitButton,

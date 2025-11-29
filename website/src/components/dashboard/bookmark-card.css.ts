@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { borderWidth, margin } from "polished"
+import { margin } from "polished"
 import {
   fonts,
   hsize,

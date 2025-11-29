@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { colors, hsize, hspace, vspace } from "src/style/constants"
+import { colors, hspace, vspace } from "src/style/constants"
 import { marginY, onHover, paddingX, paddingY } from "src/style/utils"
 
 // Styles intro chapters.

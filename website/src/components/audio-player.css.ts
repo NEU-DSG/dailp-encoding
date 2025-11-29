@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { important, margin } from "polished"
+import { margin } from "polished"
 import { colors, hspace, radii, vspace } from "src/style/constants"
 import { hideOnPrint } from "src/style/utils.css"
 

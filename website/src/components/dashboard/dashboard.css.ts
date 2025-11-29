@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { important, position } from "polished"
+import { important } from "polished"
 import {
   colors,
   fonts,

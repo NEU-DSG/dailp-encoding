@@ -1,23 +1,16 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { IconBaseProps } from "react-icons/lib"
-import {
-  MdClose,
-  MdSettings,
-  MdStayPrimaryLandscape,
-} from "react-icons/md/index"
+import { MdClose, MdSettings } from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
   useDialogState,
 } from "reakit"
-import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import { useRouteParams } from "./renderer/PageShell"
-import { colors } from "./style/theme-contract.css"
 import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }

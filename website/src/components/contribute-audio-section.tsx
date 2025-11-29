@@ -1,6 +1,5 @@
 import cx from "classnames"
 import { ReactElement, ReactNode } from "react"
-import * as Dailp from "src/graphql/dailp"
 import {
   contributeAudioContainer,
   statusMessage,

@@ -1,4 +1,3 @@
-import React from "react"
 import { withClass } from "src/style/utils"
 import * as css from "./select.css"
 
