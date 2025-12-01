@@ -1,6 +1,6 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { Fragment, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import {
@@ -18,11 +18,14 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useUser } from "src/auth"
+import { UserRole, useUser, useUserRole } from "src/auth"
+import { useUserId } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
+import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -53,15 +56,9 @@ enum Tabs {
   INFO = "info-tab",
 }
 
-export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
-
-type NullPick<T, F extends keyof NonNullable<T>> = Pick<
-  NonNullable<T>,
-  F
-> | null
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
@@ -107,7 +104,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -224,7 +221,11 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-export const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({
+  doc,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+}) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -363,7 +364,7 @@ const DocumentContents = ({
   cherokeeRepresentation,
   wordPanelDetails,
 }: {
-  doc: Document
+  doc: Dailp.DocumentFieldsFragment
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
@@ -446,136 +447,143 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
-    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
-    audioRecording?: NullPick<
-      Dailp.AnnotatedDoc["audioRecording"],
-      "resourceUrl"
-    >
-  }
+  doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
-  const year = p.doc.date?.year ? `${p.doc.date.year}` : ""
-
+  const userId = useUserId()
+  const role = useUserRole()
   return (
     <header className={css.docHeader}>
-      <div className={css.container}>
-        <div className={`${css.documentLayout} lg:flex-row flex-col`}>
-          {/* Document image (thumbnail or placeholder if not available) */}
-          <div className={css.documentImageContainer}>
-            <img
-              src="https://teva.contentdm.oclc.org/iiif/2/tfd:328/full/730,/0/default.jpg?page=1"
-              alt={p.doc.title}
-              className={`${css.documentImage} lg:w-80 lg:h-96 w-full h-72`}
-            />
+      {p.breadcrumbs && (
+        <Breadcrumbs aria-label="Breadcrumbs">
+          {p.breadcrumbs.map((crumb) => (
+            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+              {crumb.name}
+            </Link>
+          ))}
+        </Breadcrumbs>
+      )}
+
+      <h1 className={css.docTitle}>
+        {p.doc.title}
+        {p.doc.date && ` (${p.doc.date.year})`}{" "}
+      </h1>
+
+      <div className={css.bottomPadded}>
+        {user ? (
+          <BookmarkButton
+            documentId={p.doc.id}
+            isBookmarked={p.doc.bookmarkedOn !== null}
+          />
+        ) : (
+          <></>
+        )}
+        {p.doc.editedAudio.length === 0 && !isMobile && (
+          <div id="no-audio-message">
+            <strong>No Audio Available</strong>
           </div>
-
-          <div className={css.contentSection}>
-            {/* Breadcrumbs */}
-            {p.breadcrumbs && (
-			        <Breadcrumbs aria-label="Breadcrumbs">
-			          {p.breadcrumbs.map((crumb) => (
-			            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-			              {crumb.name}
-			            </Link>
-			          ))}
-			        </Breadcrumbs>
-			      )}
-
-            {/* Title and year created */}
-            <div className={css.titleContainer}>
-              <h1 className={`${css.title} lg:text-5xl text-3xl`}>
-                {p.doc.title}
-                {year && (
-                  <span
-                    className={`${css.year} lg:text-2xl text-xl lg:ml-4 ml-2`}
-                  >
-                    {year}
-                  </span>
-                )}
-              </h1>
-            </div>
-
-            {/* Document types (placeholders until backend provides these fields) */}
-            <div className={`${css.documentTypes} lg:flex-row flex-col`}>
-              <div className={css.documentType}>
-                <div className={`${css.documentIcon} lg:w-8 lg:h-8 w-6 h-6`}>
-                  📄
-                </div>
-                <span
-                  className={`${css.documentTypeText} lg:text-lg text-base`}
+        )}
+        <div className={css.alignRight}>
+          {!isMobile ? (
+            <Button onClick={() => window.print()}>Print</Button>
+          ) : null}
+        </div>
+      </div>
+      <div id="audio-and-recording-container">
+        <div>
+          {/* only show document audio to non-editors , editors can see which ones are shown from checkmark*/}
+          {p.doc.editedAudio.length > 0 && role !== UserRole.Editor && (
+            <>
+              <h3>Document Audio:</h3>
+              {p.doc.editedAudio.map((audio, index) => (
+                <div
+                  id={`document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
                 >
-                  Legal Document
-                </span>
-              </div>
-              <div className={css.documentType}>
-                <div className={`${css.documentIcon} lg:w-8 lg:h-8 w-6 h-6`}>
-                  📋
-                </div>
-                <span
-                  className={`${css.documentTypeText} lg:text-lg text-base`}
-                >
-                  Manuscript
-                </span>
-              </div>
-            </div>
-
-            {/* Description (replace with actual data from backend later) */}
-            <p className={`${css.description} lg:text-base text-sm`}>
-              {"A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority."}
-            </p>
-
-            {/* Action buttons (bookmark, print, audio) */}
-            <div className={`${css.actionButtons} lg:flex-row flex-col`}>
-              {/* Audio Button */}
-              {p.doc.audioRecording ? ( // TODO Implement sticky audio bar
-                <button
-                  className={`${css.actionButton} lg:px-6 lg:py-3 px-5 py-2`}
-                >
-                  <span
-                    className={`${css.buttonIcon} lg:w-5 lg:h-5 w-4 h-4`}
-                  >
-                    🔊
-                  </span>
                   <AudioPlayer
+                    contributor={audio.recordedBy?.displayName}
+                    recordedAt={
+                      audio.recordedAt?.formattedDate
+                        ? new Date(audio.recordedAt.formattedDate)
+                        : undefined
+                    }
                     style={{ flex: 1 }}
-                    audioUrl={p.doc.audioRecording.resourceUrl}
+                    audioUrl={audio.resourceUrl}
                     showProgress
                   />
-                </button>
-              ) : (
-                !isMobile && (
-						      <div id="no-audio-message">
-						        <strong>Audio Not Yet Available</strong>
-						      </div>
-						    )
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {role === UserRole.Contributor && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map(
+                (audio, index) =>
+                  audio.recordedBy?.id === userId && (
+                    <div key={index}>
+                      <AudioPlayer
+                        contributor={"you"}
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
+                        audioUrl={audio.resourceUrl}
+                        showProgress
+                      />
+                    </div>
+                  )
               )}
-
-              {/* Print button */}
-							<div className={css.alignRight}>
-							  {!isMobile ? (
-							    <Button
-							      onClick={() => window.print()}
-							      className={css.actionButton}
-							    >
-							      <span className={css.buttonIcon}>
-							        🖨️
-							      </span>
-							      Print
-							    </Button>
-							  ) : null}
-							</div>
-							
-							{/* Bookmark button */}
-							{user && (
-							  <BookmarkButton
-							    documentId={p.doc.id}
-							    isBookmarked={p.doc.bookmarkedOn !== null}
-							  />
-							)}
-            </div>
-          </div>
+            </>
+          )}
+          {role === UserRole.Editor && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map((audio, index) => (
+                <div
+                  id={`user-contributed-document-audio-player-${index}`}
+                  className={css.documentAudioContainer}
+                  key={index}
+                >
+                  {role === UserRole.Editor && (
+                    <>
+                      <DocumentAudioWithCurate
+                        contributor={
+                          audio.recordedBy?.displayName ?? "Unknown Contributor"
+                        }
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
+                        documentId={p.doc.id}
+                        audio={audio}
+                      />
+                      {!isMobile && (
+                        <div>
+                          <a href={audio.resourceUrl}>
+                            <Button>Download Audio</Button>
+                          </a>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {(role === UserRole.Editor || role === UserRole.Contributor) && (
+            <RecordDocumentAudioPanel document={p.doc} />
+          )}
         </div>
       </div>
     </header>
@@ -596,15 +604,17 @@ export const BookmarkButton = (props: {
     <>
       {props.isBookmarked ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
-        <IconTextButton
-          icon={<MdOutlineBookmarkRemove />}
-          className={css.BookmarkButton}
-          onClick={() => {
-            removeBookmarkMutation({ documentId: props.documentId })
-          }}
-        >
-          Un-Bookmark
-        </IconTextButton>
+        <>
+          <IconTextButton
+            icon={<MdOutlineBookmarkRemove />}
+            className={css.BookmarkButton}
+            onClick={() => {
+              removeBookmarkMutation({ documentId: props.documentId })
+            }}
+          >
+            Un-Bookmark
+          </IconTextButton>
+        </>
       ) : (
         <IconTextButton
           icon={<MdOutlineBookmarkAdd />}

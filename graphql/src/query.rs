@@ -3,20 +3,23 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
+    page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CreateEditedCollectionInput,
-    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
+    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
+    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
+    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
+    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
-use itertools::Itertools;
+use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-        EditedCollection, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate,
-        WordsInDocument,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
 };
 
@@ -34,6 +37,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .all_edited_collections()
+            .await?)
+    }
+
+    async fn page_by_path(&self, context: &Context<'_>, path: String) -> FieldResult<Option<Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .page_by_path(&path)
             .await?)
     }
 
@@ -376,6 +387,14 @@ impl Query {
             .abbreviation_id_from_short_name(&short_name)
             .await?)
     }
+
+    async fn menu_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_menu_by_slug(slug)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -617,7 +636,7 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
-    /// Decide if a piece audio should be included in edited collection
+    /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn curate_word_audio(
         &self,
@@ -631,7 +650,7 @@ impl Mutation {
         let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_audio_visibility(
+            .update_word_audio_visibility(
                 &input.word_id,
                 &input.audio_slice_id,
                 input.include_in_edited_collection,
@@ -643,6 +662,35 @@ impl Mutation {
             .loader()
             .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
             .await?)
+    }
+
+    /// Decide if a piece of document audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_document_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateDocumentAudioInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let document_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_document_audio_visibility(
+                &input.document_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(
+                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?,
+            ))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     /// Attach audio that has already been uploaded to S3 to a particular word
@@ -669,6 +717,31 @@ impl Mutation {
             .await?)
     }
 
+    /// Attach audio that has already been uploaded to S3 to a particular document
+    /// Assumes user requesting mutation recorded the audio
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn attach_audio_to_document(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToDocumentInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let _media_slice_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_document(&input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(input.document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
+    }
+
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_document_metadata(
         &self,
@@ -681,6 +754,124 @@ impl Mutation {
             .update_document_metadata(document)
             .await?)
     }
+
+    /// Minimal mutation to add a document with only essential fields
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn add_document(
+        &self,
+        context: &Context<'_>,
+        input: CreateDocumentFromFormInput,
+    ) -> FieldResult<AddDocumentPayload> {
+        let title = input.document_name;
+        // Get info for the user currently signed in
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let user_profile_data = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&user.id)
+            .await?;
+        let contributor = Contributor {
+            id: user.id,
+            name: user_profile_data.display_name,
+            // get users display name. TODO we should more rigorously check this value for errors
+            role: Some(ContributorRole::Transcriber), // TODO Ask Ellen, Cara, Shireen about this terminology
+        };
+        let today = dailp::chrono::Utc::now().date_naive();
+        let document_date = dailp::Date::new(today);
+        let document_id = Uuid::new_v4();
+        let short_name = dailp::slugify(&title).to_ascii_uppercase();
+        let source = SourceAttribution {
+            name: input.source_name,
+            link: input.source_url,
+        };
+        let mut sections = Vec::new();
+        for (i, _raw_text_line) in input.raw_text_lines.iter().enumerate() {
+            let translation: Option<String> = Some(input.english_translation_lines[i].join(" "));
+            let mut segs = Vec::new();
+            for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
+                let form = AnnotatedForm {
+                    id: None,
+                    source: src_word.clone(),
+                    normalized_source: None,
+                    simple_phonetics: None,
+                    phonemic: None,
+                    segments: None,
+                    english_gloss: vec![],
+                    commentary: None,
+                    line_break: None,
+                    page_break: None,
+                    position: PositionInDocument {
+                        document_id: dailp::DocumentId(document_id),
+                        page_number: "1".to_string(),
+                        index: j as i64,
+                        geometry: None,
+                    },
+                    date_recorded: None,
+                    ingested_audio_track: None,
+                };
+                segs.push(AnnotatedSeg::Word(form));
+            }
+            let section = TranslatedSection {
+                translation,
+                source: segs,
+            };
+            sections.push(section);
+        }
+        let page = TranslatedPage {
+            paragraphs: sections,
+        };
+        let meta = DocumentMetadata {
+            id: dailp::DocumentId(document_id),
+            short_name: short_name.clone(),
+            title: title.clone(),
+            sources: vec![source],
+            collection: None,
+            genre: None,
+            subject_headings_ids: None,
+            contributors: Some(vec![contributor]),
+            spatial_coverage_ids: None,
+            translation: None,
+            page_images: None,
+            date: Some(document_date),
+            is_reference: false,
+            audio_recording: None,
+            order_index: 0,
+        };
+        let annotated_doc = AnnotatedDoc {
+            meta: meta.clone(),
+            segments: Some(vec![page]),
+        };
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        let (document_id, _chapter_id) = database
+            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .await?;
+
+        // Update the annotated_doc with the correct document_id from the database
+        let mut updated_annotated_doc = annotated_doc.clone();
+        updated_annotated_doc.meta.id = document_id;
+
+        // Insert the document contents (words and paragraphs) into the database
+        database
+            .insert_document_contents(updated_annotated_doc)
+            .await?;
+
+        let collection_slug = database.collection_slug_by_id(input.collection_id).await?;
+
+        Ok(AddDocumentPayload {
+            id: document_id.0,
+            title,
+            slug: short_name.clone(),
+            collection_slug: collection_slug
+                .ok_or_else(|| anyhow::format_err!("Failed to load collection"))?
+                .to_string(), // All user-created documents go to user_documents collection
+            chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
+        })
+    }
+
     #[graphql(
         guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
     )]
@@ -746,6 +937,25 @@ impl Mutation {
             .await?
             .to_string())
     }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_page(page)
+            .await?)
+    }
+
+    // dennis todo: should be admin, but admin accs not implemented yet
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_menu(menu)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
@@ -753,4 +963,24 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
+}
+
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct CreateDocumentFromFormInput {
+    pub document_name: String,
+    pub raw_text_lines: Vec<Vec<String>>,
+    pub english_translation_lines: Vec<Vec<String>>,
+    pub unresolved_words: Vec<String>,
+    pub source_name: String,
+    pub source_url: String,
+    pub collection_id: Uuid,
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct AddDocumentPayload {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub collection_slug: String,
+    pub chapter_slug: String,
 }

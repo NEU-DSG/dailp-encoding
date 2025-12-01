@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into page (slug, path, title, content)\nvalues ($1, $2, $3, $4)\non conflict (path) do update set\ntitle = excluded.title,\ncontent = excluded.content",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6353f976ce1b230cc524cbc6d2811b034ef8d5d8b4edad4fbef36143ff8293f2"
+}

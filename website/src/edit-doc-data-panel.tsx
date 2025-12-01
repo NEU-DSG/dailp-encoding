@@ -16,21 +16,9 @@ import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
 import * as css from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"
-import TextareaAutosize from "react-textarea-autosize";
-
-type EditDocPanelProps = {
-  document: Dailp.AnnotatedDoc
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (data: any) => void
-}
-
-type EditButtonProps = {
-  onEditClick?: () => void
-}
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
-export const EditButton = ({ onEditClick }: EditButtonProps) => {
+export const EditButton = () => {
   const { form, isEditing, setIsEditing } = useForm()
 
   return (
@@ -63,7 +51,6 @@ export const EditButton = ({ onEditClick }: EditButtonProps) => {
           className={css.editPanelButton}
           onClick={() => {
             setIsEditing(true)
-            onEditClick?.()
           }}
         >
           Edit
@@ -74,28 +61,14 @@ export const EditButton = ({ onEditClick }: EditButtonProps) => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
+export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
   const { form } = useForm()
 
   if (!form || !form.values.document) {
     return null
   }
-
-  // New placeholder fields
-  // in schema, can remove
-  // call to useFormInput (something undefined that shouldn't be)
-  // check that everything is getting set + checks for everything getting set
-  const [description, setDescription] = useState<string>("A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority.")
-  const [genre, setGenre] = useState<string>("Legal Document")
-  const [format, setFormat] = useState<string>("Manuscript")
-	const [pages, setPages] = useState<string>("1-24")
-	const [creator, setCreator] = useState<string>("Sam Houston")
-  const [source, setSource] = useState<string>("https://teva.contentdm.oclc.org/digital/collection/tfd/id/304")
-	const [doi, setDOI] = useState<string>("https://doi.org/10.1000/182")
-	
-	// Do contributors, keywords, subject headings, languages, spatial coverage, citation later on
-
+  form.values.document["id "] = docData.id
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [day, setDay] = useState<Number>()
   const [month, setMonth] = useState<Number>()
@@ -117,38 +90,6 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
     }
   }
 
-  useEffect(() => {
-    if (!docData) return
-  
-    form.values({
-      document: {
-        id: docData.id,
-        title: docData.title || "",
-        date: selectedDate ? [{ day, month, year }] : [],
-        description,
-        genre,
-        format,
-        pages,
-        creator,
-        source,
-        doi,
-      },
-    })
-  }, [
-    docData,
-    selectedDate,
-    day,
-    month,
-    year,
-    description,
-    genre,
-    format,
-    pages,
-    creator,
-    source,
-    doi,
-  ])
-  
   // Use form.push to update the form state manually
   useEffect(() => {
     form.push(["document", "id"], [docData.id.toString()]) // push manually
@@ -163,132 +104,35 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
 
   return (
     <>
-	    {/* Display a label for the form input if it exists. */}
-
-      {/* Title */}
+      {/* Display a label for the form input if it exists. */}
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        name="title"
-        label="Title"
+        name={"title"}
+        label={"Title"}
       />
       <FormInput
         {...form}
         className={css.formInput}
         name={["document", "title"]}
-        disabled={!(userRole === UserRole.Editor)}
+        disabled={!(userRole == UserRole.Editor)}
       />
       <p />
 
-      {/* Date created */}
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        name="written_at"
-        label="Written At"
+        name={"written_at"}
+        label={"Written At"}
       />
       <div className={css.dateInputConatiner}>
         <DatePicker
-          onChange={handleDateChange}
+          onChange={(date: any) => handleDateChange(date)}
           value={selectedDate}
           format="dd-MM-y"
-          disabled={!(userRole === UserRole.Editor)}
+          disabled={!(userRole == UserRole.Editor)}
         />
       </div>
-      <p />
-      
-      {/* Description */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Description"
-      />
-      <TextareaAutosize
-        className={css.formInput}
-        minRows={1}
-        maxRows={10}
-        value={description}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-
-      {/* Genre */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Genre" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={genre}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGenre(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-
-      {/* Format */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Format" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={format}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormat(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-      
-      {/* Pages */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Pages (start, end)" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={pages}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPages(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-
-      {/* Creator */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Creator (separate by ‘,’ if multiple)" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={creator}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreator(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-
-      {/* Source */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Source" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={source}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSource(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-
-       {/* DOI */}
-       <FormLabel 
-        className={css.formInputLabel} 
-        label="DOI" 
-      />
-      <FormInput
-        className={css.formInput}
-        value={doi}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDOI(e.target.value)}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
     </>
   )
 }

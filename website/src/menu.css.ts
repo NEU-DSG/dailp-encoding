@@ -58,7 +58,7 @@ export const subMenuItems = style([
 
 export const drawerItem = style([
   {
-    display: "inline-block",
+    display: "block",
     padding: vspace.quarter,
     textDecoration: "none",
     selectors: {
@@ -116,6 +116,9 @@ export const navDrawer = style([
 ])
 
 export const drawerList = style({
+  overflow: "scroll",
+  height: "100vh",
+  paddingBottom: "3rem",
   listStyle: "none",
   paddingInlineStart: 0,
 })

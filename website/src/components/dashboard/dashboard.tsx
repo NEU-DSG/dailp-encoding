@@ -1,7 +1,7 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
 import { UserRole, useUserRole } from "src/auth"
 import {
-  useAnnotatedDocumentByIdQuery,
+  DocumentFieldsFragment,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
@@ -83,15 +83,25 @@ export const AdminToolsTab = () => {
         <br />
         <Link href="#">Edit Existing Collection</Link>
       </div>
+      <br />
+
       <div>
         <h2>Manage Documents</h2>
         <Link href="#">Create New Document(s)</Link>
       </div>
+
+      <br />
       <div>
         <h2>Manage Users</h2>
         <Link href="#">Update Permissions for Existing User</Link>
         <br />
         <Link href="#">Manage Teams</Link>
+      </div>
+      <br />
+
+      <div>
+        <h2>Create / Edit Main Menu</h2>
+        <Link href="#">Edit Main Menu</Link>
       </div>
     </>
   )
@@ -103,9 +113,9 @@ export const BookmarksTab = () => {
     <>
       {data && data.bookmarkedDocuments.length > 0 ? (
         <ul className={css.noBullets}>
-          {data.bookmarkedDocuments?.map((doc: any) => (
+          {data.bookmarkedDocuments?.map((doc) => (
             <li key={doc.id}>
-              <BookmarksTabItem documentId={doc.id} />
+              <BookmarksTabItem doc={doc} />
             </li>
           ))}
         </ul>
@@ -132,19 +142,15 @@ export const BookmarksTab = () => {
   )
 }
 
-export const BookmarksTabItem = (props: { documentId: string }) => {
-  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
-    variables: { id: props.documentId },
-  })
-  const docData = doc?.documentByUuid
-  const docFullPath = docData?.chapters?.[0]?.path
+export const BookmarksTabItem = (props: { doc: DocumentFieldsFragment }) => {
+  const docFullPath = props.doc.chapters?.[0]?.path
   let docPath = ""
   if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
     docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
   }
   console.log(docPath)
   // Crops the thumbnail to 50% of the original size and then scales it to 500x500
-  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
+  const thumbnailUrl = (props.doc.translatedPages?.[0]?.image?.url +
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
@@ -152,10 +158,10 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
         <BookmarkCard
           thumbnail={thumbnailUrl}
           header={{
-            text: docData?.title as unknown as string,
+            text: props.doc.title as unknown as string,
             link: `/collections/${docPath}`,
           }}
-          description={docData?.date?.year as unknown as string}
+          description={props.doc.date?.year as unknown as string}
         />
       </div>
     </>

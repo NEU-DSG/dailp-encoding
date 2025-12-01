@@ -1,3 +1,11 @@
+type AddDocumentPayload {
+	id: UUID!
+	title: String!
+	slug: String!
+	collectionSlug: String!
+	chapterSlug: String!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -42,10 +50,6 @@ type AnnotatedDoc {
 	"""
 	isReference: Boolean!
 	"""
-	The audio recording resource for this entire document
-	"""
-	audioRecording: AudioSlice
-	"""
 	Arbitrary number used for manually ordering documents in a collection.
 	For collections without manual ordering, use zero here.
 	"""
@@ -73,6 +77,30 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	Terms that that reflects Indigenous knowledge practices associated with a document
+	"""
+	subjectHeadings: [SubjectHeading!]!
+  """
+	The locations associated with this document
+	"""
+	spatialCoverage: [SpatialCoverage!]!
+  """
+  The audio for this document that was ingested from GoogleSheets, if there is any.
+	"""
+	ingestedAudioTrack: AudioSlice
+	"""
+	A slices of audio associated with this word in the context of a document.
+	This audio has been selected by an editor from contributions, or is the
+	same as the ingested audio track, if one is available.
+	"""
+	editedAudio: [AudioSlice!]!
+	"""
+	Audio for this word that has been recorded by community members. Will be
+	empty if user does not have access to uncurated contributions.
+	TODO! User guard for contributors only
+	"""
+	userContributedAudio: [AudioSlice!]!
 }
 
 """
@@ -203,6 +231,30 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
+
+"""
+Request to attach user-recorded audio to a document
+"""
+input AttachAudioToDocumentInput {
+	"""
+	Document to bind audio to
+	"""
+	documentId: UUID!
+	"""
+	A URL to a Cloudfront-proxied user-recorded reading of a document.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String!
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -416,6 +468,10 @@ that specifies the type of their contributions.
 """
 type Contributor {
 	"""
+	UUID of the contributor
+	"""
+	id: UUID!
+	"""
 	Full name of the contributor
 	"""
 	name: String!
@@ -463,10 +519,18 @@ contributions to the associated item (add or revise as needed)
 enum ContributorRole {
 	TRANSCRIBER
 	TRANSLATOR
-	EDITOR
 	ANNOTATOR
 	CULTURAL_ADVISOR
-	AUTHOR
+}
+
+input CreateDocumentFromFormInput {
+	documentName: String!
+	rawTextLines: [[String!]!]!
+	englishTranslationLines: [[String!]!]!
+	unresolvedWords: [String!]!
+	sourceName: String!
+	sourceUrl: String!
+	collectionId: UUID!
 }
 
 """
@@ -488,7 +552,25 @@ input CreateEditedCollectionInput {
 }
 
 """
-Request to update if a piece of audio should be included in an edited collection
+Request to update if a piece of document audio should be included in an edited collection
+"""
+input CurateDocumentAudioInput {
+	"""
+	Document audio is attached to
+	"""
+	documentId: UUID!
+	"""
+	Audio to include/exclude
+	"""
+	audioSliceId: UUID!
+	"""
+	New value
+	"""
+	includeInEditedCollection: Boolean!
+}
+
+"""
+Request to update if a piece of word audio should be included in an edited collection
 """
 input CurateWordAudioInput {
 	"""
@@ -574,6 +656,10 @@ type DocumentCollection {
 	"""
 	name: String!
 	"""
+	Database ID for this collection
+	"""
+	id: UUID
+	"""
 	URL-ready slug for this collection, generated from the name
 	"""
 	slug: String!
@@ -603,6 +689,18 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+  Terms that reflect Indigenous knowledge practices associated with the document
+	"""
+	subjectHeadings: [SubjectHeadingUpdate!]
+  """
+	The editors, translators, etc. of the document
+	"""
+	contributors: [UUID!]
+  """
+  The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	spatialCoverage: [SpatialCoverageUpdate!]
 }
 
 type DocumentPage {
@@ -801,6 +899,82 @@ type Markdown {
 }
 
 """
+Menu object representing the navbar menu that can be edited.
+"""
+type Menu {
+	"""
+	Id for menu.
+	"""
+	id: UUID!
+	"""
+	Name for the menu.
+	"""
+	name: String!
+	"""
+	Slug for the menu.
+	"""
+	slug: String!
+	"""
+	Menu items.
+	"""
+	items: [MenuItem!]!
+}
+
+"""
+A single item in the menu.
+"""
+type MenuItem {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItem!]
+}
+
+"""
+Input for a single menu item.
+"""
+input MenuItemInput {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
+Input for updating a menu.
+"""
+input MenuUpdate {
+	"""
+	Menu id.
+	"""
+	id: UUID!
+	"""
+	New name (optional).
+	"""
+	name: String
+	"""
+	New menu items (optional).
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
 One particular morpheme and all the known words that contain that exact morpheme.
 """
 type MorphemeReference {
@@ -927,17 +1101,50 @@ type Mutation {
 	"""
 	removeBookmark(documentId: UUID!): AnnotatedDoc!
 	"""
-	Decide if a piece audio should be included in edited collection
+	Decide if a piece of word audio should be included in edited collection
 	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	"""
+	Decide if a piece of document audio should be included in edited collection
+	"""
+	curateDocumentAudio(input: CurateDocumentAudioInput!): AnnotatedDoc!
 	"""
 	Attach audio that has already been uploaded to S3 to a particular word
 	Assumes user requesting mutation recoreded the audio
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
+	"""
+	Attach audio that has already been uploaded to S3 to a particular document
+	Assumes user requesting mutation recorded the audio
+	"""
+	attachAudioToDocument(input: AttachAudioToDocumentInput!): AnnotatedDoc!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Minimal mutation to add a document with only essential fields
+	"""
+	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertPage(page: NewPageInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
+}
+
+"""
+Input struct for a page.
+"""
+input NewPageInput {
+	"""
+	title of new page
+	"""
+	title: String!
+	"""
+	content for page, needs to be sanitized
+	"""
+	body: [String!]!
+	"""
+	path of new page
+	"""
+	path: String!
 }
 
 """
@@ -1041,6 +1248,7 @@ input PostCommentInput {
 
 type Query {
 	allEditedCollections: [EditedCollection!]!
+	pageByPath(path: String!): Page
 	editedCollection(slug: String!): EditedCollection
 	"""
 	Retrieves a chapter and its contents by its collection and chapter slug.
@@ -1126,6 +1334,7 @@ type Query {
 	"""
 	dailpUserById(id: UUID!): User!
 	abbreviationIdFromShortName(shortName: String!): UUID!
+	menuBySlug(slug: String!): Menu!
 }
 
 """
@@ -1144,6 +1353,65 @@ type SourceAttribution {
 	link: String!
 }
 
+"""
+Stores a spatial coverage associated with a document
+"""
+type SpatialCoverage {
+	"""
+	UUID for the place
+	"""
+	id: UUID!
+	"""
+	Name of the place
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a spatial coverage
+	"""
+	status: ApprovalStatus!
+}
+
+input SpatialCoverageUpdate {
+	"""
+	UUID for the spatial coverage
+	"""
+	id: UUID!
+	"""
+	Name of the spatial coverage
+	"""
+	name: String!
+}
+
+
+"""
+Record to store a subject heading that reflects Indigenous knowledge
+practices associated with a document
+"""
+type SubjectHeading {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a subject heading
+	"""
+	status: ApprovalStatus!
+}
+
+input SubjectHeadingUpdate {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+}
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
@@ -1230,6 +1498,8 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
+	name: String!
+	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }

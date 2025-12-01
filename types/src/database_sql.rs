@@ -1,8 +1,10 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::postgres::types::PgLTree;
+use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -10,6 +12,11 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::SpatialCoverage;
+use crate::page::ContentBlock;
+use crate::page::Markdown;
+use crate::page::NewPageInput;
+use crate::page::Page;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -19,10 +26,7 @@ use {
     async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
-    sqlx::{
-        postgres::{types::PgRange, PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
-    },
+    sqlx::{postgres::PgPoolOptions, query_file, query_file_as, query_file_scalar, Acquire},
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
@@ -37,6 +41,36 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn subject_headings_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
+    pub async fn spatial_coverage_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -227,6 +261,20 @@ impl Database {
             .collect())
     }
 
+    pub async fn document_contributor_audio(&self, document_id: &Uuid) -> Result<Vec<AudioSlice>> {
+        let contributor_audio = query_file_as!(
+            BasicAudioSlice,
+            "queries/document_contributor_audio.sql",
+            document_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(contributor_audio
+            .into_iter()
+            .map(AudioSlice::from)
+            .collect())
+    }
+
     pub async fn words_by_doc(
         &self,
         document_id: Option<DocumentId>,
@@ -299,6 +347,8 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -437,6 +487,8 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -744,9 +796,31 @@ impl Database {
         Ok(media_slice_id)
     }
 
-    /// Update if a piece of audio will be shown to readers
+    /// As above in `attach_audio_to_word`:
+    /// Creates media slice if doesn't yet exist for provided audio recording.
+    /// Adds join table entry attaching media slice to document.
+    /// Returns `id` of upserted media slice.
+    pub async fn attach_audio_to_document(
+        &self,
+        upload: &AttachAudioToDocumentInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_document.sql",
+            contributor_id,
+            upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.document_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
+
+    /// Update if a piece of word audio will be shown to readers
     /// Will return None if the word and audio assocation could not be found, otherwise word id.
-    pub async fn update_audio_visibility(
+    pub async fn update_word_audio_visibility(
         &self,
         word_id: &Uuid,
         audio_slice_id: &Uuid,
@@ -754,7 +828,7 @@ impl Database {
         editor_id: &Uuid,
     ) -> Result<Option<Uuid>> {
         let _word_id = query_file_scalar!(
-            "queries/update_audio_visibility.sql",
+            "queries/update_word_audio_visibility.sql",
             word_id,
             audio_slice_id,
             include_in_edited_collection,
@@ -765,9 +839,31 @@ impl Database {
         Ok(_word_id)
     }
 
+    /// Update if a piece of document audio will be shown to readers
+    /// Will return None if the document and audio assocation could not be found, otherwise document id.
+    pub async fn update_document_audio_visibility(
+        &self,
+        document_id: &Uuid,
+        audio_slice_id: &Uuid,
+        include_in_edited_collection: bool,
+        editor_id: &Uuid,
+    ) -> Result<Option<Uuid>> {
+        let _document_id = query_file_scalar!(
+            "queries/update_document_audio_visibility.sql",
+            document_id,
+            audio_slice_id,
+            include_in_edited_collection,
+            editor_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(_document_id)
+    }
+
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -775,13 +871,56 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
+
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -795,7 +934,7 @@ impl Database {
         self.paragraph_by_id(&paragraph.id).await
     }
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
 
@@ -982,14 +1121,21 @@ impl Database {
         .await?;
 
         {
-            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
-                .contributors
-                .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
+            let contributors = meta.contributors.iter().flatten();
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
+                })
                 .multiunzip();
+
             // Convert roles to Option<String> for SQL
             let role_strings: Vec<Option<String>> =
                 role.iter().map(|r| r.map(|r| r.to_string())).collect();
+
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -1046,13 +1192,13 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1107,7 +1253,7 @@ impl Database {
         let collection_id = query_file_scalar!(
             "queries/insert_edited_collection.sql",
             collection.title,
-            slug::slugify(&collection.title),
+            slug::slugify(&collection.title).replace("-", "_"),
             collection.description,
             collection.thumbnail_url,
         )
@@ -1128,6 +1274,7 @@ impl Database {
         Ok(vec![DocumentCollection {
             slug: item.slug,
             title: item.title,
+            id: None,
         }])
     }
 
@@ -1141,6 +1288,7 @@ impl Database {
             .map(|chapter| DocumentCollection {
                 slug: chapter.slug,
                 title: chapter.title,
+                id: None,
             })
             .collect())
     }
@@ -1560,7 +1708,24 @@ impl Database {
         Ok(DocumentCollection {
             slug: collection.slug,
             title: collection.title,
+            id: Some(collection.id),
         })
+    }
+
+    pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
+        Ok(
+            query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+                .fetch_optional(&self.client)
+                .await?,
+        )
+    }
+
+    /// Get collection slug by collection ID
+    pub async fn collection_slug_by_id(&self, collection_id: Uuid) -> Result<Option<String>> {
+        let result = query_file!("queries/edited_collection_by_id.sql", collection_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(result.map(|r| r.slug))
     }
 
     pub async fn chapter(
@@ -1568,9 +1733,42 @@ impl Database {
         collection_slug: String,
         chapter_slug: String,
     ) -> Result<Option<CollectionChapter>> {
+        // Try the original slugs first
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
+            chapter_slug
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        // If found, return it
+        if let Some(chapter_data) = chapter {
+            return Ok(Some(CollectionChapter {
+                id: chapter_data.id,
+                path: chapter_data
+                    .chapter_path
+                    .into_iter()
+                    .map(|s| (*s).into())
+                    .collect(),
+                index_in_parent: chapter_data.index_in_parent,
+                title: chapter_data.title,
+                document_id: chapter_data.document_id.map(DocumentId),
+                wordpress_id: chapter_data.wordpress_id,
+                section: chapter_data.section,
+            }));
+        }
+
+        // If not found, try with underscore/hyphen conversion for collection_slug
+        let alternative_collection_slug = if collection_slug.contains('-') {
+            collection_slug.replace("-", "_")
+        } else {
+            collection_slug.replace("_", "-")
+        };
+
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            alternative_collection_slug,
             chapter_slug
         )
         .fetch_optional(&self.client)
@@ -1624,12 +1822,299 @@ impl Database {
         }
     }
 
+    /// Insert a contributor attribution for a chapter
+    pub async fn insert_chapter_contributor_attribution(
+        &self,
+        chapter_id: &uuid::Uuid,
+        contributor_id: &uuid::Uuid,
+        contribution_role: &str,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_chapter_contributor_attribution.sql",
+            chapter_id,
+            contributor_id,
+            contribution_role
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    /// Insert a document into an edited collection and create a new chapter for it
+    /// Returns (document_id, chapter_id)
+    /// dennis todo : please clean this up
+    pub async fn insert_document_into_edited_collection(
+        &self,
+        document: AnnotatedDoc,
+        collection_id: Uuid,
+    ) -> Result<(DocumentId, Uuid)> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+        let next_index = -1;
+
+        let user_group_id = self.document_group_id_by_slug("user_documents").await?;
+
+        // Insert the document using the user_documents document group ID
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            user_group_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the document
+        {
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = contributors
+                .clone()
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
+                })
+                .collect();
+
+            if !names.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &names,
+                    &doc_id,
+                    &roles
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        let collection_slug = self.collection_slug_by_id(collection_id).await?;
+        // Create a new chapter for this document in the user_documents collection
+        let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
+        let chapter_path = PgLTree::from_str(&format!(
+            "{}.{}",
+            collection_slug.unwrap().replace("-", "_"),
+            chapter_slug
+        ))?;
+
+        let chapter_id = query_file_scalar!(
+            "queries/insert_chapter_with_document_id.sql",
+            meta.title, // Use document title as chapter title
+            document_uuid,
+            None::<i64>, // wordpress_id
+            0i64,        // index_in_parent (we can increment this later if needed)
+            chapter_path,
+            crate::CollectionSection::Body as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the new chapter
+        for contributor in meta.contributors.iter().flatten() {
+            query_file!("queries/upsert_contributor.sql", &contributor.name)
+                .execute(&mut *tx)
+                .await?;
+            let contributor_id =
+                query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
+                    .fetch_one(&mut *tx)
+                    .await?;
+            // Use map to handle Option<String> without fallback
+            let role = contributor.role.as_ref().map(|r| r.to_string());
+
+            let role_str: &str = role.as_deref().unwrap_or("");
+            query_file!(
+                "queries/insert_chapter_contributor_attribution.sql",
+                &chapter_id,
+                &contributor_id,
+                role_str
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for section in page.paragraphs {
+                    // Calculate the actual character range for this paragraph
+                    let total_chars: usize = section
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+
+                    let char_range: PgRange<i64> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+
+                    let _paragraph_id = query_file_scalar!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        char_range,
+                        section.translation.unwrap_or_default()
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+                    // Insert words with proper page_id and character ranges
+                    let mut word_char_index = starting_char_index;
+                    for word_seg in section.source {
+                        match word_seg {
+                            AnnotatedSeg::Word(word) => {
+                                let word_len = word.source.chars().count() as i64;
+                                let word_char_range: PgRange<i64> =
+                                    (word_char_index..word_char_index + word_len).into();
+
+                                self.insert_word(
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(word_char_range),
+                                )
+                                .await?;
+
+                                word_char_index += word_len;
+                            }
+                            _ => {}
+                        }
+                    }
+                    starting_char_index += total_chars as i64;
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok((document_id, chapter_id))
+    }
+
     pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
         Ok(
             query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
                 .fetch_one(&self.client)
                 .await?,
         )
+    }
+
+    pub async fn upsert_page(&self, input: NewPageInput) -> Result<String> {
+        // sanitize input
+        let title = input.title.trim();
+        // generate slug
+        let slug = slug::slugify(title);
+        // Ensure there is at least one body block and it is non-empty
+        let body = match input.body.first() {
+            Some(content) if !content.trim().is_empty() => content.clone(),
+            _ => return Err(anyhow::anyhow!("input body is empty")),
+        };
+
+        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
+            .execute(&self.client)
+            .await?;
+        Ok(input.path)
+    }
+
+    pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
+        let record = query_file!("queries/page_by_path.sql", path)
+            .fetch_optional(&self.client)
+            .await?;
+        if let Some(row) = record {
+            let blocks: Vec<ContentBlock> =
+                vec![ContentBlock::Markdown(Markdown { content: row.body })];
+            Ok(Some(Page::build(row.title, row.slug, blocks)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    //Ok(page)
+    pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
+        let menu = query_file!("queries/menu_by_slug.sql", slug)
+            .fetch_one(&self.client)
+            .await?;
+
+        let items_json: serde_json::Value = menu.items;
+        let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
+
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        let menu = query_file!(
+            "queries/update_menu.sql",
+            menu.id,
+            menu.name.clone().unwrap_or_default(),
+            slug::slugify(menu.name.unwrap_or_default()),
+            menu.items
+                .map(|items| serde_json::to_value(items).unwrap_or_default())
+        )
+        .fetch_one(&self.client)
+        .await?;
+        let items: Vec<MenuItem> = serde_json::from_value(menu.items).unwrap_or_default();
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
+        query_file!(
+            "queries/insert_menu.sql",
+            menu.name,
+            menu.slug,
+            serde_json::to_value(menu.items).unwrap_or_default()
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
     }
 }
 
@@ -1695,6 +2180,8 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -1767,6 +2254,8 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2069,6 +2558,7 @@ impl Loader<ContributorsForDocument> for Database {
                 (
                     ContributorsForDocument(x.document_id),
                     Contributor {
+                        id: x.id,
                         name: x.full_name,
                         role: x
                             .contribution_role
@@ -2389,6 +2879,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

@@ -18,8 +18,35 @@ select
       )
     ) filter (where contributor is not null),
     '[]'
-  )
-  as contributors
+  ) as contributors,
+  ( -- Subject Headings
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', sh.id,
+          'name', sh.name,
+          'status', sh.status
+    )), '[]')
+    from document_subject_heading dsh
+    join subject_heading sh on sh.id = dsh.subject_heading_id
+    where dsh.document_id = d.id
+  ) as subject_headings,
+  ( -- Spatial Coverage
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', sc.id,
+          'name', sc.name,
+          'status', sc.status
+        )
+      ),
+      '[]'
+    )
+    from document_spatial_coverage dsc
+    join spatial_coverage sc on sc.id = dsc.spatial_coverage_id
+    where dsc.document_id = d.id
+  ) as spatial_coverage
+
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
@@ -32,4 +59,4 @@ group by d.id,
   media_slice.id,
   media_resource.id,
   dailp_user.id,
-  ubd.bookmarked_on
+  ubd.bookmarked_on;
