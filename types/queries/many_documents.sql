@@ -34,7 +34,7 @@ select
     from document_language dl
     join language l on l.id = dl.language_id
     where dl.document_id = d.id
-  ) as languages
+  ) as languages,
   ( -- Subject Headings
     select coalesce(
       jsonb_agg(
