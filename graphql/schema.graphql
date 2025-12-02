@@ -81,12 +81,12 @@ type AnnotatedDoc {
 	Terms that that reflects Indigenous knowledge practices associated with a document
 	"""
 	subjectHeadings: [SubjectHeading!]!
-  """
+	"""
 	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
-  """
-  The audio for this document that was ingested from GoogleSheets, if there is any.
+	"""
+	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
 	"""
@@ -690,15 +690,15 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
-  Terms that reflect Indigenous knowledge practices associated with the document
+	Terms that reflect Indigenous knowledge practices associated with the document
 	"""
 	subjectHeadings: [SubjectHeadingUpdate!]
-  """
+	"""
 	The editors, translators, etc. of the document
 	"""
 	contributors: [UUID!]
-  """
-  The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
 }
@@ -1498,8 +1498,6 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
-	name: String!
-	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }

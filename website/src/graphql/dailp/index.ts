@@ -1265,8 +1265,6 @@ export type UserInfo = {
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
   readonly id: Scalars["UUID"]
-  readonly name: Scalars["String"]
-  readonly role: ContributorRole
 }
 
 export type UserUpdate = {

@@ -6,12 +6,12 @@ import { useCredentials } from "src/auth"
 import { Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
+import { EditDocumentModal, EditDocumentModalProps } from "./edit-document-modal"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
 import * as css from "./document.css"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
-
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
@@ -24,7 +24,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
   const token = useCredentials()
   const { form, isEditing } = useForm()
-
+ 
   const contributorsList = (
     <>
       <Helmet>
@@ -58,7 +58,12 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       )}
       {isEditing ? (
         <Form {...form}>
-          <EditDocPanel document={docData} />
+          <EditDocumentModal
+            isOpen={true}
+            onClose={() => {}}
+            onSubmit={(data) => console.log(data)}
+            documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
+          />
         </Form>
       ) : (
         <></>

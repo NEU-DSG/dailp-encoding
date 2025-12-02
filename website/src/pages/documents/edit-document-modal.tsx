@@ -11,31 +11,17 @@ import { Dropdown } from "./dropdown"
 import Cite from "../../utils/citation-config"
 import plugins from "citation-js"
 import { UserRole, useUserRole } from "../../auth"
-import { Contributor } from "src/graphql/dailp"
+//import { AnnotatedDoc, Contributor } from "src/graphql/dailp"
+import * as Dailp from "src/graphql/dailp"
 
 export type EditDocumentModalProps = {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: any) => void
-  documentMetadata?: Partial<{
-    title: string
-    date: string
-    description: string
-    type: string
-    format: string
-    pages: string
-    creator: string[]
-    source: string
-    doi: string
-    contributors: Contributor[]
-    keywords: string[]
-    subjectHeadings: string[]
-    languages: string[]
-    spatialCoverages: string[]
-  }>
+  documentMetadata: Dailp.AnnotatedDoc
 }
 
-export interface FormContributor extends Contributor {
+export interface FormContributor extends Dailp.Contributor {
     isNew?: boolean
   }
   
@@ -106,7 +92,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  documentMetadata = {},
+  documentMetadata,
 }) => {
   const userRole = useUserRole()
   const isEditor = userRole === UserRole.Editor
@@ -115,6 +101,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const [title, setTitle] = useState(documentMetadata.title ?? "")
   const [date, setDate] = useState(documentMetadata.date ?? "")
+  const [genre, setGenre] = useState(documentMetadata.genre ?? "")
+  /*
   const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [type, setType] = useState(documentMetadata.type ?? "")
   const [format, setFormat] = useState(documentMetadata.format ?? "")
@@ -124,6 +112,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [doi, setDOI] = useState(documentMetadata.doi ?? "")
   const [citation, setCitation] = useState("")
   const [citeFormat, setCiteFormat] = useState("APA")
+  */
 
   const [formContributors, setFormContributors] = useState<FormContributor[]>(
     () => (documentMetadata.contributors ?? []).map(c => ({
@@ -137,6 +126,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [tempRole, setTempRole] = useState("")
   const [tempVisible, setTempVisible] = useState(false)
 
+  /*
   const {
     tags: keywords,
     newTags: newKeywords,
@@ -164,22 +154,24 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     addTag: addCoverage,
     removeTag: removeCoverage,
   } = useTagSelector(documentMetadata.spatialCoverages ?? [], approvedSpatialCoverages)
+  */
 
   const [backupState, setBackupState] = useState<null | {
     title: string
-    date: string
-    description: string
-    type: string
-    format: string
-    pages: string
-    creator: string[]
-    source: string
-    doi: string
-    contributors: Contributor[]
-    keywords: string[]
-    subjectHeadings: string[]
-    languages: string[]
-    spatialCoverages: string[]
+    date: string | Dailp.Date
+    // description: string
+    // type: string
+    // format: string
+    genre: string
+    // pages: string
+    // creator: string[]
+    // source: string
+    // doi: string
+    // //contributors: Contributor[]
+    // keywords: string[]
+    // subjectHeadings: string[]
+    // languages: string[]
+    // spatialCoverages: string[]
   }>(null)
 
   useEffect(() => {
@@ -187,18 +179,18 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       setBackupState({
         title,
         date,
-        description,
-        type,
-        format,
-        pages,
-        creator,
-        source,
-        doi,
-        contributors,
-        keywords,
-        subjectHeadings,
-        languages,
-        spatialCoverages,
+        //description,
+        genre,
+        //format,
+        // pages,
+        //creator,
+        //source,
+       //doi,
+        // contributors,
+        // keywords,
+        // subjectHeadings,
+        // languages,
+        // spatialCoverages,
       })
       setIsEditing(false)
     }
@@ -226,6 +218,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
   }
 
+  /*
   const docMetadata = useMemo(
     () =>
       buildCitationMetadata({
@@ -252,19 +245,20 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       setCitation("Error generating citation")
     }
   }, [citeFormat, docMetadata])
+  */
 
   const cancelEdits = () => {
     if (!backupState) return
     setTitle(backupState.title)
     setDate(backupState.date)
-    setDescription(backupState.description)
-    setType(backupState.type)
-    setFormat(backupState.format)
-    setPages(backupState.pages)
-    setCreator(backupState.creator)
-    setSource(backupState.source)
-    setDOI(backupState.doi)
-    setContributors(backupState.contributors)
+    //setDescription(backupState.description)
+    setGenre(backupState.genre)
+    //setFormat(backupState.format)
+    //setPages(backupState.pages)
+    //setCreator(backupState.creator)
+    //setSource(backupState.source)
+    //setDOI(backupState.doi)
+    //setContributors(backupState.contributors)
     // Tags reset handled by reinitialization on modal open
     setIsEditing(false)
   }
@@ -274,20 +268,20 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     onSubmit({
       title,
       date,
-      description,
-      type,
-      format,
-      pages,
-      creator,
-      source,
-      doi,
-      contributors,
-      keywords,
-      subjectHeadings,
-      languages,
-      spatialCoverages,
-      citation,
-      citeFormat,
+    //   description,
+      genre,
+    //   format,
+    //   pages,
+    //   creator,
+    //   source,
+    //   doi,
+    //   contributors,
+    //   keywords,
+    //   subjectHeadings,
+    //   languages,
+    //   spatialCoverages,
+    //   citation,
+    //   citeFormat,
     })
     setIsEditing(false)
   }
@@ -329,13 +323,14 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <input
                 type="text"
                 className={styles.input}
-                value={date}
+                value={date.toString()}
                 onChange={(e) => setDate(e.target.value)}
                 disabled={!isEditing}
               />
             </div>
           </div>
 
+        {/*
           <div className={styles.fullWidthGroup}>
             <label className={styles.label}>Description</label>
             <TextareaAutosize
@@ -349,6 +344,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               disabled={!isEditing}
             />
           </div>
+            */}
 
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
@@ -356,12 +352,13 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <input
                 type="text"
                 className={styles.input}
-                value={type}
-                onChange={(e) => setType(e.target.value)}
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
                 disabled={!isEditing}
               />
             </div>
-
+        
+            {/*
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Format</label>
               <input
@@ -372,6 +369,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 disabled={!isEditing}
               />
             </div>
+        
 
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Pages (start page, end page)</label>
@@ -401,6 +399,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 disabled={!isEditing}
               />
             </div>
+            */}
           </div>
 
           <TagSelector
@@ -462,7 +461,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             }
           />
 
-          <div className={styles.fullWidthGroup}>
+          {/* <div className={styles.fullWidthGroup}>
             <label className={styles.label}>Source</label>
             <input
               type="text"
@@ -550,6 +549,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             addButtonLabel="Change Format"
             disabled={!isEditing}
           />
+          */}
 
           <div className={styles.buttonGroup}>
             {isEditing ? (
