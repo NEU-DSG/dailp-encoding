@@ -8,11 +8,11 @@ use dailp::{
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    CurateDocumentAudioInput, CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
-use itertools::{Itertools, Position};
+use itertools::Itertools;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
