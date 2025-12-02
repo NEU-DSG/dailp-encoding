@@ -78,10 +78,6 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
-	Creators of this document
-	"""
-	creators: [Creator!]!
-	"""
 	Key terms associated with a document
 	"""
 	keywords: [Keyword!]!
@@ -97,6 +93,10 @@ type AnnotatedDoc {
 	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
+	"""
+	Creators of this document
+	"""
+	creators: [Creator!]!
 	"""
 	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
@@ -727,10 +727,6 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
-	The creator(s) of the document
-	"""
-	creators: [CreatorUpdate!]
-	"""
 	The key terms associated with the document
 	"""
 	keywords: [KeywordUpdate!]
@@ -750,6 +746,10 @@ input DocumentMetadataUpdate {
 	The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
+	"""
+	The creator(s) of the document
+	"""
+	creators: [CreatorUpdate!]
 }
 
 type DocumentPage {
