@@ -1,14 +1,12 @@
 use crate::doc_metadata::{
-    ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+    ApprovalStatus, Language, LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate,
+    SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
 };
-
-use crate::doc_metadata::{ApprovalStatus, Language, LanguageUpdate};
-use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 
