@@ -12,8 +12,8 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-use crate::doc_metadata::Language;
-use crate::doc_metadata::SpatialCoverage;
+
+use crate::doc_metadata::{Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -42,6 +42,12 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(rows)
+    }
     pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
         let rows =
             sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
@@ -352,6 +358,7 @@ impl Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
@@ -493,6 +500,7 @@ impl Database {
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
                 genre: None,
+                keywords_ids: Some(Vec::new()),
                 languages_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
@@ -884,6 +892,24 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
+        // Update subject headings
+        if let MaybeUndefined::Value(keywords) = &document.keywords {
+            query_file!("queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<KeywordUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_keywords.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
         // Update languages
         if let MaybeUndefined::Value(languages) = &document.languages {
             query_file!("queries/delete_document_languages.sql", document.id)
@@ -2206,6 +2232,7 @@ impl Loader<DocumentId> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
@@ -2281,6 +2308,7 @@ impl Loader<DocumentShortName> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,

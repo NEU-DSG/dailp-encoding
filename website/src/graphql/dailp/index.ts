@@ -82,6 +82,8 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Key terms associated with a document */
+  readonly keywords: ReadonlyArray<Keyword>
   /** The languages present in this document */
   readonly languages: ReadonlyArray<Language>
   /**
@@ -543,6 +545,8 @@ export type DocumentMetadataUpdate = {
   readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The key terms associated with the document */
+  readonly keywords: InputMaybe<ReadonlyArray<KeywordUpdate>>
   /** The languages present in the document */
   readonly languages: InputMaybe<ReadonlyArray<LanguageUpdate>>
   /** The physical locations associated with a document (e.g. where it was written, found) */
@@ -681,6 +685,24 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Record to store a keyword associated with a document */
+export type Keyword = {
+  readonly __typename?: "Keyword"
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a keyword */
+  readonly status: ApprovalStatus
+}
+
+export type KeywordUpdate = {
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
 }
 
 /** Stores a language associated with a document */
@@ -1800,8 +1822,17 @@ export type DocFormFieldsFragment = {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
+    readonly keywords: ReadonlyArray<
+      { readonly __typename?: "Keyword" } & Pick<
+        Keyword,
+        "id" | "name" | "status"
+      >
+    >
     readonly languages: ReadonlyArray<
-      { readonly __typename?: "Language" } & Pick<Language, "id" | "name">
+      { readonly __typename?: "Language" } & Pick<
+        Language,
+        "id" | "name" | "status"
+      >
     >
     readonly subjectHeadings: ReadonlyArray<
       { readonly __typename?: "SubjectHeading" } & Pick<
@@ -3370,9 +3401,15 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+    keywords {
+      id
+      name
+      status
+    }
     languages {
       id
       name
+      status
     }
     subjectHeadings {
       id
