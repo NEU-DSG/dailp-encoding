@@ -123,6 +123,7 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
             //.collect(),
             collection: Some("Reference Materials".to_owned()),
             genre: None,
+            languages_ids: None,
             subject_headings_ids: None,
             spatial_coverage_ids: None,
             is_reference: true,
