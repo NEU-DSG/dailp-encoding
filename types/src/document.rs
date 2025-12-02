@@ -1,3 +1,7 @@
+use crate::doc_metadata::{
+    ApprovalStatus, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
@@ -7,8 +11,13 @@ use crate::doc_metadata::{ApprovalStatus, Language, LanguageUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file, query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool, Row};
+
+use futures::TryStreamExt;
+use itertools::Itertools;
+use tokio::fs::read_to_string;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -146,11 +155,6 @@ impl AnnotatedDoc {
         self.meta.is_reference
     }
 
-    /// The audio recording resource for this entire document
-    async fn audio_recording(&self) -> &Option<AudioSlice> {
-        // TODO: Allow for multiple audio sources
-        &self.meta.audio_recording
-    }
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     async fn order_index(&self) -> i64 {
@@ -228,6 +232,59 @@ impl AnnotatedDoc {
         let db = context.data::<Database>()?;
         let languages = db.languages_for_document(self.meta.id.0).await?;
         Ok(languages)
+    }
+    /// Terms that that reflects Indigenous knowledge practices associated with a document
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<Database>()?;
+        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
+        Ok(headings)
+    }
+
+    /// The locations associated with this document
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        let db = context.data::<Database>()?;
+        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
+        Ok(coverages)
+    }
+
+    /// The audio for this document that was ingested from GoogleSheets, if there is any.
+    async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
+        Ok(self.meta.audio_recording.to_owned())
+    }
+
+    /// A slices of audio associated with this word in the context of a document.
+    /// This audio has been selected by an editor from contributions, or is the
+    /// same as the ingested audio track, if one is available.
+    async fn edited_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let mut all_audio = self.user_contributed_audio(context).await?;
+        // add ingested audio track as first element if it should be shown
+        if let Some(ingested_audio_track) = self.meta.audio_recording.to_owned() {
+            all_audio.insert(0, ingested_audio_track);
+        }
+        return Ok(all_audio
+            .into_iter()
+            .filter(|audio| audio.include_in_edited_collection)
+            .collect_vec());
+    }
+
+    /// Audio for this word that has been recorded by community members. Will be
+    /// empty if user does not have access to uncurated contributions.
+    /// TODO! User guard for contributors only
+    async fn user_contributed_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db.document_contributor_audio(&self.meta.id.0).await?)
     }
 }
 
@@ -328,6 +385,12 @@ pub struct DocumentMetadataUpdate {
     pub written_at: MaybeUndefined<DateInput>,
     /// The languages present in the document
     pub languages: MaybeUndefined<Vec<LanguageUpdate>>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
+    /// The editors, translators, etc. of the document
+    pub contributors: MaybeUndefined<Vec<Uuid>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -476,10 +539,14 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
-    /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The languages present in the document
     pub languages_ids: Option<Vec<Uuid>>,
+    /// The people involved in collecting, translating, annotating.
+    pub contributors: Option<Vec<Contributor>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -498,7 +565,8 @@ pub struct DocumentMetadata {
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
 }
-
+    
+#[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all languages linked to this document
     async fn languages<'a>(
@@ -509,6 +577,33 @@ impl DocumentMetadata {
         let rows = query_file_as!(
             Language,
             "queries/get_languages_by_document_id.sql",
+          self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+      
+        Ok(rows
+            .into_iter()
+            .map(|row| Language {
+              id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+    /// Fetch all subject headings linked to this document
+    async fn subject_headings<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SubjectHeading>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
             self.id.0
         )
         .fetch_all(pool)
@@ -516,7 +611,69 @@ impl DocumentMetadata {
 
         Ok(rows
             .into_iter()
-            .map(|row| Language {
+            .map(|row| SubjectHeading {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+
+    async fn contributors<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Contributor>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+
+        // Load SQL from file
+        let sql = read_to_string("queries/get_contributors_by_document_id.sql")
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+        let mut rows = sqlx::query(&sql).bind(self.id.0).fetch(pool);
+
+        let mut contributors = Vec::new();
+
+        while let Some(row) = rows
+            .try_next()
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        {
+            let id: uuid::Uuid = row
+                .try_get("id")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let name: String = row
+                .try_get("name")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let role_str: Option<String> = row
+                .try_get("role")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+            let role = role_str.and_then(|s| s.parse::<ContributorRole>().ok());
+
+            contributors.push(Contributor { id, name, role });
+        }
+
+        Ok(contributors)
+    }
+
+    /// Fetch all spatial coverages linked to this document
+    async fn spatial_coverage<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SpatialCoverage>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SpatialCoverage {
                 id: row.id,
                 name: row.name,
                 status: row.status,

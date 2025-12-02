@@ -54,6 +54,9 @@ export const FormProvider = (props: { children: any }) => {
               ][0]
             : {},
           languages: values.document["languages"],
+          subjectHeadings: values.document["subjectHeadings"],
+          contributors: values.document["contributors"],
+          spatialCoverage: values.document["spatialCoverage"] ?? [],
         },
       })
     },

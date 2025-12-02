@@ -13,6 +13,7 @@ use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::doc_metadata::Language;
+use crate::doc_metadata::SpatialCoverage;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -46,6 +47,34 @@ impl Database {
             sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
                 .fetch_all(&self.client)
                 .await?;
+        Ok(rows)
+    }
+    pub async fn subject_headings_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
+    pub async fn spatial_coverage_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
 
         Ok(rows)
     }
@@ -240,6 +269,20 @@ impl Database {
             .collect())
     }
 
+    pub async fn document_contributor_audio(&self, document_id: &Uuid) -> Result<Vec<AudioSlice>> {
+        let contributor_audio = query_file_as!(
+            BasicAudioSlice,
+            "queries/document_contributor_audio.sql",
+            document_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(contributor_audio
+            .into_iter()
+            .map(AudioSlice::from)
+            .collect())
+    }
+
     pub async fn words_by_doc(
         &self,
         document_id: Option<DocumentId>,
@@ -313,6 +356,8 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -452,6 +497,8 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -759,9 +806,31 @@ impl Database {
         Ok(media_slice_id)
     }
 
-    /// Update if a piece of audio will be shown to readers
+    /// As above in `attach_audio_to_word`:
+    /// Creates media slice if doesn't yet exist for provided audio recording.
+    /// Adds join table entry attaching media slice to document.
+    /// Returns `id` of upserted media slice.
+    pub async fn attach_audio_to_document(
+        &self,
+        upload: &AttachAudioToDocumentInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_document.sql",
+            contributor_id,
+            upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.document_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
+
+    /// Update if a piece of word audio will be shown to readers
     /// Will return None if the word and audio assocation could not be found, otherwise word id.
-    pub async fn update_audio_visibility(
+    pub async fn update_word_audio_visibility(
         &self,
         word_id: &Uuid,
         audio_slice_id: &Uuid,
@@ -769,7 +838,7 @@ impl Database {
         editor_id: &Uuid,
     ) -> Result<Option<Uuid>> {
         let _word_id = query_file_scalar!(
-            "queries/update_audio_visibility.sql",
+            "queries/update_word_audio_visibility.sql",
             word_id,
             audio_slice_id,
             include_in_edited_collection,
@@ -778,6 +847,27 @@ impl Database {
         .fetch_one(&self.client)
         .await?;
         Ok(_word_id)
+    }
+
+    /// Update if a piece of document audio will be shown to readers
+    /// Will return None if the document and audio assocation could not be found, otherwise document id.
+    pub async fn update_document_audio_visibility(
+        &self,
+        document_id: &Uuid,
+        audio_slice_id: &Uuid,
+        include_in_edited_collection: bool,
+        editor_id: &Uuid,
+    ) -> Result<Option<Uuid>> {
+        let _document_id = query_file_scalar!(
+            "queries/update_document_audio_visibility.sql",
+            document_id,
+            audio_slice_id,
+            include_in_edited_collection,
+            editor_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(_document_id)
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
@@ -813,13 +903,53 @@ impl Database {
             .await?;
         }
 
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
         // Commit updates
         tx.commit().await?;
 
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -833,7 +963,7 @@ impl Database {
         self.paragraph_by_id(&paragraph.id).await
     }
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
 
@@ -1020,14 +1150,21 @@ impl Database {
         .await?;
 
         {
-            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
-                .contributors
-                .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
+            let contributors = meta.contributors.iter().flatten();
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
+                })
                 .multiunzip();
+
             // Convert roles to Option<String> for SQL
             let role_strings: Vec<Option<String>> =
                 role.iter().map(|r| r.map(|r| r.to_string())).collect();
+
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -1145,7 +1282,7 @@ impl Database {
         let collection_id = query_file_scalar!(
             "queries/insert_edited_collection.sql",
             collection.title,
-            slug::slugify(&collection.title),
+            slug::slugify(&collection.title).replace("-", "_"),
             collection.description,
             collection.thumbnail_url,
         )
@@ -1734,30 +1871,17 @@ impl Database {
 
     /// Insert a document into an edited collection and create a new chapter for it
     /// Returns (document_id, chapter_id)
+    /// dennis todo : please clean this up
     pub async fn insert_document_into_edited_collection(
         &self,
         document: AnnotatedDoc,
-        _collection_id: Uuid,
+        collection_id: Uuid,
     ) -> Result<(DocumentId, Uuid)> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
         let next_index = -1;
 
-        // All user-created documents go to the user_documents document group
-        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
-        {
-            Some(id) => id,
-            None => {
-                // Create the user_documents document_group if it doesn't exist
-                query_file_scalar!(
-                    "queries/insert_document_group.sql",
-                    "user_documents",
-                    "User-Created Documents"
-                )
-                .fetch_one(&mut *tx)
-                .await?
-            }
-        };
+        let user_group_id = self.document_group_id_by_slug("user_documents").await?;
 
         // Insert the document using the user_documents document group ID
         let document_uuid = query_file_scalar!(
@@ -1766,7 +1890,7 @@ impl Database {
             meta.title,
             meta.is_reference,
             &meta.date as &Option<Date>,
-            user_documents_group_id,
+            user_group_id,
             next_index
         )
         .fetch_one(&mut *tx)
@@ -1774,23 +1898,22 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
             let doc_id: Vec<Uuid> = vec![meta.id.0];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    // not sure what to default to, also not sure why contributor role is an
-                    // option
-                    None => ContributorRole::Author.to_string(),
+            let roles: Vec<String> = contributors
+                .clone()
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
                 })
                 .collect();
 
-            if !name.is_empty() {
+            if !names.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &name,
+                    &names,
                     &doc_id,
                     &roles
                 )
@@ -1799,9 +1922,14 @@ impl Database {
             }
         }
 
+        let collection_slug = self.collection_slug_by_id(collection_id).await?;
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
-        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+        let chapter_path = PgLTree::from_str(&format!(
+            "{}.{}",
+            collection_slug.unwrap().replace("-", "_"),
+            chapter_slug
+        ))?;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",
@@ -1816,7 +1944,7 @@ impl Database {
         .await?;
 
         // Attribute contributors to the new chapter
-        for contributor in &meta.contributors {
+        for contributor in meta.contributors.iter().flatten() {
             query_file!("queries/upsert_contributor.sql", &contributor.name)
                 .execute(&mut *tx)
                 .await?;
@@ -1824,15 +1952,15 @@ impl Database {
                 query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
                     .fetch_one(&mut *tx)
                     .await?;
-            let role = contributor
-                .role
-                .unwrap_or(ContributorRole::Author)
-                .to_string();
+            // Use map to handle Option<String> without fallback
+            let role = contributor.role.as_ref().map(|r| r.to_string());
+
+            let role_str: &str = role.as_deref().unwrap_or("");
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
                 &contributor_id,
-                &role
+                role_str
             )
             .execute(&mut *tx)
             .await?;
@@ -1969,6 +2097,7 @@ impl Database {
         }
     }
 
+    //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
@@ -2081,6 +2210,8 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2154,6 +2285,8 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2456,6 +2589,7 @@ impl Loader<ContributorsForDocument> for Database {
                 (
                     ContributorsForDocument(x.document_id),
                     Contributor {
+                        id: x.id,
                         name: x.full_name,
                         role: x
                             .contribution_role
@@ -2776,6 +2910,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
