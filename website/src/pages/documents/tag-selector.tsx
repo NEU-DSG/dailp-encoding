@@ -6,11 +6,11 @@ interface TagSelectorProps {
   selectedTags: string[]
   approvedTags: string[]
   newTags?: Set<string>
-  onAdd: (tag: string) => void
-  onRemove: (index: number) => void
+  onAdd?: (tag: string) => void
+  onRemove?: (index: number) => void
   addButtonLabel: string
   customForm?: React.ReactNode
-} 
+}
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
   label,
@@ -35,13 +35,15 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             className={newTags.has(tag) ? styles.newTag : styles.tag}
           >
             <span>{tag}</span>
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className={styles.removeTagButton}
-            >
-              ×
-            </button>
+            {onRemove && (
+              <button
+                type="button"
+                onClick={() => onRemove?.(index)}
+                className={styles.removeTagButton}
+              >
+                ×
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -66,7 +68,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                   <button
                     key={tag}
                     type="button"
-                    onClick={() => onAdd(tag)}
+                    onClick={() => onAdd?.(tag)}
                     className={styles.tagOption}
                   >
                     {tag}

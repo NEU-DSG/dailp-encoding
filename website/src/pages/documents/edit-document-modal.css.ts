@@ -96,6 +96,24 @@ export const addButton = style({
   },
 })
 
+export const editButton = style({
+    padding: "12px 60px",
+    backgroundColor: "#497CC7",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+    minWidth: "120px",
+    boxShadow: "0 4px 4px rgba(0, 0, 0, 0.3)",
+      selectors: {
+      "&:hover": {
+        backgroundColor: "#3867AD",
+      },
+    },
+  })
+
 export const buttonGroup = style({
   display: "flex",
   gap: "50px",

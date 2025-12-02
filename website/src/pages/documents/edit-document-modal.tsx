@@ -208,15 +208,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const addContributor = (name: string, role: string, isVisible: boolean) => {
     if (!name || !role) return
     const label = `${name} (${role})`
-    setFormContributors(prev => [
-        ...prev,
-        {
-          name,
-          role,
-          isVisible,
-          isNew: true
-        }
-    ])
     setNewContributors((prev) => new Set(prev).add(label))
     setTempName("")
     setTempRole("")
@@ -538,7 +529,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             <TextareaAutosize
               className={styles.input}
               value={citation}
-              onChange={(e) => setCitation(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setCitation(e.target.value)
+              }              
               minRows={1}
               maxRows={10}
               disabled={!isEditing}
