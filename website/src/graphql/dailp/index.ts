@@ -84,6 +84,10 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Key terms associated with a document */
+  readonly keywords: ReadonlyArray<Keyword>
+  /** The languages present in this document */
+  readonly languages: ReadonlyArray<Language>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -95,6 +99,10 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /** The locations associated with this document */
+  readonly spatialCoverage: ReadonlyArray<SpatialCoverage>
+  /** Terms that that reflects Indigenous knowledge practices associated with a document */
+  readonly subjectHeadings: ReadonlyArray<SubjectHeading>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -220,6 +228,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a document */
 export type AttachAudioToDocumentInput = {
@@ -377,6 +392,8 @@ export type ContentBlock = Gallery | Markdown
 export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
+  /** UUID of the contributor */
+  readonly id: Scalars["UUID"]
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
@@ -416,9 +433,7 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
-  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
-  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }
@@ -544,10 +559,20 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The editors, translators, etc. of the document */
+  readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** The creator(s) of the document */
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The key terms associated with the document */
+  readonly keywords: InputMaybe<ReadonlyArray<KeywordUpdate>>
+  /** The languages present in the document */
+  readonly languages: InputMaybe<ReadonlyArray<LanguageUpdate>>
+  /** The physical locations associated with a document (e.g. where it was written, found) */
+  readonly spatialCoverage: InputMaybe<ReadonlyArray<SpatialCoverageUpdate>>
+  /** Terms that reflect Indigenous knowledge practices associated with the document */
+  readonly subjectHeadings: InputMaybe<ReadonlyArray<SubjectHeadingUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -680,6 +705,43 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Record to store a keyword associated with a document */
+export type Keyword = {
+  readonly __typename?: "Keyword"
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a keyword */
+  readonly status: ApprovalStatus
+}
+
+export type KeywordUpdate = {
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+}
+
+/** Stores a language associated with a document */
+export type Language = {
+  readonly __typename?: "Language"
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a language */
+  readonly status: ApprovalStatus
+}
+
+/** For updating languages */
+export type LanguageUpdate = {
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
 }
 
 /** Start of a new line */
@@ -1181,6 +1243,45 @@ export type SourceAttribution = {
   /** URL of this source's homepage, i.e. "https://www.newberry.org/" */
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
+  readonly name: Scalars["String"]
+}
+
+/** Stores a spatial coverage associated with a document */
+export type SpatialCoverage = {
+  readonly __typename?: "SpatialCoverage"
+  /** UUID for the place */
+  readonly id: Scalars["UUID"]
+  /** Name of the place */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a spatial coverage */
+  readonly status: ApprovalStatus
+}
+
+export type SpatialCoverageUpdate = {
+  /** UUID for the spatial coverage */
+  readonly id: Scalars["UUID"]
+  /** Name of the spatial coverage */
+  readonly name: Scalars["String"]
+}
+
+/**
+ * Record to store a subject heading that reflects Indigenous knowledge
+ * practices associated with a document
+ */
+export type SubjectHeading = {
+  readonly __typename?: "SubjectHeading"
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a subject heading */
+  readonly status: ApprovalStatus
+}
+
+export type SubjectHeadingUpdate = {
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
   readonly name: Scalars["String"]
 }
 
@@ -1740,6 +1841,36 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly keywords: ReadonlyArray<
+      { readonly __typename?: "Keyword" } & Pick<
+        Keyword,
+        "id" | "name" | "status"
+      >
+    >
+    readonly languages: ReadonlyArray<
+      { readonly __typename?: "Language" } & Pick<
+        Language,
+        "id" | "name" | "status"
+      >
+    >
+    readonly subjectHeadings: ReadonlyArray<
+      { readonly __typename?: "SubjectHeading" } & Pick<
+        SubjectHeading,
+        "id" | "name" | "status"
+      >
+    >
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
+    >
+    readonly spatialCoverage: ReadonlyArray<
+      { readonly __typename?: "SpatialCoverage" } & Pick<
+        SpatialCoverage,
+        "id" | "name" | "status"
+      >
     >
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
@@ -3292,6 +3423,31 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    contributors {
+      id
+      name
+      role
+    }
+    spatialCoverage {
+      id
+      name
+      status
     }
     creators {
       id

@@ -1,15 +1,21 @@
+use crate::doc_metadata::{
+    ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
+    SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+};
+use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::ApprovalStatus;
-use crate::person::{Contributor, Creator, CreatorUpdate, SourceAttribution};
-
-use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined, Context};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file, query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool, Row};
+
+use futures::TryStreamExt;
+use itertools::Itertools;
+use tokio::fs::read_to_string;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -219,6 +225,38 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// Key terms associated with a document
+    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
+        let db = context.data::<Database>()?;
+        let headings = db.keywords_for_document(self.meta.id.0).await?;
+        Ok(headings)
+    }
+    /// The languages present in this document
+    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
+        let db = context.data::<Database>()?;
+        let languages = db.languages_for_document(self.meta.id.0).await?;
+        Ok(languages)
+    }
+    /// Terms that that reflects Indigenous knowledge practices associated with a document
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<Database>()?;
+        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
+        Ok(headings)
+    }
+
+    /// The locations associated with this document
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        let db = context.data::<Database>()?;
+        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
+        Ok(coverages)
+    }
+
     /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
         let db = context.data::<Database>()?;
@@ -355,6 +393,16 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The key terms associated with the document
+    pub keywords: MaybeUndefined<Vec<KeywordUpdate>>,
+    /// The languages present in the document
+    pub languages: MaybeUndefined<Vec<LanguageUpdate>>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
+    /// The editors, translators, etc. of the document
+    pub contributors: MaybeUndefined<Vec<Uuid>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
     /// The creator(s) of the document
     pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
 }
@@ -505,10 +553,18 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings_ids: Option<Vec<Uuid>>,
+    /// The languages present in the document
+    pub languages_ids: Option<Vec<Uuid>>,
+    /// The key terms associated with the document
+    pub keywords_ids: Option<Vec<Uuid>>,
     /// The creator(s) of the document
     pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors: Option<Vec<Contributor>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -530,6 +586,137 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
+    /// Fetch all keywords linked to this document
+    async fn keywords<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Keyword>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Keyword,
+            "queries/get_keywords_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Keyword {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+    /// Fetch all languages linked to this document
+    async fn languages<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Language>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Language,
+            "queries/get_languages_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Language {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+    /// Fetch all subject headings linked to this document
+    async fn subject_headings<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SubjectHeading>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SubjectHeading {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
+
+    async fn contributors<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Contributor>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+
+        // Load SQL from file
+        let sql = read_to_string("queries/get_contributors_by_document_id.sql")
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+        let mut rows = sqlx::query(&sql).bind(self.id.0).fetch(pool);
+
+        let mut contributors = Vec::new();
+
+        while let Some(row) = rows
+            .try_next()
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+        {
+            let id: uuid::Uuid = row
+                .try_get("id")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let name: String = row
+                .try_get("name")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let role_str: Option<String> = row
+                .try_get("role")
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+
+            let role = role_str.and_then(|s| s.parse::<ContributorRole>().ok());
+
+            contributors.push(Contributor { id, name, role });
+        }
+
+        Ok(contributors)
+    }
+
+    /// Fetch all spatial coverages linked to this document
+    async fn spatial_coverage<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SpatialCoverage>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SpatialCoverage {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
     /// Fetch all creators linked to this document
     async fn creators<'a>(
         &'a self,
@@ -553,6 +740,7 @@ impl DocumentMetadata {
             .collect())
     }
 }
+
 
 /// Database ID for one document
 #[derive(

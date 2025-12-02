@@ -82,6 +82,22 @@ type AnnotatedDoc {
 	"""
 	creators: [Creator!]!
 	"""
+	Key terms associated with a document
+	"""
+	keywords: [Keyword!]!
+	"""
+	The languages present in this document
+	"""
+	languages: [Language!]!
+	"""
+	Terms that that reflects Indigenous knowledge practices associated with a document
+	"""
+	subjectHeadings: [SubjectHeading!]!
+	"""
+	The locations associated with this document
+	"""
+	spatialCoverage: [SpatialCoverage!]!
+	"""
 	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
@@ -227,6 +243,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a document
@@ -455,6 +480,10 @@ that specifies the type of their contributions.
 """
 type Contributor {
 	"""
+	UUID of the contributor
+	"""
+	id: UUID!
+	"""
 	Full name of the contributor
 	"""
 	name: String!
@@ -502,10 +531,8 @@ contributions to the associated item (add or revise as needed)
 enum ContributorRole {
 	TRANSCRIBER
 	TRANSLATOR
-	EDITOR
 	ANNOTATOR
 	CULTURAL_ADVISOR
-	AUTHOR
 }
 
 input CreateDocumentFromFormInput {
@@ -703,6 +730,26 @@ input DocumentMetadataUpdate {
 	The creator(s) of the document
 	"""
 	creators: [CreatorUpdate!]
+	"""
+	The key terms associated with the document
+	"""
+	keywords: [KeywordUpdate!]
+	"""
+	The languages present in the document
+	"""
+	languages: [LanguageUpdate!]
+	"""
+	Terms that reflect Indigenous knowledge practices associated with the document
+	"""
+	subjectHeadings: [SubjectHeadingUpdate!]
+	"""
+	The editors, translators, etc. of the document
+	"""
+	contributors: [UUID!]
+	"""
+	The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	spatialCoverage: [SpatialCoverageUpdate!]
 }
 
 type DocumentPage {
@@ -881,6 +928,67 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+"""
+Record to store a keyword associated with a document
+"""
+type Keyword {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a keyword
+	"""
+	status: ApprovalStatus!
+}
+
+input KeywordUpdate {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+}
+
+"""
+Stores a language associated with a document
+"""
+type Language {
+	"""
+	UUID for the language
+	"""
+	id: UUID!
+	"""
+	Name of the language
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a language
+	"""
+	status: ApprovalStatus!
+}
+
+"""
+For updating languages
+"""
+input LanguageUpdate {
+	"""
+	UUID for the language
+	"""
+	id: UUID!
+	"""
+	Name of the language
+	"""
+	name: String!
+}
 
 """
 Start of a new line
@@ -1355,6 +1463,65 @@ type SourceAttribution {
 	link: String!
 }
 
+"""
+Stores a spatial coverage associated with a document
+"""
+type SpatialCoverage {
+	"""
+	UUID for the place
+	"""
+	id: UUID!
+	"""
+	Name of the place
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a spatial coverage
+	"""
+	status: ApprovalStatus!
+}
+
+input SpatialCoverageUpdate {
+	"""
+	UUID for the spatial coverage
+	"""
+	id: UUID!
+	"""
+	Name of the spatial coverage
+	"""
+	name: String!
+}
+
+
+"""
+Record to store a subject heading that reflects Indigenous knowledge
+practices associated with a document
+"""
+type SubjectHeading {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a subject heading
+	"""
+	status: ApprovalStatus!
+}
+
+input SubjectHeadingUpdate {
+	"""
+	UUID for the subject heading
+	"""
+	id: UUID!
+	"""
+	Name of the subject heading
+	"""
+	name: String!
+}
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as

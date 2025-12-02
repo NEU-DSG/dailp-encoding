@@ -14,12 +14,69 @@ select
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'name', contributor.full_name, 
+        'name', contributor.full_name,
         'role', attr.contribution_role
       )
     ) filter (where contributor is not null),
     '[]'
   ) as contributors,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', k.id,
+          'name', k.name,
+          'status', k.status
+        )
+      ),
+      '[]'
+    )
+    from document_keyword dk
+    join keyword k on k.id = dk.keyword_id
+    where dk.document_id = d.id
+  ) as keywords,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', l.id,
+          'name', l.name,
+          'status', l.status
+        )
+      ),
+      '[]'
+    )
+    from document_language dl
+    join language l on l.id = dl.language_id
+    where dl.document_id = d.id
+  ) as languages,
+  ( -- Subject Headings
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', sh.id,
+          'name', sh.name,
+          'status', sh.status
+    )), '[]')
+    from document_subject_heading dsh
+    join subject_heading sh on sh.id = dsh.subject_heading_id
+    where dsh.document_id = d.id
+  ) as subject_headings,
+  ( -- Spatial Coverage
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', sc.id,
+          'name', sc.name,
+          'status', sc.status
+        )
+      ),
+      '[]'
+    )
+    from document_spatial_coverage dsc
+    join spatial_coverage sc on sc.id = dsc.spatial_coverage_id
+    where dsc.document_id = d.id
+  ) as spatial_coverage,
   (
     select coalesce(
       jsonb_agg(
@@ -33,7 +90,8 @@ select
     from document_creator dcr
     join creator cr on cr.id = dcr.creator_id
     where dcr.document_id = d.id
-  ) as creators
+  ) as creators,
+
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id

@@ -123,6 +123,31 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  keywords {
+    id
+    name
+    status
+  }
+  languages {
+    id
+    name
+    status
+  }
+  subjectHeadings {
+    id
+    name
+    status
+  }
+  contributors {
+    id
+    name
+    role
+  }
+  spatialCoverage {
+    id
+    name
+    status
+  }
   creators {
     id
     name
@@ -698,6 +723,7 @@ query pageByPath($path: String!) {
     }
   }
 }
+
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id

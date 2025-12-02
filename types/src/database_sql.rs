@@ -12,6 +12,8 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+
+use crate::doc_metadata::{Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -41,6 +43,49 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(rows)
+    }
+    pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
+        let rows =
+            sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
+                .fetch_all(&self.client)
+                .await?;
+        Ok(rows)
+    }
+    pub async fn subject_headings_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
+    pub async fn spatial_coverage_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
         let rows = sqlx::query_file_as!(Creator, "queries/get_creators_by_document_id.sql", doc_id)
             .fetch_all(&self.client)
@@ -323,9 +368,13 @@ impl Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -462,9 +511,13 @@ impl Database {
                     .unwrap_or_default(),
                 creators_ids: Some(Vec::new()),
                 genre: None,
+                keywords_ids: Some(Vec::new()),
+                languages_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -850,6 +903,160 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
+        // Update subject headings
+        if let MaybeUndefined::Value(keywords) = &document.keywords {
+            query_file!("queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<KeywordUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_keywords.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update languages
+        if let MaybeUndefined::Value(languages) = &document.languages {
+            query_file!("queries/delete_document_languages.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<LanguageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_languages.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
+
+        // Update keywords
+        if let MaybeUndefined::Value(keywords) = &document.keywords {
+            query_file!("queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<KeywordUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_keywords.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update languages
+        if let MaybeUndefined::Value(languages) = &document.languages {
+            query_file!("queries/delete_document_languages.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<LanguageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_languages.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
+
         // Update creators
         // Need to handle if creator already in the list is inserted?
         if let MaybeUndefined::Value(creators) = &document.creators {
@@ -917,7 +1124,10 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -931,7 +1141,7 @@ impl Database {
         self.paragraph_by_id(&paragraph.id).await
     }
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
 
@@ -1118,28 +1328,29 @@ impl Database {
         .await?;
 
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
                 })
-                .collect();
+                .multiunzip();
 
-            if !name.is_empty() {
-                query_file!(
-                    "queries/upsert_document_contributors.sql",
-                    &name,
-                    &doc_id,
-                    &roles
-                )
-                .execute(&mut *tx)
-                .await?;
-            }
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
+
+            query_file!(
+                "queries/upsert_document_contributors.sql",
+                &*name as _,
+                &*doc,
+                &role_strings as _
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         tx.commit().await?;
@@ -1865,22 +2076,22 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            // Use the ID returned from inserting the document to satisfy FK constraints
-            let doc_id: Vec<Uuid> = vec![document_uuid];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    None => ContributorRole::Author.to_string(),
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = contributors
+                .clone()
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
                 })
                 .collect();
 
-            if !name.is_empty() {
+            if !names.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &name,
+                    &names,
                     &doc_id,
                     &roles
                 )
@@ -1911,7 +2122,7 @@ impl Database {
         .await?;
 
         // Attribute contributors to the new chapter
-        for contributor in &meta.contributors {
+        for contributor in meta.contributors.iter().flatten() {
             query_file!("queries/upsert_contributor.sql", &contributor.name)
                 .execute(&mut *tx)
                 .await?;
@@ -1919,15 +2130,15 @@ impl Database {
                 query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
                     .fetch_one(&mut *tx)
                     .await?;
-            let role = contributor
-                .role
-                .unwrap_or(ContributorRole::Author)
-                .to_string();
+            // Use map to handle Option<String> without fallback
+            let role = contributor.role.as_ref().map(|r| r.to_string());
+
+            let role_str: &str = role.as_deref().unwrap_or("");
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
                 &contributor_id,
-                &role
+                role_str
             )
             .execute(&mut *tx)
             .await?;
@@ -2063,6 +2274,7 @@ impl Database {
             Ok(None)
         }
     }
+
     //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
@@ -2173,9 +2385,13 @@ impl Loader<DocumentId> for Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2246,9 +2462,13 @@ impl Loader<DocumentShortName> for Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2551,6 +2771,7 @@ impl Loader<ContributorsForDocument> for Database {
                 (
                     ContributorsForDocument(x.document_id),
                     Contributor {
+                        id: x.id,
                         name: x.full_name,
                         role: x
                             .contribution_role
@@ -2871,6 +3092,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
