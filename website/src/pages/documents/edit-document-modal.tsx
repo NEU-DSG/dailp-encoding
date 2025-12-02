@@ -13,95 +13,95 @@ import * as styles from "./edit-document-modal.css"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
-    isOpen: boolean
-    onClose: () => void
-    onSubmit: (data: any) => void
-    documentMetadata: Dailp.AnnotatedDoc
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: any) => void
+  documentMetadata: Dailp.AnnotatedDoc
 }
 
 export interface FormContributor extends Dailp.Contributor {
-    details: Dailp.ContributorDetails | null 
-    isNew: boolean
-    isVisible: boolean | false
+  details: Dailp.ContributorDetails | null
+  isNew: boolean
+  isVisible: boolean | false
 }
 
 export const formatMap: Record<string, string> = {
-    APA: "apa",
-    Vancouver: "vancouver",
-    Harvard: "harvard1",
+  APA: "apa",
+  Vancouver: "vancouver",
+  Harvard: "harvard1",
 }
 
 // Reusable approved tags lists
 const approvedKeywords = [
-    "Colonialism",
-    "Government",
-    "Politics",
-    "History",
-    "Culture",
-    "Law",
-    "Constitution",
-    "Indigenous Rights",
-    "Treaty",
-    "Land Rights",
-    "Self-Determination",
-    "Tribal Governance",
+  "Colonialism",
+  "Government",
+  "Politics",
+  "History",
+  "Culture",
+  "Law",
+  "Constitution",
+  "Indigenous Rights",
+  "Treaty",
+  "Land Rights",
+  "Self-Determination",
+  "Tribal Governance",
 ]
 
 const approvedSubjectHeadings = [
-    "Cherokee Political Structure",
-    "Sacred Relationships to Land",
-    "Indigenous Self-Determination",
-    "Ecological Stewardship",
-    "Colonial Disruption and Resilience",
-    "Ceremony and Sacred Practice",
-    "Indigenous Governance Models",
+  "Cherokee Political Structure",
+  "Sacred Relationships to Land",
+  "Indigenous Self-Determination",
+  "Ecological Stewardship",
+  "Colonial Disruption and Resilience",
+  "Ceremony and Sacred Practice",
+  "Indigenous Governance Models",
 ]
 
 const approvedLanguages = [
-    "Mandarin Chinese",
-    "Hindi",
-    "Spanish",
-    "French",
-    "Arabic",
-    "Bengali",
-    "Portuguese",
-    "Navajo",
-    "Cree",
-    "Sioux",
-    "Chippewa",
+  "Mandarin Chinese",
+  "Hindi",
+  "Spanish",
+  "French",
+  "Arabic",
+  "Bengali",
+  "Portuguese",
+  "Navajo",
+  "Cree",
+  "Sioux",
+  "Chippewa",
 ]
 
 const approvedSpatialCoverages = [
-    "New Echota, GA",
-    "Tennessee, USA",
-    "Boston, MA",
-    "New York City, NY",
-    "Los Angeles, CA",
-    "Tokyo, Japan",
-    "Beijing, China",
-    "Paris, France",
-    "Dubai, UAE",
+  "New Echota, GA",
+  "Tennessee, USA",
+  "Boston, MA",
+  "New York City, NY",
+  "Los Angeles, CA",
+  "Tokyo, Japan",
+  "Beijing, China",
+  "Paris, France",
+  "Dubai, UAE",
 ]
 
 function getDisplayName(code: string) {
-    return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
+  return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
 }
 
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
-    isOpen,
-    onClose,
-    onSubmit,
-    documentMetadata,
+  isOpen,
+  onClose,
+  onSubmit,
+  documentMetadata,
 }) => {
-    const userRole = useUserRole()
-    const isEditor = userRole === UserRole.Editor
+  const userRole = useUserRole()
+  const isEditor = userRole === UserRole.Editor
 
-    const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
-    const [title, setTitle] = useState(documentMetadata.title ?? "")
-    const [date, setDate] = useState(documentMetadata.date ?? "")
-    const [genre, setGenre] = useState(documentMetadata.genre ?? "")
-    /*
+  const [title, setTitle] = useState(documentMetadata.title ?? "")
+  const [date, setDate] = useState(documentMetadata.date ?? "")
+  const [genre, setGenre] = useState(documentMetadata.genre ?? "")
+  /*
     const [description, setDescription] = useState(documentMetadata.description ?? "")
     const [type, setType] = useState(documentMetadata.type ?? "")
     const [format, setFormat] = useState(documentMetadata.format ?? "")
@@ -113,27 +113,27 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     const [citeFormat, setCiteFormat] = useState("APA")
     */
 
-    // For initializing new contributors who may not have a role yet
-    type MaybeContributorRole = Dailp.ContributorRole | null;
+  // For initializing new contributors who may not have a role yet
+  type MaybeContributorRole = Dailp.ContributorRole | null
 
-    const [formContributors, setFormContributors] = useState<FormContributor[]>(
-        () =>
-            (documentMetadata.contributors ?? []).map((c) => ({
-                ...c,
-                isNew: false,
-                isVisible: c.details?.isVisible ?? false,
-                details: c.details ?? null,
-            }))
-    )
-    const [newContributors, setNewContributors] = useState<Set<string>>(new Set())
+  const [formContributors, setFormContributors] = useState<FormContributor[]>(
+    () =>
+      (documentMetadata.contributors ?? []).map((c) => ({
+        ...c,
+        isNew: false,
+        isVisible: c.details?.isVisible ?? false,
+        details: c.details ?? null,
+      }))
+  )
+  const [newContributors, setNewContributors] = useState<Set<string>>(new Set())
 
-    const [tempName, setTempName] = useState("")
-    const [tempRole, setTempRole] = useState<MaybeContributorRole>(null);
-    const [tempVisible, setTempVisible] = useState(false)
+  const [tempName, setTempName] = useState("")
+  const [tempRole, setTempRole] = useState<MaybeContributorRole>(null)
+  const [tempVisible, setTempVisible] = useState(false)
 
-    const contributorRoles = Object.values(Dailp.ContributorRole);
+  const contributorRoles = Object.values(Dailp.ContributorRole)
 
-    /*
+  /*
     const {
       tags: keywords,
       newTags: newKeywords,
@@ -163,84 +163,88 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     } = useTagSelector(documentMetadata.spatialCoverages ?? [], approvedSpatialCoverages)
     */
 
-    const [backupState, setBackupState] = useState<null | {
-        title: string
-        date: string | Dailp.Date
-        // description: string
-        // type: string
-        // format: string
-        genre: string
-        // pages: string
-        // creator: string[]
-        // source: string
-        // doi: string
-        // //contributors: Contributor[]
-        // keywords: string[]
-        // subjectHeadings: string[]
-        // languages: string[]
-        // spatialCoverages: string[]
-    }>(null)
+  const [backupState, setBackupState] = useState<null | {
+    title: string
+    date: string | Dailp.Date
+    // description: string
+    // type: string
+    // format: string
+    genre: string
+    // pages: string
+    // creator: string[]
+    // source: string
+    // doi: string
+    // //contributors: Contributor[]
+    // keywords: string[]
+    // subjectHeadings: string[]
+    // languages: string[]
+    // spatialCoverages: string[]
+  }>(null)
 
-    useEffect(() => {
-        if (isOpen) {
-            setBackupState({
-                title,
-                date,
-                //description,
-                genre,
-                //format,
-                // pages,
-                //creator,
-                //source,
-                //doi,
-                // contributors,
-                // keywords,
-                // subjectHeadings,
-                // languages,
-                // spatialCoverages,
-            })
-            setIsEditing(false)
-        }
-    }, [isOpen])
+  useEffect(() => {
+    if (isOpen) {
+      setBackupState({
+        title,
+        date,
+        //description,
+        genre,
+        //format,
+        // pages,
+        //creator,
+        //source,
+        //doi,
+        // contributors,
+        // keywords,
+        // subjectHeadings,
+        // languages,
+        // spatialCoverages,
+      })
+      setIsEditing(false)
+    }
+  }, [isOpen])
 
-    const [contributors, setContributors] =
-        useState<FormContributor[]>(formContributors)
-    const addContributor = (name: string, role: Dailp.ContributorRole, isVisible: boolean) => {
-        if (!name || !role) return
+  const [contributors, setContributors] =
+    useState<FormContributor[]>(formContributors)
+  const addContributor = (
+    name: string,
+    role: Dailp.ContributorRole,
+    isVisible: boolean
+  ) => {
+    if (!name || !role) return
 
-        const newContributor: FormContributor = {
-            id: crypto.randomUUID(),
-            name,
-            role,
-            isVisible,
-            isNew: true,
-            details: null,
-        }
-
-        setContributors((prev) => [...prev, newContributor])
-
-        const label = `${name} (${role})`
-        setNewContributors((prev) => new Set(prev).add(label))
-
-        // Reset temp form fields
-        setTempName("")
-        setTempRole(null);
-        setTempVisible(false)
+    const newContributor: FormContributor = {
+      id: crypto.randomUUID(),
+      name,
+      role,
+      isVisible,
+      isNew: true,
+      details: null,
     }
 
-    const removeContributor = (index: number) => {
-        const removedContributor = contributors[index]
-        if (!removedContributor) return
-        const label = `${removedContributor.name} (${removedContributor.role})`
-        setContributors((prev) => prev.filter((_, i) => i !== index))
-        setNewContributors((prev) => {
-            const copy = new Set(prev)
-            copy.delete(label)
-            return copy
-        })
-    }
+    setContributors((prev) => [...prev, newContributor])
 
-    /*
+    const label = `${name} (${role})`
+    setNewContributors((prev) => new Set(prev).add(label))
+
+    // Reset temp form fields
+    setTempName("")
+    setTempRole(null)
+    setTempVisible(false)
+  }
+
+  const removeContributor = (index: number) => {
+    const removedContributor = contributors[index]
+    if (!removedContributor) return
+    const label = `${removedContributor.name} (${removedContributor.role})`
+    setContributors((prev) => prev.filter((_, i) => i !== index))
+    setNewContributors((prev) => {
+      const copy = new Set(prev)
+      copy.delete(label)
+      return copy
+    })
+  }
+
+  /*
     const docMetadata = useMemo(
       () =>
         buildCitationMetadata({
@@ -269,79 +273,79 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }, [citeFormat, docMetadata])
     */
 
-    const cancelEdits = () => {
-        if (!backupState) return
-        setTitle(backupState.title)
-        setDate(backupState.date)
-        //setDescription(backupState.description)
-        setGenre(backupState.genre)
-        //setFormat(backupState.format)
-        //setPages(backupState.pages)
-        //setCreator(backupState.creator)
-        //setSource(backupState.source)
-        //setDOI(backupState.doi)
-        //setContributors(backupState.contributors)
-        // Tags reset handled by reinitialization on modal open
-        setIsEditing(false)
-    }
+  const cancelEdits = () => {
+    if (!backupState) return
+    setTitle(backupState.title)
+    setDate(backupState.date)
+    //setDescription(backupState.description)
+    setGenre(backupState.genre)
+    //setFormat(backupState.format)
+    //setPages(backupState.pages)
+    //setCreator(backupState.creator)
+    //setSource(backupState.source)
+    //setDOI(backupState.doi)
+    //setContributors(backupState.contributors)
+    // Tags reset handled by reinitialization on modal open
+    setIsEditing(false)
+  }
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        onSubmit({
-            title,
-            date,
-            //   description,
-            genre,
-            //   format,
-            //   pages,
-            //   creator,
-            //   source,
-            //   doi,
-            //   contributors,
-            //   keywords,
-            //   subjectHeadings,
-            //   languages,
-            //   spatialCoverages,
-            //   citation,
-            //   citeFormat,
-        })
-        setIsEditing(false)
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit({
+      title,
+      date,
+      //   description,
+      genre,
+      //   format,
+      //   pages,
+      //   creator,
+      //   source,
+      //   doi,
+      //   contributors,
+      //   keywords,
+      //   subjectHeadings,
+      //   languages,
+      //   spatialCoverages,
+      //   citation,
+      //   citeFormat,
+    })
+    setIsEditing(false)
+  }
 
-    if (!isOpen) return null
+  if (!isOpen) return null
 
-    return (
-        <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                <h2 className={styles.title}>Editing Document Information</h2>
-                <p className={styles.subtitle}>* indicates a required field</p>
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.title}>Editing Document Information</h2>
+        <p className={styles.subtitle}>* indicates a required field</p>
 
-                <form onSubmit={handleSubmit}>
-                    <div className={styles.formGrid}>
-                        <div className={styles.fieldGroup}>
-                            <label className={styles.label}>Title*</label>
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                disabled={!isEditing}
-                            />
-                        </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Title*</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
 
-                        <div className={styles.fieldGroup}>
-                            <label className={styles.label}>Date Created</label>
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={date.toString()}
-                                onChange={(e) => setDate(e.target.value)}
-                                disabled={!isEditing}
-                            />
-                        </div>
-                    </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Date Created</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={date.toString()}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
 
-                    {/*
+          {/*
           <div className={styles.fullWidthGroup}>
             <label className={styles.label}>Description</label>
             <TextareaAutosize
@@ -357,19 +361,19 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           </div>
             */}
 
-                    <div className={styles.formGrid}>
-                        <div className={styles.fieldGroup}>
-                            <label className={styles.label}>Document Type</label>
-                            <input
-                                type="text"
-                                className={styles.input}
-                                value={genre}
-                                onChange={(e) => setGenre(e.target.value)}
-                                disabled={!isEditing}
-                            />
-                        </div>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Document Type</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
 
-                        {/*
+            {/*
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Format</label>
               <input
@@ -411,64 +415,66 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               />
             </div>
             */}
-                    </div>
+          </div>
 
-                    <TagSelector
-                        label="Contributors"
-                        selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
-                        approvedTags={[]}
-                        newTags={newContributors}
-                        onAdd={() => { }}
-                        onRemove={isEditing ? removeContributor : undefined}
-                        addButtonLabel="+ Contributor"
-                        customForm={
-                            isEditing ? (
-                                <div className={styles.fullWidthGroup}>
-                                    <input
-                                        type="text"
-                                        placeholder="Contributor name"
-                                        value={tempName}
-                                        onChange={(e) => setTempName(e.target.value)}
-                                        className={styles.input}
-                                    />
-                                    <select
-                                        value={tempRole ?? ""}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setTempRole(val === "" ? null : (val as Dailp.ContributorRole));
-                                        }}
-                                        >
-                                        <option value="">Select role</option>
-                                        {contributorRoles.map((role) => (
-                                            <option key={role} value={role}>
-                                            {role}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <label className={styles.label}>
-                                        <input
-                                            type="checkbox"
-                                            checked={tempVisible}
-                                            onChange={(e) => setTempVisible(e.target.checked)}
-                                        />
-                                        Allow contributor profile to be publically visible?
-                                    </label>
-                                    <button
-                                        type="button"
-                                        className={styles.addTagButton}
-                                        onClick={() => {
-                                            if (!tempName || !tempRole) return
-                                            addContributor(tempName, tempRole, tempVisible)
-                                        }}
-                                    >
-                                        Submit
-                                    </button>
-                                </div>
-                            ) : null
-                        }
+          <TagSelector
+            label="Contributors"
+            selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
+            approvedTags={[]}
+            newTags={newContributors}
+            onAdd={() => {}}
+            onRemove={isEditing ? removeContributor : undefined}
+            addButtonLabel="+ Contributor"
+            customForm={
+              isEditing ? (
+                <div className={styles.fullWidthGroup}>
+                  <input
+                    type="text"
+                    placeholder="Contributor name"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    className={styles.input}
+                  />
+                  <select
+                    value={tempRole ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setTempRole(
+                        val === "" ? null : (val as Dailp.ContributorRole)
+                      )
+                    }}
+                  >
+                    <option value="">Select role</option>
+                    {contributorRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <label className={styles.label}>
+                    <input
+                      type="checkbox"
+                      checked={tempVisible}
+                      onChange={(e) => setTempVisible(e.target.checked)}
                     />
+                    Allow contributor profile to be publically visible?
+                  </label>
+                  <button
+                    type="button"
+                    className={styles.addTagButton}
+                    onClick={() => {
+                      if (!tempName || !tempRole) return
+                      addContributor(tempName, tempRole, tempVisible)
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              ) : null
+            }
+          />
 
-                    {/* <div className={styles.fullWidthGroup}>
+          {/* <div className={styles.fullWidthGroup}>
             <label className={styles.label}>Source</label>
             <input
               type="text"
@@ -558,32 +564,32 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           />
           */}
 
-                    <div className={styles.buttonGroup}>
-                        {isEditing ? (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={cancelEdits}
-                                    className={styles.modalCancelButton}
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className={styles.submitButton}>
-                                    Submit
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className={styles.modalCancelButton}
-                            >
-                                Close
-                            </button>
-                        )}
-                    </div>
-                </form>
-            </div>
-        </div>
-    )
+          <div className={styles.buttonGroup}>
+            {isEditing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={cancelEdits}
+                  className={styles.modalCancelButton}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.submitButton}>
+                  Submit
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.modalCancelButton}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
