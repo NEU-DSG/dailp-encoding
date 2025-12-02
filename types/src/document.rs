@@ -565,7 +565,7 @@ pub struct DocumentMetadata {
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
 }
-    
+
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all languages linked to this document
@@ -577,15 +577,15 @@ impl DocumentMetadata {
         let rows = query_file_as!(
             Language,
             "queries/get_languages_by_document_id.sql",
-          self.id.0
+            self.id.0
         )
         .fetch_all(pool)
         .await?;
-      
+
         Ok(rows
             .into_iter()
             .map(|row| Language {
-              id: row.id,
+                id: row.id,
                 name: row.name,
                 status: row.status,
             })
@@ -600,10 +600,6 @@ impl DocumentMetadata {
         let rows = query_file_as!(
             SubjectHeading,
             "queries/get_subject_headings_by_document_id.sql",
-            self.id.0
-        )
-        .fetch_all(pool)
-        .await?;
             self.id.0
         )
         .fetch_all(pool)
