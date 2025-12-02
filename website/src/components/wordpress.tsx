@@ -36,7 +36,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <PageContents content={wpPage.content} />
+    return <WordpressPageContents content={wpPage.content} />
   } else if (fetching) {
     return (
       <div>
@@ -50,7 +50,11 @@ const WordpressPage = ({ slug }: Props) => {
 
 export default WordpressPage
 
-export const PageContents = ({ content }: { content: string | null }) => {
+export const WordpressPageContents = ({
+  content,
+}: {
+  content: string | null
+}) => {
   const { "*": slug } = useRouteParams()
 
   let parsed
@@ -140,7 +144,7 @@ const PullAudio = (props: {
   const doc = data?.document
 
   // Gets the audio recording of this document slice.
-  const docAudio = doc?.audioRecording
+  const docAudio = doc?.ingestedAudioTrack
   // Gets the individual recordings of each word of this document slice.
   const audioTracks = doc?.forms.map((form) => form.ingestedAudioTrack)
 
