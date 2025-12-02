@@ -3,11 +3,11 @@ import * as styles from "./dropdown.css"
 
 interface DropdownProps {
   label?: string
-  options: string[] // Stores display names, ex. "APA", "MLA", "Chicago" 
+  options: string[] // Stores display names, ex. "APA", "MLA", "Chicago"
   selected: string | null
   setSelected: (value: string) => void // Accepts display name
   addButtonLabel: string
-} 
+}
 
 export const Dropdown: React.FC<DropdownProps> = ({
   label,

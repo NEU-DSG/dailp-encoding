@@ -1,5 +1,4 @@
 declare module "citation-js" {
-    const Cite: any
-    export default Cite
+  const Cite: any
+  export default Cite
 }
-  

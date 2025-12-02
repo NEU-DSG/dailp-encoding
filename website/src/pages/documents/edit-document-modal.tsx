@@ -1,18 +1,18 @@
-"use client"
-
+import plugins from "citation-js"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
-import * as styles from "./edit-document-modal.css"
-import { useTagSelector } from "../hooks/use-tag-selector"
-import { TagSelector } from "./tag-selector"
 import TextareaAutosize from "react-textarea-autosize"
-import { buildCitationMetadata } from "../../utils/build-citation-metadata"
-import { Dropdown } from "./dropdown"
-import Cite from "../../utils/citation-config"
-import plugins from "citation-js"
-import { UserRole, useUserRole } from "../../auth"
 //import { AnnotatedDoc, Contributor } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
+import { UserRole, useUserRole } from "../../auth"
+import { buildCitationMetadata } from "../../utils/build-citation-metadata"
+import Cite from "../../utils/citation-config"
+import { useTagSelector } from "../hooks/use-tag-selector"
+import { Dropdown } from "./dropdown"
+import * as styles from "./edit-document-modal.css"
+import { TagSelector } from "./tag-selector"
+
+;("use client")
 
 export type EditDocumentModalProps = {
   isOpen: boolean
@@ -22,9 +22,8 @@ export type EditDocumentModalProps = {
 }
 
 export interface FormContributor extends Dailp.Contributor {
-    isNew?: boolean
-  }
-  
+  isNew?: boolean
+}
 
 export const formatMap: Record<string, string> = {
   APA: "apa",
@@ -115,11 +114,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   */
 
   const [formContributors, setFormContributors] = useState<FormContributor[]>(
-    () => (documentMetadata.contributors ?? []).map(c => ({
-      ...c,
-      isNew: false,
-    }))
-  )  
+    () =>
+      (documentMetadata.contributors ?? []).map((c) => ({
+        ...c,
+        isNew: false,
+      }))
+  )
   const [newContributors, setNewContributors] = useState<Set<string>>(new Set())
 
   const [tempName, setTempName] = useState("")
@@ -185,7 +185,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         // pages,
         //creator,
         //source,
-       //doi,
+        //doi,
         // contributors,
         // keywords,
         // subjectHeadings,
@@ -196,7 +196,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }
   }, [isOpen])
 
-  const [contributors, setContributors] = useState<FormContributor[]>(formContributors)
+  const [contributors, setContributors] =
+    useState<FormContributor[]>(formContributors)
   const addContributor = (name: string, role: string, isVisible: boolean) => {
     if (!name || !role) return
     const label = `${name} (${role})`
@@ -268,20 +269,20 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     onSubmit({
       title,
       date,
-    //   description,
+      //   description,
       genre,
-    //   format,
-    //   pages,
-    //   creator,
-    //   source,
-    //   doi,
-    //   contributors,
-    //   keywords,
-    //   subjectHeadings,
-    //   languages,
-    //   spatialCoverages,
-    //   citation,
-    //   citeFormat,
+      //   format,
+      //   pages,
+      //   creator,
+      //   source,
+      //   doi,
+      //   contributors,
+      //   keywords,
+      //   subjectHeadings,
+      //   languages,
+      //   spatialCoverages,
+      //   citation,
+      //   citeFormat,
     })
     setIsEditing(false)
   }
@@ -330,7 +331,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
           </div>
 
-        {/*
+          {/*
           <div className={styles.fullWidthGroup}>
             <label className={styles.label}>Description</label>
             <TextareaAutosize
@@ -357,7 +358,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 disabled={!isEditing}
               />
             </div>
-        
+
             {/*
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Format</label>

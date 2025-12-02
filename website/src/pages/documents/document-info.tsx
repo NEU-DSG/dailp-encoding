@@ -6,10 +6,13 @@ import { useCredentials } from "src/auth"
 import { Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
-import { EditDocumentModal, EditDocumentModalProps } from "./edit-document-modal"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
 import * as css from "./document.css"
+import {
+  EditDocumentModal,
+  EditDocumentModalProps,
+} from "./edit-document-modal"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -24,7 +27,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
   const token = useCredentials()
   const { form, isEditing } = useForm()
- 
+
   const contributorsList = (
     <>
       <Helmet>

@@ -1,7 +1,10 @@
 import { useState } from "react"
 
 // Provides functionality for adding and removing tags in document metadata editing modal
-export function useTagSelector(initialTags: string[] = [], approvedTags: string[] = []) {
+export function useTagSelector(
+  initialTags: string[] = [],
+  approvedTags: string[] = []
+) {
   const [tags, setTags] = useState<string[]>(initialTags)
   const [newTags, setNewTags] = useState<Set<string>>(new Set())
   const [showDropdown, setShowDropdown] = useState(false)

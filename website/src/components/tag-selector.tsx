@@ -10,7 +10,7 @@ interface TagSelectorProps {
   onRemove: (index: number) => void
   addButtonLabel: string
   customForm?: React.ReactNode
-} 
+}
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
   label,
@@ -30,10 +30,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
       <div className={css.tagsContainer}>
         {selectedTags.map((tag, index) => (
-          <div
-            key={index}
-            className={newTags.has(tag) ? css.newTag : css.tag}
-          >
+          <div key={index} className={newTags.has(tag) ? css.newTag : css.tag}>
             <span>{tag}</span>
             <button
               type="button"
