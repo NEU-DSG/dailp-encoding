@@ -694,7 +694,11 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
-	Terms that reflect Indigenous knowledge practices associated with the document
+	The languages present in the document
+	"""
+	languages: [LanguageUpdate!]
+  """
+  Terms that reflect Indigenous knowledge practices associated with the document
 	"""
 	subjectHeadings: [SubjectHeadingUpdate!]
 	"""
