@@ -13,7 +13,7 @@ use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 
-use crate::doc_metadata::{Language, Keyword, SpatialCoverage};
+use crate::doc_metadata::{Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -46,7 +46,7 @@ impl Database {
         let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
             .fetch_all(&self.client)
             .await?;
-      Ok(rows)
+        Ok(rows)
     }
     pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
         let rows =
@@ -904,7 +904,7 @@ impl Database {
             // Write new IDs
             query_file!(
                 "queries/insert_document_keywords.sql",
-              document.id,
+                document.id,
                 &ids[..]
             )
             .execute(&mut *tx)
@@ -2122,7 +2122,7 @@ impl Database {
             Ok(None)
         }
     }
-  
+
     //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)

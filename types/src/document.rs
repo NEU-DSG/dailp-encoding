@@ -1,6 +1,6 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Language, LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate,
-    SubjectHeading, SubjectHeadingUpdate, Keyword, KeywordUpdate,
+    ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
+    SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
@@ -584,7 +584,7 @@ impl DocumentMetadata {
         let rows = query_file_as!(
             Keyword,
             "queries/get_keywords_by_document_id.sql",
-          self.id.0
+            self.id.0
         )
         .fetch_all(pool)
         .await?;
@@ -592,7 +592,7 @@ impl DocumentMetadata {
         Ok(rows
             .into_iter()
             .map(|row| Keyword {
-              id: row.id,
+                id: row.id,
                 name: row.name,
                 status: row.status,
             })
@@ -613,7 +613,7 @@ impl DocumentMetadata {
         .await?;
 
         Ok(rows
-            .into_iter()            
+            .into_iter()
             .map(|row| Language {
                 id: row.id,
                 name: row.name,
