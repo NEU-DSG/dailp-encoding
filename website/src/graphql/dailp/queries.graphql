@@ -123,6 +123,11 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  languages {
+    id
+    name
+    status
+  }
   subjectHeadings {
     id
     name

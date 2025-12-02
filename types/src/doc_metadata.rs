@@ -95,20 +95,40 @@ pub struct Genre {
 }
 
 /// Stores a language associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
-    /*
-    Tag for the language within the DAILP system
-    Could be useful for managing similar language names or extending this to
-    adding tags for language, dialect, and script combinations later on
-    */
-    pub dailp_tag: String,
-    /// Documents associated with the language
-    pub documents: Vec<DocumentReference>,
     /// Name of the language
     pub name: String,
+    /// Status (pending, approved, rejected) of a language
+    pub status: ApprovalStatus,
+}
+
+/// For updating languages
+#[derive(async_graphql::InputObject)]
+pub struct LanguageUpdate {
+    /// UUID for the language
+    pub id: Uuid,
+    /// Name of the language
+    pub name: String,
+}
+
+/// Get all approved languages
+#[async_graphql::ComplexObject]
+impl Language {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Language struct to corresponding Uuid
+impl From<&Language> for Uuid {
+    fn from(l: &Language) -> Self {
+        l.id
+    }
 }
 
 /// Stores a spatial coverage associated with a document
