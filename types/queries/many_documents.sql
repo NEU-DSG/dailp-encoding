@@ -14,12 +14,27 @@ select
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'name', contributor.full_name, 'role', attr.contribution_role
+        'name', contributor.full_name,
+        'role', attr.contribution_role
       )
     ) filter (where contributor is not null),
     '[]'
-  )
-  as contributors,
+  ) as contributors,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', k.id,
+          'name', k.name,
+          'status', k.status
+        )
+      ),
+      '[]'
+    )
+    from document_keyword dk
+    join keyword k on k.id = dk.keyword_id
+    where dk.document_id = d.id
+  ) as keywords,
   (
     select coalesce(
       jsonb_agg(

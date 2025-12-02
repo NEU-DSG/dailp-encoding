@@ -78,19 +78,23 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	Key terms associated with a document
+	"""
+	keywords: [Keyword!]!
+	"""
 	The languages present in this document
 	"""
 	languages: [Language!]!
-  """
+	"""
 	Terms that that reflects Indigenous knowledge practices associated with a document
 	"""
 	subjectHeadings: [SubjectHeading!]!
-  """
+	"""
 	The locations associated with this document
 	"""
 	spatialCoverage: [SpatialCoverage!]!
-  """
-  The audio for this document that was ingested from GoogleSheets, if there is any.
+	"""
+	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
 	"""
@@ -694,19 +698,23 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
+	The key terms associated with the document
+	"""
+	keywords: [KeywordUpdate!]
+	"""
 	The languages present in the document
 	"""
 	languages: [LanguageUpdate!]
-  """
-  Terms that reflect Indigenous knowledge practices associated with the document
+	"""
+	Terms that reflect Indigenous knowledge practices associated with the document
 	"""
 	subjectHeadings: [SubjectHeadingUpdate!]
-  """
+	"""
 	The editors, translators, etc. of the document
 	"""
 	contributors: [UUID!]
-  """
-  The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
 }
@@ -887,6 +895,35 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+"""
+Record to store a keyword associated with a document
+"""
+type Keyword {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a keyword
+	"""
+	status: ApprovalStatus!
+}
+
+input KeywordUpdate {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+}
 
 """
 Stores a language associated with a document
@@ -1538,8 +1575,6 @@ type UserInfo {
 	Unique ID for the User. Should be an AWS Cognito Sub.
 	"""
 	id: UUID!
-	name: String!
-	role: ContributorRole!
 	email: String!
 	groups: [UserGroup!]!
 }
