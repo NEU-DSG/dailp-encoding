@@ -18,7 +18,23 @@ select
       )
     ) filter (where contributor is not null),
     '[]'
-  ) as contributors,
+  )
+  as contributors,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', l.id,
+          'name', l.name,
+          'status', l.status
+        )
+      ),
+      '[]'
+    )
+    from document_language dl
+    join language l on l.id = dl.language_id
+    where dl.document_id = d.id
+  ) as languages,
   ( -- Subject Headings
     select coalesce(
       jsonb_agg(
