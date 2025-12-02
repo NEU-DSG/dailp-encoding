@@ -12,8 +12,6 @@ import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { TagSelector } from "./tag-selector"
 
-    ; ("use client")
-
 export type EditDocumentModalProps = {
     isOpen: boolean
     onClose: () => void
@@ -132,6 +130,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     const [tempName, setTempName] = useState("")
     const [tempRole, setTempRole] = useState<MaybeContributorRole>(null);
     const [tempVisible, setTempVisible] = useState(false)
+
+    const contributorRoles = Object.values(Dailp.ContributorRole);
 
     /*
     const {
@@ -434,13 +434,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                                     <select
                                         value={tempRole ?? ""}
                                         onChange={(e) => {
-                                            const value = e.target.value;
-                                            setTempRole(value === "" ? null : (value as Dailp.ContributorRole));
+                                            const val = e.target.value;
+                                            setTempRole(val === "" ? null : (val as Dailp.ContributorRole));
                                         }}
-                                        className={styles.select}
                                         >
                                         <option value="">Select role</option>
-                                        {["uploader", "translator", "annotator", "transcriber", "culturalAdvisor"].map((role) => (
+                                        {contributorRoles.map((role) => (
                                             <option key={role} value={role}>
                                             {role}
                                             </option>
