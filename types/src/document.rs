@@ -8,13 +8,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined, Context};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
 
 use futures::TryStreamExt;
-use itertools::Itertools;
 use tokio::fs::read_to_string;
 use uuid::Uuid;
 
@@ -740,7 +739,6 @@ impl DocumentMetadata {
             .collect())
     }
 }
-
 
 /// Database ID for one document
 #[derive(
