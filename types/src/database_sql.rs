@@ -18,6 +18,7 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
+use crate::person::Creator;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -81,6 +82,14 @@ impl Database {
         )
         .fetch_all(&self.client)
         .await?;
+
+        Ok(rows)
+    }
+
+    pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Creator, "queries/get_creators_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
 
         Ok(rows)
     }
@@ -357,6 +366,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    creators_ids: Some(Vec::new()),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
@@ -499,6 +509,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
+                creators_ids: Some(Vec::new()),
                 genre: None,
                 keywords_ids: Some(Vec::new()),
                 languages_ids: Some(Vec::new()),
@@ -966,9 +977,70 @@ impl Database {
             .await?;
         }
 
+        // Update creators
+        // Need to handle if creator already in the list is inserted?
+        if let MaybeUndefined::Value(creators) = &document.creators {
+            // Fetch existing creators linked to this document
+            let existing: Vec<Creator> = self.creators_for_document(document.id).await?;
+
+            let existing_map: HashMap<Uuid, Creator> =
+                existing.iter().map(|c| (c.id, c.clone())).collect();
+            let updated_map: HashMap<Uuid, CreatorUpdate> =
+                creators.iter().map(|c| (c.id, c.clone())).collect();
+
+            // Determine which creators to delete (in database, but not in updated list)
+            let to_delete: Vec<Uuid> = existing_map
+                .keys()
+                .filter(|id| !updated_map.contains_key(id))
+                .cloned()
+                .collect();
+
+            // Determine which creators to add (in updated list, but not in database)
+            let to_add: Vec<&CreatorUpdate> = creators
+                .iter()
+                .filter(|c| !existing_map.contains_key(&c.id))
+                .collect();
+
+            // Determine which creators to update (same ID, but different name)
+            let to_update: Vec<&CreatorUpdate> = creators
+                .iter()
+                .filter(|c| {
+                    existing_map
+                        .get(&c.id)
+                        .map(|old| old.name != c.name)
+                        .unwrap_or(false)
+                })
+                .collect();
+
+            // Delete creators removed by user
+            for id in &to_delete {
+                query_file!("queries/remove_creator_from_document.sql", document.id, id)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+
+            // Link creator to document
+            for cr in &to_add {
+                // Insert creator if new
+                query_file!("queries/insert_creator.sql", &cr.id, &cr.name)
+                    .execute(&mut *tx)
+                    .await?;
+
+                // Link creator to document
+                query_file!("queries/insert_document_creator.sql", document.id, cr.id)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+
+            // Update existing creators with changed data
+            for cr in &to_update {
+                query_file!("queries/update_creator.sql", cr.id, cr.name)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+        }
         // Commit updates
         tx.commit().await?;
-
         Ok(document.id)
     }
 
@@ -2231,6 +2303,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    creators_ids: Some(Vec::new()),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
@@ -2307,6 +2380,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    creators_ids: Some(Vec::new()),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),

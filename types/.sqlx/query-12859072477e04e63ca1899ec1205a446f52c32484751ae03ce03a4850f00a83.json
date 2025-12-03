@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert new creator or update name if creator with same ID exists\ninsert into creator (id, name)\nvalues ($1::uuid, $2)\non conflict (id) do update\nset name = excluded.name;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "12859072477e04e63ca1899ec1205a446f52c32484751ae03ce03a4850f00a83"
+}

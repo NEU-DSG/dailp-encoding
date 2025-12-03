@@ -148,6 +148,10 @@ fragment DocFormFields on AnnotatedDoc {
     name
     status
   }
+  creators {
+    id
+    name
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {

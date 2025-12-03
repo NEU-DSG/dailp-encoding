@@ -996,6 +996,15 @@ impl SheetInterpretation {
             .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
             .clone();
 
+        let creators_row: Vec<String> = values
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("Missing creators row"))?;
+
+        let creators_ids: Vec<Uuid> = creators_row
+            .into_iter()
+            .filter_map(|s| Uuid::parse_str(s.trim()).ok())
+            .collect();
+
         Ok(DocumentMetadata {
             id: Default::default(),
             short_name,
@@ -1008,6 +1017,7 @@ impl SheetInterpretation {
             languages_ids: None,
             subject_headings_ids: None,
             spatial_coverage_ids: None,
+            creators_ids: Some(creators_ids),
             translation,
             page_images,
             date: parsed_date,

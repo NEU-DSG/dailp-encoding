@@ -94,6 +94,10 @@ type AnnotatedDoc {
 	"""
 	spatialCoverage: [SpatialCoverage!]!
 	"""
+	Creators of this document
+	"""
+	creators: [Creator!]!
+	"""
 	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
@@ -560,6 +564,31 @@ input CreateEditedCollectionInput {
 }
 
 """
+The creator of a document
+"""
+type Creator {
+	"""
+	UUID of the creator
+	"""
+	id: UUID!
+	"""
+	Name of the creator
+	"""
+	name: String!
+}
+
+input CreatorUpdate {
+	"""
+	UUID for the creator
+	"""
+	id: UUID!
+	"""
+	Name of the creator
+	"""
+	name: String!
+}
+
+"""
 Request to update if a piece of document audio should be included in an edited collection
 """
 input CurateDocumentAudioInput {
@@ -717,6 +746,10 @@ input DocumentMetadataUpdate {
 	The physical locations associated with a document (e.g. where it was written, found)
 	"""
 	spatialCoverage: [SpatialCoverageUpdate!]
+	"""
+	The creator(s) of the document
+	"""
+	creators: [CreatorUpdate!]
 }
 
 type DocumentPage {
