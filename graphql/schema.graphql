@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	Key terms associated with a document
+	"""
+	keywords: [Keyword!]!
+	"""
 	The languages present in this document
 	"""
 	languages: [Language!]!
@@ -694,6 +698,10 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
+	The key terms associated with the document
+	"""
+	keywords: [KeywordUpdate!]
+	"""
 	The languages present in the document
 	"""
 	languages: [LanguageUpdate!]
@@ -887,6 +895,35 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+"""
+Record to store a keyword associated with a document
+"""
+type Keyword {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a keyword
+	"""
+	status: ApprovalStatus!
+}
+
+input KeywordUpdate {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+}
 
 """
 Stores a language associated with a document
