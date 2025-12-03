@@ -1,6 +1,6 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
-    SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+    ApprovalStatus, Language, LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate,
+    SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, SourceAttribution};
 use crate::{
@@ -9,6 +9,7 @@ use crate::{
 };
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
 
@@ -224,12 +225,6 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Key terms associated with a document
-    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
-        let db = context.data::<Database>()?;
-        let headings = db.keywords_for_document(self.meta.id.0).await?;
-        Ok(headings)
-    }
     /// The languages present in this document
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
         let db = context.data::<Database>()?;
@@ -386,8 +381,6 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
-    /// The key terms associated with the document
-    pub keywords: MaybeUndefined<Vec<KeywordUpdate>>,
     /// The languages present in the document
     pub languages: MaybeUndefined<Vec<LanguageUpdate>>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
@@ -548,8 +541,6 @@ pub struct DocumentMetadata {
     pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The languages present in the document
     pub languages_ids: Option<Vec<Uuid>>,
-    /// The key terms associated with the document
-    pub keywords_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Option<Vec<Contributor>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
@@ -575,29 +566,6 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
-    /// Fetch all keywords linked to this document
-    async fn keywords<'a>(
-        &'a self,
-        ctx: &Context<'a>,
-    ) -> Result<Vec<Keyword>, async_graphql::Error> {
-        let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(
-            Keyword,
-            "queries/get_keywords_by_document_id.sql",
-            self.id.0
-        )
-        .fetch_all(pool)
-        .await?;
-
-        Ok(rows
-            .into_iter()
-            .map(|row| Keyword {
-                id: row.id,
-                name: row.name,
-                status: row.status,
-            })
-            .collect())
-    }
     /// Fetch all languages linked to this document
     async fn languages<'a>(
         &'a self,
