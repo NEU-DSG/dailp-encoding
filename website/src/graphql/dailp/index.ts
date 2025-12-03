@@ -1801,7 +1801,10 @@ export type DocFormFieldsFragment = {
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
     readonly languages: ReadonlyArray<
-      { readonly __typename?: "Language" } & Pick<Language, "id" | "name">
+      { readonly __typename?: "Language" } & Pick<
+        Language,
+        "id" | "name" | "status"
+      >
     >
     readonly subjectHeadings: ReadonlyArray<
       { readonly __typename?: "SubjectHeading" } & Pick<
@@ -3373,6 +3376,7 @@ export const DocFormFieldsFragmentDoc = gql`
     languages {
       id
       name
+      status
     }
     subjectHeadings {
       id
