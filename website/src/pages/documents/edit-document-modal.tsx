@@ -9,11 +9,11 @@ import Cite from "../../utils/citation-config"
 import { useTagSelector } from "../hooks/use-tag-selector"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
+import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
   isOpen: boolean
-  isEditing: boolean
   onClose: () => void
   onSubmit: (data: any) => void
   documentMetadata: Dailp.AnnotatedDoc
@@ -92,11 +92,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   onClose,
   onSubmit,
   documentMetadata,
-}) => {
+}: EditDocumentModalProps) => {
+  const { isEditing, setIsEditing } = useEditing()
+  if (!isOpen && !isEditing) return null
+
   const userRole = useUserRole()
   const isContributor = userRole === UserRole.Contributor
-
-  const [isEditing, setIsEditing] = useState(false)
 
   const [title, setTitle] = useState(documentMetadata.title ?? "")
   const [date, setDate] = useState(documentMetadata.date ?? "")

@@ -63,7 +63,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <Form {...form}>
           <EditDocumentModal
             isOpen={true}
-            isEditing={true}
             onClose={() => {}}
             onSubmit={(data) => console.log(data)}
             documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc

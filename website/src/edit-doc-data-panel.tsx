@@ -16,10 +16,12 @@ import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
 import * as css from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"
+import { useEditing } from "./pages/documents/editing-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
-  const { form, isEditing, setIsEditing } = useForm()
+  const { isEditing, setIsEditing } = useEditing()
+  const form = useForm()
 
   return (
     <Form {...form} className={css.form}>
@@ -37,7 +39,6 @@ export const EditButton = () => {
           </IconButton>
 
           <IconTextButton
-            {...form}
             icon={<IoCheckmarkSharp />}
             className={css.editPanelButton}
             as={FormSubmitButton}
