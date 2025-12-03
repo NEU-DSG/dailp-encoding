@@ -431,7 +431,9 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }

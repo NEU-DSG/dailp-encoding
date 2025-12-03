@@ -4,5 +4,7 @@ create type contributor_role as enum (
   'transcriber', 
   'translator', 
   'annotator',
-  'cultural_advisor'
+  'cultural_advisor',
+  'author',
+  'editor'
 );
