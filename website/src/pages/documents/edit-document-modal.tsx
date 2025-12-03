@@ -13,6 +13,7 @@ import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
   isOpen: boolean
+  isEditing: boolean
   onClose: () => void
   onSubmit: (data: any) => void
   documentMetadata: Dailp.AnnotatedDoc
@@ -93,7 +94,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   documentMetadata,
 }) => {
   const userRole = useUserRole()
-  const isEditor = userRole === UserRole.Editor
+  const isContributor = userRole === UserRole.Contributor
 
   const [isEditing, setIsEditing] = useState(false)
 
@@ -464,6 +465,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                     onClick={() => {
                       if (!tempName || !tempRole) return
                       addContributor(tempName, tempRole, tempVisible)
+
+                      setTempName("")
+                      setTempRole(null)
+                      setTempVisible(false)
                     }}
                   >
                     Submit

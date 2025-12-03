@@ -4,7 +4,7 @@ export const fullWidthGroup = style({
   display: "flex",
   flexDirection: "column",
   width: "100%",
-  marginBottom: "16px",
+  marginBottom: "100px", // 16px
 })
 
 export const tagsContainer = style({
@@ -99,6 +99,8 @@ export const tagDropdown = style({
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
   zIndex: 10,
   maxHeight: "200px",
+  minHeight: "100px",
+  padding: "12px",
   overflowY: "auto",
 })
 

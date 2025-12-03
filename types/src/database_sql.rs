@@ -2619,7 +2619,7 @@ impl Loader<ContributorsForDocument> for Database {
                     Contributor {
                         id: x.id,
                         name: x.full_name,
-                        role: Some(ContributorRole::from(x.contribution_role))
+                        role: Some(ContributorRole::from(x.contribution_role)),
                     },
                 )
             })

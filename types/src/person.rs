@@ -79,7 +79,7 @@ pub enum ContributorRole {
     /// Author of a document
     Author,
     /// Edited a document
-    Editor
+    Editor,
 }
 
 impl From<String> for ContributorRole {
@@ -106,7 +106,7 @@ impl fmt::Display for ContributorRole {
             ContributorRole::Annotator => "Annotator",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
             ContributorRole::Author => "Author",
-            ContributorRole::Editor => "Editor"
+            ContributorRole::Editor => "Editor",
         };
         write!(f, "{}", s)
     }
