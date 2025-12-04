@@ -60,7 +60,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <>{contributorsList}</>
       )}
       {isEditing ? (
-        <Form {...form}>
+        <Form>
           <EditDocumentModal
             isOpen={true}
             onClose={() => {}}

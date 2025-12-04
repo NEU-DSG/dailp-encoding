@@ -24,7 +24,7 @@ export const EditButton = () => {
   const form = useForm()
 
   return (
-    <Form {...form} className={css.form}>
+    <Form className={css.form}>
       {isEditing ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
         <>
