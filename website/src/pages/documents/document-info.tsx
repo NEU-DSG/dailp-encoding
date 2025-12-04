@@ -13,6 +13,7 @@ import {
   EditDocumentModal,
   EditDocumentModalProps,
 } from "./edit-document-modal"
+import { EditingProvider } from "./editing-context"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -75,7 +76,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   )
   return (
     <Fragment>
-      <>{panel}</>
+      <EditingProvider>{panel}</EditingProvider>
 
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>

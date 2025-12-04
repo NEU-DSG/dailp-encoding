@@ -318,42 +318,39 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <EditingProvider>
-      <div className={styles.overlay} onClick={onClose}>
-        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-          <h2 className={styles.title}>Editing Document Information</h2>
-          <p className={styles.subtitle}>* indicates a required field</p>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h2 className={styles.title}>Editing Document Information</h2>
+        <p className={styles.subtitle}>* indicates a required field</p>
 
-          <form onSubmit={handleSubmit}>
-            <div className={styles.formGrid}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Title*</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Date Created</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={
-                    typeof date === "string"
-                      ? date
-                      : date?.year?.toString() ?? ""
-                  }
-                  onChange={(e) => setDate(e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Title*</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={!isEditing}
+              />
             </div>
 
-            {/*
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Date Created</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={
+                  typeof date === "string" ? date : date?.year?.toString() ?? ""
+                }
+                onChange={(e) => setDate(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
+
+          {/*
             <div className={styles.fullWidthGroup}>
               <label className={styles.label}>Description</label>
               <TextareaAutosize
@@ -369,19 +366,19 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
               */}
 
-            <div className={styles.formGrid}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Document Type</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Document Type</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
 
-              {/*
+            {/*
               <div className={styles.fieldGroup}>
                 <label className={styles.label}>Format</label>
                 <input
@@ -423,70 +420,70 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 />
               </div>
               */}
-            </div>
+          </div>
 
-            <TagSelector
-              label="Contributors"
-              selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
-              approvedTags={[]}
-              newTags={newContributors}
-              onAdd={() => {}}
-              onRemove={isEditing ? removeContributor : undefined}
-              addButtonLabel="+ Contributor"
-              customForm={
-                isEditing ? (
-                  <div className={styles.fullWidthGroup}>
+          <TagSelector
+            label="Contributors"
+            selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
+            approvedTags={[]}
+            newTags={newContributors}
+            onAdd={() => {}}
+            onRemove={isEditing ? removeContributor : undefined}
+            addButtonLabel="+ Contributor"
+            customForm={
+              isEditing ? (
+                <div className={styles.fullWidthGroup}>
+                  <input
+                    type="text"
+                    placeholder="Contributor name"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    className={styles.input}
+                  />
+                  <select
+                    value={tempRole ?? ""}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setTempRole(
+                        val === "" ? null : (val as Dailp.ContributorRole)
+                      )
+                    }}
+                  >
+                    <option value="">Select role</option>
+                    {contributorRoles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <label className={styles.label}>
                     <input
-                      type="text"
-                      placeholder="Contributor name"
-                      value={tempName}
-                      onChange={(e) => setTempName(e.target.value)}
-                      className={styles.input}
+                      type="checkbox"
+                      checked={tempVisible}
+                      onChange={(e) => setTempVisible(e.target.checked)}
                     />
-                    <select
-                      value={tempRole ?? ""}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setTempRole(
-                          val === "" ? null : (val as Dailp.ContributorRole)
-                        )
-                      }}
-                    >
-                      <option value="">Select role</option>
-                      {contributorRoles.map((role) => (
-                        <option key={role} value={role}>
-                          {role}
-                        </option>
-                      ))}
-                    </select>
-                    <label className={styles.label}>
-                      <input
-                        type="checkbox"
-                        checked={tempVisible}
-                        onChange={(e) => setTempVisible(e.target.checked)}
-                      />
-                      Allow contributor profile to be publically visible?
-                    </label>
-                    <button
-                      type="button"
-                      className={styles.addTagButton}
-                      onClick={() => {
-                        if (!tempName || !tempRole) return
-                        addContributor(tempName, tempRole, tempVisible)
+                    Allow contributor profile to be publically visible?
+                  </label>
+                  <button
+                    type="button"
+                    className={styles.addTagButton}
+                    onClick={() => {
+                      if (!tempName || !tempRole) return
+                      addContributor(tempName, tempRole, tempVisible)
 
-                        setTempName("")
-                        setTempRole(null)
-                        setTempVisible(false)
-                      }}
-                    >
-                      Submit
-                    </button>
-                  </div>
-                ) : null
-              }
-            />
+                      setTempName("")
+                      setTempRole(null)
+                      setTempVisible(false)
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              ) : null
+            }
+          />
 
-            {/* <div className={styles.fullWidthGroup}>
+          {/* <div className={styles.fullWidthGroup}>
               <label className={styles.label}>Source</label>
               <input
                 type="text"
@@ -576,33 +573,32 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             />
             */}
 
-            <div className={styles.buttonGroup}>
-              {isEditing ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={cancelEdits}
-                    className={styles.modalCancelButton}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className={styles.submitButton}>
-                    Submit
-                  </button>
-                </>
-              ) : (
+          <div className={styles.buttonGroup}>
+            {isEditing ? (
+              <>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={cancelEdits}
                   className={styles.modalCancelButton}
                 >
-                  Close
+                  Cancel
                 </button>
-              )}
-            </div>
-          </form>
-        </div>
+                <button type="submit" className={styles.submitButton}>
+                  Submit
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className={styles.modalCancelButton}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </form>
       </div>
-    </EditingProvider>
+    </div>
   )
 }

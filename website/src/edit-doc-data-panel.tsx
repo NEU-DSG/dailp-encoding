@@ -24,42 +24,40 @@ export const EditButton = () => {
   const form = useForm()
 
   return (
-    <EditingProvider>
-      <Form className={css.form}>
-        {isEditing ? (
-          // Displays a "Cancel" button and "Save" button in editing mode.
-          <>
-            <IconButton
-              className={css.cancelButton}
-              round={false}
-              onClick={() => {
-                setIsEditing(false)
-              }}
-            >
-              Cancel
-            </IconButton>
-
-            <IconTextButton
-              icon={<IoCheckmarkSharp />}
-              className={css.editPanelButton}
-              as={FormSubmitButton}
-            >
-              Save
-            </IconTextButton>
-          </>
-        ) : (
-          <IconTextButton
-            icon={<HiPencilAlt />}
-            className={css.editPanelButton}
+    <Form className={css.form}>
+      {isEditing ? (
+        // Displays a "Cancel" button and "Save" button in editing mode.
+        <>
+          <IconButton
+            className={css.cancelButton}
+            round={false}
             onClick={() => {
-              setIsEditing(true)
+              setIsEditing(false)
             }}
           >
-            Edit
+            Cancel
+          </IconButton>
+
+          <IconTextButton
+            icon={<IoCheckmarkSharp />}
+            className={css.editPanelButton}
+            as={FormSubmitButton}
+          >
+            Save
           </IconTextButton>
-        )}
-      </Form>
-    </EditingProvider>
+        </>
+      ) : (
+        <IconTextButton
+          icon={<HiPencilAlt />}
+          className={css.editPanelButton}
+          onClick={() => {
+            setIsEditing(true)
+          }}
+        >
+          Edit
+        </IconTextButton>
+      )}
+    </Form>
   )
 }
 
