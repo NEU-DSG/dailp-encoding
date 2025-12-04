@@ -49,6 +49,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { EditingProvider } from "./editing-context"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -214,7 +215,9 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         {/* Document Info Component */}
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
-          <DocumentInfo doc={doc} />
+          <EditingProvider>
+            `<DocumentInfo doc={doc} />`
+          </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
     </>

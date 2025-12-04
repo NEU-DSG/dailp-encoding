@@ -75,8 +75,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   )
   return (
     <Fragment>
-      <EditingProvider>{panel}</EditingProvider>
-
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}
