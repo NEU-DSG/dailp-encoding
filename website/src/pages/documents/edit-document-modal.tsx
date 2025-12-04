@@ -94,7 +94,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   documentMetadata,
 }: EditDocumentModalProps) => {
   const { isEditing, setIsEditing } = useEditing()
-  if (!isOpen && !isEditing) return null
+
+  // Only render the modal when isOpen is true
+  if (!isOpen) return null
 
   const userRole = useUserRole()
   const isContributor = userRole === UserRole.Contributor
@@ -123,7 +125,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         ...c,
         isNew: false,
         isVisible: c.details?.isVisible ?? false,
-        details: c.details ?? null,
+        details: c.details ? { ...c.details } : null,
       }))
   )
   const [newContributors, setNewContributors] = useState<Set<string>>(new Set())
@@ -339,7 +341,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               <input
                 type="text"
                 className={styles.input}
-                value={date.toString()}
+                value={
+                  typeof date === "string" ? date : date?.year?.toString() ?? ""
+                }
                 onChange={(e) => setDate(e.target.value)}
                 disabled={!isEditing}
               />
