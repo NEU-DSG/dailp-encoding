@@ -13,7 +13,7 @@ import {
   EditDocumentModal,
   EditDocumentModalProps,
 } from "./edit-document-modal"
-import { EditingProvider } from "./editing-context"
+import { EditingProvider, useEditing } from "./editing-context"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -27,7 +27,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     return null
   }
   const token = useCredentials()
-  const { form, isEditing } = useForm()
+  const { form } = useForm()
+  const { isEditing } = useEditing()
 
   const contributorsList = (
     <>
@@ -61,14 +62,12 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <>{contributorsList}</>
       )}
       {isEditing ? (
-        <Form>
-          <EditDocumentModal
-            isOpen={true}
-            onClose={() => {}}
-            onSubmit={(data) => console.log(data)}
-            documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
-          />
-        </Form>
+        <EditDocumentModal
+          isOpen={true}
+          onClose={() => {}}
+          onSubmit={(data) => console.log(data)}
+          documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
+        />
       ) : (
         <></>
       )}
