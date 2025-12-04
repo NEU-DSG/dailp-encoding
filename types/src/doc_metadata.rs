@@ -1,5 +1,5 @@
 /// Document metadata
-use crate::{document::DocumentReference, ContributorReference};
+use crate::document::DocumentReference;
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
@@ -36,16 +36,40 @@ impl FromStr for ApprovalStatus {
 
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
-    /// Documents associated with the subject heading
-    pub documents: Vec<DocumentReference>,
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
     pub status: ApprovalStatus,
+}
+
+// For updating subject headings
+#[derive(async_graphql::InputObject)]
+pub struct SubjectHeadingUpdate {
+    /// UUID for the subject heading
+    pub id: Uuid,
+    /// Name of the subject heading
+    pub name: String,
+}
+
+/// Get all approved subject headings
+#[async_graphql::ComplexObject]
+impl SubjectHeading {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts SubjectHeading struct to corresponding Uuid
+impl From<&SubjectHeading> for Uuid {
+    fn from(s: &SubjectHeading) -> Self {
+        s.id
+    }
 }
 
 /// Stores the physical or digital medium associated with a document
@@ -78,6 +102,44 @@ impl Format {
     }
 }
 
+/// Record to store a keyword associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[sqlx(rename_all = "lowercase")]
+#[graphql(complex)]
+pub struct Keyword {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+    /// Status (pending, approved, rejected) of a keyword
+    pub status: ApprovalStatus,
+}
+
+// For updating keywords
+#[derive(async_graphql::InputObject)]
+pub struct KeywordUpdate {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+}
+
+/// Get all approved keywords
+#[async_graphql::ComplexObject]
+impl Keyword {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Keyword struct to corresponding Uuid
+impl From<&Keyword> for Uuid {
+    fn from(k: &Keyword) -> Self {
+        k.id
+    }
+}
+
 /// Stores the genre associated with a document
 #[derive(Clone, SimpleObject)]
 pub struct Genre {
@@ -90,100 +152,75 @@ pub struct Genre {
 }
 
 /// Stores a language associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
-    /*
-    Tag for the language within the DAILP system
-    Could be useful for managing similar language names or extending this to
-    adding tags for language, dialect, and script combinations later on
-    */
-    pub dailp_tag: String,
-    /// Documents associated with the language
-    pub documents: Vec<DocumentReference>,
+    /// Name of the language
+    pub name: String,
+    /// Status (pending, approved, rejected) of a language
+    pub status: ApprovalStatus,
+}
+
+/// For updating languages
+#[derive(async_graphql::InputObject)]
+pub struct LanguageUpdate {
+    /// UUID for the language
+    pub id: Uuid,
     /// Name of the language
     pub name: String,
 }
 
+/// Get all approved languages
+#[async_graphql::ComplexObject]
+impl Language {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Language struct to corresponding Uuid
+impl From<&Language> for Uuid {
+    fn from(l: &Language) -> Self {
+        l.id
+    }
+}
+
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
-    /*
-    Tag for the spatial coverage within the DAILP system
-    Could be useful for managing places with similar names or places
-    with multiple names
-    */
-    pub dailpTag: String,
-    /// Documents associated with the spatial coverage
-    pub documents: Vec<DocumentReference>,
     /// Name of the place
+    pub name: String,
+    /// Status (pending, approved, rejected) of a spatial coverage
+    pub status: ApprovalStatus,
+}
+
+// For updating spatial coverages
+#[derive(async_graphql::InputObject)]
+pub struct SpatialCoverageUpdate {
+    /// UUID for the spatial coverage
+    pub id: Uuid,
+    /// Name of the spatial coverage
     pub name: String,
 }
 
-/// Stores citation information for a document
-/// TODO: Add more fields to cover a variety of format types
-#[derive(Clone, Serialize, Deserialize, SimpleObject)]
-pub struct Citation {
-    /// UUID for the citation
-    pub id: Uuid,
-    /// Creators of the document
-    pub creators: Vec<ContributorReference>,
-    /// Format of the document being cited
-    pub doc_format: DocCitationFormat,
-    /// DOI of the document
-    pub doi: String,
-    /// Ending page of the document (inclusive)
-    pub end_page: u16,
-    /// Year the document was published
-    pub publication_year: u16,
-    /// Publisher of the document
-    pub publisher: String,
-    /// Starting page of the document
-    pub start_page: u16,
-    /// Title of the document being cited
-    pub title: String,
-    /// URL of the document, if document can be accessed online
-    pub url: String,
+/// Get all approved spatial coverages
+#[async_graphql::ComplexObject]
+impl SpatialCoverage {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
 }
 
-/// Represents the format of a citation
-/// TODO: Add more formats
-#[derive(Serialize, Deserialize, Enum, Clone, Copy, PartialEq, Eq)]
-pub enum DocCitationFormat {
-    /// Website, BlogPost, Database
-    Website,
-    /// Book, EBook
-    Book,
-    /// JournalArticle, Newsletter
-    Journal,
-    /// Podcast, RadioClip, OralHistory
-    Audio,
-    /// YouTubeVideo, Film
-    Video,
-}
-
-/// Used to automatically assign broader citation format to a document
-/// from its more specific format
-/// TODO: Add more format mappings to cover a variety of format types
-pub fn format_to_citation_format() -> HashMap<&'static str, DocCitationFormat> {
-    use DocCitationFormat::*;
-
-    let mut map = HashMap::new();
-    map.insert("Book", Book);
-    map.insert("EBook", Book);
-    map.insert("JournalArticle", Journal);
-    map.insert("Newsletter", Journal);
-    map.insert("Website", Website);
-    map.insert("BlogPost", Website);
-    map.insert("Database", Website);
-    map.insert("Podcast", Audio);
-    map.insert("RadioClip", Audio);
-    map.insert("OralHistory", Audio);
-    map.insert("YouTubeVideo", Video);
-    map.insert("Film", Video);
-
-    map
+/// Converts SpatialCoverage struct to corresponding Uuid
+impl From<&SpatialCoverage> for Uuid {
+    fn from(s: &SpatialCoverage) -> Self {
+        s.id
+    }
 }

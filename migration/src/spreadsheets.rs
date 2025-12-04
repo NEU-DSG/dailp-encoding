@@ -9,6 +9,7 @@ use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 use dailp::ContributorRole;
+use dailp::Uuid;
 use std::result::Result::Ok;
 
 use dailp::{
@@ -878,17 +879,17 @@ impl SheetInterpretation {
             .filter(|(name, role)| !name.trim().is_empty() || !role.trim().is_empty())
             .map(|(name, role)| {
                 let parsed_role = match role.to_lowercase().parse::<ContributorRole>() {
-                    // Convert string to ContributorRole if parsing succeeds
                     Ok(r) => Some(r),
-                    // Print error and assign None if parsing fails
                     Err(_) => {
                         println!("'{}' is not a valid role", role);
                         None
                     }
                 };
+
                 Contributor {
+                    id: Uuid::new_v4(),
                     name,
-                    role: parsed_role, // Some(role) if parsed, None if invalid/empty
+                    role: parsed_role,
                 }
             })
             .collect();
@@ -995,14 +996,28 @@ impl SheetInterpretation {
             .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
             .clone();
 
+        let creators_row: Vec<String> = values
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("Missing creators row"))?;
+
+        let creators_ids: Vec<Uuid> = creators_row
+            .into_iter()
+            .filter_map(|s| Uuid::parse_str(s.trim()).ok())
+            .collect();
+
         Ok(DocumentMetadata {
             id: Default::default(),
             short_name,
             title: document_title,
             sources,
             collection: source.pop().filter(|s| !s.trim().is_empty()),
-            contributors: people,
+            contributors: Some(people),
             genre: genre.pop().filter(|s| !s.trim().is_empty()),
+            keywords_ids: None, // for now
+            languages_ids: None,
+            subject_headings_ids: None,
+            spatial_coverage_ids: None,
+            creators_ids: Some(creators_ids),
             format_id: None,
             translation,
             page_images,
