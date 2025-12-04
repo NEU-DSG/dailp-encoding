@@ -15,8 +15,35 @@ const idOf = (n: any): string => {
 const generateId = (): string =>
   `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
-// Group chapters by CollectionSection type
-const groupBySection = (nodes: readonly any[] | undefined) => {
+// Convert CollectionSection enum to lowercase key
+const sectionToKey = (
+  section: CollectionSection
+): "intro" | "body" | "credit" => {
+  if (section === CollectionSection.Intro) return "intro"
+  if (section === CollectionSection.Body) return "body"
+  if (section === CollectionSection.Credit) return "credit"
+  return "body" // default fallback
+}
+
+// Build nested chapter structure with subchapters
+type ChapterNode = {
+  id?: string
+  clientId?: string
+  title: string
+  slug: string
+  section: CollectionSection
+  indexInParent: number
+  path: string[]
+  children: ChapterNode[]
+}
+
+const buildNestedStructure = (
+  nodes: readonly any[] | undefined
+): {
+  intro: ChapterNode[]
+  body: ChapterNode[]
+  credit: ChapterNode[]
+} => {
   if (!nodes) return { intro: [], body: [], credit: [] }
 
   const nodesWithIds = (nodes ?? []).map((n) => ({
@@ -24,13 +51,72 @@ const groupBySection = (nodes: readonly any[] | undefined) => {
     clientId: idOf(n) || generateId(),
   }))
 
-  const grouped = {
-    intro: nodesWithIds.filter((n) => n.section === CollectionSection.Intro),
-    body: nodesWithIds.filter((n) => n.section === CollectionSection.Body),
-    credit: nodesWithIds.filter((n) => n.section === CollectionSection.Credit),
+  // Sort by depth first, then by indexInParent
+  const sorted = [...nodesWithIds].sort((a, b) => {
+    const depthDiff = (a?.path?.length ?? 0) - (b?.path?.length ?? 0)
+    if (depthDiff !== 0) return depthDiff
+    return (a?.indexInParent ?? 0) - (b?.indexInParent ?? 0)
+  })
+
+  // Build a map of slug to chapter node
+  const slugToNode = new Map<string, ChapterNode>()
+  const topLevel: {
+    intro: ChapterNode[]
+    body: ChapterNode[]
+    credit: ChapterNode[]
+  } = { intro: [], body: [], credit: [] }
+
+  for (const node of sorted) {
+    const chapter: ChapterNode = {
+      id: node.id,
+      clientId: node.clientId,
+      title: node.title,
+      slug: node.slug,
+      section: node.section,
+      indexInParent: node.indexInParent,
+      path: node.path,
+      children: [],
+    }
+
+    slugToNode.set(node.slug, chapter)
+
+    // Get parent slug (second-to-last in path)
+    const parentSlug =
+      node.path && node.path.length > 1
+        ? node.path[node.path.length - 2]
+        : undefined
+
+    if (parentSlug) {
+      const parent = slugToNode.get(parentSlug)
+      if (parent) {
+        parent.children.push(chapter)
+      } else {
+        // Parent not found yet, add to top level
+        const sectionKey = sectionToKey(node.section)
+        topLevel[sectionKey].push(chapter)
+      }
+    } else {
+      // Top-level chapter (path.length === 2)
+      const sectionKey = sectionToKey(node.section)
+      topLevel[sectionKey].push(chapter)
+    }
   }
 
-  return grouped
+  // Sort each section's chapters and their children recursively
+  const sortRecursive = (chapters: ChapterNode[]): ChapterNode[] => {
+    return chapters
+      .sort((a, b) => a.indexInParent - b.indexInParent)
+      .map((ch) => ({
+        ...ch,
+        children: sortRecursive(ch.children),
+      }))
+  }
+
+  return {
+    intro: sortRecursive(topLevel.intro),
+    body: sortRecursive(topLevel.body),
+    credit: sortRecursive(topLevel.credit),
+  }
 }
 
 export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
@@ -39,22 +125,31 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   })
   const collection = data?.editedCollection
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
+  const [, addChapter] = Dailp.useAddCollectionChapterMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [chaptersBySection, setChaptersBySection] = useState({
-    intro: [] as any[],
-    body: [] as any[],
-    credit: [] as any[],
+  const [chaptersBySection, setChaptersBySection] = useState<{
+    intro: ChapterNode[]
+    body: ChapterNode[]
+    credit: ChapterNode[]
+  }>({
+    intro: [],
+    body: [],
+    credit: [],
   })
   const [collectionTitle, setCollectionTitle] = useState(
     collection?.title ?? "no name"
   )
   const [collectionDescription, setCollectionDescription] = useState("")
+  // State for showing "Add Subchapter" form
+  const [showAddSubchapter, setShowAddSubchapter] = useState<string | null>(
+    null
+  )
 
   // Sync editable items when collection loads/changes
   useEffect(() => {
     if (collection?.chapters) {
-      setChaptersBySection(groupBySection(collection.chapters as any))
+      setChaptersBySection(buildNestedStructure(collection.chapters as any))
     }
     setCollectionTitle(collection?.title ?? "no name")
   }, [collection])
@@ -63,44 +158,138 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     return null
   }
 
+  // Helper to update indices after reordering
+  const updateIndices = (chapters: ChapterNode[]): void => {
+    chapters.forEach((ch, idx) => {
+      ch.indexInParent = idx + 1
+      updateIndices(ch.children)
+    })
+  }
 
+  // Simple reorder function - moves item from startIndex to endIndex within same array
+  const reorder = (
+    list: ChapterNode[],
+    startIndex: number,
+    endIndex: number
+  ): ChapterNode[] => {
+    const result = Array.from(list)
+    const [removed] = result.splice(startIndex, 1)
+    if (!removed) return result
+    result.splice(endIndex, 0, removed)
+    return result
+  }
 
-  const handleDragEnd = (result: any) => {
-    const { source, destination } = result
-    if (!destination) return
-
-    const sourceSection = source.droppableId as keyof typeof chaptersBySection
-    const destSection =
-      destination.droppableId as keyof typeof chaptersBySection
-
-    setChaptersBySection((prev) => {
-      const sourceList = [...prev[sourceSection]]
-      const [removed] = sourceList.splice(source.index, 1)
-
-      // If dropped in same section, just reorder
-      if (sourceSection === destSection) {
-        sourceList.splice(destination.index, 0, removed)
-        return { ...prev, [sourceSection]: sourceList }
+  // Helper to update a parent's children in a nested structure
+  const updateParentChildren = (
+    chapters: ChapterNode[],
+    parentId: string,
+    newChildren: ChapterNode[]
+  ): ChapterNode[] => {
+    return chapters.map((ch) => {
+      if (idOf(ch) === parentId) {
+        return { ...ch, children: newChildren }
       }
-
-      // If dropped in different section, move to that section and update the section field
-      const destList = [...prev[destSection]]
-      const updatedChapter = {
-        ...removed,
-        section:
-          destSection === "intro"
-            ? CollectionSection.Intro
-            : destSection === "body"
-            ? CollectionSection.Body
-            : CollectionSection.Credit,
-      }
-      destList.splice(destination.index, 0, updatedChapter)
       return {
-        ...prev,
-        [sourceSection]: sourceList,
-        [destSection]: destList,
+        ...ch,
+        children: updateParentChildren(ch.children, parentId, newChildren),
       }
     })
+  }
+
+  const handleDragEnd = (result: any) => {
+    const { source, destination, type } = result
+    if (!destination) return
+
+    // Disallow cross-droppable moves
+    if (source.droppableId !== destination.droppableId) return
+
+    // Handle top-level chapters
+    if (type === "SECTION_CHAPTERS") {
+      const sectionKey = source.droppableId as keyof typeof chaptersBySection
+      setChaptersBySection((prev) => {
+        const reordered = reorder(
+          prev[sectionKey],
+          source.index,
+          destination.index
+        )
+        const newState = {
+          ...prev,
+          [sectionKey]: reordered,
+        }
+        updateIndices(newState.intro)
+        updateIndices(newState.body)
+        updateIndices(newState.credit)
+        return newState
+      })
+      return
+    }
+
+    // Handle nested items - type is the parent's chapterId
+    const parentId = type
+    const sectionKey = source.droppableId.split(
+      ":"
+    )[0] as keyof typeof chaptersBySection
+
+    setChaptersBySection((prev) => {
+      const sectionChapters = prev[sectionKey]
+      const parent = findChapterInNested(sectionChapters, parentId)
+      if (!parent) return prev
+
+      const reordered = reorder(
+        parent.children,
+        source.index,
+        destination.index
+      )
+      const updatedSection = updateParentChildren(
+        sectionChapters,
+        parentId,
+        reordered
+      )
+
+      const newState = {
+        ...prev,
+        [sectionKey]: updatedSection,
+      }
+
+      updateIndices(newState.intro)
+      updateIndices(newState.body)
+      updateIndices(newState.credit)
+
+      return newState
+    })
+  }
+
+  // Helper to find a chapter in nested structure
+  const findChapterInNested = (
+    chapters: ChapterNode[],
+    chapterId: string
+  ): ChapterNode | undefined => {
+    for (const ch of chapters) {
+      if (idOf(ch) === chapterId) return ch
+      const found = findChapterInNested(ch.children, chapterId)
+      if (found) return found
+    }
+    return undefined
+  }
+
+  // Flatten nested structure to collect all chapters
+  const flattenChapters = (
+    chapters: ChapterNode[],
+    section: CollectionSection
+  ): Dailp.ChapterOrderInput[] => {
+    const result: Dailp.ChapterOrderInput[] = []
+    for (const chapter of chapters) {
+      if (chapter.id) {
+        result.push({
+          id: chapter.id,
+          indexInParent: chapter.indexInParent,
+          section: section,
+        })
+      }
+      // Recursively add children
+      result.push(...flattenChapters(chapter.children, section))
+    }
+    return result
   }
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -109,31 +298,18 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setIsSaving(true)
 
     try {
-      // Collect all chapters from all sections with their new indices
+      // Collect all chapters from all sections (including subchapters)
       const chapters: Dailp.ChapterOrderInput[] = []
 
-      // Process each section
-      ;(["intro", "body", "credit"] as const).forEach((sectionKey) => {
-        const sectionChapters = chaptersBySection[sectionKey]
-        const section =
-          sectionKey === "intro"
-            ? CollectionSection.Intro
-            : sectionKey === "body"
-            ? CollectionSection.Body
-            : CollectionSection.Credit
-
-        sectionChapters.forEach((chapter, index) => {
-          // Only include chapters that have been persisted (have an id)
-          // New chapters without ids will need to be created separately
-          if (chapter.id) {
-            chapters.push({
-              id: chapter.id,
-              indexInParent: index + 1, // 1-indexed
-              section: section,
-            })
-          }
-        })
-      })
+      chapters.push(
+        ...flattenChapters(chaptersBySection.intro, CollectionSection.Intro)
+      )
+      chapters.push(
+        ...flattenChapters(chaptersBySection.body, CollectionSection.Body)
+      )
+      chapters.push(
+        ...flattenChapters(chaptersBySection.credit, CollectionSection.Credit)
+      )
 
       if (chapters.length === 0) {
         setErrorMessage("No chapters to save. Please add chapters first.")
@@ -162,37 +338,90 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     }
   }
 
-  const handleAddNewChapter = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddNewChapter = async (
+    e: React.FormEvent<HTMLFormElement>,
+    parentId?: string | null,
+    sectionKey?: keyof typeof chaptersBySection
+  ) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const title = formData.get("chapter title") as string
-    const slug = formData.get("chapter slug") as string
-    const section = formData.get(
-      "chapter section"
-    ) as keyof typeof chaptersBySection
-
     setErrorMessage(null)
-    // new chapter mutation
-    const newChapter = {
-      id: undefined,
-      clientId: generateId(),
-      title,
-      slug,
-      section:
+    setIsSaving(true)
+
+    try {
+      const formData = new FormData(e.target as HTMLFormElement)
+      const title = formData.get("chapter title") as string
+      const slug = formData.get("chapter slug") as string
+      const section = (sectionKey ||
+        formData.get("chapter section")) as keyof typeof chaptersBySection
+
+      if (!title || !slug) {
+        setErrorMessage("Title and slug are required")
+        setIsSaving(false)
+        return
+      }
+
+      // Convert section key to CollectionSection enum
+      const sectionEnum =
         section === "intro"
           ? CollectionSection.Intro
           : section === "body"
           ? CollectionSection.Body
-          : CollectionSection.Credit,
-      path: [],
-      indexInParent: 0,
-    }
+          : CollectionSection.Credit
 
-    setChaptersBySection((prev) => ({
-      ...prev,
-      [section]: [...prev[section], newChapter],
-    }))
-    ;(e.target as HTMLFormElement).reset()
+      const result = await addChapter({
+        input: {
+          collectionSlug: collectionSlug,
+          title: title,
+          slug: slug,
+          section: sectionEnum,
+          parentId: parentId ? (parentId as any) : null,
+          documentId: null,
+        },
+      })
+
+      if (result.error) {
+        setErrorMessage(result.error.message || "Failed to add chapter")
+      } else {
+        // Refetch the collection to get updated data with the new chapter
+        await refetch()
+        setErrorMessage(null)
+        ;(e.target as HTMLFormElement).reset()
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "An unexpected error occurred")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Recursive function to update a chapter in nested structure
+  const updateChapterInNested = (
+    chapters: ChapterNode[],
+    chapterId: string,
+    update: Partial<ChapterNode>
+  ): ChapterNode[] => {
+    return chapters.map((ch) => {
+      if (idOf(ch) === chapterId) {
+        return { ...ch, ...update }
+      }
+      return {
+        ...ch,
+        children: updateChapterInNested(ch.children, chapterId, update),
+      }
+    })
+  }
+
+  // Recursive function to remove a chapter from nested structure
+  const removeChapterFromNested = (
+    chapters: ChapterNode[],
+    chapterId: string
+  ): ChapterNode[] => {
+    return chapters
+      .filter((ch) => idOf(ch) !== chapterId)
+      .map((ch) => ({
+        ...ch,
+        children: removeChapterFromNested(ch.children, chapterId),
+      }))
   }
 
   const handleRemove = (
@@ -204,43 +433,303 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     if (!ok) return
     setChaptersBySection((prev) => ({
       ...prev,
-      [section]: prev[section].filter((ch) => idOf(ch) !== id),
+      [section]: removeChapterFromNested(prev[section], id),
     }))
   }
 
   const handleUpdate = (
     section: keyof typeof chaptersBySection,
     id: string,
-    update: Partial<any>
+    update: Partial<ChapterNode>
   ) => {
     setChaptersBySection((prev) => ({
       ...prev,
-      [section]: prev[section].map((ch) =>
-        idOf(ch) === id ? { ...ch, ...update } : ch
-      ),
+      [section]: updateChapterInNested(prev[section], id, update),
     }))
+  }
+
+  // Recursive component to render a chapter and its children
+  const ChapterItem = ({
+    chapter,
+    index,
+    sectionKey,
+    parentId,
+    depth = 0,
+  }: {
+    chapter: ChapterNode
+    index: number
+    sectionKey: keyof typeof chaptersBySection
+    parentId: string | null
+    depth?: number
+  }) => {
+    const chapterId = idOf(chapter)
+    const isShowingAddForm = showAddSubchapter === chapterId
+    const isTopLevel = depth === 0
+
+    return (
+      <Draggable key={chapterId} draggableId={chapterId} index={index}>
+        {(provided, snapshot) => (
+          <li
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            style={{
+              ...provided.draggableProps.style,
+              listStyle: "none",
+              margin: "6px 0",
+              background: snapshot.isDragging ? "#fafafa" : undefined,
+              borderRadius: 6,
+              padding: 8,
+              border: "1px solid #e0e0e0",
+              touchAction: "manipulation",
+              boxSizing: "border-box",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+              {...provided.dragHandleProps}
+            >
+              <span style={{ color: "#666", cursor: "grab" }}>
+                <MdDragIndicator size={18} />
+              </span>
+              {!isTopLevel && (
+                <span style={{ color: "#999", fontSize: 12 }}>↳</span>
+              )}
+              <input
+                type="text"
+                placeholder="Title"
+                value={chapter.title ?? ""}
+                onChange={(e) =>
+                  handleUpdate(sectionKey, chapterId, {
+                    title: e.target.value,
+                  })
+                }
+                style={{
+                  width: 200,
+                  height: 32,
+                  padding: "4px 8px",
+                  border: "1px solid #ddd",
+                  borderRadius: 4,
+                  fontSize: 14,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Slug"
+                value={chapter.slug ?? ""}
+                onChange={(e) =>
+                  handleUpdate(sectionKey, chapterId, {
+                    slug: e.target.value,
+                  })
+                }
+                style={{
+                  width: 150,
+                  height: 32,
+                  padding: "4px 8px",
+                  border: "1px solid #ddd",
+                  borderRadius: 4,
+                  fontSize: 14,
+                }}
+              />
+              {isTopLevel && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddSubchapter(chapterId)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    background: "#4a90e2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                  }}
+                  title="Add subchapter"
+                >
+                  + Sub
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  handleRemove(sectionKey, chapterId, chapter.title)
+                }
+                style={{
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  background: "#dc3545",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+            {isShowingAddForm && (
+              <form
+                onSubmit={(e) => {
+                  handleAddNewChapter(e, chapterId, sectionKey)
+                  setShowAddSubchapter(null)
+                }}
+                style={{
+                  marginTop: 12,
+                  padding: 12,
+                  background: "#f8f9fa",
+                  borderRadius: 4,
+                  border: "1px solid #e0e0e0",
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  type="text"
+                  name="chapter title"
+                  placeholder="Subchapter Title"
+                  required
+                  style={{
+                    width: 180,
+                    height: 32,
+                    padding: "4px 8px",
+                    border: "1px solid #ddd",
+                    borderRadius: 4,
+                    fontSize: 14,
+                  }}
+                />
+                <input
+                  type="text"
+                  name="chapter slug"
+                  placeholder="Subchapter Slug"
+                  required
+                  style={{
+                    width: 150,
+                    height: 32,
+                    padding: "4px 8px",
+                    border: "1px solid #ddd",
+                    borderRadius: 4,
+                    fontSize: 14,
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "6px 16px",
+                    fontSize: 14,
+                    background: "#4a90e2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                  }}
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddSubchapter(null)}
+                  style={{
+                    padding: "6px 16px",
+                    fontSize: 14,
+                    background: "#6c757d",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
+            {chapter.children.length > 0 && (
+              <Droppable
+                droppableId={`${sectionKey}:${chapterId}`}
+                type={`${chapterId}`}
+                direction="vertical"
+              >
+                {(dropProvided) => (
+                  <ul
+                    ref={dropProvided.innerRef}
+                    {...dropProvided.droppableProps}
+                    style={{
+                      listStyle: "none",
+                      paddingLeft: 24,
+                      marginTop: 8,
+                      minHeight: 12,
+                    }}
+                  >
+                    {chapter.children.map((child, childIndex) => (
+                      <ChapterItem
+                        key={idOf(child)}
+                        chapter={child}
+                        index={childIndex}
+                        sectionKey={sectionKey}
+                        parentId={chapterId}
+                        depth={depth + 1}
+                      />
+                    ))}
+                    {dropProvided.placeholder}
+                  </ul>
+                )}
+              </Droppable>
+            )}
+          </li>
+        )}
+      </Draggable>
+    )
   }
 
   return (
     <>
-      <div style={{ marginBottom: 16 }}>
+      <div
+        style={{
+          marginBottom: 24,
+          padding: 16,
+          border: "1px solid #e0e0e0",
+          borderRadius: 8,
+          background: "#fafafa",
+        }}
+      >
+        <h5 style={{ marginTop: 0, marginBottom: 12 }}>Collection Details</h5>
         <input
           type="text"
           name="collection title"
           placeholder="Collection Title"
           value={collectionTitle}
           onChange={(e) => setCollectionTitle(e.target.value)}
-          style={{ width: "100%", marginBottom: 8, padding: 8 }}
+          style={{
+            width: "100%",
+            marginBottom: 12,
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: 4,
+            fontSize: 14,
+          }}
         />
         <textarea
           name="collection description"
           placeholder="Description"
           value={collectionDescription}
           onChange={(e) => setCollectionDescription(e.target.value)}
-          style={{ width: "100%", padding: 8 }}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid #ddd",
+            borderRadius: 4,
+            fontSize: 14,
+            minHeight: 80,
+            resize: "vertical",
+          }}
         />
       </div>
-      <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
+      <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 8 }}>
         <h4 style={{ marginTop: 0, marginBottom: 16 }}>
           Table of Contents Editor
         </h4>
@@ -248,8 +737,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: 16,
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 20,
             }}
           >
             {(["intro", "body", "credit"] as const).map((sectionKey) => {
@@ -261,161 +750,181 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                   : "Credit"
               const chapters = chaptersBySection[sectionKey]
               return (
-                <>
-                  <h5 style={{ marginTop: 0, marginBottom: 8 }}>
+                <div key={sectionKey}>
+                  <h5 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>
                     {sectionName}
                   </h5>
                   <div
-                    key={sectionKey}
                     style={{
-                      border: "1px solid #ddd",
-                      padding: 8,
-                      borderRadius: 4,
-                      ...(sectionKey === "body"
-                        ? { height: "50vh", overflow: "scroll" }
-                        : {}),
+                      border: "1px solid #e0e0e0",
+                      padding: 12,
+                      borderRadius: 6,
+                      background: "#fafafa",
+                      minHeight: 100,
+                      maxHeight: sectionKey === "body" ? "60vh" : "auto",
+                      overflowY: sectionKey === "body" ? "auto" : "visible",
                     }}
                   >
-                    <Droppable droppableId={sectionKey} direction="vertical">
+                    <Droppable
+                      droppableId={sectionKey}
+                      type="SECTION_CHAPTERS"
+                      direction="vertical"
+                    >
                       {(provided) => (
-                        <div
+                        <ul
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          style={{ minHeight: 40 }}
+                          style={{
+                            listStyle: "none",
+                            padding: 0,
+                            margin: 0,
+                            minHeight: 40,
+                          }}
                         >
                           {chapters.map((chapter, index) => (
-                            <Draggable
+                            <ChapterItem
                               key={idOf(chapter)}
-                              draggableId={idOf(chapter)}
+                              chapter={chapter}
                               index={index}
-                            >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    background: snapshot.isDragging
-                                      ? "#fafafa"
-                                      : "#f9f9f9",
-                                    border: "1px solid #ddd",
-                                    borderRadius: 4,
-                                    padding: 8,
-                                    marginBottom: 8,
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: 6,
-                                      alignItems: "center",
-                                      flexWrap: "wrap",
-                                    }}
-                                  >
-                                    <span
-                                      {...provided.dragHandleProps}
-                                      style={{ cursor: "grab", color: "#666" }}
-                                    >
-                                      <MdDragIndicator size={16} />
-                                    </span>
-                                    <input
-                                      type="text"
-                                      placeholder="Title"
-                                      value={chapter.title ?? ""}
-                                      onChange={(e) =>
-                                        handleUpdate(
-                                          sectionKey,
-                                          idOf(chapter),
-                                          {
-                                            title: e.target.value,
-                                          }
-                                        )
-                                      }
-                                      style={{
-                                        flex: 1,
-                                        minWidth: 150,
-                                        height: 28,
-                                      }}
-                                    />
-                                    <input
-                                      type="text"
-                                      placeholder="Slug"
-                                      value={chapter.slug ?? ""}
-                                      onChange={(e) =>
-                                        handleUpdate(
-                                          sectionKey,
-                                          idOf(chapter),
-                                          {
-                                            slug: e.target.value,
-                                          }
-                                        )
-                                      }
-                                      style={{
-                                        flex: 1,
-                                        minWidth: 100,
-                                        height: 28,
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemove(
-                                          sectionKey,
-                                          idOf(chapter),
-                                          chapter.title
-                                        )
-                                      }
-                                      style={{
-                                        padding: "4px 8px",
-                                        fontSize: 12,
-                                      }}
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </Draggable>
+                              sectionKey={sectionKey}
+                              parentId={null}
+                              depth={0}
+                            />
                           ))}
                           {provided.placeholder}
-                        </div>
+                        </ul>
                       )}
                     </Droppable>
                   </div>
-                </>
+                </div>
               )
             })}
           </div>
         </DragDropContext>
       </div>
-      <form onSubmit={handleAddNewChapter} style={{ marginTop: 16 }}>
-        {errorMessage && (
-          <p style={{ color: "#b00020", margin: "0 0 8px" }}>{errorMessage}</p>
-        )}
-        <input type="text" name="chapter title" placeholder="Chapter Title" />
-        <input type="text" name="chapter slug" placeholder="Chapter Slug" />
-        <select name="chapter section">
-          <option value="intro">Intro</option>
-          <option value="body">Body</option>
-          <option value="credit">Credit</option>
-        </select>
-        <button type="submit">Add Chapter</button>
-      </form>
-      <form onSubmit={handleSave}>
-        <button type="submit" disabled={isSaving || fetching}>
-          {isSaving ? "Saving..." : "Save"}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            collection?.chapters &&
-            setChaptersBySection(groupBySection(collection.chapters as any))
-          }
-          disabled={isSaving || fetching}
+      <div style={{ marginTop: 24 }}>
+        <h5 style={{ marginBottom: 12 }}>Add New Chapter</h5>
+        <form
+          onSubmit={handleAddNewChapter}
+          style={{
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
         >
-          Reset
-        </button>
-      </form>
+          {errorMessage && (
+            <div
+              style={{
+                width: "100%",
+                color: "#b00020",
+                marginBottom: 8,
+                padding: 8,
+                background: "#ffebee",
+                borderRadius: 4,
+              }}
+            >
+              {errorMessage}
+            </div>
+          )}
+          <input
+            type="text"
+            name="chapter title"
+            placeholder="Chapter Title"
+            required
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #ddd",
+              borderRadius: 4,
+              fontSize: 14,
+              minWidth: 180,
+            }}
+          />
+          <input
+            type="text"
+            name="chapter slug"
+            placeholder="Chapter Slug"
+            required
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #ddd",
+              borderRadius: 4,
+              fontSize: 14,
+              minWidth: 150,
+            }}
+          />
+          <select
+            name="chapter section"
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #ddd",
+              borderRadius: 4,
+              fontSize: 14,
+              minWidth: 120,
+            }}
+          >
+            <option value="intro">Intro</option>
+            <option value="body">Body</option>
+            <option value="credit">Credit</option>
+          </select>
+          <button
+            type="submit"
+            style={{
+              padding: "8px 16px",
+              background: "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: 4,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            Add Chapter
+          </button>
+        </form>
+        <form
+          onSubmit={handleSave}
+          style={{ display: "flex", gap: 8, alignItems: "center" }}
+        >
+          <button
+            type="submit"
+            disabled={isSaving || fetching}
+            style={{
+              padding: "10px 20px",
+              background: isSaving || fetching ? "#6c757d" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: 4,
+              fontSize: 14,
+              cursor: isSaving || fetching ? "not-allowed" : "pointer",
+            }}
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              collection?.chapters &&
+              setChaptersBySection(
+                buildNestedStructure(collection.chapters as any)
+              )
+            }
+            disabled={isSaving || fetching}
+            style={{
+              padding: "10px 20px",
+              background: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: 4,
+              fontSize: 14,
+              cursor: isSaving || fetching ? "not-allowed" : "pointer",
+            }}
+          >
+            Reset
+          </button>
+        </form>
+      </div>
     </>
   )
 }

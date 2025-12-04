@@ -52,6 +52,12 @@ const CollectionTOC = () => {
 
   return (
     <>
+      <Link
+        href={`/collections/${collectionSlug}/edit-toc`}
+        className={css.link}
+      >
+        Edit TOC
+      </Link>
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
@@ -79,13 +85,6 @@ const TOC = ({ section, chapters }: TOCProps) => {
   return (
     <>
       <ol className={listStyle}>
-        {section === CollectionSection.Intro && (
-          <li className={listItemStyle}>
-            <Link href={`/${collectionSlug}/edit-toc`} className={css.link}>
-              Edit TOC
-            </Link>
-          </li>
-        )}
         {chapters.map((item) => (
           <li key={item.slug} className={listItemStyle}>
             <Link

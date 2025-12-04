@@ -35,6 +35,22 @@ export type Scalars = {
   UUID: any
 }
 
+/** Input for adding a new chapter to a collection */
+export type AddChapterInput = {
+  /** The slug of the collection this chapter belongs to */
+  readonly collectionSlug: Scalars["String"]
+  /** Optional document ID to link this chapter to an existing document */
+  readonly documentId: InputMaybe<Scalars["UUID"]>
+  /** Optional parent chapter ID if this is a subchapter (defaults to top-level) */
+  readonly parentId: InputMaybe<Scalars["UUID"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+  /** The slug of the chapter (used in the URL path) */
+  readonly slug: Scalars["String"]
+  /** The title of the chapter */
+  readonly title: Scalars["String"]
+}
+
 export type AddDocumentPayload = {
   readonly __typename?: "AddDocumentPayload"
   readonly chapterSlug: Scalars["String"]
@@ -791,6 +807,7 @@ export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
+  readonly addCollectionChapter: Scalars["UUID"]
   /** Minimal mutation to add a document with only essential fields */
   readonly addDocument: AddDocumentPayload
   /**
@@ -846,6 +863,10 @@ export type Mutation = {
 
 export type MutationAddBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationAddCollectionChapterArgs = {
+  input: AddChapterInput
 }
 
 export type MutationAddDocumentArgs = {
@@ -3115,6 +3136,14 @@ export type UpdateCollectionChapterOrderMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateCollectionChapterOrder">
 
+export type AddCollectionChapterMutationVariables = Exact<{
+  input: AddChapterInput
+}>
+
+export type AddCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "addCollectionChapter">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -4262,6 +4291,18 @@ export function useUpdateCollectionChapterOrderMutation() {
     UpdateCollectionChapterOrderMutation,
     UpdateCollectionChapterOrderMutationVariables
   >(UpdateCollectionChapterOrderDocument)
+}
+export const AddCollectionChapterDocument = gql`
+  mutation AddCollectionChapter($input: AddChapterInput!) {
+    addCollectionChapter(input: $input)
+  }
+`
+
+export function useAddCollectionChapterMutation() {
+  return Urql.useMutation<
+    AddCollectionChapterMutation,
+    AddCollectionChapterMutationVariables
+  >(AddCollectionChapterDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {
