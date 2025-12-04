@@ -1,6 +1,6 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
-    SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate, Format, FormatUpdate,
+    ApprovalStatus, Format, FormatUpdate, Keyword, KeywordUpdate, Language, LanguageUpdate,
+    SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
