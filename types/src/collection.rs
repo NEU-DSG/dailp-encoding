@@ -162,3 +162,20 @@ pub struct UpdateCollectionChapterOrderInput {
     /// Ordered list of chapters with their new indices
     pub chapters: Vec<ChapterOrderInput>,
 }
+
+/// Input for adding a new chapter to a collection
+#[derive(async_graphql::InputObject)]
+pub struct AddChapterInput {
+    /// The slug of the collection this chapter belongs to
+    pub collection_slug: String,
+    /// The title of the chapter
+    pub title: String,
+    /// The slug of the chapter (used in the URL path)
+    pub slug: String,
+    /// The section of the collection, Intro | Body | Credit
+    pub section: CollectionSection,
+    /// Optional parent chapter ID if this is a subchapter (defaults to top-level)
+    pub parent_id: Option<Uuid>,
+    /// Optional document ID to link this chapter to an existing document
+    pub document_id: Option<Uuid>,
+}

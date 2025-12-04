@@ -1,3 +1,33 @@
+"""
+Input for adding a new chapter to a collection
+"""
+input AddChapterInput {
+	"""
+	The slug of the collection this chapter belongs to
+	"""
+	collectionSlug: String!
+	"""
+	The title of the chapter
+	"""
+	title: String!
+	"""
+	The slug of the chapter (used in the URL path)
+	"""
+	slug: String!
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection!
+	"""
+	Optional parent chapter ID if this is a subchapter (defaults to top-level)
+	"""
+	parentId: UUID
+	"""
+	Optional document ID to link this chapter to an existing document
+	"""
+	documentId: UUID
+}
+
 type AddDocumentPayload {
 	id: UUID!
 	title: String!
@@ -1114,6 +1144,7 @@ type Mutation {
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertEditedCollection(input: UpsertChapterInput!): String!
 	updateCollectionChapterOrder(input: UpdateCollectionChapterOrderInput!): String!
+	addCollectionChapter(input: AddChapterInput!): UUID!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 }
