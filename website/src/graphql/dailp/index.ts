@@ -68,6 +68,8 @@ export type AnnotatedDoc = {
    */
   readonly editedAudio: ReadonlyArray<AudioSlice>
   readonly formCount: Scalars["Int"]
+  /** The format of the original artifact */
+  readonly format: Format
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
@@ -563,6 +565,8 @@ export type DocumentMetadataUpdate = {
   readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** The creator(s) of the document */
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
+  /** The format of the original artifact */
+  readonly format: InputMaybe<FormatUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** The key terms associated with the document */
@@ -653,6 +657,24 @@ export type EditedCollection = {
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
+}
+
+/** Stores the physical or digital medium associated with a document */
+export type Format = {
+  readonly __typename?: "Format"
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a format */
+  readonly status: ApprovalStatus
+}
+
+export type FormatUpdate = {
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
 }
 
 export type FormsInTime = {
@@ -1874,6 +1896,10 @@ export type DocFormFieldsFragment = {
     >
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+    >
+    readonly format: { readonly __typename?: "Format" } & Pick<
+      Format,
+      "id" | "name"
     >
   }
 
@@ -3423,6 +3449,10 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    format {
+      id
+      name
     }
     keywords {
       id

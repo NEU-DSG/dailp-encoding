@@ -1018,6 +1018,7 @@ impl SheetInterpretation {
             subject_headings_ids: None,
             spatial_coverage_ids: None,
             creators_ids: Some(creators_ids),
+            format_id: None,
             translation,
             page_images,
             date: parsed_date,

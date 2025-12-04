@@ -1,6 +1,6 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
-    SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+    ApprovalStatus, Format, FormatUpdate, Keyword, KeywordUpdate, Language, LanguageUpdate,
+    SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
@@ -224,6 +224,13 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// The format of the original artifact
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Format> {
+        let db = context.data::<Database>()?;
+        let format = db.format_for_document(self.meta.id.0).await?;
+        Ok(format)
+    }
+
     /// Key terms associated with a document
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
         let db = context.data::<Database>()?;
@@ -404,6 +411,8 @@ pub struct DocumentMetadataUpdate {
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
     /// The creator(s) of the document
     pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
+    /// The format of the original artifact
+    pub format: MaybeUndefined<FormatUpdate>,
 }
 
 #[async_graphql::ComplexObject]
@@ -551,6 +560,8 @@ pub struct DocumentMetadata {
     pub collection: Option<String>,
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
+    /// Term that allows us to trace what the original artifact was
+    pub format_id: Option<Uuid>,
     #[serde(default)]
     /// Terms that reflect Indigenous knowledge practices associated with the document
     pub subject_headings_ids: Option<Vec<Uuid>>,
@@ -737,6 +748,17 @@ impl DocumentMetadata {
                 name: row.name,
             })
             .collect())
+    }
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            None => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
     }
 }
 
