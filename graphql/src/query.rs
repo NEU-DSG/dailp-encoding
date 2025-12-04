@@ -8,7 +8,7 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
     AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
     CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
     DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
@@ -993,6 +993,19 @@ impl Mutation {
             .update_collection_chapter_order(input)
             .await?;
         Ok(collection_slug)
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn add_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        input: AddChapterInput,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_collection_chapter(input)
+            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]

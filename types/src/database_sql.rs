@@ -11,7 +11,9 @@ use std::str::FromStr;
 use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
-use crate::collection::{CollectionSection, EditedCollection, UpdateCollectionChapterOrderInput};
+use crate::collection::{
+    AddChapterInput, CollectionSection, EditedCollection, UpdateCollectionChapterOrderInput,
+};
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
@@ -1888,6 +1890,25 @@ impl Database {
 
         tx.commit().await?;
         Ok(())
+    }
+
+    pub async fn add_collection_chapter(&self, input: AddChapterInput) -> Result<Uuid> {
+        let collection_slug = slugify_ltree(&input.collection_slug);
+        let chapter_slug = slugify_ltree(&input.slug);
+
+        let chapter_id = query_file_scalar!(
+            "queries/add_collection_chapter.sql",
+            collection_slug,
+            input.title,
+            chapter_slug,
+            input.section as CollectionSection,
+            input.parent_id as Option<Uuid>,
+            input.document_id as Option<Uuid>
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(chapter_id)
     }
 
     pub async fn insert_edited_collection(
