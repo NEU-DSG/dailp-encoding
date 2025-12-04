@@ -2,18 +2,18 @@ use crate::doc_metadata::{
     ApprovalStatus, Keyword, KeywordUpdate, Language, LanguageUpdate, SpatialCoverage,
     SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
-use crate::person::{Contributor, ContributorRole, SourceAttribution};
+use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
 };
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
 
 use futures::TryStreamExt;
-use itertools::Itertools;
 use tokio::fs::read_to_string;
 use uuid::Uuid;
 
@@ -256,6 +256,12 @@ impl AnnotatedDoc {
         Ok(coverages)
     }
 
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        let db = context.data::<Database>()?;
+        let creators = db.creators_for_document(self.meta.id.0).await?;
+        Ok(creators)
+    }
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -396,6 +402,8 @@ pub struct DocumentMetadataUpdate {
     pub contributors: MaybeUndefined<Vec<Uuid>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
+    /// The creator(s) of the document
+    pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -550,6 +558,8 @@ pub struct DocumentMetadata {
     pub languages_ids: Option<Vec<Uuid>>,
     /// The key terms associated with the document
     pub keywords_ids: Option<Vec<Uuid>>,
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Option<Vec<Contributor>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
@@ -706,6 +716,28 @@ impl DocumentMetadata {
             })
             .collect())
     }
+    /// Fetch all creators linked to this document
+    async fn creators<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Creator>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Creator,
+            "queries/get_creators_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Creator {
+                id: row.id,
+                name: row.name,
+            })
+            .collect())
+    }
 }
 
 /// Database ID for one document
@@ -726,6 +758,7 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
+
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server
