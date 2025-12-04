@@ -9,7 +9,7 @@ import Cite from "../../utils/citation-config"
 import { useTagSelector } from "../hooks/use-tag-selector"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
-import { useEditing } from "./editing-context"
+import { EditingProvider, useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
@@ -318,287 +318,291 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>Editing Document Information</h2>
-        <p className={styles.subtitle}>* indicates a required field</p>
+    <EditingProvider>
+      <div className={styles.overlay} onClick={onClose}>
+        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <h2 className={styles.title}>Editing Document Information</h2>
+          <p className={styles.subtitle}>* indicates a required field</p>
 
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Title*</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
+          <form onSubmit={handleSubmit}>
+            <div className={styles.formGrid}>
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Title*</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
 
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Date Created</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={
-                  typeof date === "string" ? date : date?.year?.toString() ?? ""
-                }
-                onChange={(e) => setDate(e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          {/*
-          <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>Description</label>
-            <TextareaAutosize
-              className={styles.input}
-              value={description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setDescription(e.target.value)
-              }              
-              minRows={1}
-              maxRows={10}
-              disabled={!isEditing}
-            />
-          </div>
-            */}
-
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Document Type</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-                disabled={!isEditing}
-              />
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Date Created</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={
+                    typeof date === "string"
+                      ? date
+                      : date?.year?.toString() ?? ""
+                  }
+                  onChange={(e) => setDate(e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
             </div>
 
             {/*
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Format</label>
-              <input
-                type="text"
+            <div className={styles.fullWidthGroup}>
+              <label className={styles.label}>Description</label>
+              <TextareaAutosize
                 className={styles.input}
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
+                value={description}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setDescription(e.target.value)
+                }              
+                minRows={1}
+                maxRows={10}
                 disabled={!isEditing}
               />
             </div>
-        
+              */}
 
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Pages (start page, end page)</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={pages}
-                onChange={(e) => setPages(e.target.value)}
-                disabled={!isEditing}
-              />
+            <div className={styles.formGrid}>
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Document Type</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              {/*
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Format</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+          
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Pages (start page, end page)</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={pages}
+                  onChange={(e) => setPages(e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className={styles.fieldGroup}>
+                <label className={styles.label}>Creator (separate by ',' if multiple)</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={creator.join(", ")}
+                  onChange={(e) =>
+                    setCreator(
+                      e.target.value
+                        .split(",")
+                        .map((c) => c.trim())
+                        .filter((c) => c.length > 0)
+                    )
+                  }
+                  disabled={!isEditing}
+                />
+              </div>
+              */}
             </div>
 
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Creator (separate by ',' if multiple)</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={creator.join(", ")}
-                onChange={(e) =>
-                  setCreator(
-                    e.target.value
-                      .split(",")
-                      .map((c) => c.trim())
-                      .filter((c) => c.length > 0)
-                  )
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            */}
-          </div>
-
-          <TagSelector
-            label="Contributors"
-            selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
-            approvedTags={[]}
-            newTags={newContributors}
-            onAdd={() => {}}
-            onRemove={isEditing ? removeContributor : undefined}
-            addButtonLabel="+ Contributor"
-            customForm={
-              isEditing ? (
-                <div className={styles.fullWidthGroup}>
-                  <input
-                    type="text"
-                    placeholder="Contributor name"
-                    value={tempName}
-                    onChange={(e) => setTempName(e.target.value)}
-                    className={styles.input}
-                  />
-                  <select
-                    value={tempRole ?? ""}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setTempRole(
-                        val === "" ? null : (val as Dailp.ContributorRole)
-                      )
-                    }}
-                  >
-                    <option value="">Select role</option>
-                    {contributorRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                  <label className={styles.label}>
+            <TagSelector
+              label="Contributors"
+              selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
+              approvedTags={[]}
+              newTags={newContributors}
+              onAdd={() => {}}
+              onRemove={isEditing ? removeContributor : undefined}
+              addButtonLabel="+ Contributor"
+              customForm={
+                isEditing ? (
+                  <div className={styles.fullWidthGroup}>
                     <input
-                      type="checkbox"
-                      checked={tempVisible}
-                      onChange={(e) => setTempVisible(e.target.checked)}
+                      type="text"
+                      placeholder="Contributor name"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                      className={styles.input}
                     />
-                    Allow contributor profile to be publically visible?
-                  </label>
+                    <select
+                      value={tempRole ?? ""}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setTempRole(
+                          val === "" ? null : (val as Dailp.ContributorRole)
+                        )
+                      }}
+                    >
+                      <option value="">Select role</option>
+                      {contributorRoles.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                    <label className={styles.label}>
+                      <input
+                        type="checkbox"
+                        checked={tempVisible}
+                        onChange={(e) => setTempVisible(e.target.checked)}
+                      />
+                      Allow contributor profile to be publically visible?
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.addTagButton}
+                      onClick={() => {
+                        if (!tempName || !tempRole) return
+                        addContributor(tempName, tempRole, tempVisible)
+
+                        setTempName("")
+                        setTempRole(null)
+                        setTempVisible(false)
+                      }}
+                    >
+                      Submit
+                    </button>
+                  </div>
+                ) : null
+              }
+            />
+
+            {/* <div className={styles.fullWidthGroup}>
+              <label className={styles.label}>Source</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+
+            <div className={styles.fullWidthGroup}>
+              <label className={styles.label}>DOI</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={doi}
+                onChange={(e) => setDOI(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+
+            <TagSelector
+              label="Keywords"
+              selectedTags={keywords}
+              approvedTags={approvedKeywords}
+              newTags={newKeywords}
+              onAdd={isEditing ? addKeyword : undefined}
+              onRemove={isEditing ? removeKeyword : undefined}
+              addButtonLabel="+ Keyword"
+            />
+
+            <TagSelector
+              label="Subject Headings"
+              selectedTags={subjectHeadings}
+              approvedTags={approvedSubjectHeadings}
+              newTags={newHeadings}
+              onAdd={isEditing ? addHeading : undefined}
+              onRemove={isEditing ? removeHeading : undefined}
+              addButtonLabel="+ Subject Heading"
+            />
+
+            <TagSelector
+              label="Languages"
+              selectedTags={languages}
+              approvedTags={approvedLanguages}
+              newTags={newLanguages}
+              onAdd={isEditing ? addLanguage : undefined}
+              onRemove={isEditing ? removeLanguage : undefined}
+              addButtonLabel="+ Language"
+            />
+
+            <TagSelector
+              label="Spatial Coverages"
+              selectedTags={spatialCoverages}
+              approvedTags={approvedSpatialCoverages}
+              newTags={newCoverages}
+              onAdd={isEditing ? addCoverage : undefined}
+              onRemove={isEditing ? removeCoverage : undefined}
+              addButtonLabel="+ Spatial Coverage"
+            />
+
+            <div className={styles.fullWidthGroup}>
+              <label className={styles.label}>Citation</label>
+              <TextareaAutosize
+                className={styles.input}
+                value={citation}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setCitation(e.target.value)
+                }              
+                minRows={1}
+                maxRows={10}
+                disabled={!isEditing}
+              />
+            </div>
+
+            <div>{getDisplayName(citeFormat)}</div>
+            <Dropdown
+              options={Object.keys(formatMap)}
+              selected={
+                Object.entries(formatMap).find(([_, v]) => v === citeFormat)?.[0] || "APA"
+              }
+              setSelected={(displayName) => {
+                setCiteFormat(formatMap[displayName] ?? "apa")
+              }}
+              addButtonLabel="Change Format"
+              disabled={!isEditing}
+            />
+            */}
+
+            <div className={styles.buttonGroup}>
+              {isEditing ? (
+                <>
                   <button
                     type="button"
-                    className={styles.addTagButton}
-                    onClick={() => {
-                      if (!tempName || !tempRole) return
-                      addContributor(tempName, tempRole, tempVisible)
-
-                      setTempName("")
-                      setTempRole(null)
-                      setTempVisible(false)
-                    }}
+                    onClick={cancelEdits}
+                    className={styles.modalCancelButton}
                   >
+                    Cancel
+                  </button>
+                  <button type="submit" className={styles.submitButton}>
                     Submit
                   </button>
-                </div>
-              ) : null
-            }
-          />
-
-          {/* <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>Source</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>DOI</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={doi}
-              onChange={(e) => setDOI(e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <TagSelector
-            label="Keywords"
-            selectedTags={keywords}
-            approvedTags={approvedKeywords}
-            newTags={newKeywords}
-            onAdd={isEditing ? addKeyword : undefined}
-            onRemove={isEditing ? removeKeyword : undefined}
-            addButtonLabel="+ Keyword"
-          />
-
-          <TagSelector
-            label="Subject Headings"
-            selectedTags={subjectHeadings}
-            approvedTags={approvedSubjectHeadings}
-            newTags={newHeadings}
-            onAdd={isEditing ? addHeading : undefined}
-            onRemove={isEditing ? removeHeading : undefined}
-            addButtonLabel="+ Subject Heading"
-          />
-
-          <TagSelector
-            label="Languages"
-            selectedTags={languages}
-            approvedTags={approvedLanguages}
-            newTags={newLanguages}
-            onAdd={isEditing ? addLanguage : undefined}
-            onRemove={isEditing ? removeLanguage : undefined}
-            addButtonLabel="+ Language"
-          />
-
-          <TagSelector
-            label="Spatial Coverages"
-            selectedTags={spatialCoverages}
-            approvedTags={approvedSpatialCoverages}
-            newTags={newCoverages}
-            onAdd={isEditing ? addCoverage : undefined}
-            onRemove={isEditing ? removeCoverage : undefined}
-            addButtonLabel="+ Spatial Coverage"
-          />
-
-          <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>Citation</label>
-            <TextareaAutosize
-              className={styles.input}
-              value={citation}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setCitation(e.target.value)
-              }              
-              minRows={1}
-              maxRows={10}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>{getDisplayName(citeFormat)}</div>
-          <Dropdown
-            options={Object.keys(formatMap)}
-            selected={
-              Object.entries(formatMap).find(([_, v]) => v === citeFormat)?.[0] || "APA"
-            }
-            setSelected={(displayName) => {
-              setCiteFormat(formatMap[displayName] ?? "apa")
-            }}
-            addButtonLabel="Change Format"
-            disabled={!isEditing}
-          />
-          */}
-
-          <div className={styles.buttonGroup}>
-            {isEditing ? (
-              <>
+                </>
+              ) : (
                 <button
                   type="button"
-                  onClick={cancelEdits}
+                  onClick={onClose}
                   className={styles.modalCancelButton}
                 >
-                  Cancel
+                  Close
                 </button>
-                <button type="submit" className={styles.submitButton}>
-                  Submit
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={onClose}
-                className={styles.modalCancelButton}
-              >
-                Close
-              </button>
-            )}
-          </div>
-        </form>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </EditingProvider>
   )
 }

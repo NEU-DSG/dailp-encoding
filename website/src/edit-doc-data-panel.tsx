@@ -16,7 +16,7 @@ import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
 import * as css from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"
-import { useEditing } from "./pages/documents/editing-context"
+import { EditingProvider, useEditing } from "./pages/documents/editing-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
@@ -24,40 +24,42 @@ export const EditButton = () => {
   const form = useForm()
 
   return (
-    <Form className={css.form}>
-      {isEditing ? (
-        // Displays a "Cancel" button and "Save" button in editing mode.
-        <>
-          <IconButton
-            className={css.cancelButton}
-            round={false}
+    <EditingProvider>
+      <Form className={css.form}>
+        {isEditing ? (
+          // Displays a "Cancel" button and "Save" button in editing mode.
+          <>
+            <IconButton
+              className={css.cancelButton}
+              round={false}
+              onClick={() => {
+                setIsEditing(false)
+              }}
+            >
+              Cancel
+            </IconButton>
+
+            <IconTextButton
+              icon={<IoCheckmarkSharp />}
+              className={css.editPanelButton}
+              as={FormSubmitButton}
+            >
+              Save
+            </IconTextButton>
+          </>
+        ) : (
+          <IconTextButton
+            icon={<HiPencilAlt />}
+            className={css.editPanelButton}
             onClick={() => {
-              setIsEditing(false)
+              setIsEditing(true)
             }}
           >
-            Cancel
-          </IconButton>
-
-          <IconTextButton
-            icon={<IoCheckmarkSharp />}
-            className={css.editPanelButton}
-            as={FormSubmitButton}
-          >
-            Save
+            Edit
           </IconTextButton>
-        </>
-      ) : (
-        <IconTextButton
-          icon={<HiPencilAlt />}
-          className={css.editPanelButton}
-          onClick={() => {
-            setIsEditing(true)
-          }}
-        >
-          Edit
-        </IconTextButton>
-      )}
-    </Form>
+        )}
+      </Form>
+    </EditingProvider>
   )
 }
 
