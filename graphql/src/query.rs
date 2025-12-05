@@ -977,6 +977,20 @@ impl Mutation {
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn remove_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        chapter_id: Uuid,
+    ) -> FieldResult<String> {
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .remove_collection_chapter(chapter_id)
+            .await?;
+        Ok("Chapter removed from collection".to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
         Ok(context
             .data::<DataLoader<Database>>()?

@@ -1145,6 +1145,7 @@ type Mutation {
 	upsertEditedCollection(input: UpsertChapterInput!): String!
 	updateCollectionChapterOrder(input: UpdateCollectionChapterOrderInput!): String!
 	addCollectionChapter(input: AddChapterInput!): UUID!
+	removeCollectionChapter(chapterId: UUID!): String!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 }

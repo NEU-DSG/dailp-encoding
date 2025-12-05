@@ -1235,6 +1235,13 @@ impl Database {
         Ok(chapter_id)
     }
 
+    pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<()> {
+        query_file!("queries/remove_collection_chapter.sql", chapter_id)
+            .execute(&self.client)
+            .await?;
+        Ok(())
+    }
+
     pub async fn insert_edited_collection(
         &self,
         collection: CreateEditedCollectionInput,
