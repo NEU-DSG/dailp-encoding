@@ -51,6 +51,7 @@ export const fieldGroup = style({
   display: "flex",
   flexDirection: "column",
   gap: "4px",
+  marginBottom: "15px",
 })
 
 export const fullWidthGroup = style({

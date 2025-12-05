@@ -135,15 +135,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // For initializing new contributors who may not have a role yet
   type MaybeContributorRole = Dailp.ContributorRole | null
 
-  const [formContributors, setFormContributors] = useState<FormContributor[]>(
-    () =>
-      (documentMetadata.contributors ?? []).map((c) => ({
-        ...c,
-        isNew: false,
-        isVisible: c.details?.isVisible ?? false,
-        details: c.details ? { ...c.details } : null,
-      }))
-  )
   const [newContributors, setNewContributors] = useState<Set<string>>(new Set())
 
   const [tempName, setTempName] = useState("")
@@ -151,6 +142,28 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [tempVisible, setTempVisible] = useState(false)
 
   const contributorRoles = Object.values(Dailp.ContributorRole)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const dm = documentMetadata
+
+    setTitle(dm.title ?? "")
+    setDate(dm.date ?? "")
+    setCreator(dm.creators ?? [])
+    setKeywords(dm.keywords ?? [])
+    setLanguages(dm.languages ?? [])
+    setSubjectHeadings(dm.subjectHeadings ?? [])
+    setSpatialCoverage(dm.spatialCoverage ?? [])
+    setContributors(
+      (dm.contributors ?? []).map((c) => ({
+        ...c,
+        isNew: false,
+        isVisible: c.details?.isVisible ?? false,
+        details: c.details ? { ...c.details } : null,
+      }))
+    )
+  }, [isOpen, documentMetadata.id])
 
   const {
     tags: selectedKeywords,
@@ -218,8 +231,15 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }
   }, [isOpen])
 
-  const [contributors, setContributors] =
-    useState<FormContributor[]>(formContributors)
+  const [contributors, setContributors] = useState<FormContributor[]>(() =>
+    (documentMetadata.contributors ?? []).map((c) => ({
+      ...c,
+      isNew: false,
+      isVisible: c.details?.isVisible ?? false,
+      details: c.details ? { ...c.details } : null,
+    }))
+  )
+
   const addContributor = (
     name: string,
     role: Dailp.ContributorRole,

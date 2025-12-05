@@ -4,7 +4,7 @@ export const fullWidthGroup = style({
   display: "flex",
   flexDirection: "column",
   width: "100%",
-  marginBottom: "100px", // 16px
+  marginBottom: "30px", // 16px
 })
 
 export const tagsContainer = style({
