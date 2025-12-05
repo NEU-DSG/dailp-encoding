@@ -18,8 +18,6 @@ import { EditingProvider, useEditing } from "./editing-context"
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
-const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
-
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -32,6 +30,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const token = useCredentials()
   const { form } = useForm()
   const { isEditing, setIsEditing } = useEditing()
+  const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
 
   const handleUpdate = async (changes: any) => {
     await updateDocument({
@@ -39,6 +38,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         //slug: doc.slug!,
         id: doc.id,
         title: changes.title,
+        format: changes.format,
         contributors: changes.contributors,
         creators: changes.creators,
         keywords: changes.keywords,

@@ -1899,6 +1899,10 @@ export type DocFormFieldsFragment = {
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
     >
+    readonly format: { readonly __typename?: "Format" } & Pick<
+      Format,
+      "id" | "name"
+    >
   }
 
 export type ParagraphFormFieldsFragment = {
@@ -3474,6 +3478,10 @@ export const DocFormFieldsFragmentDoc = gql`
       status
     }
     creators {
+      id
+      name
+    }
+    format {
       id
       name
     }
