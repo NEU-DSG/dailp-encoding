@@ -23,7 +23,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     variables: { slug: doc.slug! },
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
-  console.log("Rendering DocumentInfo with docData:", docData)
 
   if (!docData) {
     return null
