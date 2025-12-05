@@ -21,7 +21,6 @@ export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
-    requestPolicy: "network-only",
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
   if (!docData) {
