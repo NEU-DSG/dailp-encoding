@@ -126,6 +126,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   const collection = data?.editedCollection
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
   const [, addChapter] = Dailp.useAddCollectionChapterMutation()
+  const [, addDocument] = Dailp.useAddDocumentMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState<{
@@ -360,6 +361,12 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         return
       }
 
+      if (!collection?.id) {
+        setErrorMessage("Collection ID is missing")
+        setIsSaving(false)
+        return
+      }
+
       // Convert section key to CollectionSection enum
       const sectionEnum =
         section === "intro"
@@ -368,6 +375,35 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
           ? CollectionSection.Body
           : CollectionSection.Credit
 
+      // First, create a document for this chapter
+      const documentResult = await addDocument({
+        input: {
+          documentName: title,
+          rawTextLines: [[]], // Empty document - can be edited later
+          englishTranslationLines: [[]], // Empty translation - can be edited later
+          unresolvedWords: [],
+          sourceName: "Manual Entry",
+          sourceUrl: "",
+          collectionId: collection.id,
+        },
+      })
+
+      if (documentResult.error) {
+        setErrorMessage(
+          documentResult.error.message || "Failed to create document"
+        )
+        setIsSaving(false)
+        return
+      }
+
+      const documentId = documentResult.data?.addDocument?.id
+      if (!documentId) {
+        setErrorMessage("Failed to get document ID from creation")
+        setIsSaving(false)
+        return
+      }
+
+      // Then, create the chapter linked to the document
       const result = await addChapter({
         input: {
           collectionSlug: collectionSlug,
@@ -375,7 +411,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
           slug: slug,
           section: sectionEnum,
           parentId: parentId ? (parentId as any) : null,
-          documentId: null,
+          documentId: documentId,
         },
       })
 
