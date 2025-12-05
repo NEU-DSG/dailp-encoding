@@ -843,6 +843,7 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  readonly removeCollectionChapter: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updateCollectionChapterOrder: Scalars["String"]
   /** Update a comment */
@@ -913,6 +914,10 @@ export type MutationPostCommentArgs = {
 
 export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationRemoveCollectionChapterArgs = {
+  chapterId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -3144,6 +3149,14 @@ export type AddCollectionChapterMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "addCollectionChapter">
 
+export type RemoveCollectionChapterMutationVariables = Exact<{
+  chapterId: Scalars["UUID"]
+}>
+
+export type RemoveCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "removeCollectionChapter">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -4303,6 +4316,18 @@ export function useAddCollectionChapterMutation() {
     AddCollectionChapterMutation,
     AddCollectionChapterMutationVariables
   >(AddCollectionChapterDocument)
+}
+export const RemoveCollectionChapterDocument = gql`
+  mutation RemoveCollectionChapter($chapterId: UUID!) {
+    removeCollectionChapter(chapterId: $chapterId)
+  }
+`
+
+export function useRemoveCollectionChapterMutation() {
+  return Urql.useMutation<
+    RemoveCollectionChapterMutation,
+    RemoveCollectionChapterMutationVariables
+  >(RemoveCollectionChapterDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {

@@ -126,6 +126,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   const collection = data?.editedCollection
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
   const [, addChapter] = Dailp.useAddCollectionChapterMutation()
+  // @ts-ignore - Types will be generated when GraphQL schema is regenerated
+  const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addDocument] = Dailp.useAddDocumentMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -153,7 +155,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       setChaptersBySection(buildNestedStructure(collection.chapters as any))
     }
     setCollectionTitle(collection?.title ?? "no name")
-  }, [collection])
+  }, [collection, data])
 
   if (!collection) {
     return null
@@ -348,6 +350,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setErrorMessage(null)
     setIsSaving(true)
 
+    // Save previous state for potential rollback (declared outside try for catch access)
+    let previousState: typeof chaptersBySection | null = null
+
     try {
       const formData = new FormData(e.target as HTMLFormElement)
       const title = formData.get("chapter title") as string
@@ -374,6 +379,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
           : section === "body"
           ? CollectionSection.Body
           : CollectionSection.Credit
+
+      // Save previous state for potential rollback
+      previousState = chaptersBySection
 
       // First, create a document for this chapter
       const documentResult = await addDocument({
@@ -403,6 +411,27 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         return
       }
 
+      // Create optimistic chapter node
+      const optimisticChapter: ChapterNode = {
+        clientId: generateId(), // Temporary ID until backend assigns real one
+        title: title,
+        slug: slug,
+        section: sectionEnum,
+        indexInParent: 0, // Will be set correctly by backend
+        path: [], // Will be set correctly by backend
+        children: [],
+      }
+
+      // Optimistically add to UI for immediate feedback
+      setChaptersBySection((prev) => ({
+        ...prev,
+        [section]: addChapterToNested(
+          prev[section],
+          optimisticChapter,
+          parentId || null
+        ),
+      }))
+
       // Then, create the chapter linked to the document
       const result = await addChapter({
         input: {
@@ -416,14 +445,26 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       })
 
       if (result.error) {
+        // Revert optimistic update on error
+        setChaptersBySection(previousState)
         setErrorMessage(result.error.message || "Failed to add chapter")
       } else {
-        // Refetch the collection to get updated data with the new chapter
+        // Refetch the collection to get updated data with the new chapter (with real IDs)
         await refetch()
+        // The useEffect will automatically update chaptersBySection when data/collection changes
         setErrorMessage(null)
         ;(e.target as HTMLFormElement).reset()
+        // Close subchapter form if it was open
+        if (parentId) {
+          setShowAddSubchapter(null)
+        }
       }
     } catch (error: any) {
+      // Revert optimistic update on unexpected error
+      // Note: previousState is only defined if we got past document creation
+      if (previousState) {
+        setChaptersBySection(previousState)
+      }
       setErrorMessage(error.message || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
@@ -460,17 +501,71 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       }))
   }
 
-  const handleRemove = (
+  // Helper function to add a chapter optimistically to nested structure
+  const addChapterToNested = (
+    chapters: ChapterNode[],
+    newChapter: ChapterNode,
+    parentId: string | null
+  ): ChapterNode[] => {
+    if (!parentId) {
+      // Add to top level
+      return [...chapters, newChapter]
+    }
+    // Find parent and add as child
+    return chapters.map((ch) => {
+      if (idOf(ch) === parentId) {
+        return {
+          ...ch,
+          children: [...ch.children, newChapter],
+        }
+      }
+      return {
+        ...ch,
+        children: addChapterToNested(ch.children, newChapter, parentId),
+      }
+    })
+  }
+
+  const handleRemove = async (
     section: keyof typeof chaptersBySection,
     id: string,
     title: string
   ) => {
-    const ok = confirm(`Delete ${title}?`)
+    const ok = confirm(
+      `Remove ${title} from this collection? (The chapter and document will not be deleted)`
+    )
     if (!ok) return
+
+    setErrorMessage(null)
+    setIsSaving(true)
+
+    // Optimistically remove from UI for immediate feedback
+    const previousState = chaptersBySection
     setChaptersBySection((prev) => ({
       ...prev,
       [section]: removeChapterFromNested(prev[section], id),
     }))
+
+    try {
+      const result = await removeChapter({ chapterId: id })
+
+      if (result.error) {
+        // Revert optimistic update on error
+        setChaptersBySection(previousState)
+        setErrorMessage(result.error.message || "Failed to remove chapter")
+      } else {
+        // Refetch the collection to ensure consistency with backend
+        await refetch()
+        // The useEffect will automatically update chaptersBySection when data/collection changes
+        setErrorMessage(null)
+      }
+    } catch (error: any) {
+      // Revert optimistic update on error
+      setChaptersBySection(previousState)
+      setErrorMessage(error.message || "An unexpected error occurred")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleUpdate = (
@@ -609,8 +704,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
             </div>
             {isShowingAddForm && (
               <form
-                onSubmit={(e) => {
-                  handleAddNewChapter(e, chapterId, sectionKey)
+                onSubmit={async (e) => {
+                  await handleAddNewChapter(e, chapterId, sectionKey)
                   setShowAddSubchapter(null)
                 }}
                 style={{
