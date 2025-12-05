@@ -14,7 +14,8 @@ const DailpPage = (props: DailpPageProps) => (
   <Layout>
     <main className={edgePadded}>
       <article className={fullWidth}>
-        <DailpPageContents path={"/" + props["*"]} />
+        <p>content loading test</p>
+        {/* <DailpPageContents path={"/" + props["*"]} /> */}
       </article>
     </main>
   </Layout>
