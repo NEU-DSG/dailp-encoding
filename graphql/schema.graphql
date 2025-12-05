@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	The format of the original artifact
+	"""
+	format: Format!
+	"""
 	Key terms associated with a document
 	"""
 	keywords: [Keyword!]!
@@ -752,6 +756,10 @@ input DocumentMetadataUpdate {
 	The creator(s) of the document
 	"""
 	creators: [CreatorUpdate!]
+	"""
+	The format of the original artifact
+	"""
+	format: FormatUpdate
 }
 
 type DocumentPage {
@@ -868,6 +876,35 @@ type EditedCollection {
 	chapters: [CollectionChapter!]
 }
 
+
+"""
+Stores the physical or digital medium associated with a document
+"""
+type Format {
+	"""
+	UUID for the format
+	"""
+	id: UUID!
+	"""
+	Name of the format
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a format
+	"""
+	status: ApprovalStatus!
+}
+
+input FormatUpdate {
+	"""
+	UUID for the format
+	"""
+	id: UUID!
+	"""
+	Name of the format
+	"""
+	name: String!
+}
 
 type FormsInTime {
 	start: Date

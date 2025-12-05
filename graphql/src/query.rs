@@ -835,6 +835,7 @@ impl Mutation {
             languages_ids: None,
             subject_headings_ids: None,
             creators_ids: None,
+            format_id: None,
             contributors: Some(vec![contributor]),
             spatial_coverage_ids: None,
             translation: None,
