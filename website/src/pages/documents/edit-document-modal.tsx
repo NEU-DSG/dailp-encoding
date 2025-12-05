@@ -2,6 +2,7 @@ import plugins from "citation-js"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import TextareaAutosize from "react-textarea-autosize"
+import { v4 as uuidv4 } from "uuid"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { buildCitationMetadata } from "../../utils/build-citation-metadata"
@@ -23,6 +24,22 @@ export interface FormContributor extends Dailp.Contributor {
   details: Dailp.ContributorDetails | null
   isNew: boolean
   isVisible: boolean | false
+}
+
+export interface FormKeyword extends Dailp.Keyword {
+  isNew: boolean
+}
+
+export interface FormLanguage extends Dailp.Language {
+  isNew: boolean
+}
+
+export interface FormSpatialCoverage extends Dailp.SpatialCoverage {
+  isNew: boolean
+}
+
+export interface FormSubjectHeading extends Dailp.SubjectHeading {
+  isNew: boolean
 }
 
 export const formatMap: Record<string, string> = {
@@ -111,6 +128,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     (sc) => sc.name
   )
 
+  // Get name from tag
+  const getKeywordName = (tag: Dailp.Keyword) => tag.name
+
   const [title, setTitle] = useState(documentMetadata.title ?? "")
   const [date, setDate] = useState(documentMetadata.date ?? "")
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
@@ -131,6 +151,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
   // const [citation, setCitation] = useState("")
   // const [citeFormat, setCiteFormat] = useState("APA")
+
+  //const [newKeywords, setNewKeywords] = useState<Set<string>>(new Set())
 
   // For initializing new contributors who may not have a role yet
   type MaybeContributorRole = Dailp.ContributorRole | null
@@ -330,31 +352,64 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Keywords to be submitted
+    const keywordsToSubmit = selectedKeywords.map((name) => {
+      // Find existing keyword by name to get id, otherwise generate new UUID
+      const existing = keywords.find((k) => k.name === name)
+      return {
+        id: existing?.id ?? uuidv4(),
+        name,
+      }
+    })
+
+    // Subject Headings to be submitted
+    const subjectHeadingsToSubmit = selectedSubjectHeadings.map((name) => {
+      // Find existing subject headings by name to get id, otherwise generate new UUID
+      const existing = subjectHeadings.find((sh) => sh.name === name)
+      return {
+        id: existing?.id ?? uuidv4(),
+        name,
+      }
+    })
+
+    // Languages to be submitted
+    const languagesToSubmit = selectedLanguages.map((name) => {
+      // Find existing languages by name to get id, otherwise generate new UUID
+      const existing = languages.find((l) => l.name === name)
+      return {
+        id: existing?.id ?? uuidv4(),
+        name,
+      }
+    })
+
+    // Languages to be submitted
+    const spatialCoverageToSubmit = selectedSpatialCoverages.map((name) => {
+      // Find existing spatial coverages by name to get id, otherwise generate new UUID
+      const existing = spatialCoverage.find((sc) => sc.name === name)
+      return {
+        id: existing?.id ?? uuidv4(),
+        name,
+      }
+    })
+
     onSubmit({
       title,
       date,
-      //   description,
-      //   genre,
-      //   format,
-      //   pages,
       creator,
-      //   source,
-      //   doi,
       contributors,
-      keywords,
-      subjectHeadings,
-      languages,
-      spatialCoverage,
-      //   citation,
-      //   citeFormat,
+      keywords: keywordsToSubmit,
+      subjectHeadings: subjectHeadingsToSubmit,
+      languages: languagesToSubmit,
+      spatialCoverage: spatialCoverageToSubmit,
     })
     setIsEditing(false)
+    onClose()
   }
 
-  if (!isOpen) return null
-
+  // Pass UUID of the keyword
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h2 className={styles.title}>Editing Document Information</h2>
         <p className={styles.subtitle}>* indicates a required field</p>
@@ -552,9 +607,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             selectedTags={selectedKeywords}
             approvedTags={approvedKeywords}
             newTags={newKeywords}
-            onAdd={isEditing ? addKeyword : undefined}
-            onRemove={isEditing ? removeKeyword : undefined}
-            addButtonLabel="+ Keyword"
+            onAdd={(tagName) => addKeyword(tagName)}
+            onRemove={removeKeyword}
+            addButtonLabel="Add Keyword"
           />
 
           <TagSelector
@@ -643,7 +698,4 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       </div>
     </div>
   )
-}
-function uuidv4(): any {
-  throw new Error("Function not implemented.")
 }

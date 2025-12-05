@@ -38,8 +38,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
             {onRemove && (
               <button
                 type="button"
-                onClick={() => onRemove?.(index)}
+                onClick={() => onRemove(index)}
                 className={styles.removeTagButton}
+                aria-label={`Remove tag ${tag}`}
               >
                 ×
               </button>
@@ -53,28 +54,31 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
           type="button"
           onClick={() => setShowDropdown(!showDropdown)}
           className={styles.addTagButton}
+          aria-expanded={showDropdown}
+          aria-haspopup="true"
         >
           {addButtonLabel}
         </button>
 
         {showDropdown && (
           <div className={styles.tagDropdown}>
-            {customForm ? (
-              <>{customForm}</>
-            ) : (
-              approvedTags
-                .filter((tag) => !selectedTags.includes(tag))
-                .map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => onAdd?.(tag)}
-                    className={styles.tagOption}
-                  >
-                    {tag}
-                  </button>
-                ))
-            )}
+            {customForm
+              ? customForm
+              : approvedTags
+                  .filter((tag) => !selectedTags.includes(tag))
+                  .map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        onAdd?.(tag)
+                        setShowDropdown(false)
+                      }}
+                      className={styles.tagOption}
+                    >
+                      {tag}
+                    </button>
+                  ))}
           </div>
         )}
       </div>

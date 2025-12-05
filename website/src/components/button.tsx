@@ -25,7 +25,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 type IconTextButtonProps = ButtonProps & {
   icon: ReactNode
   children: ReactNode
-  as?: React.FC<any>
+  as?: React.FC
 }
 
 export const IconTextButton = forwardRef<
