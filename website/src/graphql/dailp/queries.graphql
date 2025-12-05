@@ -156,6 +156,10 @@ fragment DocFormFields on AnnotatedDoc {
     id
     name
   }
+  genre {
+    id
+    name
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {

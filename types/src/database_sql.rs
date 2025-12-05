@@ -13,7 +13,7 @@ use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 
-use crate::doc_metadata::{Keyword, Language, SpatialCoverage};
+use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -37,15 +37,20 @@ use {
 // Explicitly import types from person.rs
 use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
-// Add new metadata
-use crate::doc_metadata::Format;
-
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Genre, sqlx::Error> {
+        let genre = sqlx::query_file_as!(Genre, "queries/get_genre_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(genre)
+    }
+
     pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
         let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
             .fetch_all(&self.client)
@@ -379,7 +384,7 @@ impl Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
-                    genre: None,
+                    genre_id: None.into(),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
@@ -523,7 +528,7 @@ impl Database {
                     .unwrap_or_default(),
                 creators_ids: Some(Vec::new()),
                 format_id: None.into(),
-                genre: None,
+                genre_id: None.into(),
                 keywords_ids: Some(Vec::new()),
                 languages_ids: Some(Vec::new()),
                 order_index: 0,
@@ -912,12 +917,18 @@ impl Database {
             _ => None,
         };
 
+        let genre: Option<Uuid> = match document.genre {
+            MaybeUndefined::Value(genre_update) => Some(genre_update.id),
+            _ => None,
+        };
+
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
             &written_at as _,
             format,
+            genre,
         )
         .execute(&mut *tx)
         .await?;
@@ -2323,7 +2334,7 @@ impl Loader<DocumentId> for Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
-                    genre: None,
+                    genre_id: None.into(),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
@@ -2401,7 +2412,7 @@ impl Loader<DocumentShortName> for Database {
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
-                    genre: None,
+                    genre_id: None.into(),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
