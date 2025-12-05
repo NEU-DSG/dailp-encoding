@@ -435,7 +435,9 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }
@@ -3480,6 +3482,10 @@ export const DocFormFieldsFragmentDoc = gql`
       status
     }
     creators {
+      id
+      name
+    }
+    format {
       id
       name
     }

@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	The format of the original artifact
+	"""
+	format: Format!
+	"""
 	Key terms associated with a document
 	"""
 	keywords: [Keyword!]!
@@ -537,6 +541,8 @@ enum ContributorRole {
 	TRANSLATOR
 	ANNOTATOR
 	CULTURAL_ADVISOR
+	AUTHOR
+	EDITOR
 }
 
 input CreateDocumentFromFormInput {

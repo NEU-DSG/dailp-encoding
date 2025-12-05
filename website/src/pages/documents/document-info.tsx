@@ -9,13 +9,17 @@ import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
 import * as css from "./document.css"
+import {
+  EditDocumentModal,
+  EditDocumentModalProps,
+} from "./edit-document-modal"
+import { EditingProvider, useEditing } from "./editing-context"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
-
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
+  const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
@@ -23,7 +27,30 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     return null
   }
   const token = useCredentials()
-  const { form, isEditing } = useForm()
+  const { form } = useForm()
+  const { isEditing, setIsEditing } = useEditing()
+  const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
+
+  const handleUpdate = async (changes: any) => {
+    await updateDocument({
+      document: {
+        //slug: doc.slug!,
+        id: doc.id,
+        title: changes.title,
+        format: changes.format,
+        contributors: changes.contributors,
+        creators: changes.creators,
+        keywords: changes.keywords,
+        languages: changes.languages,
+        spatialCoverage: changes.spatialCoverage,
+        subjectHeadings: changes.subjectHeadings,
+        writtenAt: changes.writtenAt,
+      },
+    })
+
+    reexecuteQuery()
+    setIsEditing(false)
+  }
 
   const contributorsList = (
     <>
@@ -57,9 +84,12 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <>{contributorsList}</>
       )}
       {isEditing ? (
-        <Form {...form}>
-          <EditDocPanel document={docData} />
-        </Form>
+        <EditDocumentModal
+          isOpen={true}
+          onClose={() => setIsEditing(false)}
+          onSubmit={handleUpdate}
+          documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
+        />
       ) : (
         <></>
       )}
@@ -67,7 +97,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   )
   return (
     <Fragment>
-      <>{panel}</>
+      {panel}
 
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>
