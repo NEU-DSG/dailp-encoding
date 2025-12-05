@@ -730,6 +730,10 @@ mutation AddCollectionChapter($input: AddChapterInput!) {
   addCollectionChapter(input: $input)
 }
 
+mutation RemoveCollectionChapter($chapterId: UUID!) {
+  removeCollectionChapter(chapterId: $chapterId)
+}
+
 mutation updateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
