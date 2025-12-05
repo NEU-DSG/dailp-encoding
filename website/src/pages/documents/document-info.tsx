@@ -18,9 +18,12 @@ import { EditingProvider, useEditing } from "./editing-context"
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
+const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
+
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
+  const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
+    requestPolicy: "network-only",
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
   if (!docData) {
@@ -28,7 +31,33 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
   const token = useCredentials()
   const { form } = useForm()
-  const { isEditing } = useEditing()
+  const { isEditing, setIsEditing } = useEditing()
+
+  const handleUpdate = async (changes: any) => {
+    await updateDocument({
+      document: {
+        //slug: doc.slug!,
+        id: doc.id,
+        title: changes.title,
+        contributors: changes.contributors,
+        creators: changes.creators,
+        keywords: changes.keywords,
+        languages: changes.languages,
+        spatialCoverage: changes.spatialCoverage,
+        subjectHeadings: changes.subjectHeadings,
+        writtenAt: changes.writtenAt,
+      },
+    })
+
+    reexecuteQuery()
+    setIsEditing(false)
+  }
+
+  // Re-fetch updated document
+  reexecuteQuery()
+
+  // Close modal
+  setIsEditing(false)
 
   const contributorsList = (
     <>
@@ -64,8 +93,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       {isEditing ? (
         <EditDocumentModal
           isOpen={true}
-          onClose={() => {}}
-          onSubmit={(data) => console.log(data)}
+          onClose={() => setIsEditing(false)}
+          onSubmit={handleUpdate}
           documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
         />
       ) : (
@@ -75,6 +104,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   )
   return (
     <Fragment>
+      {panel}
+
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}

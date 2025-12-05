@@ -10,7 +10,6 @@ use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 use dailp::ContributorRole;
 use dailp::Uuid;
-use log::error;
 use std::result::Result::Ok;
 
 use dailp::{
@@ -879,12 +878,18 @@ impl SheetInterpretation {
             .zip(roles.into_iter().skip(1))
             .filter(|(name, role)| !name.trim().is_empty() || !role.trim().is_empty())
             .map(|(name, role)| {
-                let parsed_role = ContributorRole::from(role.to_lowercase());
+                let parsed_role = match role.to_lowercase().parse::<ContributorRole>() {
+                    Ok(r) => Some(r),
+                    Err(_) => {
+                        println!("'{}' is not a valid role", role);
+                        None
+                    }
+                };
 
                 Contributor {
                     id: Uuid::new_v4(),
                     name,
-                    role: Some(parsed_role),
+                    role: parsed_role,
                 }
             })
             .collect();
@@ -1013,6 +1018,7 @@ impl SheetInterpretation {
             subject_headings_ids: None,
             spatial_coverage_ids: None,
             creators_ids: Some(creators_ids),
+            format_id: None,
             translation,
             page_images,
             date: parsed_date,

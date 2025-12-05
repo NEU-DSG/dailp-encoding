@@ -101,20 +101,36 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const userRole = useUserRole()
   const isContributor = userRole === UserRole.Contributor
 
+  // Extract names from metadata
+  const keywordStrings = (documentMetadata.keywords ?? []).map((k) => k.name)
+  const languageStrings = (documentMetadata.languages ?? []).map((l) => l.name)
+  const subjectHeadingStrings = (documentMetadata.subjectHeadings ?? []).map(
+    (sh) => sh.name
+  )
+  const spatialCoverageStrings = (documentMetadata.spatialCoverage ?? []).map(
+    (sc) => sc.name
+  )
+
   const [title, setTitle] = useState(documentMetadata.title ?? "")
   const [date, setDate] = useState(documentMetadata.date ?? "")
-  const [genre, setGenre] = useState(documentMetadata.genre ?? "")
-  /*
-    const [description, setDescription] = useState(documentMetadata.description ?? "")
-    const [type, setType] = useState(documentMetadata.type ?? "")
-    const [format, setFormat] = useState(documentMetadata.format ?? "")
-    const [pages, setPages] = useState(documentMetadata.pages ?? "")
-    const [creator, setCreator] = useState(documentMetadata.creator ?? [])
-    const [source, setSource] = useState(documentMetadata.source ?? "")
-    const [doi, setDOI] = useState(documentMetadata.doi ?? "")
-    const [citation, setCitation] = useState("")
-    const [citeFormat, setCiteFormat] = useState("APA")
-    */
+  const [creator, setCreator] = useState(documentMetadata.creators ?? [])
+  const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
+  const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
+  const [spatialCoverage, setSpatialCoverage] = useState(
+    documentMetadata.spatialCoverage ?? []
+  )
+  const [subjectHeadings, setSubjectHeadings] = useState(
+    documentMetadata.subjectHeadings ?? []
+  )
+
+  // const [description, setDescription] = useState(documentMetadata.description ?? "")
+  // const [genre, setGenre] = useState(documentMetadata.genre ?? "")
+  // const [format, setFormat] = useState(documentMetadata.format ?? "")
+  // const [pages, setPages] = useState(documentMetadata.pages ?? "")
+  // const [source, setSource] = useState(documentMetadata.source ?? "")
+  // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
+  // const [citation, setCitation] = useState("")
+  // const [citeFormat, setCiteFormat] = useState("APA")
 
   // For initializing new contributors who may not have a role yet
   type MaybeContributorRole = Dailp.ContributorRole | null
@@ -136,35 +152,33 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const contributorRoles = Object.values(Dailp.ContributorRole)
 
-  /*
-    const {
-      tags: keywords,
-      newTags: newKeywords,
-      addTag: addKeyword,
-      removeTag: removeKeyword,
-    } = useTagSelector(documentMetadata.keywords ?? [], approvedKeywords)
-  
-    const {
-      tags: subjectHeadings,
-      newTags: newHeadings,
-      addTag: addHeading,
-      removeTag: removeHeading,
-    } = useTagSelector(documentMetadata.subjectHeadings ?? [], approvedSubjectHeadings)
-  
-    const {
-      tags: languages,
-      newTags: newLanguages,
-      addTag: addLanguage,
-      removeTag: removeLanguage,
-    } = useTagSelector(documentMetadata.languages ?? [], approvedLanguages)
-  
-    const {
-      tags: spatialCoverages,
-      newTags: newCoverages,
-      addTag: addCoverage,
-      removeTag: removeCoverage,
-    } = useTagSelector(documentMetadata.spatialCoverages ?? [], approvedSpatialCoverages)
-    */
+  const {
+    tags: selectedKeywords,
+    newTags: newKeywords,
+    addTag: addKeyword,
+    removeTag: removeKeyword,
+  } = useTagSelector(keywordStrings ?? [], approvedKeywords)
+
+  const {
+    tags: selectedSubjectHeadings,
+    newTags: newHeadings,
+    addTag: addHeading,
+    removeTag: removeHeading,
+  } = useTagSelector(subjectHeadingStrings ?? [], approvedSubjectHeadings)
+
+  const {
+    tags: selectedLanguages,
+    newTags: newLanguages,
+    addTag: addLanguage,
+    removeTag: removeLanguage,
+  } = useTagSelector(languageStrings ?? [], approvedLanguages)
+
+  const {
+    tags: selectedSpatialCoverages,
+    newTags: newCoverages,
+    addTag: addCoverage,
+    removeTag: removeCoverage,
+  } = useTagSelector(spatialCoverageStrings ?? [], approvedSpatialCoverages)
 
   const [backupState, setBackupState] = useState<null | {
     title: string
@@ -172,16 +186,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     // description: string
     // type: string
     // format: string
-    genre: string
+    //genre: string
     // pages: string
-    // creator: string[]
+    creator: Dailp.Creator[]
     // source: string
     // doi: string
-    // //contributors: Contributor[]
-    // keywords: string[]
-    // subjectHeadings: string[]
-    // languages: string[]
-    // spatialCoverages: string[]
+    contributors: Dailp.Contributor[]
+    keywords: Dailp.Keyword[]
+    subjectHeadings: Dailp.SubjectHeading[]
+    languages: Dailp.Language[]
+    spatialCoverages: Dailp.SpatialCoverage[]
   }>(null)
 
   useEffect(() => {
@@ -190,19 +204,17 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         title,
         date,
         //description,
-        genre,
         //format,
         // pages,
-        //creator,
+        creator: [...creator],
         //source,
         //doi,
-        // contributors,
-        // keywords,
-        // subjectHeadings,
-        // languages,
-        // spatialCoverages,
+        contributors,
+        keywords: [...keywords],
+        subjectHeadings: [...subjectHeadings],
+        languages: [...languages],
+        spatialCoverages: [...spatialCoverage],
       })
-      setIsEditing(false)
     }
   }, [isOpen])
 
@@ -216,7 +228,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     if (!name || !role) return
 
     const newContributor: FormContributor = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       name,
       role,
       isVisible,
@@ -281,10 +293,14 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setTitle(backupState.title)
     setDate(backupState.date)
     //setDescription(backupState.description)
-    setGenre(backupState.genre)
+    //setGenre(backupState.genre)
     //setFormat(backupState.format)
     //setPages(backupState.pages)
-    //setCreator(backupState.creator)
+    setCreator(backupState.creator)
+    setKeywords(backupState.keywords)
+    setLanguages(backupState.languages)
+    setSubjectHeadings(backupState.subjectHeadings)
+    setSpatialCoverage(backupState.spatialCoverages)
     //setSource(backupState.source)
     //setDOI(backupState.doi)
     //setContributors(backupState.contributors)
@@ -298,17 +314,17 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       title,
       date,
       //   description,
-      genre,
+      //   genre,
       //   format,
       //   pages,
-      //   creator,
+      creator,
       //   source,
       //   doi,
-      //   contributors,
-      //   keywords,
-      //   subjectHeadings,
-      //   languages,
-      //   spatialCoverages,
+      contributors,
+      keywords,
+      subjectHeadings,
+      languages,
+      spatialCoverage,
       //   citation,
       //   citeFormat,
     })
@@ -366,7 +382,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
               */}
 
-          <div className={styles.formGrid}>
+          {/* <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Document Type</label>
               <input
@@ -376,10 +392,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 onChange={(e) => setGenre(e.target.value)}
                 disabled={!isEditing}
               />
-            </div>
+            </div> */}
 
-            {/*
-              <div className={styles.fieldGroup}>
+          {/* <div className={styles.fieldGroup}>
                 <label className={styles.label}>Format</label>
                 <input
                   type="text"
@@ -388,9 +403,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                   onChange={(e) => setFormat(e.target.value)}
                   disabled={!isEditing}
                 />
-              </div>
-          
+              </div> */}
 
+          {/* 
               <div className={styles.fieldGroup}>
                 <label className={styles.label}>Pages (start page, end page)</label>
                 <input
@@ -401,25 +416,30 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                   disabled={!isEditing}
                 />
               </div>
-
-              <div className={styles.fieldGroup}>
-                <label className={styles.label}>Creator (separate by ',' if multiple)</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={creator.join(", ")}
-                  onChange={(e) =>
-                    setCreator(
-                      e.target.value
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter((c) => c.length > 0)
-                    )
-                  }
-                  disabled={!isEditing}
-                />
-              </div>
               */}
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>
+              Creator (separate by ',' if multiple)
+            </label>
+            <input
+              type="text"
+              className={styles.input}
+              value={creator.map((c) => c.name).join(", ")} // Join names to string for input
+              onChange={(e) =>
+                setCreator(
+                  e.target.value
+                    .split(",")
+                    .map((c) => c.trim())
+                    .filter((c) => c.length > 0)
+                    .map((name) => ({
+                      id: uuidv4(),
+                      name,
+                    }))
+                )
+              }
+              disabled={!isEditing}
+            />
           </div>
 
           <TagSelector
@@ -449,6 +469,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                       )
                     }}
                   >
+                    {/* Show display name for role */}
                     <option value="">Select role</option>
                     {contributorRoles.map((role) => (
                       <option key={role} value={role}>
@@ -484,94 +505,95 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           />
 
           {/* <div className={styles.fullWidthGroup}>
-              <label className={styles.label}>Source</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
+                  <label className={styles.label}>Source</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={source}
+                    onChange={(e) => setSource(e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
 
-            <div className={styles.fullWidthGroup}>
-              <label className={styles.label}>DOI</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={doi}
-                onChange={(e) => setDOI(e.target.value)}
-                disabled={!isEditing}
-              />
-            </div>
+                <div className={styles.fullWidthGroup}>
+                  <label className={styles.label}>DOI</label>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={doi}
+                    onChange={(e) => setDOI(e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+          */}
 
-            <TagSelector
-              label="Keywords"
-              selectedTags={keywords}
-              approvedTags={approvedKeywords}
-              newTags={newKeywords}
-              onAdd={isEditing ? addKeyword : undefined}
-              onRemove={isEditing ? removeKeyword : undefined}
-              addButtonLabel="+ Keyword"
-            />
+          <TagSelector
+            label="Keywords"
+            selectedTags={selectedKeywords}
+            approvedTags={approvedKeywords}
+            newTags={newKeywords}
+            onAdd={isEditing ? addKeyword : undefined}
+            onRemove={isEditing ? removeKeyword : undefined}
+            addButtonLabel="+ Keyword"
+          />
 
-            <TagSelector
-              label="Subject Headings"
-              selectedTags={subjectHeadings}
-              approvedTags={approvedSubjectHeadings}
-              newTags={newHeadings}
-              onAdd={isEditing ? addHeading : undefined}
-              onRemove={isEditing ? removeHeading : undefined}
-              addButtonLabel="+ Subject Heading"
-            />
+          <TagSelector
+            label="Subject Headings"
+            selectedTags={selectedSubjectHeadings}
+            approvedTags={approvedSubjectHeadings}
+            newTags={newHeadings}
+            onAdd={isEditing ? addHeading : undefined}
+            onRemove={isEditing ? removeHeading : undefined}
+            addButtonLabel="+ Subject Heading"
+          />
 
-            <TagSelector
-              label="Languages"
-              selectedTags={languages}
-              approvedTags={approvedLanguages}
-              newTags={newLanguages}
-              onAdd={isEditing ? addLanguage : undefined}
-              onRemove={isEditing ? removeLanguage : undefined}
-              addButtonLabel="+ Language"
-            />
+          <TagSelector
+            label="Languages"
+            selectedTags={selectedLanguages}
+            approvedTags={approvedLanguages}
+            newTags={newLanguages}
+            onAdd={isEditing ? addLanguage : undefined}
+            onRemove={isEditing ? removeLanguage : undefined}
+            addButtonLabel="+ Language"
+          />
 
-            <TagSelector
-              label="Spatial Coverages"
-              selectedTags={spatialCoverages}
-              approvedTags={approvedSpatialCoverages}
-              newTags={newCoverages}
-              onAdd={isEditing ? addCoverage : undefined}
-              onRemove={isEditing ? removeCoverage : undefined}
-              addButtonLabel="+ Spatial Coverage"
-            />
+          <TagSelector
+            label="Spatial Coverages"
+            selectedTags={selectedSpatialCoverages}
+            approvedTags={approvedSpatialCoverages}
+            newTags={newCoverages}
+            onAdd={isEditing ? addCoverage : undefined}
+            onRemove={isEditing ? removeCoverage : undefined}
+            addButtonLabel="+ Spatial Coverage"
+          />
 
-            <div className={styles.fullWidthGroup}>
-              <label className={styles.label}>Citation</label>
-              <TextareaAutosize
-                className={styles.input}
-                value={citation}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setCitation(e.target.value)
-                }              
-                minRows={1}
-                maxRows={10}
-                disabled={!isEditing}
-              />
-            </div>
+          {/* <div className={styles.fullWidthGroup}>
+                  <label className={styles.label}>Citation</label>
+                  <TextareaAutosize
+                    className={styles.input}
+                    value={citation}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setCitation(e.target.value)
+                    }              
+                    minRows={1}
+                    maxRows={10}
+                    disabled={!isEditing}
+                  />
+                </div>
 
-            <div>{getDisplayName(citeFormat)}</div>
-            <Dropdown
-              options={Object.keys(formatMap)}
-              selected={
-                Object.entries(formatMap).find(([_, v]) => v === citeFormat)?.[0] || "APA"
-              }
-              setSelected={(displayName) => {
-                setCiteFormat(formatMap[displayName] ?? "apa")
-              }}
-              addButtonLabel="Change Format"
-              disabled={!isEditing}
-            />
-            */}
+                <div>{getDisplayName(citeFormat)}</div>
+                <Dropdown
+                  options={Object.keys(formatMap)}
+                  selected={
+                    Object.entries(formatMap).find(([_, v]) => v === citeFormat)?.[0] || "APA"
+                  }
+                  setSelected={(displayName) => {
+                    setCiteFormat(formatMap[displayName] ?? "apa")
+                  }}
+                  addButtonLabel="Change Format"
+                  disabled={!isEditing}
+                />
+                */}
 
           <div className={styles.buttonGroup}>
             {isEditing ? (
@@ -601,4 +623,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       </div>
     </div>
   )
+}
+function uuidv4(): any {
+  throw new Error("Function not implemented.")
 }

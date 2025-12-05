@@ -128,6 +128,7 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
             subject_headings_ids: None,
             spatial_coverage_ids: None,
             creators_ids: None,
+            format_id: None,
             is_reference: true,
             page_images: None,
             sources: Vec::new(),

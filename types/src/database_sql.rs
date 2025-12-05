@@ -37,6 +37,9 @@ use {
 // Explicitly import types from person.rs
 use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
+// Add new metadata
+use crate::doc_metadata::Format;
+
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 pub struct Database {
@@ -92,6 +95,14 @@ impl Database {
             .await?;
 
         Ok(rows)
+    }
+
+    pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Format, sqlx::Error> {
+        let format = sqlx::query_file_as!(Format, "queries/get_format_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(format)
     }
 
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
@@ -367,6 +378,7 @@ impl Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
@@ -510,6 +522,7 @@ impl Database {
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
                 creators_ids: Some(Vec::new()),
+                format_id: None.into(),
                 genre: None,
                 keywords_ids: Some(Vec::new()),
                 languages_ids: Some(Vec::new()),
@@ -894,11 +907,17 @@ impl Database {
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
         let mut tx = self.client.begin().await?;
 
+        let format: Option<Uuid> = match document.format {
+            MaybeUndefined::Value(format_update) => Some(format_update.id),
+            _ => None,
+        };
+
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
-            &written_at as _
+            &written_at as _,
+            format,
         )
         .execute(&mut *tx)
         .await?;
@@ -2195,7 +2214,6 @@ impl Database {
         }
     }
 
-    //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
@@ -2304,6 +2322,7 @@ impl Loader<DocumentId> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
@@ -2381,6 +2400,7 @@ impl Loader<DocumentShortName> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
                     genre: None,
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
@@ -2693,7 +2713,11 @@ impl Loader<ContributorsForDocument> for Database {
                     Contributor {
                         id: x.id,
                         name: x.full_name,
-                        role: Some(ContributorRole::from(x.contribution_role)),
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })

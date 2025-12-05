@@ -76,24 +76,18 @@ pub enum ContributorRole {
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
-    /// Author of a document
-    Author,
-    /// Edited a document
-    Editor,
 }
 
-impl From<String> for ContributorRole {
-    //type Err = String;
+impl FromStr for ContributorRole {
+    type Err = String;
 
-    fn from(s: String) -> Self {
-        match s.to_lowercase().as_str() {
-            "transcriber" => ContributorRole::Transcriber,
-            "translator" => ContributorRole::Translator,
-            "annotator" => ContributorRole::Annotator,
-            "culturaladvisor" => ContributorRole::CulturalAdvisor,
-            "author" => ContributorRole::Author,
-            "editor" => ContributorRole::Editor,
-            other => panic!("{} is not a valid contributor role", s),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Transcriber" => Ok(ContributorRole::Transcriber),
+            "Translator" => Ok(ContributorRole::Translator),
+            "Annotator" => Ok(ContributorRole::Annotator),
+            "CulturalAdvisor" => Ok(ContributorRole::CulturalAdvisor),
+            other => Err(format!("Unknown contributor role: {}", other)),
         }
     }
 }
@@ -105,8 +99,6 @@ impl fmt::Display for ContributorRole {
             ContributorRole::Translator => "Translator",
             ContributorRole::Annotator => "Annotator",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Author => "Author",
-            ContributorRole::Editor => "Editor",
         };
         write!(f, "{}", s)
     }
@@ -115,8 +107,7 @@ impl fmt::Display for ContributorRole {
 impl ContributorRole {
     /// Attempts to parse a string into a ContributorRole, returning None if parsing fails
     pub fn from_option_str(s: &str) -> Option<Self> {
-        // TODO: Make ContributorRole::from return a ContributorRole instead of a panic
-        Some(ContributorRole::from(s.to_string()))
+        s.parse::<ContributorRole>().ok()
     }
 
     /// Converts a ContributorRole into its string representation

@@ -73,14 +73,33 @@ impl From<&SubjectHeading> for Uuid {
 }
 
 /// Stores the physical or digital medium associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Format {
     /// UUID for the format
     pub id: Uuid,
-    /// Documents associated with the format
-    pub documents: Vec<DocumentReference>,
     /// Name of the format
     pub name: String,
+    /// Status (pending, approved, rejected) of a format
+    pub status: ApprovalStatus,
+}
+
+// For updating formats
+#[derive(async_graphql::InputObject)]
+pub struct FormatUpdate {
+    /// UUID for the format
+    pub id: Uuid,
+    /// Name of the format
+    pub name: String,
+}
+
+/// Get all approved formats
+#[async_graphql::ComplexObject]
+impl Format {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
 }
 
 /// Record to store a keyword associated with a document

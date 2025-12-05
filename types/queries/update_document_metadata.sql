@@ -8,5 +8,10 @@ update document set
         case
             when $3::date is not null then $3::date
             else written_at
+        end,
+    format_id =
+        case
+            when $4::uuid is not null then $4
+            else format_id
         end
 where id = $1
