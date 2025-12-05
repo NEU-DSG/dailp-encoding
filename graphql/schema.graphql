@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	The format of the original artifact
+	"""
+	format: Format!
+	"""
 	Key terms associated with a document
 	"""
 	keywords: [Keyword!]!
@@ -113,10 +117,6 @@ type AnnotatedDoc {
 	TODO! User guard for contributors only
 	"""
 	userContributedAudio: [AudioSlice!]!
-	"""
-	The format of the original artifact
-	"""
-	format: Format!
 }
 
 """

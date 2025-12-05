@@ -3450,10 +3450,6 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    format {
-      id
-      name
-    }
     keywords {
       id
       name
@@ -3480,6 +3476,10 @@ export const DocFormFieldsFragmentDoc = gql`
       status
     }
     creators {
+      id
+      name
+    }
+    format {
       id
       name
     }
