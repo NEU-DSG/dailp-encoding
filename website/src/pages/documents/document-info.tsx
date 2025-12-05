@@ -52,12 +52,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     setIsEditing(false)
   }
 
-  // Re-fetch updated document
-  reexecuteQuery()
-
-  // Close modal
-  setIsEditing(false)
-
   const contributorsList = (
     <>
       <Helmet>
