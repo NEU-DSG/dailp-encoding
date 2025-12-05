@@ -23,6 +23,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     variables: { slug: doc.slug! },
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
+  console.log("Rendering DocumentInfo with docData:", docData)
+
   if (!docData) {
     return null
   }
@@ -48,7 +50,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       },
     })
 
-    reexecuteQuery()
+    await reexecuteQuery({ requestPolicy: "network-only" })
     setIsEditing(false)
   }
 
@@ -83,6 +85,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       ) : (
         <>{contributorsList}</>
       )}
+
       {isEditing ? (
         <EditDocumentModal
           isOpen={true}

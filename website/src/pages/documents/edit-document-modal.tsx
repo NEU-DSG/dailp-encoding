@@ -185,7 +185,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         details: c.details ? { ...c.details } : null,
       }))
     )
-  }, [isOpen, documentMetadata.id])
+  }, [isOpen, documentMetadata])
 
   const {
     tags: selectedKeywords,
