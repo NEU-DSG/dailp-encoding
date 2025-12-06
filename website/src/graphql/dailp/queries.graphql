@@ -342,12 +342,37 @@ query DocumentDetails($slug: String!) {
       year
     }
     contributors {
+      id
       name
       role
     }
     sources {
       name
       link
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
     }
   }
 }
