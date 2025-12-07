@@ -267,11 +267,7 @@ async fn insert_document_from_sheet(
         date: date_recorded,
         sources: Vec::new(),
         collection: Some(collection.to_owned()),
-<<<<<<< HEAD
-        genre: None,
-=======
         genre_id: None,
->>>>>>> ab9d1bcf2e51315d31b2688b83112089caf8c565
         format_id: None,
         creators_ids: None,
         keywords_ids: None,

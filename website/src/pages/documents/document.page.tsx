@@ -125,13 +125,13 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
-    variables: { slug: doc.slug! },
-  })
-  const docData = data?.document
-  if (!docData) {
-    return null
-  }
+  // const [{ data }] = Dailp.useDocumentDetailsQuery({
+  //   variables: { slug: doc.slug! },
+  // })
+  // const docData = data?.document
+  // if (!docData) {
+  //   return null
+  // }
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:

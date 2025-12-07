@@ -24,9 +24,15 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   })
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
+  // if (!docData) {
+  //   return null
+  // }
+
+  // Debug: check if data has been fetched
   if (!docData) {
-    return null
+    return <div>Loading document information...</div>
   }
+
   const token = useCredentials()
   const { form } = useForm()
   const { isEditing, setIsEditing } = useEditing()
