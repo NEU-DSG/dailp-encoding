@@ -34,7 +34,7 @@ type AnnotatedDoc {
 	"""
 	The genre of the document, used to group similar ones
 	"""
-	genre: String
+	genre: Genre!
 	"""
 	Images of each source document page, in order
 	"""
@@ -760,6 +760,10 @@ input DocumentMetadataUpdate {
 	The format of the original artifact
 	"""
 	format: FormatUpdate
+	"""
+	Term that contextualizes the social practice surrounding the document
+	"""
+	genre: GenreUpdate
 }
 
 type DocumentPage {
@@ -917,6 +921,35 @@ A gallery of images, which may be rendered as a slideshow or lightbox.
 """
 type Gallery {
 	mediaUrls: [String!]!
+}
+
+"""
+Stores the genre associated with a document
+"""
+type Genre {
+	"""
+	UUID for the genre
+	"""
+	id: UUID!
+	"""
+	Name of the genre
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a genre
+	"""
+	status: ApprovalStatus!
+}
+
+input GenreUpdate {
+	"""
+	UUID for the genre
+	"""
+	id: UUID!
+	"""
+	Name of the genre
+	"""
+	name: String!
 }
 
 """

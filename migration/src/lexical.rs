@@ -20,7 +20,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             //Some(Contributor::new_author("Pulte, William".to_string())),
             //],
             date: Some(dailp::Date::from_ymd(1975, 1, 1)),
-            genre: None,
+            genre_id: None,
             keywords_ids: None,
             languages_ids: None,
             subject_headings_ids: None,
@@ -44,7 +44,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             contributors: None, // temporary fix
             //contributors: vec![Some(Contributor::new_author("Feeling, Durbin".to_string()))],
             date: Some(dailp::Date::from_ymd(2003, 1, 1)),
-            genre: None,
+            genre_id: None,
             keywords_ids: None,
             languages_ids: None,
             subject_headings_ids: None,
@@ -267,7 +267,11 @@ async fn insert_document_from_sheet(
         date: date_recorded,
         sources: Vec::new(),
         collection: Some(collection.to_owned()),
+<<<<<<< HEAD
         genre: None,
+=======
+        genre_id: None,
+>>>>>>> ab9d1bcf2e51315d31b2688b83112089caf8c565
         format_id: None,
         creators_ids: None,
         keywords_ids: None,

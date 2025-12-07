@@ -1,6 +1,6 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Format, FormatUpdate, Keyword, KeywordUpdate, Language, LanguageUpdate,
-    SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+    ApprovalStatus, Format, FormatUpdate, Genre, GenreUpdate, Keyword, KeywordUpdate, Language,
+    LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
@@ -8,8 +8,9 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use itertools::Itertools;
+
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
 
@@ -124,8 +125,10 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones
-    async fn genre(&self) -> &Option<String> {
-        &self.meta.genre
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Genre> {
+        let db = context.data::<Database>()?;
+        let genre = db.genre_for_document(self.meta.id.0).await?;
+        Ok(genre)
     }
 
     /// Images of each source document page, in order
@@ -413,6 +416,8 @@ pub struct DocumentMetadataUpdate {
     pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
     /// The format of the original artifact
     pub format: MaybeUndefined<FormatUpdate>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre: MaybeUndefined<GenreUpdate>,
 }
 
 #[async_graphql::ComplexObject]
@@ -558,8 +563,8 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    /// The genre this document is. TODO Evaluate whether we need this.
-    pub genre: Option<String>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: Option<Uuid>,
     /// Term that allows us to trace what the original artifact was
     pub format_id: Option<Uuid>,
     #[serde(default)]
@@ -596,6 +601,18 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
+    /// Fetch the genre associated with this document
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>, async_graphql::Error> {
+        let genre_id = match self.genre_id {
+            Some(id) => id,
+            None => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Genre, "queries/get_genre_by_document_id.sql", genre_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
     /// Fetch all keywords linked to this document
     async fn keywords<'a>(
         &'a self,

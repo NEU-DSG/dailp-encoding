@@ -13,5 +13,10 @@ update document set
         case
             when $4::uuid is not null then $4
             else format_id
+        end,
+    genre_id =
+        case
+            when $5::uuid is not null then $5
+            else genre_id
         end
 where id = $1

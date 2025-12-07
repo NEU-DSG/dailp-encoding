@@ -39,6 +39,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         id: doc.id,
         title: changes.title,
         format: changes.format,
+        genre: changes.genre,
         contributors: changes.contributors,
         creators: changes.creators,
         keywords: changes.keywords,

@@ -141,14 +141,33 @@ impl From<&Keyword> for Uuid {
 }
 
 /// Stores the genre associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Genre {
     /// UUID for the genre
     pub id: Uuid,
-    /// Documents associated with the genre
-    pub documents: Vec<DocumentReference>,
     /// Name of the genre
     pub name: String,
+    /// Status (pending, approved, rejected) of a genre
+    pub status: ApprovalStatus,
+}
+
+// For updating genres
+#[derive(async_graphql::InputObject)]
+pub struct GenreUpdate {
+    /// UUID for the genre
+    pub id: Uuid,
+    /// Name of the genre
+    pub name: String,
+}
+
+/// Get all approved genres
+#[async_graphql::ComplexObject]
+impl Genre {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
 }
 
 /// Stores a language associated with a document

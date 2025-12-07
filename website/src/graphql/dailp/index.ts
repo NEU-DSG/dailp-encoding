@@ -76,7 +76,7 @@ export type AnnotatedDoc = {
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Scalars["String"]>
+  readonly genre: Genre
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -569,6 +569,8 @@ export type DocumentMetadataUpdate = {
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The format of the original artifact */
   readonly format: InputMaybe<FormatUpdate>
+  /** Term that contextualizes the social practice surrounding the document */
+  readonly genre: InputMaybe<GenreUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** The key terms associated with the document */
@@ -690,6 +692,24 @@ export type FormsInTime = {
 export type Gallery = {
   readonly __typename?: "Gallery"
   readonly mediaUrls: ReadonlyArray<Scalars["String"]>
+}
+
+/** Stores the genre associated with a document */
+export type Genre = {
+  readonly __typename?: "Genre"
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a genre */
+  readonly status: ApprovalStatus
+}
+
+export type GenreUpdate = {
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
 }
 
 /**
@@ -1903,6 +1923,10 @@ export type DocFormFieldsFragment = {
       Format,
       "id" | "name"
     >
+    readonly genre: { readonly __typename?: "Genre" } & Pick<
+      Genre,
+      "id" | "name"
+    >
   }
 
 export type ParagraphFormFieldsFragment = {
@@ -2268,7 +2292,7 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
         readonly contributors: ReadonlyArray<
           { readonly __typename?: "Contributor" } & Pick<
             Contributor,
-            "name" | "role"
+            "id" | "name" | "role"
           >
         >
         readonly sources: ReadonlyArray<
@@ -2276,6 +2300,33 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
             SourceAttribution,
             "name" | "link"
           >
+        >
+        readonly keywords: ReadonlyArray<
+          { readonly __typename?: "Keyword" } & Pick<
+            Keyword,
+            "id" | "name" | "status"
+          >
+        >
+        readonly languages: ReadonlyArray<
+          { readonly __typename?: "Language" } & Pick<
+            Language,
+            "id" | "name" | "status"
+          >
+        >
+        readonly subjectHeadings: ReadonlyArray<
+          { readonly __typename?: "SubjectHeading" } & Pick<
+            SubjectHeading,
+            "id" | "name" | "status"
+          >
+        >
+        readonly spatialCoverage: ReadonlyArray<
+          { readonly __typename?: "SpatialCoverage" } & Pick<
+            SpatialCoverage,
+            "id" | "name" | "status"
+          >
+        >
+        readonly creators: ReadonlyArray<
+          { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
         >
       }
   >
@@ -3485,6 +3536,10 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
+    genre {
+      id
+      name
+    }
   }
 `
 export const FormFieldsFragmentDoc = gql`
@@ -3872,12 +3927,37 @@ export const DocumentDetailsDocument = gql`
         year
       }
       contributors {
+        id
         name
         role
       }
       sources {
         name
         link
+      }
+      keywords {
+        id
+        name
+        status
+      }
+      languages {
+        id
+        name
+        status
+      }
+      subjectHeadings {
+        id
+        name
+        status
+      }
+      spatialCoverage {
+        id
+        name
+        status
+      }
+      creators {
+        id
+        name
       }
     }
   }
