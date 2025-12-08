@@ -229,8 +229,12 @@ impl AnnotatedDoc {
 
     /// The format of the original artifact
     async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Format> {
-        let db = context.data::<Database>()?;
-        let format = db.format_for_document(self.meta.id.0).await?;
+        let format = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .format_for_document(self.meta.id.0)
+            .await?;
+
         Ok(format)
     }
 
