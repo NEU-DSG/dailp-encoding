@@ -39,6 +39,9 @@ export const DailpPageContents = (props: { path: string }) => {
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
 
   const isInMenu = (slug: string) => {
+    if (slug == "/") {
+      return true
+    }
     return (
       menu?.items
         ?.flatMap((item) => item.items)
