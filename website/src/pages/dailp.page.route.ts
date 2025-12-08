@@ -12,6 +12,8 @@ export default (pageContext: { urlPathname: string }) => {
   // For "/support/", this will be "support/"
   const pathAfterSlash = pathname.slice(1)
 
+  console.warn("loading dailp.page.route with slug ", pathAfterSlash)
+
   // Return route params with negative precedence to ensure this matches last
   // This ensures more specific routes (like /dashboard, /collections/@slug, etc.) are matched first
   return {
