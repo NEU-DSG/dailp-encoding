@@ -1,7 +1,7 @@
 use std::{fmt, str::FromStr};
 
 use crate::{user::User, Database, PersonFullName};
-use async_graphql::{SimpleObject, Union};
+use async_graphql::{dataloader::DataLoader, FieldResult, SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
@@ -115,6 +115,28 @@ impl ContributorRole {
         role.as_ref().map(|r| r.to_string())
     }
 }
+
+/// The creator of a document
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+// For updating creators
+#[derive(async_graphql::InputObject, Clone)]
+pub struct CreatorUpdate {
+    /// UUID for the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+#[async_graphql::ComplexObject]
+impl Creator {}
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that

@@ -12,11 +12,13 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-use crate::doc_metadata::SpatialCoverage;
+
+use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
+use crate::person::Creator;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -41,6 +43,27 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Genre, sqlx::Error> {
+        let genre = sqlx::query_file_as!(Genre, "queries/get_genre_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(genre)
+    }
+
+    pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(rows)
+    }
+    pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
+        let rows =
+            sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
+                .fetch_all(&self.client)
+                .await?;
+        Ok(rows)
+    }
     pub async fn subject_headings_for_document(
         &self,
         doc_id: Uuid,
@@ -69,6 +92,22 @@ impl Database {
         .await?;
 
         Ok(rows)
+    }
+
+    pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Creator, "queries/get_creators_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(rows)
+    }
+
+    pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Format, sqlx::Error> {
+        let format = sqlx::query_file_as!(Format, "queries/get_format_by_document_id.sql", doc_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(format)
     }
 
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
@@ -343,7 +382,11 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -483,7 +526,11 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
-                genre: None,
+                creators_ids: Some(Vec::new()),
+                format_id: None.into(),
+                genre_id: None.into(),
+                keywords_ids: Some(Vec::new()),
+                languages_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
@@ -865,14 +912,63 @@ impl Database {
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
         let mut tx = self.client.begin().await?;
 
+        let format: Option<Uuid> = match document.format {
+            MaybeUndefined::Value(format_update) => Some(format_update.id),
+            _ => None,
+        };
+
+        let genre: Option<Uuid> = match document.genre {
+            MaybeUndefined::Value(genre_update) => Some(genre_update.id),
+            _ => None,
+        };
+
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
-            &written_at as _
+            &written_at as _,
+            format,
+            genre,
         )
         .execute(&mut *tx)
         .await?;
+
+        // Update subject headings
+        if let MaybeUndefined::Value(keywords) = &document.keywords {
+            query_file!("queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<KeywordUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_keywords.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        // Update languages
+        if let MaybeUndefined::Value(languages) = &document.languages {
+            query_file!("queries/delete_document_languages.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Convert Vec<LanguageUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+
+            // Write new IDs
+            query_file!(
+                "queries/insert_document_languages.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
 
         // Update subject headings
         if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
@@ -911,9 +1007,70 @@ impl Database {
             .await?;
         }
 
+        // Update creators
+        // Need to handle if creator already in the list is inserted?
+        if let MaybeUndefined::Value(creators) = &document.creators {
+            // Fetch existing creators linked to this document
+            let existing: Vec<Creator> = self.creators_for_document(document.id).await?;
+
+            let existing_map: HashMap<Uuid, Creator> =
+                existing.iter().map(|c| (c.id, c.clone())).collect();
+            let updated_map: HashMap<Uuid, CreatorUpdate> =
+                creators.iter().map(|c| (c.id, c.clone())).collect();
+
+            // Determine which creators to delete (in database, but not in updated list)
+            let to_delete: Vec<Uuid> = existing_map
+                .keys()
+                .filter(|id| !updated_map.contains_key(id))
+                .cloned()
+                .collect();
+
+            // Determine which creators to add (in updated list, but not in database)
+            let to_add: Vec<&CreatorUpdate> = creators
+                .iter()
+                .filter(|c| !existing_map.contains_key(&c.id))
+                .collect();
+
+            // Determine which creators to update (same ID, but different name)
+            let to_update: Vec<&CreatorUpdate> = creators
+                .iter()
+                .filter(|c| {
+                    existing_map
+                        .get(&c.id)
+                        .map(|old| old.name != c.name)
+                        .unwrap_or(false)
+                })
+                .collect();
+
+            // Delete creators removed by user
+            for id in &to_delete {
+                query_file!("queries/remove_creator_from_document.sql", document.id, id)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+
+            // Link creator to document
+            for cr in &to_add {
+                // Insert creator if new
+                query_file!("queries/insert_creator.sql", &cr.id, &cr.name)
+                    .execute(&mut *tx)
+                    .await?;
+
+                // Link creator to document
+                query_file!("queries/insert_document_creator.sql", document.id, cr.id)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+
+            // Update existing creators with changed data
+            for cr in &to_update {
+                query_file!("queries/update_creator.sql", cr.id, cr.name)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+        }
         // Commit updates
         tx.commit().await?;
-
         Ok(document.id)
     }
 
@@ -2068,7 +2225,6 @@ impl Database {
         }
     }
 
-    //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
@@ -2176,7 +2332,11 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2250,7 +2410,11 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    creators_ids: Some(Vec::new()),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
