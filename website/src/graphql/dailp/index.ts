@@ -3309,6 +3309,14 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllPagesQuery = { readonly __typename?: "Query" } & {
+  readonly allPages: ReadonlyArray<
+    { readonly __typename?: "Page" } & Pick<Page, "id">
+  >
+}
+
 export type PageByPathQueryVariables = Exact<{
   path: Scalars["String"]
 }>
@@ -4498,6 +4506,22 @@ export function useUpsertPageMutation() {
   return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
     UpsertPageDocument
   )
+}
+export const AllPagesDocument = gql`
+  query AllPages {
+    allPages {
+      id
+    }
+  }
+`
+
+export function useAllPagesQuery(
+  options?: Omit<Urql.UseQueryArgs<AllPagesQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllPagesQuery, AllPagesQueryVariables>({
+    query: AllPagesDocument,
+    ...options,
+  })
 }
 export const PageByPathDocument = gql`
   query pageByPath($path: String!) {
