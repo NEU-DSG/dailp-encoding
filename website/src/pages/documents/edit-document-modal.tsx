@@ -476,9 +476,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       spatialCoverages: spatialCoverageToSubmit,
     })
 
-    setIsEditing(false)
+    // setIsEditing(false)
     onSubmit(updatedMetadata)
-    onClose()
+    // onClose()
   }
 
   // Pass UUID of the keyword
