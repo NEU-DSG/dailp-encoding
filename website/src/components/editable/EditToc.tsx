@@ -144,10 +144,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     collection?.title ?? "no name"
   )
   const [collectionDescription, setCollectionDescription] = useState("")
-  // State for showing "Add Subchapter" form
-  const [showAddSubchapter, setShowAddSubchapter] = useState<string | null>(
-    null
-  )
 
   // Sync editable items when collection loads/changes
   useEffect(() => {
@@ -454,10 +450,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         // The useEffect will automatically update chaptersBySection when data/collection changes
         setErrorMessage(null)
         ;(e.target as HTMLFormElement).reset()
-        // Close subchapter form if it was open
-        if (parentId) {
-          setShowAddSubchapter(null)
-        }
       }
     } catch (error: any) {
       // Revert optimistic update on unexpected error
@@ -594,7 +586,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     depth?: number
   }) => {
     const chapterId = idOf(chapter)
-    const isShowingAddForm = showAddSubchapter === chapterId
     const isTopLevel = depth === 0
 
     return (
@@ -666,24 +657,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                   fontSize: 14,
                 }}
               />
-              {isTopLevel && (
-                <button
-                  type="button"
-                  onClick={() => setShowAddSubchapter(chapterId)}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: 12,
-                    background: "#4a90e2",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                  }}
-                  title="Add subchapter"
-                >
-                  + Sub
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() =>
@@ -702,83 +675,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                 Delete
               </button>
             </div>
-            {isShowingAddForm && (
-              <form
-                onSubmit={async (e) => {
-                  await handleAddNewChapter(e, chapterId, sectionKey)
-                  setShowAddSubchapter(null)
-                }}
-                style={{
-                  marginTop: 12,
-                  padding: 12,
-                  background: "#f8f9fa",
-                  borderRadius: 4,
-                  border: "1px solid #e0e0e0",
-                  display: "flex",
-                  gap: 8,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                <input
-                  type="text"
-                  name="chapter title"
-                  placeholder="Subchapter Title"
-                  required
-                  style={{
-                    width: 180,
-                    height: 32,
-                    padding: "4px 8px",
-                    border: "1px solid #ddd",
-                    borderRadius: 4,
-                    fontSize: 14,
-                  }}
-                />
-                <input
-                  type="text"
-                  name="chapter slug"
-                  placeholder="Subchapter Slug"
-                  required
-                  style={{
-                    width: 150,
-                    height: 32,
-                    padding: "4px 8px",
-                    border: "1px solid #ddd",
-                    borderRadius: 4,
-                    fontSize: 14,
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: "6px 16px",
-                    fontSize: 14,
-                    background: "#4a90e2",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                  }}
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddSubchapter(null)}
-                  style={{
-                    padding: "6px 16px",
-                    fontSize: 14,
-                    background: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-              </form>
-            )}
             {chapter.children.length > 0 && (
               <Droppable
                 droppableId={`${sectionKey}:${chapterId}`}
