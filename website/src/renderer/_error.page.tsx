@@ -17,24 +17,23 @@ export const Page = () => {
 }
 
 const ClientPage = () => {
-  return <NotFound />
-  //const location = useLocation()
-  //const [{ data, fetching }] = Dailp.useEditablePageQuery({
-  //variables: { id: location.pathname },
-  //})
-  //if (fetching) {
-  //return null
-  //} else if (data && data.page) {
-  //return null
-  ///* return (
-  //*   <EditablePageContents
-  //*     data={{ dailp: data }}
-  //*     pageContext={{ id: window.location.pathname }}
-  //*   />
-  //* ) */
-  //} else {
-  //return <NotFound />
-  //}
+  const location = useLocation()
+  const [{ data, fetching }] = Dailp.useEditablePageQuery({
+    variables: { id: location.pathname },
+  })
+  if (fetching) {
+    return null
+  } else if (data && data.page) {
+    return null
+    /* return (
+     *   <EditablePageContents
+     *     data={{ dailp: data }}
+     *     pageContext={{ id: window.location.pathname }}
+     *   />
+     * ) */
+  } else {
+    return <NotFound />
+  }
 }
 
 const NotFound = () => (
