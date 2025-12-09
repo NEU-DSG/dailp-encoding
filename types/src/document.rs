@@ -232,7 +232,7 @@ impl AnnotatedDoc {
         let format = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .format_for_document(self.meta.id.0)
+            .format_for_document(self.meta.id.0
             .await?;
 
         Ok(format)
@@ -240,24 +240,32 @@ impl AnnotatedDoc {
 
     /// Key terms associated with a document
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
-        let db = context.data::<Database>()?;
-        let headings = db.keywords_for_document(self.meta.id.0).await?;
-        Ok(headings)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// The languages present in this document
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
-        let db = context.data::<Database>()?;
-        let languages = db.languages_for_document(self.meta.id.0).await?;
-        Ok(languages)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// Terms that that reflects Indigenous knowledge practices associated with a document
     async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SubjectHeading>> {
-        let db = context.data::<Database>()?;
-        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
-        Ok(headings)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SubjectHeadingsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// The locations associated with this document
@@ -265,17 +273,22 @@ impl AnnotatedDoc {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SpatialCoverage>> {
-        let db = context.data::<Database>()?;
-        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
-        Ok(coverages)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SpatialCoverageForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-        let db = context.data::<Database>()?;
-        let creators = db.creators_for_document(self.meta.id.0).await?;
-        Ok(creators)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -931,4 +944,44 @@ impl DocumentReference {
     pub async fn slug(&self) -> String {
         slug::slugify(&self.short_name)
     }
+}
+
+/// Structs for metadata loaders
+#[derive(Debug, Clone)]
+pub struct KeywordWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct LanguageWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct SubjectHeadingWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct SpatialCoverageWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct CreatorWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
 }

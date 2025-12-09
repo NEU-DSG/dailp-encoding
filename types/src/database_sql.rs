@@ -51,55 +51,128 @@ impl Database {
         Ok(genre)
     }
 
-    pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
-        let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(rows)
-    }
-    pub async fn languages_for_document(&self, doc_id: Uuid) -> Result<Vec<Language>, sqlx::Error> {
-        let rows =
-            sqlx::query_file_as!(Language, "queries/get_languages_by_document_id.sql", doc_id)
-                .fetch_all(&self.client)
-                .await?;
-        Ok(rows)
-    }
-    pub async fn subject_headings_for_document(
+    pub async fn keywords_for_documents(
         &self,
-        doc_id: Uuid,
-    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<Keyword>>, sqlx::Error> {
         let rows = sqlx::query_file_as!(
-            SubjectHeading,
-            "queries/get_subject_headings_by_document_id.sql",
-            doc_id
+            KeywordWithDocId,
+            "queries/get_keywords_by_document_ids.sql",
+            &doc_ids
         )
         .fetch_all(&self.client)
         .await?;
 
-        Ok(rows)
+        let mut map: HashMap<Uuid, Vec<Keyword>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(Keyword {
+                    id: row.id,
+                    name: row.name,
+                    status: row.status,
+                });
+        }
+        Ok(map)
     }
 
-    pub async fn spatial_coverage_for_document(
+    pub async fn languages_for_documents(
         &self,
-        doc_id: Uuid,
-    ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<Language>>, sqlx::Error> {
         let rows = sqlx::query_file_as!(
-            SpatialCoverage,
-            "queries/get_spatial_coverage_by_document_id.sql",
-            doc_id
+            LanguageWithDocId,
+            "queries/get_languages_by_document_ids.sql",
+            &doc_ids
         )
         .fetch_all(&self.client)
         .await?;
 
-        Ok(rows)
+        let mut map: HashMap<Uuid, Vec<Language>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(Language {
+                    id: row.id,
+                    name: row.name,
+                    status: row.status,
+                });
+        }
+        Ok(map)
     }
 
-    pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
-        let rows = sqlx::query_file_as!(Creator, "queries/get_creators_by_document_id.sql", doc_id)
-            .fetch_all(&self.client)
-            .await?;
+    pub async fn subject_headings_for_documents(
+        &self,
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<SubjectHeading>>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeadingWithDocId,
+            "queries/get_subject_headings_by_document_ids.sql",
+            &doc_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
 
-        Ok(rows)
+        let mut map: HashMap<Uuid, Vec<SubjectHeading>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(SubjectHeading {
+                    id: row.id,
+                    name: row.name,
+                    status: row.status,
+                });
+        }
+        Ok(map)
+    }
+
+    pub async fn spatial_coverage_for_documents(
+        &self,
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<SpatialCoverage>>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SpatialCoverageWithDocId,
+            "queries/get_spatial_coverage_by_document_ids.sql",
+            &doc_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        let mut map: HashMap<Uuid, Vec<SpatialCoverage>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(SpatialCoverage {
+                    id: row.id,
+                    name: row.name,
+                    status: row.status,
+                });
+        }
+        Ok(map)
+    }
+
+    pub async fn creators_for_documents(
+        &self,
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<Creator>>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            CreatorWithDocId,
+            "queries/get_creators_by_document_ids.sql",
+            &doc_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        let mut map: HashMap<Uuid, Vec<Creator>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(Creator {
+                    id: row.id,
+                    name: row.name,
+                });
+        }
+        Ok(map)
     }
 
     pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Format, sqlx::Error> {
@@ -2769,6 +2842,102 @@ impl Loader<PageId> for Database {
 
     async fn load(&self, _keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
         todo!("Implement content pages")
+    }
+}
+
+// New metadata loaders
+#[async_trait::async_trait]
+impl Loader<KeywordsForDocument> for Database {
+    type Value = Vec<Keyword>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[KeywordsForDocument]) -> Result<HashMap<KeywordsForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self.keywords_for_documents(doc_ids).await.map_err(Arc::new)?;
+        
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<LanguagesForDocument> for Database {
+    type Value = Vec<Language>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[LanguagesForDocument]) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self.languages_for_documents(doc_ids).await.map_err(Arc::new)?;
+        
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<SubjectHeadingsForDocument> for Database {
+    type Value = Vec<SubjectHeading>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[SubjectHeadingsForDocument]) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self.subject_headings_for_documents(doc_ids).await.map_err(Arc::new)?;
+        
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<SpatialCoverageForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[SpatialCoverageForDocument]) -> Result<HashMap<SpatialCoverageForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self.spatial_coverage_for_documents(doc_ids).await.map_err(Arc::new)?;
+        
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<CreatorsForDocument> for Database {
+    type Value = Vec<Creator>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[CreatorsForDocument]) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self.creators_for_documents(doc_ids).await.map_err(Arc::new)?;
+        
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
     }
 }
 

@@ -94,6 +94,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
       {isEditing ? (
         <EditDocumentModal
+          key={`modal-${docData.id}-${Date.now()}`} // to remount with fresh data?
           isOpen={true}
           onClose={() => setIsEditing(false)}
           onSubmit={handleUpdate}
