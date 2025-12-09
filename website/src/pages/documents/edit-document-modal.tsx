@@ -169,27 +169,27 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const contributorRoles = Object.values(Dailp.ContributorRole)
 
-  useEffect(() => {
-    if (!isOpen) return
+  // useEffect(() => {
+  //   if (!isOpen) return
 
-    const dm = documentMetadata
+  //   const dm = documentMetadata
 
-    setTitle(dm.title ?? "")
-    setDate(dm.date ?? "")
-    setCreator(dm.creators ?? [])
-    setKeywords(dm.keywords ?? [])
-    setLanguages(dm.languages ?? [])
-    setSubjectHeadings(dm.subjectHeadings ?? [])
-    setSpatialCoverage(dm.spatialCoverage ?? [])
-    setContributors(
-      (dm.contributors ?? []).map((c) => ({
-        ...c,
-        isNew: false,
-        isVisible: c.details?.isVisible ?? false,
-        details: c.details ? { ...c.details } : null,
-      }))
-    )
-  }, [isOpen, documentMetadata])
+  //   setTitle(dm.title ?? "")
+  //   setDate(dm.date ?? "")
+  //   setCreator(dm.creators ?? [])
+  //   setKeywords(dm.keywords ?? [])
+  //   setLanguages(dm.languages ?? [])
+  //   setSubjectHeadings(dm.subjectHeadings ?? [])
+  //   setSpatialCoverage(dm.spatialCoverage ?? [])
+  //   setContributors(
+  //     (dm.contributors ?? []).map((c) => ({
+  //       ...c,
+  //       isNew: false,
+  //       isVisible: c.details?.isVisible ?? false,
+  //       details: c.details ? { ...c.details } : null,
+  //     }))
+  //   )
+  // }, [isOpen, documentMetadata])
 
   // Initialize tag selectors with memoized strings
   const {
@@ -409,7 +409,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       return {
         id: existing?.id ?? uuidv4(),
         name,
-        status: existing?.status ?? Dailp.ApprovalStatus.Approved, // If part of the editing form, can assume that keywords are approved (for now)
+        //status: existing?.status ?? Dailp.ApprovalStatus.Approved, // If part of the editing form, can assume that keywords are approved (for now)
       }
     })
 
@@ -420,7 +420,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       return {
         id: existing?.id ?? uuidv4(),
         name,
-        status: existing?.status ?? Dailp.ApprovalStatus.Approved,
+        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
       }
     })
 
@@ -431,7 +431,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       return {
         id: existing?.id ?? uuidv4(),
         name,
-        status: existing?.status ?? Dailp.ApprovalStatus.Approved,
+        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
       }
     })
 
@@ -442,15 +442,15 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       return {
         id: existing?.id ?? uuidv4(),
         name,
-        status: existing?.status ?? Dailp.ApprovalStatus.Approved,
+        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
       }
     })
 
     // Update local state for metadata
-    setKeywords(keywordsToSubmit)
-    setSubjectHeadings(subjectHeadingsToSubmit)
-    setLanguages(languagesToSubmit)
-    setSpatialCoverage(spatialCoverageToSubmit)
+    // setKeywords(keywordsToSubmit)
+    // setSubjectHeadings(subjectHeadingsToSubmit)
+    // setLanguages(languagesToSubmit)
+    // setSpatialCoverage(spatialCoverageToSubmit)
 
     // Build updated document metadata object
     const updatedMetadata = {
@@ -465,16 +465,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }
 
     // Update backup state to new submitted state
-    setBackupState({
-      title,
-      date,
-      creator: [...creator],
-      contributors: [...contributors],
-      keywords: keywordsToSubmit,
-      subjectHeadings: subjectHeadingsToSubmit,
-      languages: languagesToSubmit,
-      spatialCoverages: spatialCoverageToSubmit,
-    })
+    // setBackupState({
+    //   title,
+    //   date,
+    //   creator: [...creator],
+    //   contributors: [...contributors],
+    //   keywords: keywordsToSubmit,
+    //   subjectHeadings: subjectHeadingsToSubmit,
+    //   languages: languagesToSubmit,
+    //   spatialCoverages: spatialCoverageToSubmit,
+    // })
 
     // setIsEditing(false)
     onSubmit(updatedMetadata)
