@@ -28,7 +28,6 @@ const NewPage = () => {
   const location = useLocation()
   const [path, setPath] = useState(location.search["path"] ?? "/")
 
-  console.log("DENNIS", location)
   const [isNew, setIsNew] = useState(true)
 
   const formatPath = (path: string) => {
