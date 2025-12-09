@@ -1,4 +1,6 @@
 -- Insert a new language into the database
 insert into language (id, name, status)
 values ($1::uuid, $2, $3)
-on conflict (name) do nothing;
+on conflict (name) do update
+set status = excluded.status
+returning id;

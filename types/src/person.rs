@@ -136,7 +136,7 @@ pub struct Creator {
 }
 
 // For updating creators
-#[derive(async_graphql::InputObject, Clone)]
+#[derive(async_graphql::InputObject, Clone, Debug)]
 pub struct CreatorUpdate {
     /// UUID for the creator
     pub id: uuid::Uuid,

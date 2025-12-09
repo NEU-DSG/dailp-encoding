@@ -12,7 +12,6 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-
 use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
@@ -21,6 +20,7 @@ use crate::page::Page;
 use crate::person::Creator;
 use crate::user::User;
 use crate::user::UserId;
+use log::{info, warn};
 use {
     crate::*,
     anyhow::Result,
@@ -1012,6 +1012,11 @@ impl Database {
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        info!(
+            "Starting update_document_metadata for document: {:?}",
+            document.id
+        );
+
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
         let mut tx = self.client.begin().await?;
@@ -1026,161 +1031,316 @@ impl Database {
             _ => None,
         };
 
-        query_file!(
-            "queries/update_document_metadata.sql",
-            document.id,
-            &title as _,
-            &written_at as _,
-            format,
-            genre,
-        )
-        .execute(&mut *tx)
-        .await?;
+        // query_file!(
+        //     "queries/update_document_metadata.sql",
+        //     document.id,
+        //     &title as _,
+        //     &written_at as _,
+        //     format,
+        //     genre,
+        // )
+        // .execute(&mut *tx)
+        // .await?;
 
+        info!("Updating keywords");
         // Update keywords
         if let MaybeUndefined::Value(keywords) = &document.keywords {
+            info!("Keywords to update: {:?}", keywords);
+
             // Delete all existing links
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Insert new keywords that don't exist yet
+            let mut keyword_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each keyword
             for keyword in keywords {
-                query_file!(
-                    "queries/insert_keyword.sql",
-                    &keyword.id,
-                    &keyword.name,
-                    ApprovalStatus::Approved as _
-                )
-                .execute(&mut *tx)
-                .await?;
+                // Check if keyword with this name already exists
+                let existing_id: Option<Uuid> =
+                    query_file_scalar!("queries/get_keyword_id_by_name.sql", &keyword.name)
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                let keyword_id = if let Some(existing) = existing_id {
+                    // Use existing keyword's ID
+                    info!(
+                        "Using existing keyword ID for {}: {}",
+                        keyword.name, existing
+                    );
+                    existing
+                } else {
+                    // Insert new keyword
+                    info!("Inserting new keyword: {:?}", keyword);
+                    query_file!(
+                        "queries/insert_keyword.sql",
+                        &keyword.id,
+                        &keyword.name,
+                        ApprovalStatus::Approved as _
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                    keyword.id
+                };
+
+                keyword_ids_to_link.push(keyword_id);
             }
 
-            // Link all keywords to the document
-            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+            // Link all keywords to document
+            info!("Keyword IDs to link: {:?}", keyword_ids_to_link);
             query_file!(
                 "queries/insert_document_keywords.sql",
                 document.id,
-                &ids[..]
+                &keyword_ids_to_link[..]
             )
             .execute(&mut *tx)
             .await?;
+
+            info!("Keywords update completed");
+        } else {
+            info!("No keywords to update");
         }
 
+        info!("Updating languages");
         // Update languages
         if let MaybeUndefined::Value(languages) = &document.languages {
+            info!("Languages to update: {:?}", languages);
+
             // Delete all existing links
             query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Insert new languages that don't exist yet
+            let mut language_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each language
             for language in languages {
-                query_file!(
-                    "queries/insert_language.sql",
-                    &language.id,
-                    &language.name,
-                    ApprovalStatus::Approved as _
-                )
-                .execute(&mut *tx)
-                .await?;
+                // Check if language with this name already exists
+                let existing_id: Option<Uuid> =
+                    query_file_scalar!("queries/get_language_id_by_name.sql", &language.name)
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                let language_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing language ID for {}: {}",
+                        language.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new language: {:?}", language);
+                    query_file!(
+                        "queries/insert_language.sql",
+                        &language.id,
+                        &language.name,
+                        ApprovalStatus::Approved as _
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                    language.id
+                };
+
+                language_ids_to_link.push(language_id);
             }
 
             // Link all languages to document
-            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+            info!("Language IDs to link: {:?}", language_ids_to_link);
             query_file!(
                 "queries/insert_document_languages.sql",
                 document.id,
-                &ids[..]
+                &language_ids_to_link[..]
             )
             .execute(&mut *tx)
             .await?;
+
+            info!("Languages update completed");
+        } else {
+            info!("No languages to update");
         }
 
+        info!("Updating subject headings");
         // Update subject headings
         if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            info!("Subject headings to update: {:?}", subject_headings);
+
             // Delete all existing links
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Insert new subject headings that don't exist yet
+            let mut subject_heading_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each subject heading
             for subject_heading in subject_headings {
-                query_file!(
-                    "queries/insert_subject_heading.sql",
-                    &subject_heading.id,
-                    &subject_heading.name,
-                    ApprovalStatus::Approved as _
+                // Check if subject heading with this name already exists
+                let existing_id: Option<Uuid> = query_file_scalar!(
+                    "queries/get_subject_heading_id_by_name.sql",
+                    &subject_heading.name
                 )
-                .execute(&mut *tx)
+                .fetch_optional(&mut *tx)
                 .await?;
+
+                let subject_heading_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing subject heading ID for {}: {}",
+                        subject_heading.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new subject heading: {:?}", subject_heading);
+                    query_file!(
+                        "queries/insert_subject_heading.sql",
+                        &subject_heading.id,
+                        &subject_heading.name,
+                        ApprovalStatus::Approved as _
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                    subject_heading.id
+                };
+
+                subject_heading_ids_to_link.push(subject_heading_id);
             }
 
             // Link all subject headings to document
-            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+            info!(
+                "Subject heading IDs to link: {:?}",
+                subject_heading_ids_to_link
+            );
             query_file!(
                 "queries/insert_document_subject_headings.sql",
                 document.id,
-                &ids[..]
+                &subject_heading_ids_to_link[..]
             )
             .execute(&mut *tx)
             .await?;
+
+            info!("Subject headings update completed");
+        } else {
+            info!("No subject headings to update");
         }
 
+        info!("Updating spatial coverages");
         // Update spatial coverages
         if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            info!("Spatial coverage to update: {:?}", spatial_coverage);
+
             // Delete all existing links
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Insert new spatial coverages that don't exist yet
+            let mut spatial_coverage_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each spatial coverage
             for coverage in spatial_coverage {
-                query_file!(
-                    "queries/insert_spatial_coverage.sql",
-                    &coverage.id,
-                    &coverage.name,
-                    ApprovalStatus::Approved as _
+                // Check if spatial coverage with this name already exists
+                let existing_id: Option<Uuid> = query_file_scalar!(
+                    "queries/get_spatial_coverage_id_by_name.sql",
+                    &coverage.name
                 )
-                .execute(&mut *tx)
+                .fetch_optional(&mut *tx)
                 .await?;
+
+                let spatial_coverage_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing spatial coverage ID for {}: {}",
+                        coverage.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new spatial coverage: {:?}", coverage);
+                    query_file!(
+                        "queries/insert_spatial_coverage.sql",
+                        &coverage.id,
+                        &coverage.name,
+                        ApprovalStatus::Approved as _
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+                    coverage.id
+                };
+
+                spatial_coverage_ids_to_link.push(spatial_coverage_id);
             }
 
             // Link all spatial coverages to document
-            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sc| sc.id).collect();
+            info!(
+                "Spatial coverage IDs to link: {:?}",
+                spatial_coverage_ids_to_link
+            );
             query_file!(
                 "queries/insert_document_spatial_coverage.sql",
                 document.id,
-                &ids[..]
+                &spatial_coverage_ids_to_link[..]
             )
             .execute(&mut *tx)
             .await?;
+
+            info!("Spatial coverage update completed");
+        } else {
+            info!("No spatial coverage to update");
         }
 
+        info!("Updating creators");
         // Update creators
         if let MaybeUndefined::Value(creators) = &document.creators {
+            info!("Creators to update: {:?}", creators);
+
             // Delete all existing links
-            query_file!("queries/delete_document_creators.sql", document.id)
+            query_file!("queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Insert new creators that don't exist yet
+            let mut creator_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each creator
             for creator in creators {
-                query_file!("queries/insert_creator.sql", &creator.id, &creator.name)
-                    .execute(&mut *tx)
-                    .await?;
+                // Check if creator with this name already exists
+                let existing_id: Option<Uuid> =
+                    query_file_scalar!("queries/get_creator_id_by_name.sql", &creator.name)
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                let creator_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing creator ID for {}: {}",
+                        creator.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new creator: {:?}", creator);
+                    query_file!("queries/insert_creator.sql", &creator.id, &creator.name)
+                        .execute(&mut *tx)
+                        .await?;
+                    creator.id
+                };
+
+                creator_ids_to_link.push(creator_id);
             }
 
             // Link all creators to document
-            let ids: Vec<Uuid> = creators.iter().map(|c| c.id).collect();
+            info!("Creator IDs to link: {:?}", creator_ids_to_link);
             query_file!(
                 "queries/insert_document_creators.sql",
                 document.id,
-                &ids[..]
+                &creator_ids_to_link[..]
             )
             .execute(&mut *tx)
             .await?;
+
+            info!("Creators update completed");
+        } else {
+            info!("No creators to update");
         }
+        info!("Committing transaction");
+        tx.commit().await?;
+
+        info!(
+            "Successfully updated document metadata for: {:?}",
+            document.id
+        );
+        Ok(document.id)
     }
 
     pub async fn update_paragraph(
