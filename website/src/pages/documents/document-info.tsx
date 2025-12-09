@@ -22,6 +22,11 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })
+  const token = useCredentials()
+  const { form } = useForm()
+  const { isEditing, setIsEditing } = useEditing()
+  const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
+
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
   // if (!docData) {
@@ -33,11 +38,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     return <div>Loading document information...</div>
   }
 
-  const token = useCredentials()
-  const { form } = useForm()
-  const { isEditing, setIsEditing } = useEditing()
-  const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
-
   const handleUpdate = async (changes: any) => {
     await updateDocument({
       document: {
@@ -47,7 +47,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         format: changes.format,
         genre: changes.genre,
         contributors: changes.contributors,
-        creators: changes.creators,
+        creators: changes.creator,
         keywords: changes.keywords,
         languages: changes.languages,
         spatialCoverage: changes.spatialCoverage,

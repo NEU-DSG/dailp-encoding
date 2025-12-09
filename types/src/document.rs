@@ -13,6 +13,7 @@ use itertools::Itertools;
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
+use crate::KeywordsForDocument;
 
 use futures::TryStreamExt;
 use tokio::fs::read_to_string;
@@ -240,57 +241,47 @@ impl AnnotatedDoc {
 
     /// Key terms associated with a document
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
-        let keywords = context
+        Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .keywords_for_document(self.meta.id.0)
-            .await?)
-        
-        Ok(keywords)
+            .load_one(KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// The languages present in this document
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
-        let languages = context
+        Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .languages_for_document(self.meta.id.0)
-            .await?)
-        
-        Ok(languages)
+            .load_one(LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// Terms that that reflects Indigenous knowledge practices associated with a document
     async fn subject_headings(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<SubjectHeading>> {
-        let subject_headings = context
+        Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .subject_headings_for_document(self.meta.id.0)
-            .await?)
-        
-        Ok(subject_headings)
+            .load_one(SubjectHeadingsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// The locations associated with this document
     async fn spatial_coverage(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<SpatialCoverage>> {
-        let spatial_coverage = context
+        Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .spatial_coverage_for_document(self.meta.id.0)
-            .await?)
-        
-        Ok(spatial_coverage)
+            .load_one(SpatialCoverageForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-        let creators = context
+        Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .creators_for_document(self.meta.id.0)
-            .await?)
-        
-        Ok(creators)
+            .load_one(CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
