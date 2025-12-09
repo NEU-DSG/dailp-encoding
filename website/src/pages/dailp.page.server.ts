@@ -28,7 +28,7 @@ export async function prerender() {
 
     return (
       data?.allPages.map((page) => ({
-        url: page.id,
+        url: page.path,
       })) ?? []
     )
   } catch (error) {

@@ -1136,7 +1136,21 @@ impl Database {
     }
 
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
-        todo!("Implement content pages")
+        let pages = query_file!("queries/all_pages.sql")
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(pages
+            .into_iter()
+            .map(|page| page::Page {
+                id: page.page_id,
+                path: page.path,
+                title: page.title,
+                body: vec![ContentBlock::Markdown(Markdown {
+                    content: page.content,
+                })],
+            })
+            .collect())
     }
 
     pub async fn update_page(&self, _page: page::Page) -> Result<()> {
@@ -2208,7 +2222,12 @@ impl Database {
         if let Some(row) = record {
             let blocks: Vec<ContentBlock> =
                 vec![ContentBlock::Markdown(Markdown { content: row.body })];
-            Ok(Some(Page::build(row.title, row.slug, blocks)))
+            Ok(Some(Page::build(
+                uuid::Uuid::new_v4(),
+                row.path.clone(),
+                row.title.clone(),
+                blocks,
+            )))
         } else {
             Ok(None)
         }

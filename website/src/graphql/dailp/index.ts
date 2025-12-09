@@ -1047,7 +1047,8 @@ export type Page = {
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
    */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly path: Scalars["String"]
   readonly title: Scalars["String"]
 }
 
@@ -3313,7 +3314,7 @@ export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllPagesQuery = { readonly __typename?: "Query" } & {
   readonly allPages: ReadonlyArray<
-    { readonly __typename?: "Page" } & Pick<Page, "id">
+    { readonly __typename?: "Page" } & Pick<Page, "path">
   >
 }
 
@@ -4510,7 +4511,7 @@ export function useUpsertPageMutation() {
 export const AllPagesDocument = gql`
   query AllPages {
     allPages {
-      id
+      path
     }
   }
 `

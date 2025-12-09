@@ -715,7 +715,7 @@ mutation UpsertPage($pageInput: NewPageInput!) {
 
 query AllPages {
   allPages {
-    id
+    path
   }
 }
 
