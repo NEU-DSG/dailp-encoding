@@ -3,7 +3,6 @@ import { useHasMounted } from "src/cms/routes"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { DailpPageContents } from "src/pages/dailp.page"
 import { useLocation } from "src/renderer/PageShell"
 
 /* import { EditablePageContents } from "../templates/editable-page" */
@@ -18,11 +17,6 @@ export const Page = () => {
 }
 
 const ClientPage = () => {
-  return (
-    <Layout>
-      <DailpPageContents path={"/error"} />
-    </Layout>
-  )
   return <NotFound />
   //const location = useLocation()
   //const [{ data, fetching }] = Dailp.useEditablePageQuery({
