@@ -76,7 +76,7 @@ export type AnnotatedDoc = {
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Scalars["String"]>
+  readonly genre: Genre
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -567,6 +567,8 @@ export type DocumentMetadataUpdate = {
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The format of the original artifact */
   readonly format: InputMaybe<FormatUpdate>
+  /** Term that contextualizes the social practice surrounding the document */
+  readonly genre: InputMaybe<GenreUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** The key terms associated with the document */
@@ -688,6 +690,24 @@ export type FormsInTime = {
 export type Gallery = {
   readonly __typename?: "Gallery"
   readonly mediaUrls: ReadonlyArray<Scalars["String"]>
+}
+
+/** Stores the genre associated with a document */
+export type Genre = {
+  readonly __typename?: "Genre"
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a genre */
+  readonly status: ApprovalStatus
+}
+
+export type GenreUpdate = {
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
 }
 
 /**
@@ -1900,6 +1920,10 @@ export type DocFormFieldsFragment = {
     >
     readonly format: { readonly __typename?: "Format" } & Pick<
       Format,
+      "id" | "name"
+    >
+    readonly genre: { readonly __typename?: "Genre" } & Pick<
+      Genre,
       "id" | "name"
     >
   }

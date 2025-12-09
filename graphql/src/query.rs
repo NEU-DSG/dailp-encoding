@@ -830,7 +830,7 @@ impl Mutation {
             title: title.clone(),
             sources: vec![source],
             collection: None,
-            genre: None,
+            genre_id: None,
             keywords_ids: None,
             languages_ids: None,
             subject_headings_ids: None,

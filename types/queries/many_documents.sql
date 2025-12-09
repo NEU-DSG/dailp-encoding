@@ -5,6 +5,7 @@ select
   d.is_reference,
   d.written_at,
   d.format_id,
+  d.genre_id,
   d.audio_slice_id,
   media_resource.url as "audio_url?",
   media_resource.recorded_at as "recorded_at?",
