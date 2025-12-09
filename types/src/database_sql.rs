@@ -1039,13 +1039,6 @@ impl Database {
 
         // Update keywords
         if let MaybeUndefined::Value(keywords) = &document.keywords {
-            // Fetch existing keywords
-            let existing_keywords: Vec<Keyword> = self.keywords_for_document(document.id).await?;
-            let existing_map: HashMap<Uuid, Keyword> = existing_keywords
-                .iter()
-                .map(|k| (k.id, k.clone()))
-                .collect();
-
             // Delete all existing links
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
@@ -1055,9 +1048,9 @@ impl Database {
             for keyword in keywords {
                 query_file!(
                     "queries/insert_keyword.sql",
-                    keyword.id,
+                    &keyword.id,
                     &keyword.name,
-                    Dailp::ApprovalStatus::Approved as _
+                    ApprovalStatus::Approved as _
                 )
                 .execute(&mut *tx)
                 .await?;
@@ -1074,35 +1067,27 @@ impl Database {
             .await?;
         }
 
-        // Update subject headings
-        // if let MaybeUndefined::Value(keywords) = &document.keywords {
-        //     query_file!("queries/delete_document_keywords.sql", document.id)
-        //         .execute(&mut *tx)
-        //         .await?;
-
-        //     // Convert Vec<KeywordUpdate> to Vec<Uuid>
-        //     let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
-
-        //     // Write new IDs
-        //     query_file!(
-        //         "queries/insert_document_keywords.sql",
-        //         document.id,
-        //         &ids[..]
-        //     )
-        //     .execute(&mut *tx)
-        //     .await?;
-        // }
-
         // Update languages
         if let MaybeUndefined::Value(languages) = &document.languages {
+            // Delete all existing links
             query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Convert Vec<LanguageUpdate> to Vec<Uuid>
-            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
+            // Insert new languages that don't exist yet
+            for language in languages {
+                query_file!(
+                    "queries/insert_language.sql",
+                    &language.id,
+                    &language.name,
+                    ApprovalStatus::Approved as _
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
 
-            // Write new IDs
+            // Link all languages to document
+            let ids: Vec<Uuid> = languages.iter().map(|l| l.id).collect();
             query_file!(
                 "queries/insert_document_languages.sql",
                 document.id,
@@ -1114,14 +1099,25 @@ impl Database {
 
         // Update subject headings
         if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
+            // Delete all existing links
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
-            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+            // Insert new subject headings that don't exist yet
+            for subject_heading in subject_headings {
+                query_file!(
+                    "queries/insert_subject_heading.sql",
+                    &subject_heading.id,
+                    &subject_heading.name,
+                    ApprovalStatus::Approved as _
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
 
-            // Write new IDs
+            // Link all subject headings to document
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
             query_file!(
                 "queries/insert_document_subject_headings.sql",
                 document.id,
@@ -1130,16 +1126,28 @@ impl Database {
             .execute(&mut *tx)
             .await?;
         }
+
         // Update spatial coverages
         if let MaybeUndefined::Value(spatial_coverage) = &document.spatial_coverage {
+            // Delete all existing links
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Convert Vec<SpatialCoverageUpdate> to Vec<Uuid>
-            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sh| sh.id).collect();
+            // Insert new spatial coverages that don't exist yet
+            for coverage in spatial_coverage {
+                query_file!(
+                    "queries/insert_spatial_coverage.sql",
+                    &coverage.id,
+                    &coverage.name,
+                    ApprovalStatus::Approved as _
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
 
-            // Write new IDs
+            // Link all spatial coverages to document
+            let ids: Vec<Uuid> = spatial_coverage.iter().map(|sc| sc.id).collect();
             query_file!(
                 "queries/insert_document_spatial_coverage.sql",
                 document.id,
@@ -1150,70 +1158,29 @@ impl Database {
         }
 
         // Update creators
-        // Need to handle if creator already in the list is inserted?
         if let MaybeUndefined::Value(creators) = &document.creators {
-            // Fetch existing creators linked to this document
-            let existing: Vec<Creator> = self.creators_for_document(document.id).await?;
+            // Delete all existing links
+            query_file!("queries/delete_document_creators.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
 
-            let existing_map: HashMap<Uuid, Creator> =
-                existing.iter().map(|c| (c.id, c.clone())).collect();
-            let updated_map: HashMap<Uuid, CreatorUpdate> =
-                creators.iter().map(|c| (c.id, c.clone())).collect();
-
-            // Determine which creators to delete (in database, but not in updated list)
-            let to_delete: Vec<Uuid> = existing_map
-                .keys()
-                .filter(|id| !updated_map.contains_key(id))
-                .cloned()
-                .collect();
-
-            // Determine which creators to add (in updated list, but not in database)
-            let to_add: Vec<&CreatorUpdate> = creators
-                .iter()
-                .filter(|c| !existing_map.contains_key(&c.id))
-                .collect();
-
-            // Determine which creators to update (same ID, but different name)
-            let to_update: Vec<&CreatorUpdate> = creators
-                .iter()
-                .filter(|c| {
-                    existing_map
-                        .get(&c.id)
-                        .map(|old| old.name != c.name)
-                        .unwrap_or(false)
-                })
-                .collect();
-
-            // Delete creators removed by user
-            for id in &to_delete {
-                query_file!("queries/remove_creator_from_document.sql", document.id, id)
+            // Insert new creators that don't exist yet
+            for creator in creators {
+                query_file!("queries/insert_creator.sql", &creator.id, &creator.name)
                     .execute(&mut *tx)
                     .await?;
             }
 
-            // Link creator to document
-            for cr in &to_add {
-                // Insert creator if new
-                query_file!("queries/insert_creator.sql", &cr.id, &cr.name)
-                    .execute(&mut *tx)
-                    .await?;
-
-                // Link creator to document
-                query_file!("queries/insert_document_creator.sql", document.id, cr.id)
-                    .execute(&mut *tx)
-                    .await?;
-            }
-
-            // Update existing creators with changed data
-            for cr in &to_update {
-                query_file!("queries/update_creator.sql", cr.id, cr.name)
-                    .execute(&mut *tx)
-                    .await?;
-            }
+            // Link all creators to document
+            let ids: Vec<Uuid> = creators.iter().map(|c| c.id).collect();
+            query_file!(
+                "queries/insert_document_creators.sql",
+                document.id,
+                &ids[..]
+            )
+            .execute(&mut *tx)
+            .await?;
         }
-        // Commit updates
-        tx.commit().await?;
-        Ok(document.id)
     }
 
     pub async fn update_paragraph(
