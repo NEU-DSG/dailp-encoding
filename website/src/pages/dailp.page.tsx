@@ -69,7 +69,7 @@ export const DailpPageContents = (props: { path: string }) => {
           <h1>{page.title}</h1>
           {/* dennis todo: should be admin in the future */}
           {userRole === UserRole.Editor && (
-            <Link href={`/edit${props.path}`}>Edit</Link>
+            <Link href={`/edit?path=${props.path}`}>Edit</Link>
           )}
         </header>
         {/* html chceking here please*/}
@@ -97,7 +97,7 @@ export const DailpPageContents = (props: { path: string }) => {
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
         {userRole === UserRole.Editor && (
-          <Link href={`/edit${props.path}`}>Edit</Link>
+          <Link href={`/edit?path=${props.path}`}>Edit</Link>
         )}
       </header>
       {content.charAt(0) === "<" ? (
