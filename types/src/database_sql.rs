@@ -2223,7 +2223,7 @@ impl Database {
             let blocks: Vec<ContentBlock> =
                 vec![ContentBlock::Markdown(Markdown { content: row.body })];
             Ok(Some(Page::build(
-                uuid::Uuid::new_v4(),
+                row.page_id.clone(),
                 row.path.clone(),
                 row.title.clone(),
                 blocks,
