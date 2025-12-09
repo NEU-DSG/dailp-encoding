@@ -232,7 +232,7 @@ impl AnnotatedDoc {
         let format = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .format_for_document(self.meta.id.0
+            .format_for_document(self.meta.id.0)
             .await?;
 
         Ok(format)
