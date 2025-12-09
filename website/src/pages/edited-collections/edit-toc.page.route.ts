@@ -1,1 +1,1 @@
-export default "/collections/@collectionSlug/edit-toc"
+export default "/collections/edit-toc"
