@@ -138,11 +138,6 @@ fragment DocFormFields on AnnotatedDoc {
     name
     status
   }
-  contributors {
-    id
-    name
-    role
-  }
   spatialCoverage {
     id
     name
@@ -151,6 +146,11 @@ fragment DocFormFields on AnnotatedDoc {
   creators {
     id
     name
+  }
+  contributors {
+    id
+    name
+    role
   }
   format {
     id

@@ -10,10 +10,13 @@ use crate::{
 
 use itertools::Itertools;
 
+use crate::{
+    CreatorsForDocument, KeywordsForDocument, LanguagesForDocument, SpatialCoverageForDocument,
+    SubjectHeadingsForDocument,
+};
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
-use crate::KeywordsForDocument;
 
 use futures::TryStreamExt;
 use tokio::fs::read_to_string;
@@ -258,7 +261,10 @@ impl AnnotatedDoc {
     }
 
     /// Terms that that reflects Indigenous knowledge practices associated with a document
-    async fn subject_headings(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<SubjectHeading>> {
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(SubjectHeadingsForDocument(self.meta.id.0))
@@ -267,7 +273,10 @@ impl AnnotatedDoc {
     }
 
     /// The locations associated with this document
-    async fn spatial_coverage(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<SpatialCoverage>> {
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(SpatialCoverageForDocument(self.meta.id.0))

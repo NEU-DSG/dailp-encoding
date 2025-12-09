@@ -1904,12 +1904,6 @@ export type DocFormFieldsFragment = {
         "id" | "name" | "status"
       >
     >
-    readonly contributors: ReadonlyArray<
-      { readonly __typename?: "Contributor" } & Pick<
-        Contributor,
-        "id" | "name" | "role"
-      >
-    >
     readonly spatialCoverage: ReadonlyArray<
       { readonly __typename?: "SpatialCoverage" } & Pick<
         SpatialCoverage,
@@ -1918,6 +1912,12 @@ export type DocFormFieldsFragment = {
     >
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+    >
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
     >
     readonly format: { readonly __typename?: "Format" } & Pick<
       Format,
@@ -3518,11 +3518,6 @@ export const DocFormFieldsFragmentDoc = gql`
       name
       status
     }
-    contributors {
-      id
-      name
-      role
-    }
     spatialCoverage {
       id
       name
@@ -3531,6 +3526,11 @@ export const DocFormFieldsFragmentDoc = gql`
     creators {
       id
       name
+    }
+    contributors {
+      id
+      name
+      role
     }
     format {
       id

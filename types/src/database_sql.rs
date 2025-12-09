@@ -3098,6 +3098,106 @@ impl Loader<KeywordsForDocument> for Database {
     }
 }
 
+#[async_trait::async_trait]
+impl Loader<LanguagesForDocument> for Database {
+    type Value = Vec<Language>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[LanguagesForDocument],
+    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .languages_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<SubjectHeadingsForDocument> for Database {
+    type Value = Vec<SubjectHeading>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SubjectHeadingsForDocument],
+    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .subject_headings_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<SpatialCoverageForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SpatialCoverageForDocument],
+    ) -> Result<HashMap<SpatialCoverageForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .spatial_coverage_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
+impl Loader<CreatorsForDocument> for Database {
+    type Value = Vec<Creator>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[CreatorsForDocument],
+    ) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .creators_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
 /// A simplified comment type that is easier to pull out of the database
 struct BasicComment {
     pub id: Uuid,
@@ -3171,6 +3271,18 @@ pub struct EditedCollectionDetails(pub String);
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct KeywordsForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct LanguagesForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct SubjectHeadingsForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct SpatialCoverageForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct CreatorsForDocument(pub Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
