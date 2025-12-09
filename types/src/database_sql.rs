@@ -1037,16 +1037,34 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
-        // Update subject headings
+        // Update keywords
         if let MaybeUndefined::Value(keywords) = &document.keywords {
+            // Fetch existing keywords
+            let existing_keywords: Vec<Keyword> = self.keywords_for_document(document.id).await?;
+            let existing_map: HashMap<Uuid, Keyword> = existing_keywords
+                .iter()
+                .map(|k| (k.id, k.clone()))
+                .collect();
+
+            // Delete all existing links
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
-            // Convert Vec<KeywordUpdate> to Vec<Uuid>
-            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+            // Insert new keywords that don't exist yet
+            for keyword in keywords {
+                query_file!(
+                    "queries/insert_keyword.sql",
+                    keyword.id,
+                    &keyword.name,
+                    Dailp::ApprovalStatus::Approved as _
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
 
-            // Write new IDs
+            // Link all keywords to the document
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
             query_file!(
                 "queries/insert_document_keywords.sql",
                 document.id,
@@ -1055,6 +1073,26 @@ impl Database {
             .execute(&mut *tx)
             .await?;
         }
+
+        // Update subject headings
+        // if let MaybeUndefined::Value(keywords) = &document.keywords {
+        //     query_file!("queries/delete_document_keywords.sql", document.id)
+        //         .execute(&mut *tx)
+        //         .await?;
+
+        //     // Convert Vec<KeywordUpdate> to Vec<Uuid>
+        //     let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+        //     // Write new IDs
+        //     query_file!(
+        //         "queries/insert_document_keywords.sql",
+        //         document.id,
+        //         &ids[..]
+        //     )
+        //     .execute(&mut *tx)
+        //     .await?;
+        // }
+
         // Update languages
         if let MaybeUndefined::Value(languages) = &document.languages {
             query_file!("queries/delete_document_languages.sql", document.id)

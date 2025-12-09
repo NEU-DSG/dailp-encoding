@@ -47,7 +47,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         format: changes.format,
         genre: changes.genre,
         contributors: changes.contributors.map((c: any) => c.id),
-        creators: changes.creator.map((c: any) => c.id),
+        creators: changes.creator,
         keywords: changes.keywords,
         languages: changes.languages,
         spatialCoverage: changes.spatialCoverage,
