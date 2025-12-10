@@ -1031,17 +1031,6 @@ impl Database {
             _ => None,
         };
 
-        // query_file!(
-        //     "queries/update_document_metadata.sql",
-        //     document.id,
-        //     &title as _,
-        //     &written_at as _,
-        //     format,
-        //     genre,
-        // )
-        // .execute(&mut *tx)
-        // .await?;
-
         info!("Updating keywords");
         // Update keywords
         if let MaybeUndefined::Value(keywords) = &document.keywords {
@@ -1072,15 +1061,16 @@ impl Database {
                 } else {
                     // Insert new keyword
                     info!("Inserting new keyword: {:?}", keyword);
-                    query_file!(
+                    let inserted_id: Uuid = query_file_scalar!(
                         "queries/insert_keyword.sql",
                         &keyword.id,
                         &keyword.name,
                         ApprovalStatus::Approved as _
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
-                    keyword.id
+                    info!("Inserted keyword with ID: {}", inserted_id);
+                    inserted_id
                 };
 
                 keyword_ids_to_link.push(keyword_id);
@@ -1129,15 +1119,16 @@ impl Database {
                     existing
                 } else {
                     info!("Inserting new language: {:?}", language);
-                    query_file!(
+                    let inserted_id: Uuid = query_file_scalar!(
                         "queries/insert_language.sql",
                         &language.id,
                         &language.name,
                         ApprovalStatus::Approved as _
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
-                    language.id
+                    info!("Inserted language with ID: {}", inserted_id);
+                    inserted_id
                 };
 
                 language_ids_to_link.push(language_id);
@@ -1188,15 +1179,16 @@ impl Database {
                     existing
                 } else {
                     info!("Inserting new subject heading: {:?}", subject_heading);
-                    query_file!(
+                    let inserted_id: Uuid = query_file_scalar!(
                         "queries/insert_subject_heading.sql",
                         &subject_heading.id,
                         &subject_heading.name,
                         ApprovalStatus::Approved as _
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
-                    subject_heading.id
+                    info!("Inserted subject heading with ID: {}", inserted_id);
+                    inserted_id
                 };
 
                 subject_heading_ids_to_link.push(subject_heading_id);
@@ -1250,15 +1242,16 @@ impl Database {
                     existing
                 } else {
                     info!("Inserting new spatial coverage: {:?}", coverage);
-                    query_file!(
+                    let inserted_id: Uuid = query_file_scalar!(
                         "queries/insert_spatial_coverage.sql",
                         &coverage.id,
                         &coverage.name,
                         ApprovalStatus::Approved as _
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
-                    coverage.id
+                    info!("Inserted spatial coverage with ID: {}", inserted_id);
+                    inserted_id
                 };
 
                 spatial_coverage_ids_to_link.push(spatial_coverage_id);
@@ -1310,10 +1303,15 @@ impl Database {
                     existing
                 } else {
                     info!("Inserting new creator: {:?}", creator);
-                    query_file!("queries/insert_creator.sql", &creator.id, &creator.name)
-                        .execute(&mut *tx)
-                        .await?;
-                    creator.id
+                    let inserted_id: Uuid = query_file_scalar!(
+                        "queries/insert_creator.sql",
+                        &creator.id,
+                        &creator.name
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+                    info!("Inserted creator with ID: {}", inserted_id);
+                    inserted_id
                 };
 
                 creator_ids_to_link.push(creator_id);
@@ -1333,6 +1331,7 @@ impl Database {
         } else {
             info!("No creators to update");
         }
+
         info!("Committing transaction");
         tx.commit().await?;
 

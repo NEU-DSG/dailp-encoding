@@ -1,8 +1,14 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Add a new keyword to the database\ninsert into keyword (id, name, status)\nvalues ($1::uuid, $2, $3);",
+  "query": "-- Add a new spatial coverage to the database\ninsert into spatial_coverage (id, name, status)\nvalues ($1::uuid, $2, $3)\nreturning id;",
   "describe": {
-    "columns": [],
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
     "parameters": {
       "Left": [
         "Uuid",
@@ -21,7 +27,9 @@
         }
       ]
     },
-    "nullable": []
+    "nullable": [
+      false
+    ]
   },
-  "hash": "ed65f4d09083ff395fad456a622e5a20f1564a3e097cf4de5ef35392f9e14130"
+  "hash": "db1725a9588ea538f0d4baf92524d6ae79ea413a2e2e780dc4bc85bcd11cff99"
 }
