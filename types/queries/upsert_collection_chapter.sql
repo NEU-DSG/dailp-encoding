@@ -1,6 +1,12 @@
-insert into collection_chapter(id, title, section, index_in_parent)
-values ($1::uuid, $2, $3::collection_section, $4)
-on conflict (id) do update
-set title = excluded.title,
-section = excluded.section,
-index_in_parent = excluded.index_in_parent
+/*
+$1: uuid id
+$2: text title (optional)
+$3: collection_section section (optional)
+$4: int index_in_parent (optional)
+*/
+update collection_chapter
+set 
+  title = coalesce($2, title),
+  section = coalesce($3::collection_section, section),
+  index_in_parent = coalesce($4, index_in_parent)
+where id = $1::uuid

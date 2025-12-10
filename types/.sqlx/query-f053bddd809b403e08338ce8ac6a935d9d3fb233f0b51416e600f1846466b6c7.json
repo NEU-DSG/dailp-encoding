@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into collection_chapter(id, title, section, index_in_parent)\nvalues ($1::uuid, $2, $3::collection_section, $4)\non conflict (id) do update\nset title = excluded.title,\nsection = excluded.section,\nindex_in_parent = excluded.index_in_parent",
+  "query": "/*\n$1: uuid id\n$2: text title (optional)\n$3: collection_section section (optional)\n$4: int index_in_parent (optional)\n*/\nupdate collection_chapter\nset \n  title = coalesce($2, title),\n  section = coalesce($3::collection_section, section),\n  index_in_parent = coalesce($4, index_in_parent)\nwhere id = $1::uuid",
   "describe": {
     "columns": [],
     "parameters": {
@@ -24,5 +24,5 @@
     },
     "nullable": []
   },
-  "hash": "25deb2f35c9537927386ed0c60667059adb20a719e36a0615debd62217d93d4b"
+  "hash": "f053bddd809b403e08338ce8ac6a935d9d3fb233f0b51416e600f1846466b6c7"
 }
