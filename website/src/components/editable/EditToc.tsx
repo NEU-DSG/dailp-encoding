@@ -330,26 +330,79 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setErrorMessage(null)
     setIsSaving(true)
 
-    // Blur all inputs to ensure their values are synced before saving
-    const activeElement = document.activeElement as HTMLElement
-    if (activeElement && activeElement.tagName === "INPUT") {
-      activeElement.blur()
-      // Wait a tick for state to sync after blur
-      await new Promise((resolve) => setTimeout(resolve, 0))
+    // Collect current input values from DOM to ensure we have the latest edits
+    // This handles the case where user edits but doesn't blur before clicking save
+    const inputUpdates = new Map<string, { title?: string; slug?: string }>()
+
+    // Find all title and slug inputs with their chapter IDs from data attributes
+    const titleInputs = document.querySelectorAll<HTMLInputElement>(
+      'input[data-chapter-id][data-field="title"]'
+    )
+    const slugInputs = document.querySelectorAll<HTMLInputElement>(
+      'input[data-chapter-id][data-field="slug"]'
+    )
+
+    titleInputs.forEach((input) => {
+      const chapterId = input.getAttribute("data-chapter-id")
+      if (chapterId) {
+        const current = inputUpdates.get(chapterId) || {}
+        inputUpdates.set(chapterId, { ...current, title: input.value })
+      }
+    })
+
+    slugInputs.forEach((input) => {
+      const chapterId = input.getAttribute("data-chapter-id")
+      if (chapterId) {
+        const current = inputUpdates.get(chapterId) || {}
+        inputUpdates.set(chapterId, { ...current, slug: input.value })
+      }
+    })
+
+    // Update state with current input values for UI consistency
+    if (inputUpdates.size > 0) {
+      setChaptersBySection((prev) => {
+        const updated = { ...prev }
+        ;(["intro", "body", "credit"] as const).forEach((sectionKey) => {
+          updated[sectionKey] = updateChaptersFromInputs(
+            prev[sectionKey],
+            inputUpdates
+          )
+        })
+        return updated
+      })
     }
 
     try {
+      // Apply input updates directly to chapters for saving (since state updates are async)
+      const chaptersWithUpdates =
+        inputUpdates.size > 0
+          ? {
+              intro: updateChaptersFromInputs(
+                chaptersBySection.intro,
+                inputUpdates
+              ),
+              body: updateChaptersFromInputs(
+                chaptersBySection.body,
+                inputUpdates
+              ),
+              credit: updateChaptersFromInputs(
+                chaptersBySection.credit,
+                inputUpdates
+              ),
+            }
+          : chaptersBySection
+
       // Collect all chapters from all sections (including subchapters) for order update
       const chapters: Dailp.ChapterOrderInput[] = []
 
       chapters.push(
-        ...flattenChapters(chaptersBySection.intro, CollectionSection.Intro)
+        ...flattenChapters(chaptersWithUpdates.intro, CollectionSection.Intro)
       )
       chapters.push(
-        ...flattenChapters(chaptersBySection.body, CollectionSection.Body)
+        ...flattenChapters(chaptersWithUpdates.body, CollectionSection.Body)
       )
       chapters.push(
-        ...flattenChapters(chaptersBySection.credit, CollectionSection.Credit)
+        ...flattenChapters(chaptersWithUpdates.credit, CollectionSection.Credit)
       )
 
       if (chapters.length === 0) {
@@ -359,32 +412,40 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       }
 
       // Collect all chapters with full data for title/slug updates
+      // Use chaptersWithUpdates to ensure we have the latest input values
       const chaptersForUpsert = [
         ...flattenChaptersForUpsert(
-          chaptersBySection.intro,
+          chaptersWithUpdates.intro,
           CollectionSection.Intro
         ),
         ...flattenChaptersForUpsert(
-          chaptersBySection.body,
+          chaptersWithUpdates.body,
           CollectionSection.Body
         ),
         ...flattenChaptersForUpsert(
-          chaptersBySection.credit,
+          chaptersWithUpdates.credit,
           CollectionSection.Credit
         ),
       ]
 
-      // Update chapter titles and slugs
+      // Update chapter titles (slug updates require chapter_path changes which aren't supported by upsert)
+      // Only update chapters that have valid IDs (existing chapters from the database)
       for (const chapter of chaptersForUpsert) {
+        // Skip chapters without valid IDs - they shouldn't exist but be defensive
+        if (!chapter.id) {
+          console.warn("Skipping chapter without ID:", chapter)
+          continue
+        }
+
         const upsertResult = await upsertChapter({
           input: {
             id: chapter.id,
             title: chapter.title || null,
-            slug: chapter.slug || null,
             section: chapter.section,
             indexInParent: chapter.indexInParent,
             description: null as Dailp.InputMaybe<string>,
             thumbnailUrl: null as Dailp.InputMaybe<string>,
+            slug: chapter.slug || null,
           },
         })
 
@@ -535,6 +596,31 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       return {
         ...ch,
         children: updateChapterInNested(ch.children, chapterId, update),
+      }
+    })
+  }
+
+  // Recursive function to update chapters from input values map
+  const updateChaptersFromInputs = (
+    chapters: ChapterNode[],
+    inputUpdates: Map<string, { title?: string; slug?: string }>
+  ): ChapterNode[] => {
+    return chapters.map((ch) => {
+      const chapterId = idOf(ch)
+      const updates = inputUpdates.get(chapterId)
+      const updatedChapter = updates
+        ? {
+            ...ch,
+            ...(updates.title !== undefined && { title: updates.title }),
+            ...(updates.slug !== undefined && { slug: updates.slug }),
+          }
+        : ch
+      return {
+        ...updatedChapter,
+        children: updateChaptersFromInputs(
+          updatedChapter.children,
+          inputUpdates
+        ),
       }
     })
   }
@@ -691,6 +777,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
               <input
                 type="text"
                 placeholder="Title"
+                data-chapter-id={chapterId}
+                data-field="title"
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
                 onBlur={() =>
@@ -710,6 +798,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
               <input
                 type="text"
                 placeholder="Slug"
+                data-chapter-id={chapterId}
+                data-field="slug"
                 value={localSlug}
                 onChange={(e) => setLocalSlug(e.target.value)}
                 onBlur={() =>
@@ -857,8 +947,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                       borderRadius: 6,
                       background: "#fafafa",
                       minHeight: 100,
-                      maxHeight: sectionKey === "body" ? "60vh" : "auto",
-                      overflowY: sectionKey === "body" ? "auto" : "visible",
+                      maxHeight: "60vh",
+                      overflowY: "auto",
                     }}
                   >
                     <Droppable
