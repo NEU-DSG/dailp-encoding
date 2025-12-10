@@ -952,7 +952,7 @@ impl Mutation {
         //TODO ADD ADMIN ROLES WHEN IT IS READY
         guard = "GroupGuard::new(UserGroup::Editors)"
     )]
-    async fn upsert_edited_collection(
+    async fn upsert_chapter(
         &self,
         context: &Context<'_>,
         input: UpsertChapterInput,
@@ -979,19 +979,6 @@ impl Mutation {
             .update_collection_chapter_order(input)
             .await?;
         Ok(collection_slug)
-    }
-
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn add_collection_chapter(
-        &self,
-        context: &Context<'_>,
-        input: AddChapterInput,
-    ) -> FieldResult<Uuid> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .add_collection_chapter(input)
-            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]

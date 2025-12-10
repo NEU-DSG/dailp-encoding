@@ -128,7 +128,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   // @ts-ignore - Types will be generated when GraphQL schema is regenerated
   const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addDocument] = Dailp.useAddDocumentMutation()
-  const [, upsertChapter] = Dailp.useUpsertEditedCollectionMutation()
+  const [, upsertChapter] = Dailp.useUpsertChapterMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState<{

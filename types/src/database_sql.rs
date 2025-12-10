@@ -1455,25 +1455,6 @@ impl Database {
         Ok(())
     }
 
-    pub async fn add_collection_chapter(&self, input: AddChapterInput) -> Result<Uuid> {
-        let collection_slug = slugify_ltree(&input.collection_slug);
-        let chapter_slug = slugify_ltree(&input.slug);
-
-        let chapter_id = query_file_scalar!(
-            "queries/add_collection_chapter.sql",
-            collection_slug,
-            input.title,
-            chapter_slug,
-            input.section as CollectionSection,
-            input.parent_id as Option<Uuid>,
-            input.document_id as Option<Uuid>
-        )
-        .fetch_one(&self.client)
-        .await?;
-
-        Ok(chapter_id)
-    }
-
     pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<()> {
         query_file!("queries/remove_collection_chapter.sql", chapter_id)
             .execute(&self.client)
