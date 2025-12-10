@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into subject_heading (id, name, status)\nvalues ($1::uuid, $2, $3)\non conflict (id) do nothing;",
+  "query": "-- Insert a new subject heading into the database\ninsert into spatial_coverage (id, name, status)\nvalues ($1::uuid, $2, $3);",
   "describe": {
     "columns": [],
     "parameters": {
@@ -23,5 +23,5 @@
     },
     "nullable": []
   },
-  "hash": "bc726eb817711df3bd0cfbb230fb5eb25542d627c7e6cb6f5253efd2346be2f4"
+  "hash": "d4d0c8ad66e6eec12da5d73d2ab99f4389f25b862bbc0c6a84aaa966f0d95361"
 }

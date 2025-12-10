@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert new creator or update name if creator with same ID exists\ninsert into creator (id, name)\nvalues ($1::uuid, $2);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ca98110314ab0a60495f5d1d0b3133a2e69eae792916bd9713a2793bc4a67790"
+}

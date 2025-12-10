@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into spatial_coverage (id, name, status)\nvalues ($1::uuid, $2, $3)\non conflict (id) do nothing;",
+  "query": "-- Add a new keyword to the database\ninsert into keyword (id, name, status)\nvalues ($1::uuid, $2, $3);",
   "describe": {
     "columns": [],
     "parameters": {
@@ -23,5 +23,5 @@
     },
     "nullable": []
   },
-  "hash": "a37fe9d67ac1c306829eff96947596d0a7c987c36b9028a4c809be8284c4bb24"
+  "hash": "ed65f4d09083ff395fad456a622e5a20f1564a3e097cf4de5ef35392f9e14130"
 }

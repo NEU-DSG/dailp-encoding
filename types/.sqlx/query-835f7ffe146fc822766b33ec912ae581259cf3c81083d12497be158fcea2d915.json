@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into keyword (id, name, status)\nvalues ($1::uuid, $2, $3)\non conflict (id) do nothing;",
+  "query": "-- Insert a new language into the database\ninsert into language (id, name, status)\nvalues ($1::uuid, $2, $3);",
   "describe": {
     "columns": [],
     "parameters": {
@@ -23,5 +23,5 @@
     },
     "nullable": []
   },
-  "hash": "a8c8a60c60ac98838a623860be92af0066afc1bda11adc74707c856a7a8f5d73"
+  "hash": "835f7ffe146fc822766b33ec912ae581259cf3c81083d12497be158fcea2d915"
 }
