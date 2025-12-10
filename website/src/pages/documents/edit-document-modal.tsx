@@ -60,6 +60,8 @@ const approvedSubjectHeadings = [
 
 const approvedLanguages = [
   "Mandarin Chinese",
+  "English",
+  "Cherokee",
   "Hindi",
   "Spanish",
   "French",
@@ -169,6 +171,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const contributorRoles = Object.values(Dailp.ContributorRole)
 
+  const [creatorInput, setCreatorInput] = useState(
+    documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
+  )
+
   // useEffect(() => {
   //   if (!isOpen) return
 
@@ -265,6 +271,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setTitle(dm.title ?? "")
     setDate(dm.date ?? "")
     setCreator(dm.creators ?? [])
+    setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
     setKeywords(dm.keywords ?? [])
     setLanguages(dm.languages ?? [])
     setSubjectHeadings(dm.subjectHeadings ?? [])
@@ -574,8 +581,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             <input
               type="text"
               className={styles.input}
-              value={creator.map((c) => c.name).join(", ")} // Join names to string for input
-              onChange={(e) =>
+              value={creatorInput}
+              onChange={(e) => setCreatorInput(e.target.value)}
+              onBlur={(e) => {
+                // Parse and set creators when user leaves the field
                 setCreator(
                   e.target.value
                     .split(",")
@@ -586,7 +595,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                       name,
                     }))
                 )
-              }
+              }}
               disabled={!isEditing}
             />
           </div>
@@ -598,7 +607,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newContributors}
             onAdd={() => {}}
             onRemove={isEditing ? removeContributor : undefined}
-            addButtonLabel="+ Contributor"
+            addButtonLabel="Add Contributor"
             customForm={
               isEditing ? (
                 <div className={styles.fullWidthGroup}>
