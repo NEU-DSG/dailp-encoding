@@ -125,10 +125,10 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   })
   const collection = data?.editedCollection
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
-  const [, addChapter] = Dailp.useAddCollectionChapterMutation()
   // @ts-ignore - Types will be generated when GraphQL schema is regenerated
   const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addDocument] = Dailp.useAddDocumentMutation()
+  const [, upsertChapter] = Dailp.useUpsertEditedCollectionMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState<{
@@ -291,13 +291,55 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     return result
   }
 
+  // Flatten nested structure to collect all chapters with full data for upsert
+  const flattenChaptersForUpsert = (
+    chapters: ChapterNode[],
+    section: CollectionSection
+  ): Array<{
+    id: string
+    title: string
+    slug: string
+    section: CollectionSection
+    indexInParent: number
+  }> => {
+    const result: Array<{
+      id: string
+      title: string
+      slug: string
+      section: CollectionSection
+      indexInParent: number
+    }> = []
+    for (const chapter of chapters) {
+      if (chapter.id) {
+        result.push({
+          id: chapter.id,
+          title: chapter.title,
+          slug: chapter.slug,
+          section: section,
+          indexInParent: chapter.indexInParent,
+        })
+      }
+      // Recursively add children
+      result.push(...flattenChaptersForUpsert(chapter.children, section))
+    }
+    return result
+  }
+
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setErrorMessage(null)
     setIsSaving(true)
 
+    // Blur all inputs to ensure their values are synced before saving
+    const activeElement = document.activeElement as HTMLElement
+    if (activeElement && activeElement.tagName === "INPUT") {
+      activeElement.blur()
+      // Wait a tick for state to sync after blur
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+
     try {
-      // Collect all chapters from all sections (including subchapters)
+      // Collect all chapters from all sections (including subchapters) for order update
       const chapters: Dailp.ChapterOrderInput[] = []
 
       chapters.push(
@@ -316,6 +358,46 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         return
       }
 
+      // Collect all chapters with full data for title/slug updates
+      const chaptersForUpsert = [
+        ...flattenChaptersForUpsert(
+          chaptersBySection.intro,
+          CollectionSection.Intro
+        ),
+        ...flattenChaptersForUpsert(
+          chaptersBySection.body,
+          CollectionSection.Body
+        ),
+        ...flattenChaptersForUpsert(
+          chaptersBySection.credit,
+          CollectionSection.Credit
+        ),
+      ]
+
+      // Update chapter titles and slugs
+      for (const chapter of chaptersForUpsert) {
+        const upsertResult = await upsertChapter({
+          input: {
+            id: chapter.id,
+            title: chapter.title || null,
+            slug: chapter.slug || null,
+            section: chapter.section,
+            indexInParent: chapter.indexInParent,
+            description: null as Dailp.InputMaybe<string>,
+            thumbnailUrl: null as Dailp.InputMaybe<string>,
+          },
+        })
+
+        if (upsertResult.error) {
+          setErrorMessage(
+            upsertResult.error.message || "Failed to save chapter updates"
+          )
+          setIsSaving(false)
+          return
+        }
+      }
+
+      // Update chapter order
       const result = await updateOrder({
         input: {
           collectionSlug: collectionSlug,
@@ -379,34 +461,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       // Save previous state for potential rollback
       previousState = chaptersBySection
 
-      // First, create a document for this chapter
-      const documentResult = await addDocument({
-        input: {
-          documentName: title,
-          rawTextLines: [[]], // Empty document - can be edited later
-          englishTranslationLines: [[]], // Empty translation - can be edited later
-          unresolvedWords: [],
-          sourceName: "Manual Entry",
-          sourceUrl: "",
-          collectionId: collection.id,
-        },
-      })
-
-      if (documentResult.error) {
-        setErrorMessage(
-          documentResult.error.message || "Failed to create document"
-        )
-        setIsSaving(false)
-        return
-      }
-
-      const documentId = documentResult.data?.addDocument?.id
-      if (!documentId) {
-        setErrorMessage("Failed to get document ID from creation")
-        setIsSaving(false)
-        return
-      }
-
       // Create optimistic chapter node
       const optimisticChapter: ChapterNode = {
         clientId: generateId(), // Temporary ID until backend assigns real one
@@ -428,29 +482,34 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         ),
       }))
 
-      // Then, create the chapter linked to the document
-      const result = await addChapter({
+      // Create document (which also creates the chapter automatically)
+      const documentResult = await addDocument({
         input: {
-          collectionSlug: collectionSlug,
-          title: title,
-          slug: slug,
+          documentName: title,
+          rawTextLines: [[]], // Empty document - can be edited later
+          englishTranslationLines: [[]], // Empty translation - can be edited later
+          unresolvedWords: [],
+          sourceName: "Manual Entry",
+          sourceUrl: "",
+          collectionId: collection.id,
           section: sectionEnum,
-          parentId: parentId ? (parentId as any) : null,
-          documentId: documentId,
         },
       })
 
-      if (result.error) {
+      if (documentResult.error) {
         // Revert optimistic update on error
         setChaptersBySection(previousState)
-        setErrorMessage(result.error.message || "Failed to add chapter")
-      } else {
-        // Refetch the collection to get updated data with the new chapter (with real IDs)
-        await refetch()
-        // The useEffect will automatically update chaptersBySection when data/collection changes
-        setErrorMessage(null)
-        ;(e.target as HTMLFormElement).reset()
+        setErrorMessage(
+          documentResult.error.message || "Failed to create document"
+        )
+        setIsSaving(false)
+        return
       }
+
+      // Refetch to get the real chapter data with correct IDs
+      await refetch()
+      setErrorMessage(null)
+      ;(e.target as HTMLFormElement).reset()
     } catch (error: any) {
       // Revert optimistic update on unexpected error
       // Note: previousState is only defined if we got past document creation
@@ -587,6 +646,14 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   }) => {
     const chapterId = idOf(chapter)
     const isTopLevel = depth === 0
+    const [localTitle, setLocalTitle] = useState(chapter.title ?? "")
+    const [localSlug, setLocalSlug] = useState(chapter.slug ?? "")
+
+    // Sync local state when chapter prop changes (but not from our own updates)
+    useEffect(() => {
+      setLocalTitle(chapter.title ?? "")
+      setLocalSlug(chapter.slug ?? "")
+    }, [chapter.id, chapter.clientId])
 
     return (
       <Draggable key={chapterId} draggableId={chapterId} index={index}>
@@ -624,10 +691,11 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
               <input
                 type="text"
                 placeholder="Title"
-                value={chapter.title ?? ""}
-                onChange={(e) =>
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
+                onBlur={() =>
                   handleUpdate(sectionKey, chapterId, {
-                    title: e.target.value,
+                    title: localTitle,
                   })
                 }
                 style={{
@@ -642,10 +710,11 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
               <input
                 type="text"
                 placeholder="Slug"
-                value={chapter.slug ?? ""}
-                onChange={(e) =>
+                value={localSlug}
+                onChange={(e) => setLocalSlug(e.target.value)}
+                onBlur={() =>
                   handleUpdate(sectionKey, chapterId, {
-                    slug: e.target.value,
+                    slug: localSlug,
                   })
                 }
                 style={{

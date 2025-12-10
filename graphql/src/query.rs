@@ -9,7 +9,7 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
+    AttachAudioToWordInput, CollectionChapter, CollectionSection, Contributor, ContributorRole,
     CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
     DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
     PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
@@ -870,8 +870,13 @@ impl Mutation {
             segments: Some(vec![page]),
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
+        let section = input.section.unwrap_or(CollectionSection::Body);
         let (document_id, _chapter_id) = database
-            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .insert_document_into_edited_collection(
+                annotated_doc.clone(),
+                input.collection_id,
+                section,
+            )
             .await?;
 
         // Update the annotated_doc with the correct document_id from the database
@@ -1113,6 +1118,7 @@ pub struct CreateDocumentFromFormInput {
     pub source_name: String,
     pub source_url: String,
     pub collection_id: Uuid,
+    pub section: Option<CollectionSection>,
 }
 
 #[derive(async_graphql::SimpleObject)]

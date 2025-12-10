@@ -53,7 +53,7 @@ const CollectionTOC = () => {
   return (
     <>
       <Link
-        href={`/collections/${collectionSlug}/edit-toc`}
+        href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
         className={css.link}
       >
         Edit TOC

@@ -2520,6 +2520,7 @@ impl Database {
         &self,
         document: AnnotatedDoc,
         collection_id: Uuid,
+        section: CollectionSection,
     ) -> Result<(DocumentId, Uuid)> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
@@ -2582,7 +2583,7 @@ impl Database {
             None::<i64>, // wordpress_id
             0i64,        // index_in_parent (we can increment this later if needed)
             chapter_path,
-            crate::CollectionSection::Body as crate::CollectionSection
+            section as crate::CollectionSection
         )
         .fetch_one(&mut *tx)
         .await?;
