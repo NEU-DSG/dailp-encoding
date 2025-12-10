@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into collection_chapter(id, title, section, index_in_parent)\nvalues ($1::uuid, $2, $3::collection_section, $4)\non conflict (id) do update\nset title = excluded.title,\nsection = excluded.section,\nindex_in_parent = excluded.index_in_parent",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        },
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "25deb2f35c9537927386ed0c60667059adb20a719e36a0615debd62217d93d4b"
+}

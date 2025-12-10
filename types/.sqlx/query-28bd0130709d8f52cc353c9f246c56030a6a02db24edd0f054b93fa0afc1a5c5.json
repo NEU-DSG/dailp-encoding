@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "/*\n$1: str collection_slug\n$2: str title\n$3: str chapter_slug\n$4: collection_section section\n$5: uuid parent_id (optional, null for top-level)\n$6: uuid document_id (optional)\n*/\nwith collection_base as (\n  select slug::ltree as base_path\n  from edited_collection\n  where slug = $1\n),\nparent_path as (\n  select \n    case \n      when $5::uuid is null then (select base_path from collection_base)\n      else (select chapter_path from collection_chapter where id = $5::uuid)\n    end as path\n),\nfinal_path as (\n  select (select path from parent_path) || $3::text as chapter_path\n),\nnext_index as (\n  select coalesce(max(index_in_parent), 0) + 1 as idx\n  from collection_chapter cc\n  cross join parent_path pp\n  where cc.section = $4::collection_section\n    and (\n      ($5::uuid is null \n        and nlevel(cc.chapter_path) = 2 \n        and ltree2text(subpath(cc.chapter_path, 0, 1)) = $1)\n      or ($5::uuid is not null \n        and pp.path @> cc.chapter_path\n        and nlevel(cc.chapter_path) = nlevel(pp.path) + 1)\n    )\n)\ninsert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section\n)\nselect\n  $2,\n  $6::uuid,\n  null::bigint,\n  (select idx from next_index),\n  (select chapter_path from final_path),\n  $4::collection_section\nreturning id\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        },
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "28bd0130709d8f52cc353c9f246c56030a6a02db24edd0f054b93fa0afc1a5c5"
+}
