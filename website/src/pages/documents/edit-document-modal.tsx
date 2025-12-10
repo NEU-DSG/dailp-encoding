@@ -693,7 +693,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newHeadings}
             onAdd={isEditing ? addHeading : undefined}
             onRemove={isEditing ? removeHeading : undefined}
-            addButtonLabel="+ Subject Heading"
+            addButtonLabel="Add Subject Heading"
           />
 
           <TagSelector
@@ -703,7 +703,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newLanguages}
             onAdd={isEditing ? addLanguage : undefined}
             onRemove={isEditing ? removeLanguage : undefined}
-            addButtonLabel="+ Language"
+            addButtonLabel="Add Language"
           />
 
           <TagSelector
@@ -713,10 +713,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newCoverages}
             onAdd={isEditing ? addCoverage : undefined}
             onRemove={isEditing ? removeCoverage : undefined}
-            addButtonLabel="+ Spatial Coverage"
+            addButtonLabel="Add Spatial Coverage"
           />
 
-          {/* <div className={styles.fullWidthGroup}>
+          {/* // Might need to pull the creator(s) from creator or contributors w/ author role
+          
+          <div className={styles.fullWidthGroup}>
                   <label className={styles.label}>Citation</label>
                   <TextareaAutosize
                     className={styles.input}
