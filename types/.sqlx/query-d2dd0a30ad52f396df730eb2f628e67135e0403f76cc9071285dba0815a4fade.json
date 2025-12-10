@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "/*\n$1: uuid chapter_id\n*/\ndelete from collection_chapter\nwhere id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d2dd0a30ad52f396df730eb2f628e67135e0403f76cc9071285dba0815a4fade"
+}
