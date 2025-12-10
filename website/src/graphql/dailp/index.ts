@@ -454,6 +454,7 @@ export type CreateDocumentFromFormInput = {
     ReadonlyArray<Scalars["String"]>
   >
   readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
+  readonly section: InputMaybe<CollectionSection>
   readonly sourceName: Scalars["String"]
   readonly sourceUrl: Scalars["String"]
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
@@ -3141,6 +3142,14 @@ export type UpdateCollectionChapterOrderMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateCollectionChapterOrder">
 
+export type UpsertEditedCollectionMutationVariables = Exact<{
+  input: UpsertChapterInput
+}>
+
+export type UpsertEditedCollectionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "upsertEditedCollection">
+
 export type AddCollectionChapterMutationVariables = Exact<{
   input: AddChapterInput
 }>
@@ -4304,6 +4313,18 @@ export function useUpdateCollectionChapterOrderMutation() {
     UpdateCollectionChapterOrderMutation,
     UpdateCollectionChapterOrderMutationVariables
   >(UpdateCollectionChapterOrderDocument)
+}
+export const UpsertEditedCollectionDocument = gql`
+  mutation UpsertEditedCollection($input: UpsertChapterInput!) {
+    upsertEditedCollection(input: $input)
+  }
+`
+
+export function useUpsertEditedCollectionMutation() {
+  return Urql.useMutation<
+    UpsertEditedCollectionMutation,
+    UpsertEditedCollectionMutationVariables
+  >(UpsertEditedCollectionDocument)
 }
 export const AddCollectionChapterDocument = gql`
   mutation AddCollectionChapter($input: AddChapterInput!) {

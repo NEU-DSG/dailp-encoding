@@ -32,6 +32,10 @@ const EditTocPage = () => {
         ) : (
           <>
             <h1 style={{ marginBottom: 16 }}>Edit Table of Contents</h1>
+            <Link href={`/collections/${collectionSlug}`}>
+              Back to collection
+            </Link>
+            <br />
             <EditableToc collectionSlug={collectionSlug} />
           </>
         )}

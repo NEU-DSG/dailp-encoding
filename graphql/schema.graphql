@@ -560,6 +560,7 @@ input CreateDocumentFromFormInput {
 	sourceName: String!
 	sourceUrl: String!
 	collectionId: UUID!
+	section: CollectionSection
 }
 
 """

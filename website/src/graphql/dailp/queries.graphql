@@ -637,6 +637,10 @@ mutation UpdateCollectionChapterOrder(
   updateCollectionChapterOrder(input: $input)
 }
 
+mutation UpsertEditedCollection($input: UpsertChapterInput!) {
+  upsertEditedCollection(input: $input)
+}
+
 mutation AddCollectionChapter($input: AddChapterInput!) {
   addCollectionChapter(input: $input)
 }

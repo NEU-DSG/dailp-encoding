@@ -57,10 +57,13 @@ pub struct CollectionChapter {
 #[sqlx(type_name = "collection_section")]
 pub enum CollectionSection {
     /// Intro chapter
+    #[graphql(name = "INTRO")]
     Intro,
     /// Body chapter
+    #[graphql(name = "BODY")]
     Body,
     /// Credit
+    #[graphql(name = "CREDIT")]
     Credit,
 }
 
