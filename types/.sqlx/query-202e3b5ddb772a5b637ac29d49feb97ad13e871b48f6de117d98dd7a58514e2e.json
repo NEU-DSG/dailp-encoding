@@ -1,33 +1,31 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n  title,\n  path,\n  slug,\n  content as body\nfrom page\nwhere path = $1;",
+  "query": "select page_id, title, content, path from page;",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
+        "name": "page_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
         "name": "title",
         "type_info": "Text"
       },
       {
-        "ordinal": 1,
-        "name": "path",
-        "type_info": "Text"
-      },
-      {
         "ordinal": 2,
-        "name": "slug",
+        "name": "content",
         "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "body",
+        "name": "path",
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": [
-        "Text"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
@@ -36,5 +34,5 @@
       false
     ]
   },
-  "hash": "08a7959bd2d50f96af8a5b5a6e35308c86cbc2185dc628bc5d38a472c309e77e"
+  "hash": "202e3b5ddb772a5b637ac29d49feb97ad13e871b48f6de117d98dd7a58514e2e"
 }

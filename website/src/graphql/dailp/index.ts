@@ -1067,7 +1067,8 @@ export type Page = {
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
    */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly path: Scalars["String"]
   readonly title: Scalars["String"]
 }
 
@@ -3333,6 +3334,14 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllPagesQuery = { readonly __typename?: "Query" } & {
+  readonly allPages: ReadonlyArray<
+    { readonly __typename?: "Page" } & Pick<Page, "path">
+  >
+}
+
 export type PageByPathQueryVariables = Exact<{
   path: Scalars["String"]
 }>
@@ -3504,10 +3513,6 @@ export const DocFormFieldsFragmentDoc = gql`
       name
     }
     format {
-      id
-      name
-    }
-    genre {
       id
       name
     }
@@ -4526,6 +4531,22 @@ export function useUpsertPageMutation() {
   return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
     UpsertPageDocument
   )
+}
+export const AllPagesDocument = gql`
+  query AllPages {
+    allPages {
+      path
+    }
+  }
+`
+
+export function useAllPagesQuery(
+  options?: Omit<Urql.UseQueryArgs<AllPagesQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllPagesQuery, AllPagesQueryVariables>({
+    query: AllPagesDocument,
+    ...options,
+  })
 }
 export const PageByPathDocument = gql`
   query pageByPath($path: String!) {
