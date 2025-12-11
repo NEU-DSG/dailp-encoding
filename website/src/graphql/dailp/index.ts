@@ -2292,7 +2292,10 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       "id" | "slug" | "title"
     > & {
         readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "day" | "month" | "year"
+          >
         >
         readonly contributors: ReadonlyArray<
           { readonly __typename?: "Contributor" } & Pick<
@@ -3929,6 +3932,8 @@ export const DocumentDetailsDocument = gql`
       slug
       title
       date {
+        day
+        month
         year
       }
       contributors {

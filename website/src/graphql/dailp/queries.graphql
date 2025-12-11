@@ -343,6 +343,8 @@ query DocumentDetails($slug: String!) {
     slug
     title
     date {
+      day
+      month
       year
     }
     contributors {

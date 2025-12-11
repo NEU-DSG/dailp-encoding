@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
+import { form } from "src/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { buildCitationMetadata } from "../../utils/build-citation-metadata"
@@ -502,7 +503,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     // Build updated document metadata object
     const updatedMetadata = {
       title,
-      date,
+      date: dateValue,
       creator,
       contributors,
       keywords: keywordsToSubmit,
@@ -551,7 +552,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Date Created</label>
               <DatePicker
-                onChange={(date: any) => handleDateChange(date)}
+                onChange={(newDate: any) => setDate(newDate)}
                 value={date}
                 format="MM-dd-y"
                 disabled={!isEditing} // change to !(userRole == UserRole.Editor)
