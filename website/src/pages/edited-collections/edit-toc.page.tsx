@@ -12,7 +12,6 @@ const EditTocPage = () => {
   const [{ data, fetching }, refetch] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug! },
   })
-  console.log("DENNIS", data)
 
   if (!collectionSlug) {
     return <div>Collection slug not found</div>
