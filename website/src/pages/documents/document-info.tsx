@@ -101,7 +101,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
   // Format contributors for display
   const formatContributors = () => {
-    if (!docData.contributors || docData.contributors.length === 0) return "N/A"
+    if (!docData.contributors || docData.contributors.length === 0) return ""
     return docData.contributors.map((c) => `${c.name} (${c.role})`).join(", ")
   }
 
