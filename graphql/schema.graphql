@@ -498,6 +498,11 @@ type Contributor {
 	details: ContributorDetails
 }
 
+input ContributorAttributionInput {
+	name: String!
+	role: ContributorRole
+}
+
 """
 Basic personal details of an individual contributor, which can be retrieved
 from a particular instance of [`Contributor`].
@@ -747,7 +752,7 @@ input DocumentMetadataUpdate {
 	"""
 	The editors, translators, etc. of the document
 	"""
-	contributors: [UUID!]
+	contributors: [ContributorAttributionInput!]
 	"""
 	The physical locations associated with a document (e.g. where it was written, found)
 	"""

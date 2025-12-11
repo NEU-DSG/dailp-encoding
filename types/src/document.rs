@@ -2,7 +2,10 @@ use crate::doc_metadata::{
     ApprovalStatus, Format, FormatUpdate, Genre, GenreUpdate, Keyword, KeywordUpdate, Language,
     LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
-use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
+use crate::person::{
+    Contributor, ContributorAttributionInput, ContributorRole, Creator, CreatorUpdate,
+    SourceAttribution,
+};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
@@ -430,7 +433,7 @@ pub struct DocumentMetadataUpdate {
     /// Terms that reflect Indigenous knowledge practices associated with the document
     pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
     /// The editors, translators, etc. of the document
-    pub contributors: MaybeUndefined<Vec<Uuid>>,
+    pub contributors: MaybeUndefined<Vec<ContributorAttributionInput>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
     /// The creator(s) of the document

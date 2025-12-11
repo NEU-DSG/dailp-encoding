@@ -125,6 +125,12 @@ impl ContributorRole {
     }
 }
 
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct ContributorAttributionInput {
+    pub name: String,
+    pub role: Option<ContributorRole>,
+}
+
 /// The creator of a document
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[graphql(complex)]

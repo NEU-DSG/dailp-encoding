@@ -1031,6 +1031,48 @@ impl Database {
             _ => None,
         };
 
+        info!("Updating contributors");
+        // Update contributors
+        if let MaybeUndefined::Value(contributors) = &document.contributors {
+            info!("Contributors to update: {:?}", contributors);
+
+            // Delete existing contributor attributions
+            query_file!("queries/delete_document_contributors.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            // Add each contributor
+            for c in contributors {
+                // Upsert contributor
+                query_file!("queries/upsert_contributor.sql", &c.name)
+                    .execute(&mut *tx)
+                    .await?;
+
+                // Get contributor ID by name
+                let contributor_id: Uuid =
+                    query_file_scalar!("queries/get_contributor_id_by_name.sql", &c.name)
+                        .fetch_one(&mut *tx)
+                        .await?;
+
+                // Convert role to Option<String> for SQL
+                let role_str = c.role.as_ref().map(|r| r.to_string());
+
+                // Link to document with role
+                query_file!(
+                    "queries/insert_contributor_attribution_with_role.sql",
+                    document.id,
+                    contributor_id,
+                    role_str.as_deref()
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+
+            info!("Contributors update completed");
+        } else {
+            info!("No contributors to update");
+        }
+
         info!("Updating keywords");
         // Update keywords
         if let MaybeUndefined::Value(keywords) = &document.keywords {

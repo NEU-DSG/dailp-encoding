@@ -402,6 +402,11 @@ export type Contributor = {
   readonly role: Maybe<ContributorRole>
 }
 
+export type ContributorAttributionInput = {
+  readonly name: Scalars["String"]
+  readonly role: InputMaybe<ContributorRole>
+}
+
 /**
  * Basic personal details of an individual contributor, which can be retrieved
  * from a particular instance of [`Contributor`].
@@ -564,7 +569,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** The editors, translators, etc. of the document */
-  readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly contributors: InputMaybe<ReadonlyArray<ContributorAttributionInput>>
   /** The creator(s) of the document */
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The format of the original artifact */

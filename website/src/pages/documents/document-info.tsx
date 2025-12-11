@@ -39,25 +39,49 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
 
   const handleUpdate = async (changes: any) => {
-    await updateDocument({
-      document: {
-        //slug: doc.slug!,
-        id: doc.id,
-        title: changes.title,
-        format: changes.format,
-        genre: changes.genre,
-        contributors: changes.contributors.map((c: any) => c.id),
-        creators: changes.creator,
-        keywords: changes.keywords,
-        languages: changes.languages,
-        spatialCoverage: changes.spatialCoverage,
-        subjectHeadings: changes.subjectHeadings,
-        writtenAt: changes.writtenAt,
-      },
-    })
+    try {
+      // Format date
+      let writtenAtValue = null
+      if (changes.date) {
+        if (typeof changes.date === "string") {
+          const year = parseInt(changes.date)
+          if (!isNaN(year)) {
+            writtenAtValue = { year, month: 1, day: 1 }
+          }
+        } else if (typeof changes.date === "object" && "year" in changes.date) {
+          writtenAtValue = {
+            year: changes.date.year,
+            month: changes.date.month || 1,
+            day: changes.date.day || 1,
+          }
+        }
+      }
 
-    await reexecuteQuery({ requestPolicy: "network-only" })
-    setIsEditing(false)
+      await updateDocument({
+        document: {
+          id: doc.id,
+          title: changes.title,
+          format: changes.format,
+          genre: changes.genre,
+          contributors: changes.contributors.map((c: any) => ({
+            name: c.name,
+            role: c.role,
+          })),
+          creators: changes.creator,
+          keywords: changes.keywords,
+          languages: changes.languages,
+          spatialCoverage: changes.spatialCoverage,
+          subjectHeadings: changes.subjectHeadings,
+          writtenAt: writtenAtValue,
+        },
+      })
+
+      await reexecuteQuery({ requestPolicy: "network-only" })
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Failed to update document:", error)
+      setIsEditing(false)
+    }
   }
 
   const contributorsList = (
