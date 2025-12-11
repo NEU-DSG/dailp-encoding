@@ -8,6 +8,7 @@ import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
+import * as styles from "./document-info.css"
 import * as css from "./document.css"
 import {
   EditDocumentModal,
@@ -84,6 +85,35 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     }
   }
 
+  // Format date for display
+  const formatDate = (dateObj: any) => {
+    if (!dateObj) return "N/A"
+    const { year, month, day } = dateObj
+    if (month && day) {
+      return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    }
+    return year.toString()
+  }
+
+  // Format contributors for display
+  const formatContributors = () => {
+    if (!docData.contributors || docData.contributors.length === 0) return "N/A"
+    return docData.contributors.map((c) => `${c.name} (${c.role})`).join(", ")
+  }
+
+  // Format arrays for display
+  const formatArray = (
+    arr: readonly any[] | undefined | null,
+    fallback = ""
+  ) => {
+    if (!arr || arr.length === 0) return fallback
+    return arr.join(", ")
+  }
+
   const contributorsList = (
     <>
       <Helmet>
@@ -102,6 +132,155 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     </>
   )
 
+  const metadataDisplay = (
+    <div className={styles.container}>
+      <Helmet>
+        <title>{docData.title} - Details</title>
+      </Helmet>
+
+      <div className={styles.header}>
+        {token && (
+          <button
+            className={styles.editButton}
+            onClick={() => setIsEditing(true)}
+          >
+            <span className={styles.editIcon}>✏️</span>
+            Edit
+          </button>
+        )}
+        <h2 className={styles.title}>Document Information</h2>
+        <p className={styles.subtitle}>
+          {/* {docData.uploadedAt && `Uploaded ${new Date(docData.uploadedAt).toLocaleDateString()}`}
+          {docData.editedAt && ` • Last Edited ${new Date(docData.editedAt).toLocaleDateString()}`} */}
+        </p>
+      </div>
+
+      <div className={styles.infoSection}>
+        <div className={styles.field}>
+          <div className={styles.label}>TITLE</div>
+          <div className={styles.value}>
+            {docData.title || "Title Not Yet Available"}
+          </div>
+        </div>
+
+        {docData.date && (
+          <div className={styles.field}>
+            <div className={styles.label}>DATE CREATED</div>
+            <div className={styles.value}>
+              {formatDate(docData.date.year) || "Date Not Available"}
+            </div>
+          </div>
+        )}
+
+        {/* {docData.genre && (
+          <div className={styles.field}>
+            <div className={styles.label}>GENRE</div>
+            <div className={styles.value}>{docData.genre || "Genre Not Yet Available"}</div>
+          </div>
+        )}
+
+        {docData.format && (
+          <div className={styles.field}>
+            <div className={styles.label}>FORMAT</div>
+            <div className={styles.value}>{docData.format || "Format Not Yet Available"}</div>
+          </div>
+        )} */}
+
+        {/* {docData.pages && (
+          <div className={styles.field}>
+            <div className={styles.label}>PAGES</div>
+            <div className={styles.value}>{docData.pages}</div>
+          </div>
+        )} */}
+
+        {docData.creators && docData.creators.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>CREATOR</div>
+            <div className={styles.value}>
+              {formatArray(docData.creators) || "Creator(s) Not Available"}
+            </div>
+          </div>
+        )}
+
+        {docData.contributors && docData.contributors.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>CONTRIBUTORS</div>
+            <div className={styles.value}>
+              {formatContributors() || "Contributors Not Yet Available"}
+            </div>
+          </div>
+        )}
+
+        {docData.sources && docData.sources.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>SOURCE</div>
+            <div className={styles.value}>
+              <a href={docData.sources[0]!.link} className={styles.link}>
+                {docData.sources[0]!.link || "Source Not Available"}
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* {docData.doi && (
+          <div className={styles.field}>
+            <div className={styles.label}>DOI</div>
+            <div className={styles.value}>
+              <a href={`https://doi.org/${docData.doi}`} className={styles.link}>
+                https://doi.org/{docData.doi}
+              </a>
+            </div>
+          </div>
+        )} */}
+
+        {docData.keywords && docData.keywords.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>KEYWORDS</div>
+            <div className={styles.value}>
+              {formatArray(docData.keywords) || "Keywords Not Yet Available"}
+            </div>
+          </div>
+        )}
+
+        {docData.subjectHeadings && docData.subjectHeadings.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>SUBJECT HEADINGS</div>
+            <div className={styles.value}>
+              {formatArray(docData.subjectHeadings) ||
+                "Subject Headings Not Yet Available"}
+            </div>
+          </div>
+        )}
+
+        {docData.languages && docData.languages.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>LANGUAGES</div>
+            <div className={styles.value}>
+              {formatArray(docData.languages) || "Languages Not Yet Available"}
+            </div>
+          </div>
+        )}
+
+        {docData.spatialCoverage && docData.spatialCoverage.length > 0 && (
+          <div className={styles.field}>
+            <div className={styles.label}>SPATIAL COVERAGE</div>
+            <div className={styles.value}>
+              {formatArray(docData.spatialCoverage) ||
+                "Spatial Coverage Not Yet Available"}
+            </div>
+          </div>
+        )}
+
+        {/* 
+          <div className={styles.field}>
+            <div className={styles.label}>CITATION</div>
+            <div className={styles.value}>{get generated citation}</div>
+          </div>
+        */}
+      </div>
+    </div>
+  )
+
   const panel = (
     <>
       {/* If the user is logged in, then display an edit button on the word
@@ -109,11 +288,11 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   the normal word panel. */}
       {token ? (
         <>
-          {!isEditing && <>{contributorsList}</>}
+          {!isEditing && <>{metadataDisplay}</>}
           <EditButton />
         </>
       ) : (
-        <>{contributorsList}</>
+        <>{metadataDisplay}</>
       )}
 
       {isEditing ? (
@@ -129,6 +308,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       )}
     </>
   )
+
   return (
     <Fragment>
       {panel}

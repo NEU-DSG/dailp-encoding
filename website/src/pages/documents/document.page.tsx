@@ -216,7 +216,7 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
           <EditingProvider>
-            `<DocumentInfo doc={doc} />`
+            <DocumentInfo doc={doc} />
           </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
