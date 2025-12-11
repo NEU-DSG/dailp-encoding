@@ -1432,6 +1432,43 @@ impl Database {
         Ok(())
     }
 
+    pub async fn batch_upsert_collection_chapters(
+        &self,
+        chapters: Vec<UpsertChapterInput>,
+    ) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+
+        for collection in chapters {
+            let title: Option<String> = if collection.title.is_undefined() {
+                None
+            } else {
+                collection.title.take()
+            };
+            let section: Option<CollectionSection> = if collection.section.is_undefined() {
+                None
+            } else {
+                collection.section.take()
+            };
+            let index_in_parent: Option<i64> = if collection.index_in_parent.is_undefined() {
+                None
+            } else {
+                collection.index_in_parent.take()
+            };
+            query_file!(
+                "queries/upsert_collection_chapter.sql",
+                collection.id,
+                title,
+                section as _,
+                index_in_parent,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
     pub async fn update_collection_chapter_order(
         &self,
         input: UpdateCollectionChapterOrderInput,
@@ -2112,20 +2149,40 @@ impl Database {
         }
 
         let collection_slug = self.collection_slug_by_id(collection_id).await?;
+        let collection_slug_str = collection_slug
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Collection slug not found"))?;
+
+        // Collection slugs in chapter_path have dashes replaced with underscores
+        let collection_slug_for_path = collection_slug_str.replace("-", "_");
+
+        // Get the count of top-level chapters in this section to determine the correct index_in_parent
+        let chapter_count = query_file_scalar!(
+            "queries/count_top_level_chapters_in_section.sql",
+            collection_slug_for_path.as_str(),
+            section as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .unwrap_or(0i64);
+
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
         let chapter_path = PgLTree::from_str(&format!(
             "{}.{}",
-            collection_slug.unwrap().replace("-", "_"),
+            collection_slug_str.replace("-", "_"),
             chapter_slug
         ))?;
+
+        // Use chapter_count + 1 as index_in_parent so the new chapter appears at the end
+        let index_in_parent = chapter_count + 1;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",
             meta.title, // Use document title as chapter title
             document_uuid,
             None::<i64>, // wordpress_id
-            0i64,        // index_in_parent (we can increment this later if needed)
+            index_in_parent,
             chapter_path,
             section as crate::CollectionSection
         )

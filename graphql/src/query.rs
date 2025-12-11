@@ -7,10 +7,10 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AddChapterInput, AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, CollectionChapter, CollectionSection, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    AttachAudioToWordInput, BatchUpsertChaptersInput, CollectionChapter, CollectionSection,
+    Contributor, ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput,
+    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
+    DocumentParagraph, PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
     UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
 };
 use itertools::{Itertools, Position};
@@ -964,6 +964,23 @@ impl Mutation {
             .upsert_collection_chapter(input)
             .await?;
         Ok(chapter_id.to_string())
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn batch_upsert_chapters(
+        &self,
+        context: &Context<'_>,
+        input: BatchUpsertChaptersInput,
+    ) -> FieldResult<String> {
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .batch_upsert_collection_chapters(input.chapters)
+            .await?;
+        Ok("Chapters updated".to_string())
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]

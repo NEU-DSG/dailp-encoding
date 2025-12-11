@@ -125,10 +125,10 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   })
   const collection = data?.editedCollection
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
-  // @ts-ignore - Types will be generated when GraphQL schema is regenerated
   const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addDocument] = Dailp.useAddDocumentMutation()
   const [, upsertChapter] = Dailp.useUpsertChapterMutation()
+  const [, batchUpsertChapters] = Dailp.useBatchUpsertChaptersMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState<{
@@ -428,51 +428,45 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         ),
       ]
 
-      // Update chapter titles (slug updates require chapter_path changes which aren't supported by upsert)
+      // Batch update chapter titles, slugs, sections, and indices
       // Only update chapters that have valid IDs (existing chapters from the database)
-      for (const chapter of chaptersForUpsert) {
-        // Skip chapters without valid IDs - they shouldn't exist but be defensive
-        if (!chapter.id) {
-          console.warn("Skipping chapter without ID:", chapter)
-          continue
-        }
+      const chaptersToUpsert = chaptersForUpsert
+        .filter((chapter) => {
+          if (!chapter.id) {
+            console.warn("Skipping chapter without ID:", chapter)
+            return false
+          }
+          return true
+        })
+        .map((chapter) => ({
+          id: chapter.id!,
+          title: chapter.title || null,
+          section: chapter.section,
+          indexInParent: chapter.indexInParent,
+          description: null as Dailp.InputMaybe<string>,
+          thumbnailUrl: null as Dailp.InputMaybe<string>,
+          slug: chapter.slug || null,
+        }))
 
-        const upsertResult = await upsertChapter({
+      if (chaptersToUpsert.length > 0) {
+        const batchResult = await batchUpsertChapters({
           input: {
-            id: chapter.id,
-            title: chapter.title || null,
-            section: chapter.section,
-            indexInParent: chapter.indexInParent,
-            description: null as Dailp.InputMaybe<string>,
-            thumbnailUrl: null as Dailp.InputMaybe<string>,
-            slug: chapter.slug || null,
+            chapters: chaptersToUpsert,
           },
         })
 
-        if (upsertResult.error) {
+        if (batchResult.error) {
           setErrorMessage(
-            upsertResult.error.message || "Failed to save chapter updates"
+            batchResult.error.message || "Failed to save chapter updates"
           )
           setIsSaving(false)
           return
         }
       }
 
-      // Update chapter order
-      const result = await updateOrder({
-        input: {
-          collectionSlug: collectionSlug,
-          chapters: chapters,
-        },
-      })
-
-      if (result.error) {
-        setErrorMessage(result.error.message || "Failed to save chapter order")
-      } else {
-        // Refetch the collection to get updated data
-        await refetch()
-        setErrorMessage(null)
-      }
+      // Refetch the collection to get updated data
+      await refetch()
+      setErrorMessage(null)
     } catch (error: any) {
       setErrorMessage(error.message || "An unexpected error occurred")
     } finally {
@@ -522,13 +516,26 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       // Save previous state for potential rollback
       previousState = chaptersBySection
 
-      // Create optimistic chapter node
+      // Get the current section size to set the correct index_in_parent
+      // For top-level chapters (no parentId), count all top-level chapters in the section
+      // For nested chapters, count children of the parent
+      let sectionSize = 0
+      if (!parentId) {
+        // Top-level chapter: count all top-level chapters in the section
+        sectionSize = chaptersBySection[section].length
+      } else {
+        // Nested chapter: find parent and count its children
+        const parent = findChapterInNested(chaptersBySection[section], parentId)
+        sectionSize = parent ? parent.children.length : 0
+      }
+
+      // Create optimistic chapter node with correct index_in_parent
       const optimisticChapter: ChapterNode = {
         clientId: generateId(), // Temporary ID until backend assigns real one
         title: title,
         slug: slug,
         section: sectionEnum,
-        indexInParent: 0, // Will be set correctly by backend
+        indexInParent: sectionSize + 1, // Set to section size + 1 to appear at the end
         path: [], // Will be set correctly by backend
         children: [],
       }

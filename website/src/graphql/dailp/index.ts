@@ -288,6 +288,12 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Input for batch upserting multiple chapters */
+export type BatchUpsertChaptersInput = {
+  /** List of chapters to upsert */
+  readonly chapters: ReadonlyArray<UpsertChapterInput>
+}
+
 /** Input for updating a single chapter's order */
 export type ChapterOrderInput = {
   /** The id of the chapter */
@@ -934,6 +940,7 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
+  readonly batchUpsertChapters: Scalars["String"]
   readonly createEditedCollection: Scalars["String"]
   /** Decide if a piece of document audio should be included in edited collection */
   readonly curateDocumentAudio: AnnotatedDoc
@@ -984,6 +991,10 @@ export type MutationAttachAudioToDocumentArgs = {
 
 export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
+}
+
+export type MutationBatchUpsertChaptersArgs = {
+  input: BatchUpsertChaptersInput
 }
 
 export type MutationCreateEditedCollectionArgs = {
@@ -3334,6 +3345,14 @@ export type UpsertChapterMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertChapter"
 >
 
+export type BatchUpsertChaptersMutationVariables = Exact<{
+  input: BatchUpsertChaptersInput
+}>
+
+export type BatchUpsertChaptersMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "batchUpsertChapters">
+
 export type RemoveCollectionChapterMutationVariables = Exact<{
   chapterId: Scalars["UUID"]
 }>
@@ -4538,6 +4557,18 @@ export function useUpsertChapterMutation() {
     UpsertChapterMutation,
     UpsertChapterMutationVariables
   >(UpsertChapterDocument)
+}
+export const BatchUpsertChaptersDocument = gql`
+  mutation BatchUpsertChapters($input: BatchUpsertChaptersInput!) {
+    batchUpsertChapters(input: $input)
+  }
+`
+
+export function useBatchUpsertChaptersMutation() {
+  return Urql.useMutation<
+    BatchUpsertChaptersMutation,
+    BatchUpsertChaptersMutationVariables
+  >(BatchUpsertChaptersDocument)
 }
 export const RemoveCollectionChapterDocument = gql`
   mutation RemoveCollectionChapter($chapterId: UUID!) {

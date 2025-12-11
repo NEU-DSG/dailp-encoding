@@ -334,6 +334,16 @@ type AudioSlice {
 	endTime: Int
 }
 
+"""
+Input for batch upserting multiple chapters
+"""
+input BatchUpsertChaptersInput {
+	"""
+	List of chapters to upsert
+	"""
+	chapters: [UpsertChapterInput!]!
+}
+
 
 """
 Input for updating a single chapter's order
@@ -1325,6 +1335,7 @@ type Mutation {
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertChapter(input: UpsertChapterInput!): String!
+	batchUpsertChapters(input: BatchUpsertChaptersInput!): String!
 	updateCollectionChapterOrder(input: UpdateCollectionChapterOrderInput!): String!
 	removeCollectionChapter(chapterId: UUID!): String!
 	upsertPage(page: NewPageInput!): String!

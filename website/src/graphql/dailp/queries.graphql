@@ -678,6 +678,10 @@ mutation UpsertChapter($input: UpsertChapterInput!) {
   upsertChapter(input: $input)
 }
 
+mutation BatchUpsertChapters($input: BatchUpsertChaptersInput!) {
+  batchUpsertChapters(input: $input)
+}
+
 mutation RemoveCollectionChapter($chapterId: UUID!) {
   removeCollectionChapter(chapterId: $chapterId)
 }
