@@ -1019,6 +1019,10 @@ impl Database {
 
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+
+        info!("Title to update: {:?}", title);
+        info!("Written at to update: {:?}", written_at);
+
         let mut tx = self.client.begin().await?;
 
         let format: Option<Uuid> = match document.format {
@@ -1030,6 +1034,17 @@ impl Database {
             MaybeUndefined::Value(genre_update) => Some(genre_update.id),
             _ => None,
         };
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &written_at as _,
+            format,
+            genre,
+        )
+        .execute(&mut *tx)
+        .await?;
 
         info!("Updating contributors");
         // Update contributors

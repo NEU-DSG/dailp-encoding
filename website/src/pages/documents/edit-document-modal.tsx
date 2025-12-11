@@ -1,6 +1,7 @@
 import plugins from "citation-js"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
+import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
 import * as Dailp from "src/graphql/dailp"
@@ -101,6 +102,22 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // Only render the modal when isOpen is true
   if (!isOpen) return null
 
+  const handleDateChange = (e: any) => {
+    const selectedDateValue = e as Date
+
+    if (selectedDateValue) {
+      setDate(selectedDateValue)
+
+      const selectedDay = selectedDateValue.getDate()
+      const selectedMonth = selectedDateValue.getMonth() + 1
+      const selectedYear = selectedDateValue.getFullYear()
+
+      setDay(selectedDay)
+      setMonth(selectedMonth)
+      setYear(selectedYear)
+    }
+  }
+
   const userRole = useUserRole()
   const isContributor = userRole === UserRole.Contributor
 
@@ -125,11 +142,13 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     [documentMetadata.spatialCoverage]
   )
 
-  // Get name from tag
-  const getKeywordName = (tag: Dailp.Keyword) => tag.name
-
   const [title, setTitle] = useState(documentMetadata.title ?? "")
-  const [date, setDate] = useState(documentMetadata.date ?? "")
+
+  const [date, setDate] = useState<Date | null>(null)
+  const [day, setDay] = useState<Number>()
+  const [month, setMonth] = useState<Number>()
+  const [year, setYear] = useState<Number>()
+
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
   const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
@@ -228,7 +247,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const [backupState, setBackupState] = useState<null | {
     title: string
-    date: string | Dailp.Date
+    date: Date | null
     // description: string
     // type: string
     // format: string
@@ -268,8 +287,19 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   useEffect(() => {
     const dm = documentMetadata
 
+    // Convert documentMetadata date to Date object
+    let dateObj = null
+    if (dm.date) {
+      if (typeof dm.date === "object" && "year" in dm.date) {
+        const year = dm.date.year
+        const month = (dm.date.month || 1) - 1
+        const day = dm.date.day || 1
+        dateObj = new Date(year, month, day)
+      }
+    }
+    setDate(dateObj)
+
     setTitle(dm.title ?? "")
-    setDate(dm.date ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
     setKeywords(dm.keywords ?? [])
@@ -294,7 +324,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
     setBackupState({
       title: dm.title ?? "",
-      date: dm.date ?? "",
+      date: dateObj,
       // description,
       // format,
       // pages,
@@ -409,6 +439,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Format date for submission
+    let dateValue: { year: number; month: number; day: number } | null = null
+    if (date) {
+      dateValue = {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+      }
+    }
+
     // Keywords to be submitted
     const keywordsToSubmit = selectedKeywords.map((name) => {
       // Find existing keyword by name to get id, otherwise generate new UUID
@@ -510,14 +550,11 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Date Created</label>
-              <input
-                type="text"
-                className={styles.input}
-                value={
-                  typeof date === "string" ? date : date?.year?.toString() ?? ""
-                }
-                onChange={(e) => setDate(e.target.value)}
-                disabled={!isEditing}
+              <DatePicker
+                onChange={(date: any) => handleDateChange(date)}
+                value={date}
+                format="MM-dd-y"
+                disabled={!isEditing} // change to !(userRole == UserRole.Editor)
               />
             </div>
           </div>
