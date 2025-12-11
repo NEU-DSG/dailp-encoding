@@ -2089,7 +2089,7 @@ impl Database {
         {
             let contributors = meta.contributors.iter().flatten();
             let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
-            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let doc_id: Vec<Uuid> = vec![document_uuid];
             let roles: Vec<String> = contributors
                 .clone()
                 .map(|c| {
