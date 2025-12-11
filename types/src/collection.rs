@@ -177,6 +177,13 @@ pub struct UpdateCollectionChapterOrderInput {
     pub chapters: Vec<ChapterOrderInput>,
 }
 
+/// Input for batch upserting multiple chapters
+#[derive(async_graphql::InputObject)]
+pub struct BatchUpsertChaptersInput {
+    /// List of chapters to upsert
+    pub chapters: Vec<UpsertChapterInput>,
+}
+
 /// Input for adding a new chapter to a collection
 #[derive(async_graphql::InputObject)]
 pub struct AddChapterInput {
