@@ -2,6 +2,7 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
@@ -12,21 +13,37 @@ import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
-  collectionSlug: string
-  chapterSlug: string
+  collectionSlug?: string
+  chapterSlug?: string
+  chapter?: Dailp.CollectionChapterQuery["chapter"]
 }) => {
+  const routeParams = useRouteParams()
+  const collectionSlug =
+    props.collectionSlug ??
+    (routeParams?.["collectionSlug"] as string | undefined)
+  const chapterSlug =
+    props.chapterSlug ?? (routeParams?.["chapterSlug"] as string | undefined)
+
+  // Query will use cache if data was prefetched in chapter.page.client.ts
   const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
     variables: {
-      collectionSlug: props.collectionSlug,
-      chapterSlug: props.chapterSlug,
+      collectionSlug: collectionSlug!,
+      chapterSlug: chapterSlug!,
     },
+    pause: !collectionSlug || !chapterSlug,
   })
 
   const dialog = useDialog()
 
-  const subchapters = useSubchapters(props.chapterSlug)
+  const subchapters = chapterSlug ? useSubchapters(chapterSlug) : undefined
 
-  const chapter = data?.chapter
+  // Use prefetched chapter from props for immediate render, otherwise use query result
+  // The query will read from cache if prefetched, avoiding duplicate network requests
+  const chapter = props.chapter ?? data?.chapter
+
+  if (!collectionSlug || !chapterSlug) {
+    return <>Loading...</>
+  }
 
   if (fetching) {
     return <>Loading...</>
@@ -39,8 +56,8 @@ const ChapterPage = (props: {
   if (!chapter) {
     return (
       <>
-        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
-        {props.chapterSlug}
+        Chapter not found for collection: {collectionSlug}, chapter:{" "}
+        {chapterSlug}
       </>
     )
   }
@@ -60,7 +77,7 @@ const ChapterPage = (props: {
                   {chapter.breadcrumbs
                     .map((crumb) => (
                       <Link
-                        href={`${collectionRoute(props.collectionSlug)}/${
+                        href={`${collectionRoute(collectionSlug)}/${
                           crumb.slug
                         }`}
                         key={crumb.slug}
@@ -70,7 +87,9 @@ const ChapterPage = (props: {
                     ))
                     .concat(
                       <Link
-                        href={`${collectionRoute}/${chapter.slug}`}
+                        href={`${collectionRoute(collectionSlug)}/${
+                          chapter.slug
+                        }`}
                         key={chapter.slug}
                       >
                         {chapter.title}
@@ -80,10 +99,7 @@ const ChapterPage = (props: {
               </header>
               {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
               <DailpPageContents
-                path={`/${props.collectionSlug}/${chapter.slug.replace(
-                  /_/g,
-                  "-"
-                )}`}
+                path={`/${collectionSlug}/${chapter.slug.replace(/_/g, "-")}`}
               />
             </>
           ) : null}
@@ -93,7 +109,7 @@ const ChapterPage = (props: {
             <>
               <DocumentTitleHeader
                 breadcrumbs={chapter.breadcrumbs}
-                rootPath={collectionRoute(props.collectionSlug)}
+                rootPath={collectionRoute(collectionSlug)}
                 doc={document}
               />
               <TabSet doc={document} />
@@ -103,7 +119,7 @@ const ChapterPage = (props: {
           <ul>
             {subchapters?.map((chapter) => (
               <li key={chapter.slug}>
-                <Link href={chapterRoute(props.collectionSlug!, chapter.slug)}>
+                <Link href={chapterRoute(collectionSlug, chapter.slug)}>
                   {chapter.title}
                 </Link>
               </li>
