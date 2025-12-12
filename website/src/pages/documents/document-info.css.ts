@@ -44,7 +44,7 @@ export const title = style({
   fontSize: "28px",
   fontWeight: "600",
   color: "#333333",
-  margin: "0 0 8px 0",
+  margin: "-5rem 0 8px 0",
 })
 
 export const subtitle = style({

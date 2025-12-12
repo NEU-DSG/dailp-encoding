@@ -101,17 +101,23 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
   // Format contributors for display
   const formatContributors = () => {
-    if (!docData.contributors || docData.contributors.length === 0) return ""
+    if (!docData.contributors || docData.contributors.length === 0) return null
     return docData.contributors.map((c) => `${c.name} (${c.role})`).join(", ")
   }
 
   // Format arrays for display
-  const formatArray = (
-    arr: readonly any[] | undefined | null,
-    fallback = ""
-  ) => {
-    if (!arr || arr.length === 0) return fallback
-    return arr.join(", ")
+  const formatArray = (arr: readonly any[] | undefined | null) => {
+    if (!arr || arr.length === 0) return null
+
+    // Map over array and extract name if it's an object, otherwise use the value directly
+    return arr
+      .map((item) => {
+        if (item && typeof item === "object" && item.name) {
+          return item.name
+        }
+        return item
+      })
+      .join(", ")
   }
 
   const contributorsList = (
@@ -139,15 +145,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       </Helmet>
 
       <div className={styles.header}>
-        {token && (
-          <button
-            className={styles.editButton}
-            onClick={() => setIsEditing(true)}
-          >
-            <span className={styles.editIcon}>✏️</span>
-            Edit
-          </button>
-        )}
         <h2 className={styles.title}>Document Information</h2>
         <p className={styles.subtitle}>
           {/* {docData.uploadedAt && `Uploaded ${new Date(docData.uploadedAt).toLocaleDateString()}`}
@@ -159,32 +156,28 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <div className={styles.field}>
           <div className={styles.label}>TITLE</div>
           <div className={styles.value}>
-            {docData.title || "Title Not Yet Available"}
+            {docData.title || "Title Not Yet Available."}
           </div>
         </div>
 
-        {docData.date && (
-          <div className={styles.field}>
-            <div className={styles.label}>DATE CREATED</div>
-            <div className={styles.value}>
-              {formatDate(docData.date.year) || "Date Not Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>DATE CREATED</div>
+          <div className={styles.value}>
+            {formatDate(docData.date) || "Date Not Available."}
           </div>
-        )}
+        </div>
 
-        {/* {docData.genre && (
+        {/* 
           <div className={styles.field}>
             <div className={styles.label}>GENRE</div>
-            <div className={styles.value}>{docData.genre || "Genre Not Yet Available"}</div>
+            <div className={styles.value}>{docData.genre || "Genre Not Yet Available."}</div>
           </div>
-        )}
 
-        {docData.format && (
           <div className={styles.field}>
             <div className={styles.label}>FORMAT</div>
-            <div className={styles.value}>{docData.format || "Format Not Yet Available"}</div>
+            <div className={styles.value}>{docData.format || "Format Not Yet Available."}</div>
           </div>
-        )} */}
+        */}
 
         {/* {docData.pages && (
           <div className={styles.field}>
@@ -193,30 +186,26 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         )} */}
 
-        {docData.creators && docData.creators.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>CREATOR</div>
-            <div className={styles.value}>
-              {formatArray(docData.creators) || "Creator(s) Not Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>CREATOR</div>
+          <div className={styles.value}>
+            {formatArray(docData.creators) || "Creator(s) Not Available."}
           </div>
-        )}
+        </div>
 
-        {docData.contributors && docData.contributors.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>CONTRIBUTORS</div>
-            <div className={styles.value}>
-              {formatContributors() || "Contributors Not Yet Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>CONTRIBUTORS</div>
+          <div className={styles.value}>
+            {formatContributors() || "Contributors Not Yet Available."}
           </div>
-        )}
+        </div>
 
         {docData.sources && docData.sources.length > 0 && (
           <div className={styles.field}>
             <div className={styles.label}>SOURCE</div>
             <div className={styles.value}>
               <a href={docData.sources[0]!.link} className={styles.link}>
-                {docData.sources[0]!.link || "Source Not Available"}
+                {docData.sources[0]!.link}
               </a>
             </div>
           </div>
@@ -233,43 +222,35 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         )} */}
 
-        {docData.keywords && docData.keywords.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>KEYWORDS</div>
-            <div className={styles.value}>
-              {formatArray(docData.keywords) || "Keywords Not Yet Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>KEYWORDS</div>
+          <div className={styles.value}>
+            {formatArray(docData.keywords) || "Keywords Not Yet Available."}
           </div>
-        )}
+        </div>
 
-        {docData.subjectHeadings && docData.subjectHeadings.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>SUBJECT HEADINGS</div>
-            <div className={styles.value}>
-              {formatArray(docData.subjectHeadings) ||
-                "Subject Headings Not Yet Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>SUBJECT HEADINGS</div>
+          <div className={styles.value}>
+            {formatArray(docData.subjectHeadings) ||
+              "Subject Headings Not Yet Available."}
           </div>
-        )}
+        </div>
 
-        {docData.languages && docData.languages.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>LANGUAGES</div>
-            <div className={styles.value}>
-              {formatArray(docData.languages) || "Languages Not Yet Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>LANGUAGES</div>
+          <div className={styles.value}>
+            {formatArray(docData.languages) || "Languages Not Yet Available."}
           </div>
-        )}
+        </div>
 
-        {docData.spatialCoverage && docData.spatialCoverage.length > 0 && (
-          <div className={styles.field}>
-            <div className={styles.label}>SPATIAL COVERAGE</div>
-            <div className={styles.value}>
-              {formatArray(docData.spatialCoverage) ||
-                "Spatial Coverage Not Yet Available"}
-            </div>
+        <div className={styles.field}>
+          <div className={styles.label}>SPATIAL COVERAGE</div>
+          <div className={styles.value}>
+            {formatArray(docData.spatialCoverage) ||
+              "Spatial Coverage Not Yet Available."}
           </div>
-        )}
+        </div>
 
         {/* 
           <div className={styles.field}>
@@ -313,7 +294,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     <Fragment>
       {panel}
 
-      {docData.sources.length > 0 ? (
+      {docData.sources && docData.sources.length > 0 ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}
           <Link href={docData.sources[0]!.link}>
