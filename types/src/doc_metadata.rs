@@ -85,7 +85,7 @@ pub struct Format {
 }
 
 // For updating formats
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct FormatUpdate {
     /// UUID for the format
     pub id: Uuid,
@@ -153,7 +153,7 @@ pub struct Genre {
 }
 
 // For updating genres
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct GenreUpdate {
     /// UUID for the genre
     pub id: Uuid,

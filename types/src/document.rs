@@ -131,13 +131,6 @@ impl AnnotatedDoc {
             .map(|name| DocumentCollection::from_name(name.to_owned()))
     }
 
-    /// The genre of the document, used to group similar ones
-    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Genre> {
-        let db = context.data::<Database>()?;
-        let genre = db.genre_for_document(self.meta.id.0).await?;
-        Ok(genre)
-    }
-
     /// Images of each source document page, in order
     async fn page_images(&self) -> &Option<IiifImages> {
         &self.meta.page_images
@@ -234,8 +227,19 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// The genre of the document
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
+        let genre = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .genre_for_document(self.meta.id.0)
+            .await?;
+
+        Ok(genre)
+    }
+
     /// The format of the original artifact
-    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Format> {
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
         let format = context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -637,6 +641,19 @@ impl DocumentMetadata {
             .await?;
         Ok(row)
     }
+
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            None => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+
     /// Fetch all keywords linked to this document
     async fn keywords<'a>(
         &'a self,
@@ -789,17 +806,6 @@ impl DocumentMetadata {
                 name: row.name,
             })
             .collect())
-    }
-    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
-        let format_id = match self.format_id {
-            Some(id) => id,
-            None => return Ok(None),
-        };
-        let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
-            .fetch_optional(pool)
-            .await?;
-        Ok(row)
     }
 }
 

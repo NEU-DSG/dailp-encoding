@@ -69,14 +69,14 @@ export type AnnotatedDoc = {
   readonly editedAudio: ReadonlyArray<AudioSlice>
   readonly formCount: Scalars["Int"]
   /** The format of the original artifact */
-  readonly format: Format
+  readonly format: Maybe<Format>
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
-  /** The genre of the document, used to group similar ones */
-  readonly genre: Genre
+  /** The genre of the document */
+  readonly genre: Maybe<Genre>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -1924,13 +1924,11 @@ export type DocFormFieldsFragment = {
         "id" | "name" | "role"
       >
     >
-    readonly format: { readonly __typename?: "Format" } & Pick<
-      Format,
-      "id" | "name"
+    readonly format: Maybe<
+      { readonly __typename?: "Format" } & Pick<Format, "id" | "name">
     >
-    readonly genre: { readonly __typename?: "Genre" } & Pick<
-      Genre,
-      "id" | "name"
+    readonly genre: Maybe<
+      { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
   }
 
@@ -2291,6 +2289,18 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
+        readonly format: Maybe<
+          { readonly __typename?: "Format" } & Pick<
+            Format,
+            "id" | "name" | "status"
+          >
+        >
+        readonly genre: Maybe<
+          { readonly __typename?: "Genre" } & Pick<
+            Genre,
+            "id" | "name" | "status"
+          >
+        >
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<
             Date,
@@ -3931,6 +3941,16 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
+      format {
+        id
+        name
+        status
+      }
+      genre {
+        id
+        name
+        status
+      }
       date {
         day
         month

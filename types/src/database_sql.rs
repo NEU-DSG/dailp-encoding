@@ -43,12 +43,20 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Genre, sqlx::Error> {
+    pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Option<Genre>, sqlx::Error> {
         let genre = sqlx::query_file_as!(Genre, "queries/get_genre_by_document_id.sql", doc_id)
-            .fetch_one(&self.client)
+            .fetch_optional(&self.client)
             .await?;
 
         Ok(genre)
+    }
+
+    pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Option<Format>, sqlx::Error> {
+        let format = sqlx::query_file_as!(Format, "queries/get_format_by_document_id.sql", doc_id)
+            .fetch_optional(&self.client)
+            .await?;
+
+        Ok(format)
     }
 
     pub async fn keywords_for_documents(
@@ -178,14 +186,6 @@ impl Database {
     pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
         let mut results = self.creators_for_documents(vec![doc_id]).await?;
         Ok(results.remove(&doc_id).unwrap_or_default())
-    }
-
-    pub async fn format_for_document(&self, doc_id: Uuid) -> Result<Format, sqlx::Error> {
-        let format = sqlx::query_file_as!(Format, "queries/get_format_by_document_id.sql", doc_id)
-            .fetch_one(&self.client)
-            .await?;
-
-        Ok(format)
     }
 
     pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
@@ -1025,14 +1025,75 @@ impl Database {
 
         let mut tx = self.client.begin().await?;
 
-        let format: Option<Uuid> = match document.format {
-            MaybeUndefined::Value(format_update) => Some(format_update.id),
-            _ => None,
+        info!("Updating format");
+        // Update format
+        let format_id: Option<Uuid> = if let MaybeUndefined::Value(format_input) = &document.format
+        {
+            info!("Format to update: {:?}", format_input);
+
+            // Check if format with this name already exists
+            let existing_id: Option<Uuid> =
+                query_file_scalar!("queries/get_format_id_by_name.sql", &format_input.name)
+                    .fetch_optional(&mut *tx)
+                    .await?;
+
+            if let Some(existing) = existing_id {
+                info!(
+                    "Using existing format ID for {}: {}",
+                    format_input.name, existing
+                );
+                Some(existing)
+            } else {
+                info!("Inserting new format: {:?}", format_input);
+                let inserted_id: Uuid = query_file_scalar!(
+                    "queries/insert_format.sql",
+                    &format_input.id,
+                    &format_input.name,
+                    ApprovalStatus::Approved as _
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+                info!("Inserted format with ID: {}", inserted_id);
+                Some(inserted_id)
+            }
+        } else {
+            info!("No format to update");
+            None
         };
 
-        let genre: Option<Uuid> = match document.genre {
-            MaybeUndefined::Value(genre_update) => Some(genre_update.id),
-            _ => None,
+        info!("Updating genre");
+        // Update genre
+        let genre_id: Option<Uuid> = if let MaybeUndefined::Value(genre_input) = &document.genre {
+            info!("Genre to update: {:?}", genre_input);
+
+            // Check if genre with this name already exists
+            let existing_id: Option<Uuid> =
+                query_file_scalar!("queries/get_genre_id_by_name.sql", &genre_input.name)
+                    .fetch_optional(&mut *tx)
+                    .await?;
+
+            if let Some(existing) = existing_id {
+                info!(
+                    "Using existing genre ID for {}: {}",
+                    genre_input.name, existing
+                );
+                Some(existing)
+            } else {
+                info!("Inserting new genre: {:?}", genre_input);
+                let inserted_id: Uuid = query_file_scalar!(
+                    "queries/insert_genre.sql",
+                    &genre_input.id,
+                    &genre_input.name,
+                    ApprovalStatus::Approved as _
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+                info!("Inserted genre with ID: {}", inserted_id);
+                Some(inserted_id)
+            }
+        } else {
+            info!("No genre to update");
+            None
         };
 
         query_file!(
@@ -1040,8 +1101,8 @@ impl Database {
             document.id,
             &title as _,
             &written_at as _,
-            format,
-            genre,
+            format_id,
+            genre_id
         )
         .execute(&mut *tx)
         .await?;

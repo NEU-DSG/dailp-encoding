@@ -32,10 +32,6 @@ type AnnotatedDoc {
 	"""
 	collection: DocumentCollection
 	"""
-	The genre of the document, used to group similar ones
-	"""
-	genre: Genre!
-	"""
 	Images of each source document page, in order
 	"""
 	pageImages: IiifImages
@@ -78,9 +74,13 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	The genre of the document
+	"""
+	genre: Genre
+	"""
 	The format of the original artifact
 	"""
-	format: Format!
+	format: Format
 	"""
 	Key terms associated with a document
 	"""

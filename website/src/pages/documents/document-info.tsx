@@ -167,17 +167,19 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
-        {/* 
-          <div className={styles.field}>
-            <div className={styles.label}>GENRE</div>
-            <div className={styles.value}>{docData.genre || "Genre Not Yet Available."}</div>
+        <div className={styles.field}>
+          <div className={styles.label}>DOCUMENT TYPE</div>
+          <div className={styles.value}>
+            {docData.genre?.name || "Document Type Not Yet Available."}
           </div>
+        </div>
 
-          <div className={styles.field}>
-            <div className={styles.label}>FORMAT</div>
-            <div className={styles.value}>{docData.format || "Format Not Yet Available."}</div>
+        <div className={styles.field}>
+          <div className={styles.label}>FORMAT</div>
+          <div className={styles.value}>
+            {docData.format?.name || "Format Not Yet Available."}
           </div>
-        */}
+        </div>
 
         {/* {docData.pages && (
           <div className={styles.field}>

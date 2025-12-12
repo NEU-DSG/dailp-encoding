@@ -342,6 +342,16 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
+    format {
+      id
+      name
+      status
+    }
+    genre {
+      id
+      name
+      status
+    }
     date {
       day
       month

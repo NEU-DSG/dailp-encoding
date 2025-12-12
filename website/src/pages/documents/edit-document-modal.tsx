@@ -170,8 +170,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   )
 
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
-  // const [genre, setGenre] = useState(documentMetadata.genre ?? "")
-  // const [format, setFormat] = useState(documentMetadata.format ?? "")
+  const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
+  const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
@@ -251,8 +251,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     date: Date | null
     // description: string
     // type: string
-    // format: string
-    //genre: string
+    format: Dailp.Format["name"]
+    genre: Dailp.Genre["name"]
     // pages: string
     creator: Dailp.Creator[]
     // source: string
@@ -270,7 +270,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         title,
         date,
         //description,
-        //format,
+        format,
+        genre,
         // pages,
         creator: [...creator],
         //source,
@@ -301,6 +302,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setDate(dateObj)
 
     setTitle(dm.title ?? "")
+    setFormat(dm.format?.name ?? "")
+    setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
     setKeywords(dm.keywords ?? [])
@@ -327,7 +330,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       title: dm.title ?? "",
       date: dateObj,
       // description,
-      // format,
+      format: dm.format?.name ?? "",
+      genre: dm.genre?.name ?? "",
       // pages,
       creator: [...(dm.creators ?? [])],
       // source,
@@ -413,8 +417,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setTitle(backupState.title)
     setDate(backupState.date)
     //setDescription(backupState.description)
-    //setGenre(backupState.genre)
-    //setFormat(backupState.format)
+    setGenre(backupState.genre)
+    setFormat(backupState.format)
     //setPages(backupState.pages)
     setCreator(backupState.creator)
     setKeywords(backupState.keywords)
@@ -449,6 +453,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         day: date.getDate(),
       }
     }
+
+    // Format genre for submission
+    const formatToSubmit = format ? { id: uuidv4(), name: format } : undefined
+
+    // Format genre for submission
+    const genreToSubmit = genre ? { id: uuidv4(), name: genre } : undefined
 
     // Keywords to be submitted
     const keywordsToSubmit = selectedKeywords.map((name) => {
@@ -504,6 +514,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     const updatedMetadata = {
       title,
       date: dateValue,
+      format: formatToSubmit,
+      genre: genreToSubmit,
       creator,
       contributors,
       keywords: keywordsToSubmit,
@@ -576,7 +588,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
               */}
 
-          {/* <div className={styles.formGrid}>
+          <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Document Type</label>
               <input
@@ -586,18 +598,19 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 onChange={(e) => setGenre(e.target.value)}
                 disabled={!isEditing}
               />
-            </div> */}
+            </div>
 
-          {/* <div className={styles.fieldGroup}>
-                <label className={styles.label}>Format</label>
-                <input
-                  type="text"
-                  className={styles.input}
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div> */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Format</label>
+              <input
+                type="text"
+                className={styles.input}
+                value={format}
+                onChange={(e) => setFormat(e.target.value)}
+                disabled={!isEditing}
+              />
+            </div>
+          </div>
 
           {/* 
               <div className={styles.fieldGroup}>
