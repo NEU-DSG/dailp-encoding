@@ -1,7 +1,7 @@
 use std::{fmt, str::FromStr};
 
 use crate::{user::User, Database, PersonFullName};
-use async_graphql::{dataloader::DataLoader, FieldResult, SimpleObject, Union};
+use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
@@ -76,18 +76,24 @@ pub enum ContributorRole {
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
+    /// Author of a document
+    Author,
+    /// Edited a document
+    Editor,
 }
 
-impl FromStr for ContributorRole {
-    type Err = String;
+impl From<String> for ContributorRole {
+    //type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Transcriber" => Ok(ContributorRole::Transcriber),
-            "Translator" => Ok(ContributorRole::Translator),
-            "Annotator" => Ok(ContributorRole::Annotator),
-            "CulturalAdvisor" => Ok(ContributorRole::CulturalAdvisor),
-            other => Err(format!("Unknown contributor role: {}", other)),
+    fn from(s: String) -> Self {
+        match s.to_lowercase().as_str() {
+            "transcriber" => ContributorRole::Transcriber,
+            "translator" => ContributorRole::Translator,
+            "annotator" => ContributorRole::Annotator,
+            "culturaladvisor" => ContributorRole::CulturalAdvisor,
+            "author" => ContributorRole::Author,
+            "editor" => ContributorRole::Editor,
+            other => panic!("{} is not a valid contributor role", s),
         }
     }
 }
@@ -99,6 +105,8 @@ impl fmt::Display for ContributorRole {
             ContributorRole::Translator => "Translator",
             ContributorRole::Annotator => "Annotator",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
+            ContributorRole::Author => "Author",
+            ContributorRole::Editor => "Editor",
         };
         write!(f, "{}", s)
     }
@@ -107,13 +115,20 @@ impl fmt::Display for ContributorRole {
 impl ContributorRole {
     /// Attempts to parse a string into a ContributorRole, returning None if parsing fails
     pub fn from_option_str(s: &str) -> Option<Self> {
-        s.parse::<ContributorRole>().ok()
+        // TODO: Make ContributorRole::from return a ContributorRole instead of a panic
+        Some(ContributorRole::from(s.to_string()))
     }
 
     /// Converts a ContributorRole into its string representation
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
     }
+}
+
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct ContributorAttributionInput {
+    pub name: String,
+    pub role: Option<ContributorRole>,
 }
 
 /// The creator of a document
@@ -127,7 +142,7 @@ pub struct Creator {
 }
 
 // For updating creators
-#[derive(async_graphql::InputObject, Clone)]
+#[derive(async_graphql::InputObject, Clone, Debug)]
 pub struct CreatorUpdate {
     /// UUID for the creator
     pub id: uuid::Uuid,

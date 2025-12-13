@@ -1,0 +1,1 @@
+select id from keyword where name = $1;

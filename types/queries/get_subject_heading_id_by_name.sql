@@ -1,0 +1,1 @@
+select id from subject_heading where name = $1;

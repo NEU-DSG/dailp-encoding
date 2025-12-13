@@ -44,22 +44,37 @@ export const FormProvider = (props: { children: any }) => {
       // console.log(typeof values.document["date"])
       setIsEditing(false)
 
+      // Handle date
+      let writtenAtValue: Dailp.DateInput | null = null
+      const dateValue = values.document["date"]
+
+      if (dateValue) {
+        if (typeof dateValue === "string") {
+          const yearNum = parseInt(dateValue)
+          if (!isNaN(yearNum)) {
+            writtenAtValue = { year: yearNum, month: 1, day: 1 } // Default to Jan 1 if only year (for now)
+          }
+        } else if (typeof dateValue === "object" && "year" in dateValue) {
+          writtenAtValue = {
+            year: dateValue.year,
+            month: dateValue.month || 1,
+            day: dateValue.day || 1,
+          }
+        }
+      }
+
       runUpdate({
         document: {
           id: values.document["id"][0][0],
           title: values.document["title"],
-          writtenAt: values.document["date"]
-            ? (values.document["date"] as unknown as Array<any>)[
-                (values.document["date"] as unknown as Array<any>).length - 1
-              ][0]
-            : {},
+          writtenAt: writtenAtValue,
           format: values.document["format"],
-          keywords: values.document["keywords"],
-          languages: values.document["languages"],
-          subjectHeadings: values.document["subjectHeadings"],
-          contributors: values.document["contributors"],
+          keywords: values.document["keywords"] ?? [],
+          languages: values.document["languages"] ?? [],
+          subjectHeadings: values.document["subjectHeadings"] ?? [],
+          contributors: values.document["contributors"] ?? [],
           spatialCoverage: values.document["spatialCoverage"] ?? [],
-          creators: values.document["creators"],
+          creators: values.document["creators"] ?? [],
           genre: values.document["genre"],
         },
       })

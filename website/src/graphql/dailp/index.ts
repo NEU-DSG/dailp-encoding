@@ -69,14 +69,14 @@ export type AnnotatedDoc = {
   readonly editedAudio: ReadonlyArray<AudioSlice>
   readonly formCount: Scalars["Int"]
   /** The format of the original artifact */
-  readonly format: Format
+  readonly format: Maybe<Format>
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
-  /** The genre of the document, used to group similar ones */
-  readonly genre: Genre
+  /** The genre of the document */
+  readonly genre: Maybe<Genre>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -402,6 +402,11 @@ export type Contributor = {
   readonly role: Maybe<ContributorRole>
 }
 
+export type ContributorAttributionInput = {
+  readonly name: Scalars["String"]
+  readonly role: InputMaybe<ContributorRole>
+}
+
 /**
  * Basic personal details of an individual contributor, which can be retrieved
  * from a particular instance of [`Contributor`].
@@ -435,7 +440,9 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }
@@ -562,7 +569,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** The editors, translators, etc. of the document */
-  readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly contributors: InputMaybe<ReadonlyArray<ContributorAttributionInput>>
   /** The creator(s) of the document */
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The format of the original artifact */
@@ -1902,12 +1909,6 @@ export type DocFormFieldsFragment = {
         "id" | "name" | "status"
       >
     >
-    readonly contributors: ReadonlyArray<
-      { readonly __typename?: "Contributor" } & Pick<
-        Contributor,
-        "id" | "name" | "role"
-      >
-    >
     readonly spatialCoverage: ReadonlyArray<
       { readonly __typename?: "SpatialCoverage" } & Pick<
         SpatialCoverage,
@@ -1917,13 +1918,17 @@ export type DocFormFieldsFragment = {
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
     >
-    readonly format: { readonly __typename?: "Format" } & Pick<
-      Format,
-      "id" | "name"
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
     >
-    readonly genre: { readonly __typename?: "Genre" } & Pick<
-      Genre,
-      "id" | "name"
+    readonly format: Maybe<
+      { readonly __typename?: "Format" } & Pick<Format, "id" | "name">
+    >
+    readonly genre: Maybe<
+      { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
   }
 
@@ -2284,13 +2289,28 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
+        readonly format: Maybe<
+          { readonly __typename?: "Format" } & Pick<
+            Format,
+            "id" | "name" | "status"
+          >
+        >
+        readonly genre: Maybe<
+          { readonly __typename?: "Genre" } & Pick<
+            Genre,
+            "id" | "name" | "status"
+          >
+        >
         readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "day" | "month" | "year"
+          >
         >
         readonly contributors: ReadonlyArray<
           { readonly __typename?: "Contributor" } & Pick<
             Contributor,
-            "name" | "role"
+            "id" | "name" | "role"
           >
         >
         readonly sources: ReadonlyArray<
@@ -2298,6 +2318,33 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
             SourceAttribution,
             "name" | "link"
           >
+        >
+        readonly keywords: ReadonlyArray<
+          { readonly __typename?: "Keyword" } & Pick<
+            Keyword,
+            "id" | "name" | "status"
+          >
+        >
+        readonly languages: ReadonlyArray<
+          { readonly __typename?: "Language" } & Pick<
+            Language,
+            "id" | "name" | "status"
+          >
+        >
+        readonly subjectHeadings: ReadonlyArray<
+          { readonly __typename?: "SubjectHeading" } & Pick<
+            SubjectHeading,
+            "id" | "name" | "status"
+          >
+        >
+        readonly spatialCoverage: ReadonlyArray<
+          { readonly __typename?: "SpatialCoverage" } & Pick<
+            SpatialCoverage,
+            "id" | "name" | "status"
+          >
+        >
+        readonly creators: ReadonlyArray<
+          { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
         >
       }
   >
@@ -3489,11 +3536,6 @@ export const DocFormFieldsFragmentDoc = gql`
       name
       status
     }
-    contributors {
-      id
-      name
-      role
-    }
     spatialCoverage {
       id
       name
@@ -3502,6 +3544,11 @@ export const DocFormFieldsFragmentDoc = gql`
     creators {
       id
       name
+    }
+    contributors {
+      id
+      name
+      role
     }
     format {
       id
@@ -3894,16 +3941,53 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
+      format {
+        id
+        name
+        status
+      }
+      genre {
+        id
+        name
+        status
+      }
       date {
+        day
+        month
         year
       }
       contributors {
+        id
         name
         role
       }
       sources {
         name
         link
+      }
+      keywords {
+        id
+        name
+        status
+      }
+      languages {
+        id
+        name
+        status
+      }
+      subjectHeadings {
+        id
+        name
+        status
+      }
+      spatialCoverage {
+        id
+        name
+        status
+      }
+      creators {
+        id
+        name
       }
     }
   }

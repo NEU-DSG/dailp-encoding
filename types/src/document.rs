@@ -2,7 +2,10 @@ use crate::doc_metadata::{
     ApprovalStatus, Format, FormatUpdate, Genre, GenreUpdate, Keyword, KeywordUpdate, Language,
     LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
-use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
+use crate::person::{
+    Contributor, ContributorAttributionInput, ContributorRole, Creator, CreatorUpdate,
+    SourceAttribution,
+};
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
@@ -10,6 +13,10 @@ use crate::{
 
 use itertools::Itertools;
 
+use crate::{
+    CreatorsForDocument, KeywordsForDocument, LanguagesForDocument, SpatialCoverageForDocument,
+    SubjectHeadingsForDocument,
+};
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file, query_file_as, PgPool, Row};
@@ -124,13 +131,6 @@ impl AnnotatedDoc {
             .map(|name| DocumentCollection::from_name(name.to_owned()))
     }
 
-    /// The genre of the document, used to group similar ones
-    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Genre> {
-        let db = context.data::<Database>()?;
-        let genre = db.genre_for_document(self.meta.id.0).await?;
-        Ok(genre)
-    }
-
     /// Images of each source document page, in order
     async fn page_images(&self) -> &Option<IiifImages> {
         &self.meta.page_images
@@ -227,33 +227,56 @@ impl AnnotatedDoc {
             .await?)
     }
 
+    /// The genre of the document
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
+        let genre = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .genre_for_document(self.meta.id.0)
+            .await?;
+
+        Ok(genre)
+    }
+
     /// The format of the original artifact
-    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Format> {
-        let db = context.data::<Database>()?;
-        let format = db.format_for_document(self.meta.id.0).await?;
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
+        let format = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .format_for_document(self.meta.id.0)
+            .await?;
+
         Ok(format)
     }
 
     /// Key terms associated with a document
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
-        let db = context.data::<Database>()?;
-        let headings = db.keywords_for_document(self.meta.id.0).await?;
-        Ok(headings)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// The languages present in this document
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
-        let db = context.data::<Database>()?;
-        let languages = db.languages_for_document(self.meta.id.0).await?;
-        Ok(languages)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// Terms that that reflects Indigenous knowledge practices associated with a document
     async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SubjectHeading>> {
-        let db = context.data::<Database>()?;
-        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
-        Ok(headings)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(SubjectHeadingsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// The locations associated with this document
@@ -261,17 +284,22 @@ impl AnnotatedDoc {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SpatialCoverage>> {
-        let db = context.data::<Database>()?;
-        let coverages = db.spatial_coverage_for_document(self.meta.id.0).await?;
-        Ok(coverages)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(SpatialCoverageForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 
     /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-        let db = context.data::<Database>()?;
-        let creators = db.creators_for_document(self.meta.id.0).await?;
-        Ok(creators)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -409,7 +437,7 @@ pub struct DocumentMetadataUpdate {
     /// Terms that reflect Indigenous knowledge practices associated with the document
     pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
     /// The editors, translators, etc. of the document
-    pub contributors: MaybeUndefined<Vec<Uuid>>,
+    pub contributors: MaybeUndefined<Vec<ContributorAttributionInput>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
     /// The creator(s) of the document
@@ -613,6 +641,19 @@ impl DocumentMetadata {
             .await?;
         Ok(row)
     }
+
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            None => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+
     /// Fetch all keywords linked to this document
     async fn keywords<'a>(
         &'a self,
@@ -713,7 +754,7 @@ impl DocumentMetadata {
                 .try_get("role")
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?;
 
-            let role = role_str.and_then(|s| s.parse::<ContributorRole>().ok());
+            let role = role_str.and_then(|s| Some(ContributorRole::from(s)));
 
             contributors.push(Contributor { id, name, role });
         }
@@ -765,17 +806,6 @@ impl DocumentMetadata {
                 name: row.name,
             })
             .collect())
-    }
-    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
-        let format_id = match self.format_id {
-            Some(id) => id,
-            None => return Ok(None),
-        };
-        let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Format, "queries/get_format_by_document_id.sql", format_id)
-            .fetch_optional(pool)
-            .await?;
-        Ok(row)
     }
 }
 
@@ -927,4 +957,44 @@ impl DocumentReference {
     pub async fn slug(&self) -> String {
         slug::slugify(&self.short_name)
     }
+}
+
+/// Structs for metadata loaders
+#[derive(Debug, Clone)]
+pub struct KeywordWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct LanguageWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct SubjectHeadingWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct SpatialCoverageWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+    pub status: ApprovalStatus,
+}
+
+#[derive(Debug, Clone)]
+pub struct CreatorWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
 }
