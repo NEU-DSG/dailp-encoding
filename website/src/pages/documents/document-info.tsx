@@ -1,4 +1,7 @@
+import "@citation-js/plugin-bibtex"
+import "@citation-js/plugin-csl"
 import "@reach/dialog/styles.css"
+import Cite from "citation-js"
 import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
@@ -15,6 +18,8 @@ import {
   EditDocumentModalProps,
 } from "./edit-document-modal"
 import { EditingProvider, useEditing } from "./editing-context"
+
+// import Cite from "../../utils/citation-config"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -97,6 +102,45 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       })
     }
     return year.toString()
+  }
+
+  // Handle citation (is there a better way to do this without regenerating it?)
+  const [citation, setCitation] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    try {
+      const docCitation = new Cite({
+        title: docData.title,
+        author: docData.creators?.map((c) => ({ literal: c.name })),
+        issued: docData.date
+          ? {
+              "date-parts": [
+                [docData.date.year, docData.date.month, docData.date.day],
+              ],
+            }
+          : undefined,
+        type: docData.format?.name?.toLowerCase() || "book",
+      }).format("bibliography", {
+        format: "text",
+        template: "apa",
+        lang: "en-US",
+      })
+
+      setCitation(docCitation)
+    } catch {
+      setCitation("Error generating citation")
+    }
+  }, [docData])
+
+  function CitationField({ citation }: { citation: string | null }) {
+    return (
+      <div className={styles.field}>
+        <div className={styles.label}>CITATION</div>
+        <div className={styles.value} style={{ whiteSpace: "pre-line" }}>
+          {citation ?? "Citation Not Yet Available."}
+        </div>
+      </div>
+    )
   }
 
   // Format contributors for display
@@ -254,12 +298,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
-        {/* 
-          <div className={styles.field}>
-            <div className={styles.label}>CITATION</div>
-            <div className={styles.value}>{get generated citation}</div>
-          </div>
-        */}
+        <CitationField citation={citation} />
       </div>
     </div>
   )

@@ -1,4 +1,3 @@
-import plugins from "citation-js"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
@@ -28,10 +27,32 @@ export interface FormContributor extends Dailp.Contributor {
   isVisible: boolean | false
 }
 
+// year month day as string
+function getDateString(date: Date | null): string | undefined {
+  if (!date) return undefined
+
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, "0")
+  const day = date.getDate().toString().padStart(2, "0")
+
+  return `${year}/${month}/${day}`
+}
+
+// Citation formats for dropdown (mapped from display name to name Cite expects)
 export const formatMap: Record<string, string> = {
   APA: "apa",
   Vancouver: "vancouver",
   Harvard: "harvard1",
+}
+
+// Get citation format display name
+function getDisplayName(code: string) {
+  return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
+}
+
+// Handle citation
+export type CitationFieldProps = {
+  citation: string | null
 }
 
 // Reusable approved tags lists
@@ -87,10 +108,6 @@ const approvedSpatialCoverages = [
   "Paris, France",
   "Dubai, UAE",
 ]
-
-function getDisplayName(code: string) {
-  return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
-}
 
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
@@ -175,10 +192,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
-  // const [citation, setCitation] = useState("")
-  // const [citeFormat, setCiteFormat] = useState("APA")
-
-  //const [newKeywords, setNewKeywords] = useState<Set<string>>(new Set())
+  const [citation, setCitation] = useState("")
+  const [citeFormat, setCiteFormat] = useState("APA")
 
   // For initializing new contributors who may not have a role yet
   type MaybeContributorRole = Dailp.ContributorRole | null
@@ -383,34 +398,37 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
   }
 
-  /*
-    const docMetadata = useMemo(
-      () =>
-        buildCitationMetadata({
-          title,
-          creator,
-          date,
-          source,
-          pages,
-          type: format.toLowerCase(),
-          doi,
-        }),
-      [title, creator, date, source, pages, format, doi]
-    )
-  
-    useEffect(() => {
-      try {
-        const docCitation = new Cite(docMetadata).format("bibliography", {
-          format: "text",
-          template: citeFormat.toLowerCase() || "apa",
-          lang: "en-US",
-        })
-        setCitation(docCitation)
-      } catch {
-        setCitation("Error generating citation")
-      }
-    }, [citeFormat, docMetadata])
-    */
+  const creatorStrings = useMemo(
+    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
+    [documentMetadata.creators]
+  )
+
+  const docMetadata = useMemo(
+    () =>
+      buildCitationMetadata({
+        title,
+        creator: creatorStrings,
+        date: getDateString(date),
+        // source,
+        // pages,
+        type: format.toLowerCase() || "book",
+        // doi,
+      }),
+    [title, creator, date, format]
+  )
+
+  useEffect(() => {
+    try {
+      const docCitation = new Cite(docMetadata).format("bibliography", {
+        format: "text",
+        template: citeFormat.toLowerCase() || "apa",
+        lang: "en-US",
+      })
+      setCitation(docCitation)
+    } catch {
+      setCitation("Error generating citation")
+    }
+  }, [citeFormat, docMetadata])
 
   const cancelEdits = () => {
     if (!backupState) return
@@ -427,6 +445,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setSpatialCoverage(backupState.spatialCoverages)
     //setSource(backupState.source)
     //setDOI(backupState.doi)
+
     // Tags reset handled by reinitialization on modal open
     setContributors(backupState.contributors)
 
@@ -776,35 +795,35 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             addButtonLabel="Add Spatial Coverage"
           />
 
-          {/* // Might need to pull the creator(s) from creator or contributors w/ author role
-          
+          {/* Might need to pull the creator(s) from creator or contributors w/ author role */}
           <div className={styles.fullWidthGroup}>
-                  <label className={styles.label}>Citation</label>
-                  <TextareaAutosize
-                    className={styles.input}
-                    value={citation}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setCitation(e.target.value)
-                    }              
-                    minRows={1}
-                    maxRows={10}
-                    disabled={!isEditing}
-                  />
-                </div>
+            <label className={styles.label}>Citation</label>
+            <TextareaAutosize
+              className={styles.input}
+              value={citation}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setCitation(e.target.value)
+              }
+              minRows={1}
+              maxRows={10}
+              disabled={!isEditing}
+            />
+          </div>
 
-                <div>{getDisplayName(citeFormat)}</div>
-                <Dropdown
-                  options={Object.keys(formatMap)}
-                  selected={
-                    Object.entries(formatMap).find(([_, v]) => v === citeFormat)?.[0] || "APA"
-                  }
-                  setSelected={(displayName) => {
-                    setCiteFormat(formatMap[displayName] ?? "apa")
-                  }}
-                  addButtonLabel="Change Format"
-                  disabled={!isEditing}
-                />
-                */}
+          <div>{getDisplayName(citeFormat)}</div>
+          <Dropdown
+            options={Object.keys(formatMap)}
+            selected={
+              Object.entries(formatMap).find(
+                ([_, v]) => v === citeFormat
+              )?.[0] || "APA"
+            }
+            setSelected={(displayName) => {
+              setCiteFormat(formatMap[displayName] ?? "apa")
+            }}
+            addButtonLabel="Change Format"
+            disabled={!isEditing}
+          />
 
           <div className={styles.buttonGroup}>
             {isEditing ? (
