@@ -1,7 +1,6 @@
 import "@citation-js/plugin-bibtex"
 import "@citation-js/plugin-csl"
 import "@reach/dialog/styles.css"
-import Cite from "citation-js"
 import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
@@ -11,6 +10,8 @@ import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
+import Cite from "../../utils/citation-config"
+import CitationField from "./citation-field"
 import * as styles from "./document-info.css"
 import * as css from "./document.css"
 import {
@@ -18,8 +19,6 @@ import {
   EditDocumentModalProps,
 } from "./edit-document-modal"
 import { EditingProvider, useEditing } from "./editing-context"
-
-// import Cite from "../../utils/citation-config"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -32,6 +31,9 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const { form } = useForm()
   const { isEditing, setIsEditing } = useEditing()
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
+
+  const [citation, setCitation] = React.useState<string>("")
+  const [citeFormat, setCiteFormat] = React.useState("apa")
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
@@ -46,6 +48,11 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
   const handleUpdate = async (changes: any) => {
     try {
+      // Update citation format if it changed
+      if (changes.citeFormat) {
+        setCiteFormat(changes.citeFormat)
+      }
+
       // Format date
       let writtenAtValue = null
       if (changes.date) {
@@ -102,45 +109,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       })
     }
     return year.toString()
-  }
-
-  // Handle citation (is there a better way to do this without regenerating it?)
-  //const [citation, setCitation] = React.useState<string | null>(null)
-
-  // React.useEffect(() => {
-  //   try {
-  //     const docCitation = new Cite({
-  //       title: docData.title,
-  //       author: docData.creators?.map((c) => ({ literal: c.name })),
-  //       issued: docData.date
-  //         ? {
-  //             "date-parts": [
-  //               [docData.date.year, docData.date.month, docData.date.day],
-  //             ],
-  //           }
-  //         : undefined,
-  //       type: docData.format?.name?.toLowerCase() || "book",
-  //     }).format("bibliography", {
-  //       format: "text",
-  //       template: "apa",
-  //       lang: "en-US",
-  //     })
-
-  //     setCitation(docCitation)
-  //   } catch {
-  //     setCitation("Error generating citation")
-  //   }
-  // }, [docData])
-
-  function CitationField({ citation }: { citation: string | null }) {
-    return (
-      <div className={styles.field}>
-        <div className={styles.label}>CITATION</div>
-        <div className={styles.value} style={{ whiteSpace: "pre-line" }}>
-          {citation ?? "Citation Not Yet Available."}
-        </div>
-      </div>
-    )
   }
 
   // Format contributors for display
@@ -298,7 +266,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
-        {/* <CitationField citation={citation} /> */}
+        <CitationField citation={citation} />
       </div>
     </div>
   )
@@ -324,6 +292,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           onClose={() => setIsEditing(false)}
           onSubmit={handleUpdate}
           documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
+          initialCiteFormat={citeFormat}
         />
       ) : (
         <></>

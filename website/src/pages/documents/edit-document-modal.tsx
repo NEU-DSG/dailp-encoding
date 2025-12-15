@@ -20,6 +20,7 @@ export type EditDocumentModalProps = {
   onClose: () => void
   onSubmit: (data: any) => void
   documentMetadata: Dailp.AnnotatedDoc
+  initialCiteFormat?: string
 }
 
 export interface FormContributor extends Dailp.Contributor {
@@ -110,6 +111,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   onClose,
   onSubmit,
   documentMetadata,
+  initialCiteFormat = "apa",
 }: EditDocumentModalProps) => {
   const { isEditing, setIsEditing } = useEditing()
 
@@ -205,7 +207,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   )
 
   const [citation, setCitation] = useState("")
-  const [citeFormat, setCiteFormat] = useState("APA")
+  const [citeFormat, setCiteFormat] = useState(initialCiteFormat)
 
   // Generate citation from document metadata and selected format (APA by default)
   useEffect(() => {
@@ -561,6 +563,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
+      citeFormat: citeFormat,
     }
 
     // Update backup state to new submitted state
