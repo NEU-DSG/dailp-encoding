@@ -10,7 +10,7 @@
     "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
     "build:vite": "vite build && cp -rfT dist/client/ public/",
     "build": "graphql-codegen && npm-run-all --parallel build:vite build:rustdoc && cp -rfT ../target/doc/ public/rustdoc/",
-    "serve": "NODE_ENV=production http-server public -p 3001",
+    "serve": "NODE_ENV=production node server.mjs",
     "generate": "graphql-codegen"
   },
   "sideEffects": false,
@@ -32,6 +32,8 @@
     "amazon-cognito-identity-js": "^5.2.9",
     "aws-amplify": "^4.3.20",
     "classnames": "^2.3.1",
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.11.0",
     "html-react-parser": "^1.4.11",
