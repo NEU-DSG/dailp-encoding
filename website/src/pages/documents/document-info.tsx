@@ -105,32 +105,32 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
 
   // Handle citation (is there a better way to do this without regenerating it?)
-  const [citation, setCitation] = React.useState<string | null>(null)
+  //const [citation, setCitation] = React.useState<string | null>(null)
 
-  React.useEffect(() => {
-    try {
-      const docCitation = new Cite({
-        title: docData.title,
-        author: docData.creators?.map((c) => ({ literal: c.name })),
-        issued: docData.date
-          ? {
-              "date-parts": [
-                [docData.date.year, docData.date.month, docData.date.day],
-              ],
-            }
-          : undefined,
-        type: docData.format?.name?.toLowerCase() || "book",
-      }).format("bibliography", {
-        format: "text",
-        template: "apa",
-        lang: "en-US",
-      })
+  // React.useEffect(() => {
+  //   try {
+  //     const docCitation = new Cite({
+  //       title: docData.title,
+  //       author: docData.creators?.map((c) => ({ literal: c.name })),
+  //       issued: docData.date
+  //         ? {
+  //             "date-parts": [
+  //               [docData.date.year, docData.date.month, docData.date.day],
+  //             ],
+  //           }
+  //         : undefined,
+  //       type: docData.format?.name?.toLowerCase() || "book",
+  //     }).format("bibliography", {
+  //       format: "text",
+  //       template: "apa",
+  //       lang: "en-US",
+  //     })
 
-      setCitation(docCitation)
-    } catch {
-      setCitation("Error generating citation")
-    }
-  }, [docData])
+  //     setCitation(docCitation)
+  //   } catch {
+  //     setCitation("Error generating citation")
+  //   }
+  // }, [docData])
 
   function CitationField({ citation }: { citation: string | null }) {
     return (
@@ -298,7 +298,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
-        <CitationField citation={citation} />
+        {/* <CitationField citation={citation} /> */}
       </div>
     </div>
   )

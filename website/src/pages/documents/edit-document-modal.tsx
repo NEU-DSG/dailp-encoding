@@ -1,3 +1,4 @@
+import plugins from "citation-js"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
@@ -48,11 +49,6 @@ export const formatMap: Record<string, string> = {
 // Get citation format display name
 function getDisplayName(code: string) {
   return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
-}
-
-// Handle citation
-export type CitationFieldProps = {
-  citation: string | null
 }
 
 // Reusable approved tags lists
@@ -192,8 +188,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
-  const [citation, setCitation] = useState("")
-  const [citeFormat, setCiteFormat] = useState("APA")
 
   // For initializing new contributors who may not have a role yet
   type MaybeContributorRole = Dailp.ContributorRole | null
@@ -209,6 +203,32 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [creatorInput, setCreatorInput] = useState(
     documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
   )
+
+  const [citation, setCitation] = useState("")
+  const [citeFormat, setCiteFormat] = useState("APA")
+
+  // Generate citation from document metadata and selected format (APA by default)
+  useEffect(() => {
+    const hasTemplate = !!plugins?.config
+      ?.get?.("csl")
+      ?.templates?.has?.(citeFormat)
+    console.log("Using template:", citeFormat, "exists?", hasTemplate)
+
+    try {
+      // Create text citation using selected format
+      const docCitation = new Cite(docMetadata).format("bibliography", {
+        format: "text",
+        template: citeFormat || "apa",
+        lang: "en-US",
+      })
+      console.log("Using citeFormat:", citeFormat)
+      console.log("Generated citation:", docCitation)
+      setCitation(docCitation)
+    } catch (err) {
+      console.error("Citation formatting failed:", err)
+      setCitation("Error generating citation")
+    }
+  }, [citeFormat, documentMetadata]) // Re-run everytime format or metadata changes
 
   // useEffect(() => {
   //   if (!isOpen) return
@@ -411,7 +431,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         date: getDateString(date),
         // source,
         // pages,
-        type: format.toLowerCase() || "book",
+        type: format.toLowerCase() || "document",
         // doi,
       }),
     [title, creator, date, format]
@@ -816,7 +836,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             selected={
               Object.entries(formatMap).find(
                 ([_, v]) => v === citeFormat
-              )?.[0] || "APA"
+              )?.[0] || "apa"
             }
             setSelected={(displayName) => {
               setCiteFormat(formatMap[displayName] ?? "apa")
@@ -825,6 +845,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             disabled={!isEditing}
           />
 
+          {/* Cancel and submit buttons */}
           <div className={styles.buttonGroup}>
             {isEditing ? (
               <>

@@ -17,7 +17,7 @@ interface RawDocMetadata {
 // and the metadata available for it
 export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
   const citation: any = {
-    type: doc.type?.toLowerCase() || "book", // Default fallback document type (could change later)
+    type: doc.type?.toLowerCase() || "document", // Default fallback document type (could change later)
     ...(doc.title?.trim() && { title: doc.title }),
     ...(doc.creator &&
       (Array.isArray(doc.creator) && doc.creator.length
