@@ -1405,20 +1405,17 @@ impl Database {
     }
 
     pub async fn upsert_collection_chapter(&self, collection: UpsertChapterInput) -> Result<()> {
-        let title: Option<String> = if collection.title.is_undefined() {
-            None
-        } else {
-            collection.title.take()
+        let title: Option<String> = match collection.title {
+            MaybeUndefined::Value(title) => Some(title),
+            _ => None,
         };
-        let section: Option<CollectionSection> = if collection.section.is_undefined() {
-            None
-        } else {
-            collection.section.take()
+        let section: Option<CollectionSection> = match collection.section {
+            MaybeUndefined::Value(section) => Some(section),
+            _ => None,
         };
-        let index_in_parent: Option<i64> = if collection.index_in_parent.is_undefined() {
-            None
-        } else {
-            collection.index_in_parent.take()
+        let index_in_parent: Option<i64> = match collection.index_in_parent {
+            MaybeUndefined::Value(index_in_parent) => Some(index_in_parent),
+            _ => None,
         };
         query_file!(
             "queries/upsert_collection_chapter.sql",
