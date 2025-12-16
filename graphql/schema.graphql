@@ -334,6 +334,34 @@ type AudioSlice {
 	endTime: Int
 }
 
+"""
+Input for batch upserting multiple chapters
+"""
+input BatchUpsertChaptersInput {
+	"""
+	List of chapters to upsert
+	"""
+	chapters: [UpsertChapterInput!]!
+}
+
+
+"""
+Input for updating a single chapter's order
+"""
+input ChapterOrderInput {
+	"""
+	The id of the chapter
+	"""
+	id: UUID!
+	"""
+	The new index of this chapter within its parent (1-indexed)
+	"""
+	indexInParent: Int!
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection!
+}
 
 """
 One representation of Cherokee phonology.
@@ -547,6 +575,7 @@ input CreateDocumentFromFormInput {
 	sourceName: String!
 	sourceUrl: String!
 	collectionId: UUID!
+	section: CollectionSection
 }
 
 """
@@ -1305,6 +1334,10 @@ type Mutation {
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertChapter(input: UpsertChapterInput!): String!
+	batchUpsertChapters(input: BatchUpsertChaptersInput!): String!
+	updateCollectionChapterOrder(input: UpdateCollectionChapterOrderInput!): String!
+	removeCollectionChapter(chapterId: UUID!): String!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 }
@@ -1607,6 +1640,20 @@ entities without requiring a central allocating authority.
 scalar UUID
 
 """
+Input for bulk updating collection chapter order
+"""
+input UpdateCollectionChapterOrderInput {
+	"""
+	The slug of the collection
+	"""
+	collectionSlug: String!
+	"""
+	Ordered list of chapters with their new indices
+	"""
+	chapters: [ChapterOrderInput!]!
+}
+
+"""
 Update the contributor attribution for a document
 """
 input UpdateContributorAttribution {
@@ -1622,6 +1669,40 @@ input UpdateContributorAttribution {
 	A description of what the contributor did, like "translation" or "voice"
 	"""
 	contributionRole: String!
+}
+
+"""
+Input for upserting an edited collection
+"""
+input UpsertChapterInput {
+	"""
+	The id of the chapter
+	"""
+	id: UUID!
+	"""
+	The title of the collection
+	"""
+	title: String
+	"""
+	The slug of the collection
+	"""
+	slug: String
+	"""
+	Description of the collection
+	"""
+	description: String
+	"""
+	URL of the thumbnail image for the collection
+	"""
+	thumbnailUrl: String
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection
+	"""
+	The index of this chapter within its parent
+	"""
+	indexInParent: Int
 }
 
 """

@@ -146,7 +146,7 @@ const NewPage = () => {
                   <div
                     style={{
                       display: "flex",
-                      width: "50%",
+                      width: "80%",
                       border: "1px solid #ccc",
                       borderRadius: "4px",
                       alignItems: "center",
@@ -166,7 +166,7 @@ const NewPage = () => {
                     <input
                       id="path"
                       type="text"
-                      placeholder="your-page-name"
+                      placeholder="page-name"
                       value={path}
                       onChange={(e) => {
                         setPath(e.target.value)
