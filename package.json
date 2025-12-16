@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "graphql": "16.3.0",
-    "react-textarea-autosize": "^8.5.9"
-  },
-  "devDependencies": {
-    "@types/react-textarea-autosize": "^8.0.0"
-  }
-}
