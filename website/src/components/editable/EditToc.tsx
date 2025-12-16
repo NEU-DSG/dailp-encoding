@@ -923,9 +923,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         />
       </div>
       <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 8 }}>
-        <h4 style={{ marginTop: 0, marginBottom: 16 }}>
+        <h2 style={{ marginTop: 0, marginBottom: 16 }}>
           Table of Contents Editor
-        </h4>
+        </h2>
         <DragDropContext onDragEnd={handleDragEnd}>
           <div
             style={{
@@ -944,9 +944,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
               const chapters = chaptersBySection[sectionKey]
               return (
                 <div key={sectionKey}>
-                  <h5 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>
+                  <h3 style={{ marginTop: 0, marginBottom: 12, fontSize: 16 }}>
                     {sectionName}
-                  </h5>
+                  </h3>
                   <div
                     style={{
                       border: "1px solid #e0e0e0",
@@ -996,7 +996,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         </DragDropContext>
       </div>
       <div style={{ marginTop: 24 }}>
-        <h5 style={{ marginBottom: 12 }}>Add New Chapter</h5>
+        <h2 style={{ marginBottom: 12 }}>Add New Chapter</h2>
         <form
           onSubmit={handleAddNewChapter}
           style={{
