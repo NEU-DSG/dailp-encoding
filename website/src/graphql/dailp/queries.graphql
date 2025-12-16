@@ -735,6 +735,12 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+query AllPages {
+  allPages {
+    path
+  }
+}
+
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
