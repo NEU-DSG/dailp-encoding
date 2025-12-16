@@ -73,42 +73,138 @@ impl From<&SubjectHeading> for Uuid {
 }
 
 /// Stores the physical or digital medium associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Format {
     /// UUID for the format
     pub id: Uuid,
-    /// Documents associated with the format
-    pub documents: Vec<DocumentReference>,
+    /// Name of the format
+    pub name: String,
+    /// Status (pending, approved, rejected) of a format
+    pub status: ApprovalStatus,
+}
+
+// For updating formats
+#[derive(async_graphql::InputObject)]
+pub struct FormatUpdate {
+    /// UUID for the format
+    pub id: Uuid,
     /// Name of the format
     pub name: String,
 }
 
+/// Get all approved formats
+#[async_graphql::ComplexObject]
+impl Format {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Record to store a keyword associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[sqlx(rename_all = "lowercase")]
+#[graphql(complex)]
+pub struct Keyword {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+    /// Status (pending, approved, rejected) of a keyword
+    pub status: ApprovalStatus,
+}
+
+// For updating keywords
+#[derive(async_graphql::InputObject)]
+pub struct KeywordUpdate {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+}
+
+/// Get all approved keywords
+#[async_graphql::ComplexObject]
+impl Keyword {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Keyword struct to corresponding Uuid
+impl From<&Keyword> for Uuid {
+    fn from(k: &Keyword) -> Self {
+        k.id
+    }
+}
+
 /// Stores the genre associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Genre {
     /// UUID for the genre
     pub id: Uuid,
-    /// Documents associated with the genre
-    pub documents: Vec<DocumentReference>,
+    /// Name of the genre
+    pub name: String,
+    /// Status (pending, approved, rejected) of a genre
+    pub status: ApprovalStatus,
+}
+
+// For updating genres
+#[derive(async_graphql::InputObject)]
+pub struct GenreUpdate {
+    /// UUID for the genre
+    pub id: Uuid,
     /// Name of the genre
     pub name: String,
 }
 
+/// Get all approved genres
+#[async_graphql::ComplexObject]
+impl Genre {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
 /// Stores a language associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
-    /*
-    Tag for the language within the DAILP system
-    Could be useful for managing similar language names or extending this to
-    adding tags for language, dialect, and script combinations later on
-    */
-    pub dailp_tag: String,
-    /// Documents associated with the language
-    pub documents: Vec<DocumentReference>,
     /// Name of the language
     pub name: String,
+    /// Status (pending, approved, rejected) of a language
+    pub status: ApprovalStatus,
+}
+
+/// For updating languages
+#[derive(async_graphql::InputObject)]
+pub struct LanguageUpdate {
+    /// UUID for the language
+    pub id: Uuid,
+    /// Name of the language
+    pub name: String,
+}
+
+/// Get all approved languages
+#[async_graphql::ComplexObject]
+impl Language {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Language struct to corresponding Uuid
+impl From<&Language> for Uuid {
+    fn from(l: &Language) -> Self {
+        l.id
+    }
 }
 
 /// Stores a spatial coverage associated with a document

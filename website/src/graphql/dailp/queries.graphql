@@ -123,6 +123,16 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  keywords {
+    id
+    name
+    status
+  }
+  languages {
+    id
+    name
+    status
+  }
   subjectHeadings {
     id
     name
@@ -137,6 +147,18 @@ fragment DocFormFields on AnnotatedDoc {
     id
     name
     status
+  }
+  creators {
+    id
+    name
+  }
+  format {
+    id
+    name
+  }
+  genre {
+    id
+    name
   }
 }
 
