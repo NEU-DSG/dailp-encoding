@@ -19,6 +19,8 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@citation-js/core": "^0.7.21",
+    "@citation-js/plugin-csl": "^0.7.21",
     "@fontsource/charis-sil": "^4.5.7",
     "@fontsource/quattrocento-sans": "^4.5.5",
     "@reach/dialog": "^0.16.2",
