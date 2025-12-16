@@ -1,4 +1,3 @@
-import "@citation-js/plugin-bibtex"
 import "@citation-js/plugin-csl"
 import "@reach/dialog/styles.css"
 import React, { Fragment } from "react"
