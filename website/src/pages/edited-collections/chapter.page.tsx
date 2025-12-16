@@ -50,15 +50,24 @@ const ChapterPage = (props: {
   }
 
   if (error) {
-    return <>Error: {error.message}</>
+    return (
+      <CWKWLayout>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <h1>Error</h1>
+            <p>{error.message}</p>
+          </article>
+        </main>
+      </CWKWLayout>
+    )
   }
 
   if (!chapter) {
     return (
-      <>
+      <CWKWLayout>
         Chapter not found for collection: {collectionSlug}, chapter:{" "}
         {chapterSlug}
-      </>
+      </CWKWLayout>
     )
   }
 
