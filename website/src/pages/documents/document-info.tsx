@@ -41,6 +41,41 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   //   return null
   // }
 
+  // Generate citation (is there a better way to do this?)
+  React.useEffect(() => {
+    if (!docData) return
+
+    try {
+      const metadata = {
+        title: docData.title,
+        author: docData.creators?.map((c) => ({ literal: c.name })) || [],
+        issued: docData.date
+          ? {
+              "date-parts": [
+                [
+                  docData.date.year,
+                  docData.date.month || 1,
+                  docData.date.day || 1,
+                ],
+              ],
+            }
+          : undefined,
+        type: docData.format?.name?.toLowerCase() || "document",
+      }
+
+      const docCitation = new Cite(metadata).format("bibliography", {
+        format: "text",
+        template: citeFormat,
+        lang: "en-US",
+      })
+
+      setCitation(docCitation)
+    } catch (err) {
+      console.error("Citation error:", err)
+      setCitation("Error generating citation")
+    }
+  }, [docData, citeFormat]) // Regenerate when docData or citeFormat changes
+
   // Debug: check if data has been fetched
   if (!docData) {
     return <div>Loading document information...</div>
