@@ -1,4 +1,4 @@
-import plugins from "citation-js"
+import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"

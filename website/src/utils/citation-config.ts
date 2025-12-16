@@ -1,4 +1,5 @@
-import Cite from "citation-js"
+import { Cite } from "@citation-js/core"
+import "@citation-js/plugin-csl"
 
 const csl = (Cite as any).plugins?.config?.get?.("csl")
 const templates = csl?.templates
