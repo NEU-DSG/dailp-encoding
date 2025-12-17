@@ -31,7 +31,14 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
 
   const [citation, setCitation] = React.useState<string>("")
-  const [citeFormat, setCiteFormat] = React.useState("apa")
+
+  // Initialize citation format from localStorage
+  const [citeFormat, setCiteFormat] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("preferredCitationFormat") || "apa"
+    }
+    return "apa"
+  })
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
@@ -81,9 +88,12 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
   const handleUpdate = async (changes: any) => {
     try {
-      // Update citation format if it changed
+      // Update citation format if it changed and save to localStorage
       if (changes.citeFormat) {
         setCiteFormat(changes.citeFormat)
+        if (typeof window !== "undefined") {
+          localStorage.setItem("preferredCitationFormat", changes.citeFormat)
+        }
       }
 
       // Format date

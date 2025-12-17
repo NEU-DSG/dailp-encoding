@@ -207,7 +207,14 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   )
 
   const [citation, setCitation] = useState("")
-  const [citeFormat, setCiteFormat] = useState(initialCiteFormat)
+
+  // Initialize citation format from localStorage or default to "apa"
+  const [citeFormat, setCiteFormat] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("preferredCitationFormat") || "apa"
+    }
+    return "apa"
+  })
 
   // Generate citation from document metadata and selected format (APA by default)
   useEffect(() => {
