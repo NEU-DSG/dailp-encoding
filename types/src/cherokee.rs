@@ -1,3 +1,4 @@
+use crate::Orthography;
 use crate::*;
 use lazy_static::lazy_static;
 use sqlx::postgres::*;
@@ -29,6 +30,36 @@ impl PgHasArrayType for CherokeeOrthography {
 
     fn array_compatible(ty: &PgTypeInfo) -> bool {
         <&str as PgHasArrayType>::array_compatible(ty)
+    }
+}
+
+impl Orthography for CherokeeOrthography {
+    fn identifier(&self) -> &'static str {
+        match self {
+            Self::Taoc => "TAOC",
+            Self::Crg => "CRG",
+            Self::Learner => "LEARNER",
+        }
+    }
+    fn convert(&self, input: &str) -> String {
+        // Delegates to existing CherokeeOrthography::convert()
+        CherokeeOrthography::convert(self, input)
+    }
+    fn language_code(&self) -> &'static str {
+        "chr"
+    }
+    fn display_name(&self) -> &'static str {
+        match self {
+            Self::Taoc => "TAOC",
+            Self::Crg => "CRG",
+            Self::Learner => "LEARNER",
+        }
+    }
+    fn romanize(&self, phonetic: &str) -> String {
+        match self {
+            Self::Learner => crate::lexical::simple_phonetics_to_worcester(phonetic),
+            Self::Taoc | Self::Crg => phonetic.to_string(),
+        }
     }
 }
 

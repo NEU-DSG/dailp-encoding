@@ -10,7 +10,7 @@ use std::borrow::Cow;
 pub struct WordSegment {
     /// Which Cherokee representation system is this segment written with?
     #[serde(skip)]
-    pub system: Option<CherokeeOrthography>,
+    pub system: Option<OrthographySystem>,
     /// Source language representation of this segment.
     pub morpheme: String,
     /// Target language representation of this segment.
@@ -155,7 +155,8 @@ impl WordSegment {
                 .data::<DataLoader<Database>>()?
                 .load_one(TagForMorpheme(
                     gloss_id,
-                    self.system.unwrap_or(CherokeeOrthography::Taoc),
+                    self.system
+                        .unwrap_or(OrthographySystem::Cherokee(CherokeeOrthography::Taoc)),
                 ))
                 .await?)
         } else {

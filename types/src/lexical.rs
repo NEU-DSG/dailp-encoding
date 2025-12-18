@@ -1,4 +1,7 @@
-use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, WordSegment};
+use crate::{
+    AnnotatedForm, CherokeeOrthography, Database, Date, DocumentId, Geometry, PhonologySystem,
+    WordSegment,
+};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -551,6 +554,24 @@ pub enum PhonemicString {
     /// For example, "a:!"
     Vowel(String, VowelType),
 }
+
+impl PhonologySystem for PhonemicString {
+    type Orthography = CherokeeOrthography;
+
+    fn parse_internal(input: &str) -> Self {
+        // Existing method. Will have to write your own for other languages.
+        Self::parse_dailp(input)
+    }
+
+    fn into_orthography(self, ortho: CherokeeOrthography) -> String {
+        match ortho {
+            CherokeeOrthography::Taoc => self.into_dailp(),
+            CherokeeOrthography::Crg => self.into_crg(),
+            CherokeeOrthography::Learner => self.into_learner(),
+        }
+    }
+}
+
 impl PhonemicString {
     /// Parse a phonetic romanization in internal DAILP form.
     pub fn parse_dailp(input: &str) -> Self {
