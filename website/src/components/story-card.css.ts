@@ -1,0 +1,78 @@
+import { globalStyle, style } from "@vanilla-extract/css"
+
+export const radii = {
+    none: 0,
+    small: "1px",
+    medium: "2px",
+    large: "4px",
+    round: "15px",
+}
+
+export const space = {
+    [0]: 0,
+    none: 0,
+    xsmall: "2px",
+    small: "4px",
+    medium: "8px",
+    large: "16px",
+    // etc.
+}
+
+export const storyCard = style({
+    display: "flex",
+    flexDirection: "column",
+    width: "25%",
+    flexGrow: 1,
+    minWidth: "250px",
+    maxWidth: "300px",
+    border: "1px solid black",
+    borderRadius: radii.medium,
+    overflow: "hidden",
+    ":hover": {
+        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+        transform: "translateY(-3px)"
+    },
+})
+
+export const cardContent = style({
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    flexGrow: 1,
+    padding: "20px",
+})
+
+export const storyCardImage = style([
+    {
+        width: "100%",
+        maxHeight: "175px",
+        objectFit: "cover",
+        borderTopLeftRadius: radii.medium,
+        borderTopRightRadius: radii.medium,
+    }
+])
+
+export const storyCardHeader = style({
+    fontFamily: "Inter",
+    fontWeight: "bold",
+    textDecoration: "none",
+    color: "#405372",
+    margin: 0,
+    padding: 0,
+})
+
+globalStyle(`${storyCardHeader} a`, {
+  textDecoration: "none",
+  color: "inherit",
+  margin: 0,
+  padding: 0,
+})
+
+globalStyle(`${storyCardHeader} a:hover`, {
+    textDecoration: "underline",
+})
+
+export const storyCardSubheading = style({
+    fontWeight: "bold",
+    marginTop: "6px",
+})
