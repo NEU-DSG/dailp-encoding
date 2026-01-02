@@ -6,6 +6,7 @@ export const headerContainer = style({
   height: "550px",
   overflow: "hidden",
   marginBottom: "80px",
+  marginTop: "0px",
 })
 
 export const headerImage = style({

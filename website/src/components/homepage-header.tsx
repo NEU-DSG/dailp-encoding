@@ -1,6 +1,6 @@
 import { Button } from "reakit"
 import * as styles from "./homepage-header.css"
-import DefaultImage from "../assets/DollieDuncan.jpeg"
+import DefaultImage from "../assets/DollieDuncan.jpg"
 
 export const HomepageHeader = (props: {
   title?: string

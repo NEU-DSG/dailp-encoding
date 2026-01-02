@@ -147,7 +147,6 @@ export const cardGroup = style({
 })
 
 export const storyCardGroup = style({
-  paddingTop: "100px",
   paddingBottom: "100px",
   display: "flex",
   flexDirection: "row",

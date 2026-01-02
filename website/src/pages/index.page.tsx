@@ -10,6 +10,7 @@ import Layout from "../layout"
 import { collectionRoute } from "../routes"
 import HomepageHeader from "src/components/homepage-header"
 import StoryCard from "src/components/story-card"
+import { headerContainer } from "src/components/homepage-header.css"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -35,21 +36,21 @@ const IndexPage = () => {
   return (
     <Layout>
       <Helmet title="Collections" />
+      <HomepageHeader
+        button_left={{
+          text: "Our Team",
+          link: "/home/credits/"
+        }}
+        button_right={{
+          text: "Our Collections",
+          link: "#collection-section"
+        }}
+      />
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
-          <HomepageHeader
-            button_left={{
-              text: "Our Team",
-              link: "/home/credits/"
-            }}
-            button_right={{
-              text: "Our Collections",
-              link: "#collection-section"
-            }}
-          />
           <WordpressPage slug="/" />
 
-          <h1>Latest Stories</h1>
+          <h1 id="collection-section">Latest Stories</h1>
           <div className={storyCardGroup}>
             <StoryCard
               thumbnail="https://wp.dailp.northeastern.edu/wp-content/uploads/2022/06/20181124-IMG-1118-PS-bw-WKG1-1.jpeg"

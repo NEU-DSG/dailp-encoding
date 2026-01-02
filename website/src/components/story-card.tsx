@@ -1,6 +1,6 @@
 import { Group } from "reakit"
 import { storyCard, storyCardHeader, storyCardSubheading, storyCardImage, cardContent } from "./story-card.css"
-import DefaultImage from "../assets/DollieDuncan.jpeg"
+import DefaultImage from "../assets/DollieDuncan.jpg"
 
 export const StoryCard = (props: {
     thumbnail?: string
