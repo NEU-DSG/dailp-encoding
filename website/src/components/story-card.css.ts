@@ -39,7 +39,8 @@ export const cardContent = style({
     flexDirection: "column",
     justifyContent: "space-between",
     flexGrow: 1,
-    padding: "20px",
+    paddingLeft: "20px",
+    paddingRight: "20px"
 })
 
 export const storyCardImage = style([
@@ -74,5 +75,5 @@ globalStyle(`${storyCardHeader} a:hover`, {
 
 export const storyCardSubheading = style({
     fontWeight: "bold",
-    marginTop: "6px",
+    marginTop: "10px",
 })

@@ -174,3 +174,10 @@ export const storyCardGroup = style({
     },
   },
 })
+
+export const section = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "1.25rem",
+  marginTop: "4rem",
+});
