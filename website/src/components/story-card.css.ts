@@ -1,4 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
+import { fonts } from "src/style/constants"
 
 export const radii = {
     none: 0,
@@ -54,7 +55,7 @@ export const storyCardImage = style([
 ])
 
 export const storyCardHeader = style({
-    fontFamily: "Inter",
+    fontFamily: fonts.header,
     fontWeight: "bold",
     textDecoration: "none",
     color: "#405372",
