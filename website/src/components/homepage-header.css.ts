@@ -72,6 +72,7 @@ export const actionButton = style({
     gap: "8px",
     padding: "16px 35px",
     backgroundColor: "#405372",
+    boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
     color: "white",
     fontFamily: fonts.header,
     fontWeight: "600",
