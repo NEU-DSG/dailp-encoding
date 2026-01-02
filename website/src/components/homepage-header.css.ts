@@ -1,4 +1,5 @@
 import { style, globalStyle } from "@vanilla-extract/css"
+import { fonts } from "src/style/constants"
 
 export const headerContainer = style({
     position: "relative",
@@ -42,11 +43,11 @@ export const title = style({
 })
 
 export const subtitle = style({
-    fontFamily: "Inter",
+    fontFamily: fonts.header,
     fontSize: "1.3rem",
     margin: 0,
     color: "black",
-    fontWeight: "500",
+    fontWeight: "600",
 })
 
 export const textBlock = style({
@@ -72,7 +73,7 @@ export const actionButton = style({
     padding: "16px 35px",
     backgroundColor: "#405372",
     color: "white",
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: fonts.header,
     fontWeight: "600",
     fontSize: "18px",
     border: "none",
@@ -80,7 +81,8 @@ export const actionButton = style({
     transition: "background-color 0.2s ease",
     minWidth: "140px",
     ":hover": {
-        backgroundColor: "#6F85A9",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        backgroundColor: "#222d3d",
+        boxShadow: "0 6px 10px rgba(0, 0, 0, 0.3)",
+        transform: "scale(1.02)"
     },
 })
