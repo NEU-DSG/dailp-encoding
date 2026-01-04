@@ -16,6 +16,7 @@ import { HeaderPrefDrawer } from "./mode"
 import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
 import { PreferencesProvider } from "./preferences-context"
 import "./wordpress.css"
+import NavBar from "./components/nav-bar"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
 
@@ -46,7 +47,8 @@ const Layout: React.FC = ({ children }) => {
             <LoginHeaderButton />
             <HeaderPrefDrawer />
           </div>
-          <NavMenu menuID={2} />
+          {/* <NavMenu menuID={2} /> */}
+          <NavBar />
         </header>
         {children}
         <Footer />

@@ -1,4 +1,5 @@
 import { style, globalStyle } from "@vanilla-extract/css"
+import { fonts } from "src/style/theme-contract.css"
 
 export const dropdownContainer = style({
   position: "relative",
@@ -54,7 +55,7 @@ export const dropdownItem = style({
   display: "block",
   padding: "8px 12px",
   color: "#000000",
-  fontFamily: "Inter",
+  fontFamily: fonts.header,
   textDecoration: "none",
   ":hover": { 
     backgroundColor: "#ECECEC",

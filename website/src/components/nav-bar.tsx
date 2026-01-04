@@ -7,7 +7,7 @@ export const NavBar = () => {
       <ul className={navLinks}>
         <li><a href="/">HOME</a></li>
         
-        {/* Change links */}
+        {/* Change links? */}
         <DropdownNavItem
           label="ABOUT"
           links={[
@@ -37,6 +37,7 @@ export const NavBar = () => {
           ]}
         />
 
+        {/* Link out to separate "Stories" and "Spotlights" pages later on */}
         <DropdownNavItem
           label="FEATURED"
           links={[
@@ -48,13 +49,15 @@ export const NavBar = () => {
         <li><a href="/credit">CREDIT</a></li>
 
         <div className={navIcons}>
-          <i className="fa-solid fa-user"></i>
+          <i className="fa-solid fa-user"></i> {/* Only show for logged in users, otherwise  "Log in" */}
           <i className="fa-solid fa-gear"></i>
-          <i className="fa-solid fa-bell"></i>
+          <i className="fa-solid fa-bell"></i> {/* Only show for logged in users */}
         </div>
       </ul>
     </nav>
   )
 }
+
+{/* ADD MOBILE NAV BAR */}
 
 export default NavBar

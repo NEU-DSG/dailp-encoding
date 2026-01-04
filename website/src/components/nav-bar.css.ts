@@ -1,4 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
+import { fonts } from "src/style/constants"
 
 export const navBar = style({
   width: "100%",
@@ -10,8 +11,9 @@ export const navBar = style({
 })
 
 export const navLinks = style({
+  fontFamily: fonts.header,
+  fontWeight: "500",
   listStyleType: "none",
-  fontFamily: "Inter",
   display: "flex",
   flexDirection: "row",
   gap: "2.5rem",

@@ -83,7 +83,7 @@ export const actionButton = style({
     minWidth: "140px",
     ":hover": {
         backgroundColor: "#222d3d",
-        boxShadow: "0 6px 10px rgba(0, 0, 0, 0.3)",
+        boxShadow: "0 6px 10px rgba(0, 0, 0, 0.4)",
         transform: "scale(1.02)"
     },
 })
