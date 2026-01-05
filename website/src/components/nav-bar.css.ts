@@ -3,11 +3,13 @@ import { fonts } from "src/style/constants"
 
 export const navBar = style({
   width: "100%",
-  height: "5rem",
-  overflow: "visible",
+  height: "100%",
+  display: "flex",
   marginBottom: "0px",
   backgroundColor: "#823E2D",
-  alignContent: "center"
+  alignItems: "center",
+  alignContent: "center",
+  paddingLeft: "10px",
 })
 
 export const navLinks = style({
@@ -54,5 +56,4 @@ export const navIcons = style({
 
 globalStyle(`${navIcons} i:hover`, {
   color: "#d7d7d7ff",
-  transform: "scale(1.2)"
 })
