@@ -1,6 +1,7 @@
 use crate::{
     comment::Comment, AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId,
-    MorphemeSegmentUpdate, PartsOfWord, PositionInDocument, TagId, WordSegment, WordSegmentRole,
+    MorphemeSegmentUpdate, Orthography, OrthographySystem, PartsOfWord, PositionInDocument, TagId,
+    WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -71,19 +72,28 @@ impl AnnotatedForm {
     }
 
     async fn romanized_source(&self, system: CherokeeOrthography) -> Option<Cow<'_, str>> {
-        self.simple_phonetics.as_ref().map(|phonetic| {
-            if system == CherokeeOrthography::Learner {
-                crate::lexical::simple_phonetics_to_worcester(phonetic).into()
-            } else {
-                phonetic.into()
-            }
-        })
+        self.simple_phonetics
+            .as_ref()
+            .map(|phonetic| Cow::Owned(system.romanize(phonetic)))
     }
 
+    // Old method for backwards compatibility
+    // New langauges add their own segments_languageXYZ methods
     async fn segments(
         &self,
         context: &async_graphql::Context<'_>,
         system: CherokeeOrthography,
+    ) -> FieldResult<Vec<WordSegment>> {
+        self.segments_generic(context, OrthographySystem::Cherokee(system))
+            .await
+    }
+
+    // graphql skip due to not exposing in schema
+    #[graphql(skip)]
+    async fn segments_generic(
+        &self,
+        context: &async_graphql::Context<'_>,
+        system: OrthographySystem,
     ) -> FieldResult<Vec<WordSegment>> {
         let db = context.data::<DataLoader<Database>>()?;
         // 1. To convert to a concrete analysis, start with a list of abstract tags.

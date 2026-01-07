@@ -23,6 +23,8 @@ use crate::page::Page;
 use crate::person::Creator;
 use crate::user::User;
 use crate::user::UserId;
+use crate::parse_orthography_system;
+use crate::Orthography;
 use {
     crate::*,
     anyhow::Result,
@@ -2671,18 +2673,12 @@ impl Loader<TagId> for Database {
     type Value = Vec<MorphemeTag>;
     type Error = Arc<sqlx::Error>;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
-        use async_graphql::{InputType, Name, Value};
         let glosses: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        // Use trait method instead of async_graphql conversion
         let systems: Vec<_> = keys
             .iter()
             .unique()
-            .map(|k| {
-                if let Value::Enum(s) = k.1.to_value() {
-                    s.as_str().to_owned()
-                } else {
-                    unreachable!()
-                }
-            })
+            .map(|k| k.1.identifier().to_owned())
             .collect();
         let items = query_file!("queries/morpheme_tags_by_gloss.sql", &glosses, &systems)
             .fetch_all(&self.client)
@@ -2690,11 +2686,9 @@ impl Loader<TagId> for Database {
         Ok(items
             .into_iter()
             .map(|tag| {
+                let system = parse_orthography_system(&tag.system_name).unwrap();
                 (
-                    TagId(
-                        tag.abstract_gloss.clone(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
-                    ),
+                    TagId(tag.abstract_gloss.clone(), system),
                     MorphemeTag {
                         internal_tags: tag.internal_tags.unwrap_or_default(),
                         tag: tag.concrete_gloss,
@@ -2769,18 +2763,11 @@ impl Loader<TagForMorpheme> for Database {
         &self,
         keys: &[TagForMorpheme],
     ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
-        use async_graphql::{InputType, Name, Value};
         let gloss_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
         let systems: Vec<_> = keys
             .iter()
             .unique()
-            .map(|k| {
-                if let Value::Enum(s) = k.1.to_value() {
-                    s.as_str().to_owned()
-                } else {
-                    unreachable!()
-                }
-            })
+            .map(|k| k.1.identifier().to_owned())
             .collect();
         let items = query_file!("queries/morpheme_tags.sql", &gloss_ids, &systems)
             .fetch_all(&self.client)
@@ -2791,7 +2778,7 @@ impl Loader<TagForMorpheme> for Database {
                 (
                     TagForMorpheme(
                         tag.gloss_id,
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
+                        parse_orthography_system(&tag.system_name).unwrap(),
                     ),
                     MorphemeTag {
                         internal_tags: Vec::new(),
@@ -3149,7 +3136,7 @@ impl From<BasicComment> for Comment {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct TagId(pub String, pub CherokeeOrthography);
+pub struct TagId(pub String, pub OrthographySystem);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct PartsOfWord(pub Uuid);
@@ -3167,7 +3154,7 @@ pub struct BookmarkedOn(pub Uuid, pub Uuid);
 pub struct DocumentShortName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
+pub struct TagForMorpheme(pub Uuid, pub OrthographySystem);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct PageId(pub String);
