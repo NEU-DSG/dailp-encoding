@@ -5,7 +5,11 @@ import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
-import { useRouteParams } from "src/renderer/PageShell"
+import {
+  useLocation,
+  usePageContext,
+  useRouteParams,
+} from "src/renderer/PageShell"
 
 const DISALLOWED_WORDS = [
   "admin",
@@ -21,8 +25,11 @@ const NewPage = () => {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [path, setPath] = useState("/" + useRouteParams()["*"])
+  const location = useLocation()
+  const [path, setPath] = useState(location.search["path"] ?? "/")
+
   const [isNew, setIsNew] = useState(true)
+
   const formatPath = (path: string) => {
     return path.startsWith("/")
       ? path
@@ -139,7 +146,7 @@ const NewPage = () => {
                   <div
                     style={{
                       display: "flex",
-                      width: "50%",
+                      width: "80%",
                       border: "1px solid #ccc",
                       borderRadius: "4px",
                       alignItems: "center",
@@ -159,7 +166,7 @@ const NewPage = () => {
                     <input
                       id="path"
                       type="text"
-                      placeholder="your-page-name"
+                      placeholder="page-name"
                       value={path}
                       onChange={(e) => {
                         setPath(e.target.value)
