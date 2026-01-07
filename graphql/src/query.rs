@@ -300,7 +300,7 @@ impl Query {
     ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::TagId(id, system))
+            .load_one(dailp::TagId(id, dailp::OrthographySystem::Cherokee(system)))
             .await?
             .unwrap_or_default()
             .into_iter()
