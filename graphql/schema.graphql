@@ -1376,10 +1376,9 @@ type Page {
 	The path that this page lives at, which also uniquely identifies it.
 	For example, "/our-team"
 	"""
-	id: UUID!
+	id: String!
 	title: String!
 	body: [ContentBlock!]!
-	path: String!
 }
 
 type PageImage {

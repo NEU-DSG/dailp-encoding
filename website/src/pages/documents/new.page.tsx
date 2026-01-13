@@ -90,6 +90,8 @@ const NewDocPage = () => {
         },
       })
 
+      console.log("DENNIS NEW RESULT", result)
+
       if (result.error) {
         setError(result.error.message)
       } else if (result.data?.addDocument) {

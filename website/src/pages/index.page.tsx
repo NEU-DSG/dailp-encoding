@@ -3,12 +3,11 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
-import { Card, Carousel } from "src/components"
+import { Card, Carousel, WordpressPage } from "src/components"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
-import { DailpPageContents } from "./dailp.page"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -40,7 +39,7 @@ const IndexPage = () => {
             images={carouselImages}
             caption="Digital Archive of Indigenous Language Persistence"
           />
-          <DailpPageContents path="/" />
+          <WordpressPage slug="/" />
 
           <h1>Digital Edited Collections</h1>
           {userRole === UserRole.Editor && (

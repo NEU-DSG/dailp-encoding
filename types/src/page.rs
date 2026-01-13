@@ -8,17 +8,15 @@ use serde::{Deserialize, Serialize};
 pub struct Page {
     /// The path that this page lives at, which also uniquely identifies it.
     /// For example, "/our-team"
-    pub id: uuid::Uuid,
-    pub title: String,
-    pub body: Vec<ContentBlock>,
-    pub path: String,
+    pub id: String,
+    title: String,
+    body: Vec<ContentBlock>,
 }
 
 impl Page {
-    pub fn build(id: uuid::Uuid, path: String, title: String, body: Vec<ContentBlock>) -> Self {
+    pub fn build(title: String, slug: String, body: Vec<ContentBlock>) -> Self {
         Self {
-            id,
-            path,
+            id: format!("/{}", slug),
             title,
             body,
         }

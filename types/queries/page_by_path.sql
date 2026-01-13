@@ -1,5 +1,4 @@
 select
-  page_id,
   title,
   path,
   slug,

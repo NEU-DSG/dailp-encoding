@@ -39,9 +39,6 @@ export const DailpPageContents = (props: { path: string }) => {
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
 
   const isInMenu = (slug: string) => {
-    if (slug == "/") {
-      return true
-    }
     return (
       menu?.items
         ?.flatMap((item) => item.items)
@@ -69,7 +66,7 @@ export const DailpPageContents = (props: { path: string }) => {
           <h1>{page.title}</h1>
           {/* dennis todo: should be admin in the future */}
           {userRole === UserRole.Editor && (
-            <Link href={`/edit?path=${props.path}`}>Edit</Link>
+            <Link href={`/edit${props.path}`}>Edit</Link>
           )}
         </header>
         {/* html chceking here please*/}
@@ -97,7 +94,7 @@ export const DailpPageContents = (props: { path: string }) => {
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
         {userRole === UserRole.Editor && (
-          <Link href={`/edit?path=${props.path}`}>Edit</Link>
+          <Link href={`/edit${props.path}`}>Edit</Link>
         )}
       </header>
       {content.charAt(0) === "<" ? (

@@ -2,14 +2,13 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
-import { Link } from "src/components"
+import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
-import { DailpPageContents } from "../dailp.page"
 import { useChapters, useDialog } from "./edited-collection-context"
 
 // Renders an edited collection page based on the route parameters.
@@ -97,7 +96,7 @@ const EditedCollectionPage = () => {
             <Link href="https://dailp.northeastern.edu/">DAILP</Link>
           </h3>
 
-          <DailpPageContents path={`/${collectionSlug}`} />
+          <WordpressPage slug={`/${collectionSlug}`} />
 
           <h3>
             {firstChapterSlug ? (
