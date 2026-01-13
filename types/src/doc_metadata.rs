@@ -48,7 +48,7 @@ pub struct SubjectHeading {
 }
 
 // For updating subject headings
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct SubjectHeadingUpdate {
     /// UUID for the subject heading
     pub id: Uuid,
@@ -85,7 +85,7 @@ pub struct Format {
 }
 
 // For updating formats
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct FormatUpdate {
     /// UUID for the format
     pub id: Uuid,
@@ -116,7 +116,7 @@ pub struct Keyword {
 }
 
 // For updating keywords
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct KeywordUpdate {
     /// UUID for the keyword
     pub id: Uuid,
@@ -153,7 +153,7 @@ pub struct Genre {
 }
 
 // For updating genres
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct GenreUpdate {
     /// UUID for the genre
     pub id: Uuid,
@@ -183,7 +183,7 @@ pub struct Language {
 }
 
 /// For updating languages
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct LanguageUpdate {
     /// UUID for the language
     pub id: Uuid,
@@ -220,7 +220,7 @@ pub struct SpatialCoverage {
 }
 
 // For updating spatial coverages
-#[derive(async_graphql::InputObject)]
+#[derive(async_graphql::InputObject, Debug)]
 pub struct SpatialCoverageUpdate {
     /// UUID for the spatial coverage
     pub id: Uuid,

@@ -878,18 +878,12 @@ impl SheetInterpretation {
             .zip(roles.into_iter().skip(1))
             .filter(|(name, role)| !name.trim().is_empty() || !role.trim().is_empty())
             .map(|(name, role)| {
-                let parsed_role = match role.to_lowercase().parse::<ContributorRole>() {
-                    Ok(r) => Some(r),
-                    Err(_) => {
-                        println!("'{}' is not a valid role", role);
-                        None
-                    }
-                };
+                let parsed_role = ContributorRole::from(role.to_lowercase());
 
                 Contributor {
                     id: Uuid::new_v4(),
                     name,
-                    role: parsed_role,
+                    role: Some(parsed_role),
                 }
             })
             .collect();
