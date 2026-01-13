@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n    id,\n    title,\n    document_id,\n    wordpress_id,\n    index_in_parent,\n    section as \"section: CollectionSection\",\n    chapter_path,\n    ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1)\norder by nlevel(chapter_path), index_in_parent;",
+  "query": "select\n    id,\n    title,\n    document_id,\n    wordpress_id,\n    index_in_parent,\n    section as \"section: CollectionSection\",\n    chapter_path,\n    ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);",
   "describe": {
     "columns": [
       {
@@ -76,5 +76,5 @@
       null
     ]
   },
-  "hash": "fc4276855c7a7a30216f69dbd14b5cd911818c92c17fc5875c71e3c503f346e5"
+  "hash": "b2cd756955024a13a5c1e385ef85461a7335fd7fe7bd4c3067f3a872516a77ce"
 }

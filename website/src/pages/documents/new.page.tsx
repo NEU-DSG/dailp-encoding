@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import * as Dailp from "src/graphql/dailp"
-import { CollectionSection } from "src/graphql/dailp"
 import Layout from "src/layout"
 
 interface NewDocumentForm {
@@ -86,7 +85,6 @@ const NewDocPage = () => {
           englishTranslationLines: formattedData.englishTranslationLines,
           unresolvedWords,
           collectionId: formData.collectionId, // Pass collectionId to backend
-          section: CollectionSection.Body,
         },
       })
 
