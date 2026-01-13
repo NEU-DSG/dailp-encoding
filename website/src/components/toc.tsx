@@ -52,12 +52,6 @@ const CollectionTOC = () => {
 
   return (
     <>
-      <Link
-        href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
-        className={css.link}
-      >
-        Edit TOC
-      </Link>
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
