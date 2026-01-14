@@ -18,10 +18,10 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
+use crate::parse_orthography_system;
 use crate::person::Creator;
 use crate::user::User;
 use crate::user::UserId;
-use crate::parse_orthography_system;
 use crate::Orthography;
 use {
     crate::*,
@@ -2541,11 +2541,7 @@ impl Loader<TagId> for Database {
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
         let glosses: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
         // Use trait method instead of async_graphql conversion
-        let systems: Vec<_> = keys
-            .iter()
-            .unique()
-            .map(|k| k.1.identifier().to_owned())
-            .collect();
+        let systems: Vec<_> = keys.iter().unique().map(|k| k.1.id().to_owned()).collect();
         let items = query_file!("queries/morpheme_tags_by_gloss.sql", &glosses, &systems)
             .fetch_all(&self.client)
             .await?;
@@ -2630,11 +2626,7 @@ impl Loader<TagForMorpheme> for Database {
         keys: &[TagForMorpheme],
     ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
         let gloss_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let systems: Vec<_> = keys
-            .iter()
-            .unique()
-            .map(|k| k.1.identifier().to_owned())
-            .collect();
+        let systems: Vec<_> = keys.iter().unique().map(|k| k.1.id().to_owned()).collect();
         let items = query_file!("queries/morpheme_tags.sql", &gloss_ids, &systems)
             .fetch_all(&self.client)
             .await?;

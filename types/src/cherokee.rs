@@ -34,7 +34,7 @@ impl PgHasArrayType for CherokeeOrthography {
 }
 
 impl Orthography for CherokeeOrthography {
-    fn identifier(&self) -> &'static str {
+    fn id(&self) -> &'static str {
         match self {
             Self::Taoc => "TAOC",
             Self::Crg => "CRG",
@@ -44,16 +44,6 @@ impl Orthography for CherokeeOrthography {
     fn convert(&self, input: &str) -> String {
         // Delegates to existing CherokeeOrthography::convert()
         CherokeeOrthography::convert(self, input)
-    }
-    fn language_code(&self) -> &'static str {
-        "chr"
-    }
-    fn display_name(&self) -> &'static str {
-        match self {
-            Self::Taoc => "TAOC",
-            Self::Crg => "CRG",
-            Self::Learner => "LEARNER",
-        }
     }
     fn romanize(&self, phonetic: &str) -> String {
         match self {
@@ -275,5 +265,40 @@ mod tests {
                 "ᏛᏫᏘ"
             ]
         )
+    }
+
+    #[test]
+    fn orthography_trait_methods() {
+        use crate::Orthography;
+
+        // Test id() returns correct identifier for each variant
+        assert_eq!(CherokeeOrthography::Taoc.id(), "TAOC");
+        assert_eq!(CherokeeOrthography::Crg.id(), "CRG");
+        assert_eq!(CherokeeOrthography::Learner.id(), "LEARNER");
+
+        // Test romanize() behavior
+        let phonetic = "test phonetic";
+        let taoc = CherokeeOrthography::Taoc;
+        let crg = CherokeeOrthography::Crg;
+        let learner = CherokeeOrthography::Learner;
+
+        // TAOC and CRG should return the to_string unchanged
+        assert_eq!(taoc.romanize(phonetic), phonetic);
+        assert_eq!(crg.romanize(phonetic), phonetic);
+
+        // Learner should convert (result depends on simple_phonetics_to_worcester)
+        let learner_result = learner.romanize(phonetic);
+        assert!(!learner_result.is_empty() || phonetic.is_empty());
+
+        // Test convert() delegates correctly - use existing test data
+        let orig = "ùùnatoótákwààskvv̋ʔi";
+        assert_eq!(
+            CherokeeOrthography::Learner.convert(orig),
+            "unadodaquasgv'i"
+        );
+        assert_eq!(
+            CherokeeOrthography::Crg.convert(orig),
+            "uùnadoódágwaàsgv́v́ʔi"
+        );
     }
 }
