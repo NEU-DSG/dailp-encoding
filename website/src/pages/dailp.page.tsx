@@ -39,7 +39,7 @@ export const DailpPageContents = (props: { path: string }) => {
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
 
   const isInMenu = (slug: string) => {
-    if (slug == "/") {
+    if (slug == "/" || slug.indexOf("/pages/") !== -1) {
       return true
     }
     return (
