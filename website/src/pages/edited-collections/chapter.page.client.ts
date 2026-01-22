@@ -18,8 +18,8 @@ export async function data(pageContext: PageContext) {
     .query<Dailp.CollectionChapterQuery, Dailp.CollectionChapterQueryVariables>(
       Dailp.CollectionChapterDocument,
       {
-        collectionSlug,
-        chapterSlug,
+        collectionSlug: collectionSlug.replaceAll("-", "_"),
+        chapterSlug: chapterSlug.replaceAll("-", "_"),
       }
     )
     .toPromise()
