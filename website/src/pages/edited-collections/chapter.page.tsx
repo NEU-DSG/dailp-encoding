@@ -27,8 +27,8 @@ const ChapterPage = (props: {
   // Query will use cache if data was prefetched in chapter.page.client.ts
   const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
     variables: {
-      collectionSlug: collectionSlug!,
-      chapterSlug: chapterSlug!,
+      collectionSlug: collectionSlug?.replaceAll("-", "_")!,
+      chapterSlug: chapterSlug?.replaceAll("-", "_")!,
     },
     pause: !collectionSlug || !chapterSlug,
   })
