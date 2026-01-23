@@ -89,14 +89,14 @@ const NewPage = () => {
       pageInput: {
         title,
         body: [content],
-        path: isNew ? "/pages" + path : path,
+        path: path,
       },
     }).then((res) => {
       if (res.error) {
         setError(res.error.message)
       } else {
         setError(null)
-        navigate(`/pages${formatPath(path)}`)
+        navigate(`${formatPath(path)}`)
       }
     })
   }
@@ -138,50 +138,32 @@ const NewPage = () => {
               alignItems: "center",
             }}
           >
-            {
-              // we only want to show path input if page is new
-              isNew && (
-                <>
-                  <label htmlFor="path">Path:</label>
-                  <div
-                    style={{
-                      display: "flex",
-                      width: "80%",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        padding: "8px 12px",
-                        backgroundColor: "#f5f5f5",
-                        borderRight: "1px solid #ccc",
-                        color: "#666",
-                        userSelect: "none",
-                      }}
-                    >
-                      /pages
-                    </span>
-                    <input
-                      id="path"
-                      type="text"
-                      placeholder="page-name"
-                      value={path}
-                      onChange={(e) => {
-                        setPath(e.target.value)
-                      }}
-                      style={{
-                        flex: 1,
-                        border: "none",
-                        outline: "none",
-                        padding: "8px 12px",
-                      }}
-                    />
-                  </div>
-                </>
-              )
-            }
+            <label htmlFor="path">Path:</label>
+            <div
+              style={{
+                display: "flex",
+                width: "80%",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                alignItems: "center",
+              }}
+            >
+              <input
+                id="path"
+                type="text"
+                placeholder="page-name"
+                value={path}
+                onChange={(e) => {
+                  setPath(e.target.value)
+                }}
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  padding: "8px 12px",
+                }}
+              />
+            </div>
             <br />
             <label htmlFor="title">Title:</label>
             <input
