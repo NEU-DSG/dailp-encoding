@@ -48,11 +48,11 @@ export const NavBar = () => {
 
         <li><a href="/credit">CREDIT</a></li>
 
-        <div className={navIcons}>
+        <li className={navIcons}>
           <i className="fa-solid fa-user"></i> {/* Only show for logged in users, otherwise  "Log in" */}
           <i className="fa-solid fa-gear"></i>
           <i className="fa-solid fa-bell"></i> {/* Only show for logged in users */}
-        </div>
+        </li>
       </ul>
     </nav>
   )

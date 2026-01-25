@@ -3,7 +3,7 @@ import { fonts } from "src/style/constants"
 
 export const navBar = style({
   width: "100%",
-  height: "100%",
+  height: "4rem",
   display: "flex",
   marginBottom: "0px",
   backgroundColor: "#823E2D",
@@ -19,20 +19,28 @@ export const navLinks = style({
   display: "flex",
   flexDirection: "row",
   gap: "2.5rem",
-  paddingTop: "5px",
-  paddingBottom: "5px",
+  margin: 0,
+  padding: 0, 
   marginLeft: "1rem",
-  alignItems: "center",
+  height: "100%",
+  alignItems: "stretch",
 })
 
 globalStyle(`${navLinks} a`, {
   display: "flex",
   alignItems: "center",
+  height: "100%",
   textDecoration: "none",
   color: "#ffffffff",
   fontWeight: "500",
   fontSize: "20px",
   transition: "color 0.2s ease",
+})
+
+globalStyle(`${navLinks} > li`, {
+  display: "flex",
+  alignItems: "center",
+  height: "100%",
 })
 
 globalStyle(`${navLinks} a:hover`, {
