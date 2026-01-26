@@ -21,7 +21,7 @@ export const navLinks = style({
   gap: "2.5rem",
   margin: 0,
   padding: 0, 
-  marginLeft: "1rem",
+  marginLeft: "3rem",
   height: "100%",
   alignItems: "stretch",
 })

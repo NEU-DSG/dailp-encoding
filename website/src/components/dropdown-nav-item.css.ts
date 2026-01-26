@@ -49,11 +49,20 @@ export const dropdownMenu = style({
   minWidth: "180px",
   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
   zIndex: 1000,
+  lineHeight: "1.2",
+})
+
+globalStyle(`${dropdownMenu} li`, {
+  margin: 0,
+  padding: 0,
+  display: "block",
+  alignItems: "center",
+  boxSizing: "border-box",
 })
 
 export const dropdownItem = style({
   display: "block",
-  padding: "8px 12px",
+  padding: "12px 12px",
   color: "#000000",
   fontFamily: fonts.header,
   textDecoration: "none",
@@ -64,15 +73,15 @@ export const dropdownItem = style({
 })
 
 globalStyle(`${dropdownMenu} a, ${dropdownMenu} a:visited, ${dropdownMenu} a:active`, {
-  display: "block",
+  display: "flex",
   color: "#000000",
   textDecoration: "none",
   listStyleType: "none",
-  fontWeight: "500",
+  width: "100%",
   borderBottom: "1px solid black",
+  fontWeight: "500",
   fontFamily: "Inter",
-  paddingTop: "15px",
-  paddingBottom: "15px",
+  alignItems: "center",
 })
 
 globalStyle(`${dropdownMenu} a:hover`, {
