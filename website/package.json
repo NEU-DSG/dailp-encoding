@@ -10,7 +10,7 @@
     "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
     "build:vite": "vite build && cp -rfT dist/client/ public/",
     "build": "graphql-codegen && npm-run-all --parallel build:vite build:rustdoc && cp -rfT ../target/doc/ public/rustdoc/",
-    "serve": "NODE_ENV=production node server.mjs",
+    "serve": "NODE_ENV=production http-server public -p 3001",
     "generate": "graphql-codegen"
   },
   "sideEffects": false,
