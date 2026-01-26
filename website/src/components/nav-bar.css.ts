@@ -2,7 +2,7 @@ import { globalStyle, style } from "@vanilla-extract/css"
 import { fonts } from "src/style/constants"
 
 export const navBar = style({
-  width: "100%",
+  width: "100vw",
   height: "4rem",
   display: "flex",
   marginBottom: "0px",
