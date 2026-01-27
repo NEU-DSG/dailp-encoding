@@ -4,7 +4,7 @@ import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
-import { PageContentNotice } from "../components/page-content-notice"
+import { Alert } from "../components/alert"
 import Layout from "../layout"
 
 interface DailpPageProps {
@@ -56,9 +56,9 @@ export const DailpPageContents = (props: { path: string }) => {
 
   if (!page || !content) {
     return (
-      <PageContentNotice title="Page content was not found">
+      <Alert title="Page content was not found">
         Page content was not found for <code>{props.path}</code>.
-      </PageContentNotice>
+      </Alert>
     )
   }
 
