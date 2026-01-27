@@ -547,13 +547,8 @@ impl Database {
     }
 
     pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<MorphemeTag>> {
-        use async_graphql::Value;
-        let system_name = if let Value::Enum(s) = system.to_value() {
-            s
-        } else {
-            unreachable!()
-        };
-        let results = query_file!("queries/all_morpheme_tags.sql", system_name.as_str())
+        let system_name = system.id();
+        let results = query_file!("queries/all_morpheme_tags.sql", system_name)
             .fetch_all(&self.client)
             .await?;
         Ok(results
