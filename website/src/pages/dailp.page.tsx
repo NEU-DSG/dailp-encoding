@@ -5,6 +5,7 @@ import { Link } from "src/components"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
+import { PageContentNotice } from "../components/page-content-notice"
 
 interface DailpPageProps {
   "*": string
@@ -54,8 +55,12 @@ export const DailpPageContents = (props: { path: string }) => {
   }
 
   if (!page || !content) {
-    return <p>Page content not found. {props.path}</p>
+    return (
+      <PageContentNotice title="Page content was not found">Page content was not found for <code>{props.path}</code>.</PageContentNotice>
+    )
   }
+
+  
   let collectionSlugs = ["cwkw", "willie-jumper-stories"]
 
   // check if page belongs in a collection
