@@ -50,16 +50,16 @@ async fn main() -> Result<()> {
     println!("Migrating pages...");
     pages::migrate_pages(&db).await?;
 
-    //migrate_data(&db).await?;
+    // migrate_data(&db).await?;
 
     // println!("Migrating connections...");
     // connections::migrate_connections(&db).await?;
 
     println!("Migrating menu...");
-    menu::migrate_menu(&db).await?;
+    // menu::migrate_menu(&db).await?;
 
     //println!("Migrating collections...");
-    //edited_collection::migrate_edited_collection(&db).await?;
+    edited_collection::migrate_edited_collection(&db).await?;
 
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;
