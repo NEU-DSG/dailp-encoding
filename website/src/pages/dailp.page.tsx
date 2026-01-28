@@ -56,7 +56,7 @@ export const DailpPageContents = (props: { path: string }) => {
 
   if (!page || !content) {
     return (
-      <Alert title="Page content was not found">
+      <Alert>
         Page content was not found for <code>{props.path}</code>.
       </Alert>
     )

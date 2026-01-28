@@ -1,17 +1,10 @@
 import React from "react"
 import * as css from "./alert.css"
 
-type AlertProps = React.HTMLAttributes<HTMLDivElement> & {
-  title?: string
-}
-
-export const Alert = (props: AlertProps) => {
-  const { title, children, ...rest } = props
-
+export const Alert = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className={css.wrapper}>
-      <div className={css.notice} {...rest}>
-        {title && <div className={css.title}>{title}</div>}
+      <div className={css.notice} role="alert">
         <div className={css.content}>{children}</div>
       </div>
     </div>
