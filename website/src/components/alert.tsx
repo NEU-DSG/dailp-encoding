@@ -5,7 +5,7 @@ export const Alert = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className={css.wrapper}>
       <div className={css.notice} role="alert">
-        <div className={css.content}>{children}</div>
+        <p>{children}</p>
       </div>
     </div>
   )

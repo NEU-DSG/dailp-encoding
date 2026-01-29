@@ -90,9 +90,11 @@ export const DailpPageContents = (props: { path: string }) => {
     // otherwise check if page is in menu
     if (!isInMenu(props.path)) {
       return (
-        <Alert>
-          Page content found. Add it to the menu to view it. {props.path}
-        </Alert>
+        <main>
+          <Alert>
+            Page content found. Add it to the menu to view it. {props.path}
+          </Alert>
+        </main>
       )
     }
   }
