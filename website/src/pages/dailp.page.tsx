@@ -92,6 +92,12 @@ export const DailpPageContents = (props: { path: string }) => {
 
   return (
     <>
+      {
+        /* otherwise check if page is in menu */
+        !isInMenu(props.path) && (
+          <p>Page content found. Add it to the menu to view it. {props.path}</p>
+        )
+      }
       <header>
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
@@ -99,13 +105,6 @@ export const DailpPageContents = (props: { path: string }) => {
           <Link href={`/edit?path=${props.path}`}>Edit</Link>
         )}
       </header>
-
-      {
-        /* otherwise check if page is in menu */
-        !isInMenu(props.path) && (
-          <p>Page content found. Add it to the menu to view it. {props.path}</p>
-        )
-      }
 
       {content.charAt(0) === "<" ? (
         <div dangerouslySetInnerHTML={{ __html: content }} />
