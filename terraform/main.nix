@@ -79,6 +79,7 @@ in {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
+        TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
       };
       endpoints = [
         {

@@ -67,6 +67,7 @@ in {
             TF_STAGE = config.setup.stage;
             VITE_DEPLOYMENT_ENV = config.setup.stage;
             CF_URL = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
+            TURNSTILE_SITE_KEY = builtins.getEnv "TURNSTILE_SITE_KEY";
           };
           frontend = {
             artifacts = {
