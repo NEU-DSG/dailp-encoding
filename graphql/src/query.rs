@@ -13,6 +13,7 @@ use dailp::{
     SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
+use log::{debug, info};
 use reqwest::Client;
 
 use {
@@ -969,15 +970,23 @@ impl Mutation {
     ) -> FieldResult<bool> {
         // post to https://challenges.cloudflare.com/turnstile/v0/siteverify
         let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
-        let req = token;
-
+        let params = [("secret", secret), ("response", token)];
         let client = reqwest::Client::new();
+
+        info!("Sending POST to SiteVerify API");
+        debug!("Payload: {}", params);
+
         let response = client
             .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
-            .form(&[("secret", secret), ("response", req)])
+            .form(&params)
             .send()
             .await?;
+
+        info!("Response recieved from SiteVerify API");
+        debug!("Status Code: {}", response.status());
+
         let body = response.text().await?;
+        debug("Body Content: {}", body);
         let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
         Ok(body_json["success"].as_bool().unwrap())
