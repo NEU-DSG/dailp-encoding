@@ -974,7 +974,7 @@ impl Mutation {
         let client = reqwest::Client::new();
 
         info!("Sending POST to SiteVerify API");
-        debug!("Payload: {}", params);
+        debug!("Payload: {:?}", params);
 
         let response = client
             .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
@@ -986,7 +986,7 @@ impl Mutation {
         debug!("Status Code: {}", response.status());
 
         let body = response.text().await?;
-        debug("Body Content: {}", body);
+        debug!("Body Content: {}", body);
         let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
         Ok(body_json["success"].as_bool().unwrap())
