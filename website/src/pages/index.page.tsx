@@ -4,12 +4,13 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
 import { Card, WordpressPage } from "src/components"
-import { fullWidth, paddedCenterColumn, storyCardGroup, section } from "src/style/utils.css"
+import { fullWidth, paddedCenterColumn, storyCardGroup, section, cardGroup } from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
 import HomepageHeader from "src/components/homepage-header"
 import StoryCard from "src/components/story-card"
+import CollectionCard from "src/components/collection-card"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -107,20 +108,23 @@ const IndexPage = () => {
               </div>
             )}
             <ul>
-              {dailp?.allEditedCollections.map((collection) => (
-                <Card
-                  thumbnail={collection.thumbnailUrl ?? cwkwLogo}
-                  header={{
-                    text: collection.title,
-                    link: collectionRoute(collection.slug),
-                  }}
-                  description={
-                    collection.description
-                      ? collection.description
-                      : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
-                  }
-                />
-              ))}
+              <div className={cardGroup}>
+                {dailp?.allEditedCollections.map((collection) => (
+                  <CollectionCard
+                    thumbnail={collection.thumbnailUrl ?? cwkwLogo}
+                    header={{
+                      text: collection.title,
+                      link: collectionRoute(collection.slug),
+                    }}
+                    description={
+                      collection.description
+                        ? collection.description
+                        : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
+                    }
+                    buttonLabel="View Collection"
+                  />
+                ))}
+              </div>
             </ul>
           </section>
         </article>

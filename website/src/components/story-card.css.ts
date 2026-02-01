@@ -1,23 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts } from "src/style/constants"
-
-export const radii = {
-    none: 0,
-    small: "1px",
-    medium: "2px",
-    large: "4px",
-    round: "15px",
-}
-
-export const space = {
-    [0]: 0,
-    none: 0,
-    xsmall: "2px",
-    small: "4px",
-    medium: "8px",
-    large: "16px",
-    // etc.
-}
+import { fonts, radii } from "src/style/constants"
 
 export const storyCard = style({
     display: "flex",

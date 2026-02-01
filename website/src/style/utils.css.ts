@@ -117,35 +117,6 @@ export const paddedCenterColumn = style([edgePadded, centeredColumn])
 
 export const paddingAround = style(padding(rhythm(3 / 4), hspace.edge))
 
-export const cardGroup = style({
-  paddingTop: "0px",
-  display: "flex",
-  flexDirection: "row",
-  gap: "30px",
-  justifyContent: "center",
-  alignItems: "stretch",
-
-  "@media": {
-    // Mobile (stack cards vertically)
-    "screen and (max-width: 600px)": {
-      flexDirection: "column",
-      alignItems: "center",
-    },
-
-    // Tablet (2 cards per row)
-    "screen and (min-width: 601px) and (max-width: 900px)": {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "center",
-    },
-
-    // Desktop (3–4 cards per row)
-    "screen and (min-width: 901px)": {
-      flexDirection: "row",
-    },
-  },
-})
-
 export const storyCardGroup = style({
   paddingBottom: "100px",
   display: "flex",
@@ -181,3 +152,32 @@ export const section = style({
   gap: "1.25rem",
   marginTop: "4rem",
 });
+
+export const cardGroup = style({
+  paddingTop: "0px",
+  display: "flex",
+  flexDirection: "row",
+  gap: "30px",
+  justifyContent: "center",
+  alignItems: "stretch",
+
+  "@media": {
+    // Mobile (stack cards vertically)
+    "screen and (max-width: 600px)": {
+      flexDirection: "column",
+      alignItems: "center",
+    },
+
+    // Tablet (2 cards per row)
+    "screen and (min-width: 601px) and (max-width: 900px)": {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+    },
+
+    // Desktop (3–4 cards per row)
+    "screen and (min-width: 901px)": {
+      flexDirection: "row",
+    },
+  },
+})
