@@ -4,6 +4,7 @@ import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
+import { Alert } from "../components/alert"
 import Layout from "../layout"
 
 interface DailpPageProps {
@@ -54,7 +55,7 @@ export const DailpPageContents = (props: { path: string }) => {
   }
 
   if (!page || !content) {
-    return <p>Page content not found. {props.path}</p>
+    return <Alert>Page content not found. {props.path}</Alert>
   }
   let collectionSlugs = ["cwkw", "willie-jumper-stories"]
 
@@ -80,23 +81,18 @@ export const DailpPageContents = (props: { path: string }) => {
         )}
       </>
     )
-  } else {
-    // otherwise check if page is in menu
-    if (!isInMenu(props.path)) {
-      return (
-        <p>Page content found. Add it to the menu to view it. {props.path}</p>
-      )
-    }
   }
 
   const userRole = useUserRole()
 
   return (
     <>
-    {
-        /* otherwise check if page is in menu */
+      {
+        /* check if page is in menu */
         !isInMenu(props.path) && (
-          <p>Page content found. Add it to the menu to view it. {props.path}</p>
+          <Alert>
+            Page content found. Add it to the menu to view it. {props.path}
+          </Alert>
         )
       }
       <header>
