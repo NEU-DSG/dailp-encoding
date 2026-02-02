@@ -97,6 +97,23 @@ export const DailpPageContents = (props: { path: string }) => {
       }
       <header>
         <h1>{page.title}</h1>
+        {/* dropdown & publish button */}
+        {userRole === UserRole.Editor && (
+          <div>
+            <label>
+              Location:
+              <select>
+                <option value="">None</option>
+                {menu?.items?.map((item: any) => (
+                  <option key={item.label} value={item.path}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button>Publish</button>
+          </div>
+        )}
         {/* dennis todo: should be admin in the future */}
         {userRole === UserRole.Editor && (
           <Link href={`/edit?path=${props.path}`}>Edit</Link>
