@@ -6,11 +6,12 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AddChapterInput, AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, BatchUpsertChaptersInput, CollectionChapter, CollectionSection,
+    Contributor, ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput,
+    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
+    DocumentParagraph, PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -852,8 +853,13 @@ impl Mutation {
             segments: Some(vec![page]),
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
+        let section = input.section.unwrap_or(CollectionSection::Body);
         let (document_id, _chapter_id) = database
-            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .insert_document_into_edited_collection(
+                annotated_doc.clone(),
+                input.collection_id,
+                section,
+            )
             .await?;
 
         // Update the annotated_doc with the correct document_id from the database
@@ -944,6 +950,70 @@ impl Mutation {
             .to_string())
     }
 
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn upsert_chapter(
+        &self,
+        context: &Context<'_>,
+        input: UpsertChapterInput,
+    ) -> FieldResult<String> {
+        let chapter_id = input.id;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_collection_chapter(input)
+            .await?;
+        Ok(chapter_id.to_string())
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn batch_upsert_chapters(
+        &self,
+        context: &Context<'_>,
+        input: BatchUpsertChaptersInput,
+    ) -> FieldResult<String> {
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .batch_upsert_collection_chapters(input.chapters)
+            .await?;
+        Ok("Chapters updated".to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_collection_chapter_order(
+        &self,
+        context: &Context<'_>,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> FieldResult<String> {
+        let collection_slug = input.collection_slug.clone();
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_collection_chapter_order(input)
+            .await?;
+        Ok(collection_slug)
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn remove_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        chapter_id: Uuid,
+    ) -> FieldResult<String> {
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .remove_collection_chapter(chapter_id)
+            .await?;
+        Ok("Chapter removed from collection".to_string())
+    }
+
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
         Ok(context
@@ -1009,6 +1079,7 @@ pub struct CreateDocumentFromFormInput {
     pub source_name: String,
     pub source_url: String,
     pub collection_id: Uuid,
+    pub section: Option<CollectionSection>,
 }
 
 #[derive(async_graphql::SimpleObject)]
