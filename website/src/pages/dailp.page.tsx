@@ -101,7 +101,7 @@ export const DailpPageContents = (props: { path: string }) => {
         {userRole === UserRole.Editor && (
           <div>
             <label>
-              Location:
+              Page Location:
               <select>
                 <option value="">None</option>
                 {menu?.items?.map((item: any) => (
