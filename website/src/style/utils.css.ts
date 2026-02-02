@@ -155,29 +155,28 @@ export const section = style({
 
 export const cardGroup = style({
   paddingTop: "0px",
-  display: "flex",
-  flexDirection: "row",
+  display: "grid",
   gap: "30px",
   justifyContent: "center",
   alignItems: "stretch",
+  width: "100%",
+  maxWidth: "1400px",
+  gridTemplateColumns: "repeat(2, 1fr)",
 
   "@media": {
-    // Mobile (stack cards vertically)
+    // Mobile (stack vertically: 1 per row)
     "screen and (max-width: 600px)": {
-      flexDirection: "column",
-      alignItems: "center",
+      gridTemplateColumns: "1fr",
     },
 
     // Tablet (2 cards per row)
     "screen and (min-width: 601px) and (max-width: 900px)": {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "center",
+      gridTemplateColumns: "repeat(2, 1fr)",
     },
 
     // Desktop (3–4 cards per row)
     "screen and (min-width: 901px)": {
-      flexDirection: "row",
+      gridTemplateColumns: "repeat(3, 1fr)",
     },
   },
 })

@@ -1,100 +1,323 @@
-import React from "react"
-import { Link } from "src/components"
+import Link from "./components/link"
 import { CreativeCommonsBy } from "src/components/attributions/creative-commons"
-import { usePageContext } from "src/renderer/PageShell"
-import { wordpressUrl } from "src/theme.css"
+import { usePageContext } from "./renderer/PageShell"
 import * as css from "./footer.css"
 
-/** University affiliation, related navigation links, and contact info.  */
+/** University affiliation, related navigation links, and contact info. */
 const Footer = () => {
   const { buildDate } = usePageContext()
+  const currentYear = new Date().getFullYear()
+
   return (
     <footer className={css.footer}>
-      <div className={css.dark}>
-        <span className={css.content} style={{ display: "block" }}>
-          <CreativeCommonsBy
-            title="The Digital Archive of Indigenous Language Persistence (DAILP)"
-            authors={[
-              { name: "Ellen Cushman", link: "https://www.ellencushman.com" },
-              { name: "Shelby Snead", link: "https://snead.xyz" },
-              { name: "Naomi Trevino" },
-              { name: "Jeffrey Bourns" },
-              { name: "Aparna Dutta" },
-              { name: "Henry Volchonok" },
-            ]}
-          />
-        </span>
-        <p className={css.content} style={{ display: "block" }}>
-          This project was created with help from the{" "}
-          <Link href="http://dsg.northeastern.edu/">
-            Digital Scholarship Group
-          </Link>{" "}
-          at the{" "}
-          <Link href="http://library.northeastern.edu/">
-            Northeastern University Library
-          </Link>
-        </p>
-        <div className={css.content}>
-          <Link href="https://northeastern.edu">
+      {/* Supported By */}
+      <div className={css.sponsorSection}>
+        <h2 className={css.supportedByTitle}>Supported By</h2>
+
+        <div className={css.sponsorLogosContainer}>
+          <Link
+            href="https://www.hluce.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img
-              className={css.image}
-              src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
-              alt="Northeastern University"
-              width={180}
-              loading="lazy"
+              src="https://www.hluce.org/content/uploads/2018/04/hlf_logo_fullcolor_wordmark_rgb.png"
+              alt="Henry Luce Foundation"
+              className={css.sponsorLogo}
             />
           </Link>
-          <Link href="https://github.com/neu-dsg/dailp-encoding">
-            Browse the source code
+
+          <Link
+            href="https://www.archives.gov/nhprc"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://www.archives.gov/files/nhprc/images/nhprc-logo.jpg"
+              alt="National Archives: NHPRC"
+              className={css.sponsorLogoTall}
+            />
           </Link>
-        </div>
-        <div className={css.content}>
-          Last Updated on {buildDate.toDateString()}
+
+          <Link
+            href="https://www.mellon.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Andrew_W._Mellon_Foundation_logo.svg/1200px-Andrew_W._Mellon_Foundation_logo.svg.png"
+              alt="Mellon Foundation"
+              className={css.sponsorLogo}
+            />
+          </Link>
+
+          <Link
+            href="https://librarynews.northeastern.edu/?p=275791"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://library.northeastern.edu/wp-content/uploads/2022/03/SHARP-website-v01-300x200.jpg"
+              alt="SHARP Grant"
+              className={css.sponsorLogoTall}
+            />
+          </Link>
+
+          <Link
+            href="https://www.neh.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://www.neh.gov/sites/default/files/styles/medium_square/public/2019-08/NEH-Preferred-Seal820.jpg"
+              alt="National Endowment for the Humanities"
+              className={css.sponsorLogoTall}
+            />
+          </Link>
         </div>
       </div>
-      <div className={css.light}>
-        <h4>
-          <Link href="/support">Supported by</Link>
-        </h4>
-        <div className={css.content}>
-          <Link href="https://www.hluce.org/">
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/04/LUCE-Logo-Full-Color-L-768x242.png`}
-              height={68}
-              alt="Henry Luce Foundation"
-            />
-          </Link>
-          <Link href="https://www.archives.gov/nhprc">
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/12/nhprc-logo-239x300.jpg`}
-              width={120}
-              alt="National Archives: National Historical Publications & Records Commission"
-            />
-          </Link>
-          <Link href="https://www.neh.gov/">
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/12/NEH-Preferred-Seal820-768x348.jpg`}
-              width={150}
-              alt="National Endowment for the Humanities"
-            />
-          </Link>
-          <Link href="https://librarynews.northeastern.edu/?p=275791">
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2022/03/SHARP-website-v01-300x200.jpg`}
-              width={150}
-              alt="Sustaining the Humanities through the American Rescue Plan Grant"
-            />
-          </Link>
-          <Link href="https://www.imls.gov/">
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/09/imls_logo_2c-300x136.jpg`}
-              width={150}
-              alt="Institute of Museum and Library Services"
-            />
-          </Link>
+
+      {/* Main Footer */}
+      <div className={css.darkSection}>
+        <div className={css.darkContainer}>
+          <div className={css.footerGrid}>
+
+            {/* University + Sitemap */}
+            <div className={css.universityColumn}>
+              <div>
+                <h3 className={css.universityTitle}>
+                  Northeastern
+                  <br />
+                  University
+                </h3>
+
+                <address className={css.address}>
+                  360 Huntington Ave,
+                  <br />
+                  Boston, MA 02115
+                </address>
+              </div>
+
+              <div>
+                <h4 className={css.sectionTitle}>Sitemap</h4>
+
+                <nav className={css.sitemapNav}>
+                  <Link href="/" className={css.sitemapLink}>
+                    Home
+                  </Link>
+
+                  <Link href="/glossary" className={css.sitemapLink}>
+                    Glossary of Terms
+                  </Link>
+
+                  <Link href="/search" className={css.sitemapLink}>
+                    Word Search
+                  </Link>
+
+                  <Link href="/goals" className={css.sitemapLink}>
+                    Goals
+                  </Link>
+
+                  <Link href="/team" className={css.sitemapLink}>
+                    Team
+                  </Link>
+                </nav>
+              </div>
+            </div>
+
+            {/* About */}
+            <div className={css.aboutSection}>
+              <h4 className={css.sectionTitle}>About</h4>
+
+              <p className={css.aboutText}>
+                The Digital Archive of Indigenous Language Persistence (DAILP) by{" "}
+                <Link
+                  href="https://www.ellencushman.com"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ellen Cushman
+                </Link>
+                ,{" "}
+                <Link
+                  href="https://snead.xyz"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Shelby Snead
+                </Link>
+                , Naomi Trevino, Jeffrey Bourns, Aparna Dutta, and Henry Volchonok is
+                licensed under{" "}
+                <Link
+                  href="https://creativecommons.org/licenses/by-nc/4.0/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  CC BY-NC 4.0
+                </Link>
+
+                <span className={css.ccIcons}>
+                  <svg
+                    className={css.ccIcon}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    <text
+                      x="12"
+                      y="16"
+                      fontSize="10"
+                      textAnchor="middle"
+                      fill="currentColor"
+                    >
+                      CC
+                    </text>
+                  </svg>
+
+                  <svg
+                    className={css.ccIcon}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    <circle cx="12" cy="8" r="2" />
+                    <path
+                      d="M12 12v6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                  </svg>
+
+                  <svg
+                    className={css.ccIcon}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    <text
+                      x="12"
+                      y="16"
+                      fontSize="10"
+                      textAnchor="middle"
+                    >
+                      $
+                    </text>
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="20"
+                      y2="20"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </span>
+              </p>
+
+              <p className={css.aboutText}>
+                This project was created with help from the{" "}
+                <Link
+                  href="http://dsg.northeastern.edu/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Digital Scholarship Group
+                </Link>{" "}
+                at the{" "}
+                <Link
+                  href="http://library.northeastern.edu/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Northeastern University Library
+                </Link>
+              </p>
+
+              <Link
+                href="https://github.com/neu-dsg/dailp-encoding"
+                className={css.sourceLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Browse the source code
+              </Link>
+
+              <p className={css.lastUpdated}>
+                Last Updated on {buildDate.toDateString()}
+              </p>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className={css.sectionTitle}>Contact</h4>
+
+              <nav className={css.contactNav}>
+                <Link
+                  href="mailto:contact@dailp.northeastern.edu"
+                  className={css.contactLink}
+                >
+                  <i className="fa-regular fa-envelope" />
+                  Email
+                </Link>
+
+                <Link
+                  href="https://www.linkedin.com/company/dailp"
+                  className={css.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="fa-brands fa-linkedin-in" />
+                  LinkedIn
+                </Link>
+
+                <Link
+                  href="https://github.com/neu-dsg/dailp-encoding"
+                  className={css.contactLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="fa-brands fa-github" />
+                  GitHub
+                </Link>
+              </nav>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className={css.copyrightSection}>
+            © {currentYear} Digital Archive of Indigenous Language Persistence
+            (DAILP)
+          </div>
         </div>
       </div>
     </footer>
   )
 }
+
 export default Footer
