@@ -2,6 +2,7 @@ import Link from "./components/link"
 import { CreativeCommonsBy } from "src/components/attributions/creative-commons"
 import { usePageContext } from "./renderer/PageShell"
 import * as css from "./footer.css"
+import { wordpressUrl } from "src/theme.css"
 
 /** University affiliation, related navigation links, and contact info. */
 const Footer = () => {
@@ -21,7 +22,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             <img
-              src="https://www.hluce.org/content/uploads/2018/04/hlf_logo_fullcolor_wordmark_rgb.png"
+              src={`${wordpressUrl}/wp-content/uploads/2021/04/LUCE-Logo-Full-Color-L-768x242.png`}
               alt="Henry Luce Foundation"
               className={css.sponsorLogo}
             />
@@ -33,7 +34,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             <img
-              src="https://www.archives.gov/files/nhprc/images/nhprc-logo.jpg"
+              src={`${wordpressUrl}/wp-content/uploads/2021/12/nhprc-logo-239x300.jpg`}
               alt="National Archives: NHPRC"
               className={css.sponsorLogoTall}
             />
@@ -45,7 +46,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Andrew_W._Mellon_Foundation_logo.svg/1200px-Andrew_W._Mellon_Foundation_logo.svg.png"
+              src="https://nff.org/sites/default/files/paragraphs/media/image-small/Mellon_Logomark_Lockup_Black.png"
               alt="Mellon Foundation"
               className={css.sponsorLogo}
             />
@@ -57,7 +58,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             <img
-              src="https://library.northeastern.edu/wp-content/uploads/2022/03/SHARP-website-v01-300x200.jpg"
+              src="https://www.humanitiestennessee.org/wp-content/uploads/2021/06/SHARP.jpg"
               alt="SHARP Grant"
               className={css.sponsorLogoTall}
             />
@@ -69,7 +70,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             <img
-              src="https://www.neh.gov/sites/default/files/styles/medium_square/public/2019-08/NEH-Preferred-Seal820.jpg"
+              src={`${wordpressUrl}/wp-content/uploads/2021/12/NEH-Preferred-Seal820-768x348.jpg`}
               alt="National Endowment for the Humanities"
               className={css.sponsorLogoTall}
             />
