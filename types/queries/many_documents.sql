@@ -16,6 +16,7 @@ select
   coalesce(
     jsonb_agg(
       jsonb_build_object(
+        'id', contributor.id,
         'name', contributor.full_name,
         'role', attr.contribution_role
       )

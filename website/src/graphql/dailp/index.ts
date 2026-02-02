@@ -69,14 +69,14 @@ export type AnnotatedDoc = {
   readonly editedAudio: ReadonlyArray<AudioSlice>
   readonly formCount: Scalars["Int"]
   /** The format of the original artifact */
-  readonly format: Format
+  readonly format: Maybe<Format>
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
-  /** The genre of the document, used to group similar ones */
-  readonly genre: Genre
+  /** The genre of the document */
+  readonly genre: Maybe<Genre>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -418,6 +418,11 @@ export type Contributor = {
   readonly role: Maybe<ContributorRole>
 }
 
+export type ContributorAttributionInput = {
+  readonly name: Scalars["String"]
+  readonly role: InputMaybe<ContributorRole>
+}
+
 /**
  * Basic personal details of an individual contributor, which can be retrieved
  * from a particular instance of [`Contributor`].
@@ -451,7 +456,9 @@ export type ContributorDetails = {
  */
 export enum ContributorRole {
   Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
   CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
   Transcriber = "TRANSCRIBER",
   Translator = "TRANSLATOR",
 }
@@ -579,7 +586,7 @@ export type DocumentCollection = {
  */
 export type DocumentMetadataUpdate = {
   /** The editors, translators, etc. of the document */
-  readonly contributors: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly contributors: InputMaybe<ReadonlyArray<ContributorAttributionInput>>
   /** The creator(s) of the document */
   readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
   /** The format of the original artifact */
@@ -975,6 +982,7 @@ export type Mutation = {
   readonly updateWord: AnnotatedForm
   readonly upsertChapter: Scalars["String"]
   readonly upsertPage: Scalars["String"]
+  readonly validateTurnstileToken: Scalars["Boolean"]
 }
 
 export type MutationAddBookmarkArgs = {
@@ -1083,6 +1091,10 @@ export type MutationUpsertPageArgs = {
   page: NewPageInput
 }
 
+export type MutationValidateTurnstileTokenArgs = {
+  token: Scalars["String"]
+}
+
 /** Input struct for a page. */
 export type NewPageInput = {
   /** content for page, needs to be sanitized */
@@ -1104,7 +1116,8 @@ export type Page = {
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
    */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly path: Scalars["String"]
   readonly title: Scalars["String"]
 }
 
@@ -1965,12 +1978,6 @@ export type DocFormFieldsFragment = {
         "id" | "name" | "status"
       >
     >
-    readonly contributors: ReadonlyArray<
-      { readonly __typename?: "Contributor" } & Pick<
-        Contributor,
-        "id" | "name" | "role"
-      >
-    >
     readonly spatialCoverage: ReadonlyArray<
       { readonly __typename?: "SpatialCoverage" } & Pick<
         SpatialCoverage,
@@ -1980,13 +1987,17 @@ export type DocFormFieldsFragment = {
     readonly creators: ReadonlyArray<
       { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
     >
-    readonly format: { readonly __typename?: "Format" } & Pick<
-      Format,
-      "id" | "name"
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
     >
-    readonly genre: { readonly __typename?: "Genre" } & Pick<
-      Genre,
-      "id" | "name"
+    readonly format: Maybe<
+      { readonly __typename?: "Format" } & Pick<Format, "id" | "name">
+    >
+    readonly genre: Maybe<
+      { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
   }
 
@@ -2347,13 +2358,28 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
+        readonly format: Maybe<
+          { readonly __typename?: "Format" } & Pick<
+            Format,
+            "id" | "name" | "status"
+          >
+        >
+        readonly genre: Maybe<
+          { readonly __typename?: "Genre" } & Pick<
+            Genre,
+            "id" | "name" | "status"
+          >
+        >
         readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "day" | "month" | "year"
+          >
         >
         readonly contributors: ReadonlyArray<
           { readonly __typename?: "Contributor" } & Pick<
             Contributor,
-            "name" | "role"
+            "id" | "name" | "role"
           >
         >
         readonly sources: ReadonlyArray<
@@ -2361,6 +2387,33 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
             SourceAttribution,
             "name" | "link"
           >
+        >
+        readonly keywords: ReadonlyArray<
+          { readonly __typename?: "Keyword" } & Pick<
+            Keyword,
+            "id" | "name" | "status"
+          >
+        >
+        readonly languages: ReadonlyArray<
+          { readonly __typename?: "Language" } & Pick<
+            Language,
+            "id" | "name" | "status"
+          >
+        >
+        readonly subjectHeadings: ReadonlyArray<
+          { readonly __typename?: "SubjectHeading" } & Pick<
+            SubjectHeading,
+            "id" | "name" | "status"
+          >
+        >
+        readonly spatialCoverage: ReadonlyArray<
+          { readonly __typename?: "SpatialCoverage" } & Pick<
+            SpatialCoverage,
+            "id" | "name" | "status"
+          >
+        >
+        readonly creators: ReadonlyArray<
+          { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
         >
       }
   >
@@ -3429,6 +3482,14 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllPagesQuery = { readonly __typename?: "Query" } & {
+  readonly allPages: ReadonlyArray<
+    { readonly __typename?: "Page" } & Pick<Page, "path">
+  >
+}
+
 export type PageByPathQueryVariables = Exact<{
   path: Scalars["String"]
 }>
@@ -3497,6 +3558,14 @@ export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
       >
     }
 }
+
+export type ValidateTurnstileTokenMutationVariables = Exact<{
+  token: Scalars["String"]
+}>
+
+export type ValidateTurnstileTokenMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "validateTurnstileToken">
 
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
@@ -3585,11 +3654,6 @@ export const DocFormFieldsFragmentDoc = gql`
       name
       status
     }
-    contributors {
-      id
-      name
-      role
-    }
     spatialCoverage {
       id
       name
@@ -3599,11 +3663,12 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
-    format {
+    contributors {
       id
       name
+      role
     }
-    genre {
+    format {
       id
       name
     }
@@ -3990,16 +4055,53 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
+      format {
+        id
+        name
+        status
+      }
+      genre {
+        id
+        name
+        status
+      }
       date {
+        day
+        month
         year
       }
       contributors {
+        id
         name
         role
       }
       sources {
         name
         link
+      }
+      keywords {
+        id
+        name
+        status
+      }
+      languages {
+        id
+        name
+        status
+      }
+      subjectHeadings {
+        id
+        name
+        status
+      }
+      spatialCoverage {
+        id
+        name
+        status
+      }
+      creators {
+        id
+        name
       }
     }
   }
@@ -4673,6 +4775,22 @@ export function useUpsertPageMutation() {
     UpsertPageDocument
   )
 }
+export const AllPagesDocument = gql`
+  query AllPages {
+    allPages {
+      path
+    }
+  }
+`
+
+export function useAllPagesQuery(
+  options?: Omit<Urql.UseQueryArgs<AllPagesQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllPagesQuery, AllPagesQueryVariables>({
+    query: AllPagesDocument,
+    ...options,
+  })
+}
 export const PageByPathDocument = gql`
   query pageByPath($path: String!) {
     pageByPath(path: $path) {
@@ -4746,4 +4864,16 @@ export function useUpdateMenuMutation() {
   return Urql.useMutation<UpdateMenuMutation, UpdateMenuMutationVariables>(
     UpdateMenuDocument
   )
+}
+export const ValidateTurnstileTokenDocument = gql`
+  mutation ValidateTurnstileToken($token: String!) {
+    validateTurnstileToken(token: $token)
+  }
+`
+
+export function useValidateTurnstileTokenMutation() {
+  return Urql.useMutation<
+    ValidateTurnstileTokenMutation,
+    ValidateTurnstileTokenMutationVariables
+  >(ValidateTurnstileTokenDocument)
 }

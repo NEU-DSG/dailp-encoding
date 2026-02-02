@@ -138,11 +138,6 @@ fragment DocFormFields on AnnotatedDoc {
     name
     status
   }
-  contributors {
-    id
-    name
-    role
-  }
   spatialCoverage {
     id
     name
@@ -151,6 +146,11 @@ fragment DocFormFields on AnnotatedDoc {
   creators {
     id
     name
+  }
+  contributors {
+    id
+    name
+    role
   }
   format {
     id
@@ -342,16 +342,53 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
+    format {
+      id
+      name
+      status
+    }
+    genre {
+      id
+      name
+      status
+    }
     date {
+      day
+      month
       year
     }
     contributors {
+      id
       name
       role
     }
     sources {
       name
       link
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
     }
   }
 }
@@ -735,6 +772,12 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+query AllPages {
+  allPages {
+    path
+  }
+}
+
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
@@ -780,4 +823,8 @@ mutation UpdateMenu($menu: MenuUpdate!) {
       }
     }
   }
+}
+
+mutation ValidateTurnstileToken($token: String!) {
+  validateTurnstileToken(token: $token)
 }

@@ -14,6 +14,8 @@ use dailp::{
     UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
 };
 use itertools::{Itertools, Position};
+use log::{debug, info};
+use reqwest::Client;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -1029,6 +1031,35 @@ impl Mutation {
             .loader()
             .update_menu(menu)
             .await?)
+    }
+
+    async fn validate_turnstile_token(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<bool> {
+        // post to https://challenges.cloudflare.com/turnstile/v0/siteverify
+        let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
+        let params = [("secret", secret), ("response", token)];
+        let client = reqwest::Client::new();
+
+        info!("Sending POST to SiteVerify API");
+        debug!("Payload: {:?}", params);
+
+        let response = client
+            .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+            .form(&params)
+            .send()
+            .await?;
+
+        info!("Response recieved from SiteVerify API");
+        debug!("Status Code: {}", response.status());
+
+        let body = response.text().await?;
+        debug!("Body Content: {}", body);
+        let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
+
+        Ok(body_json["success"].as_bool().unwrap())
     }
 }
 
