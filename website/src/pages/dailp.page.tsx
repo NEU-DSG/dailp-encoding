@@ -62,7 +62,8 @@ export const DailpPageContents = (props: { path: string }) => {
 
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
-  const isInCollection = (collectionSlug && collectionSlugs.includes(collectionSlug))
+  const isInCollection =
+    collectionSlug && collectionSlugs.includes(collectionSlug)
   if (isInCollection) {
     const userRole = useUserRole()
 
@@ -88,9 +89,7 @@ export const DailpPageContents = (props: { path: string }) => {
   const userRole = useUserRole()
 
   // true if page is either in a collection or in menu
-  const isPublished =
-    isInCollection ||
-    isInMenu(props.path)
+  const isPublished = isInCollection || isInMenu(props.path)
   // stores current "set page location" dropdown selection
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const locationSelected = selectedLocation !== ""
@@ -107,39 +106,39 @@ export const DailpPageContents = (props: { path: string }) => {
       }
       <header>
         <h1>{page.title}</h1>
+        {/* dennis todo: should be admin in the future */}
         {
           /* dropdown & publish button */
           userRole === UserRole.Editor && (
             <div>
-              <label>
-                Set Page Location:
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
+              <div>
+                <label>
+                  Set Page Location:
+                  <select
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                  >
+                    <option value="">None</option>
+                    {menu?.items?.map((item: any) => (
+                      <option key={item.label} value={item.path}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  disabled={
+                    (isPublished && locationSelected) ||
+                    (!isPublished && !locationSelected)
+                  }
                 >
-                  <option value="">None</option>
-                  {menu?.items?.map((item: any) => (
-                    <option key={item.label} value={item.path}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                disabled={
-                  (isPublished && locationSelected) ||
-                  (!isPublished && !locationSelected)
-                }
-              >
-                {isPublished && !locationSelected ? "Unpublish" : "Publish"}
-              </button>
+                  {isPublished && !locationSelected ? "Unpublish" : "Publish"}
+                </button>
+              </div>
+              <Link href={`/edit?path=${props.path}`}>Edit</Link>
             </div>
           )
         }
-        {/* dennis todo: should be admin in the future */}
-        {userRole === UserRole.Editor && (
-          <Link href={`/edit?path=${props.path}`}>Edit</Link>
-        )}
       </header>
       {content.charAt(0) === "<" ? (
         <div dangerouslySetInnerHTML={{ __html: content }} />
