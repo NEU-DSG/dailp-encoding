@@ -51,11 +51,18 @@ export const DailpPageContents = (props: { path: string }) => {
     )
   }
 
-  // keep these variables above early returns to prevent React error
+  /* keep these variables above early returns to prevent React error */
   // stores current "set page location" dropdown selection
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const locationSelected = selectedLocation !== ""
   const userRole = useUserRole()
+  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
+  // check if page belongs in a collection
+  const collectionSlug = props.path.split("/")[1]
+  const isInCollection =
+    collectionSlug && collectionSlugs.includes(collectionSlug)
+  // true if page is either in a collection or in menu
+  const isPublished = isInCollection || isInMenu(props.path)
 
   if (fetching) {
     return <p>Loading...</p>
@@ -64,74 +71,14 @@ export const DailpPageContents = (props: { path: string }) => {
   if (!page || !content) {
     return <Alert>Page content not found. {props.path}</Alert>
   }
-  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
-
-  // check if page belongs in a collection
-  const collectionSlug = props.path.split("/")[1]
-  const isInCollection =
-    collectionSlug && collectionSlugs.includes(collectionSlug)
-  // true if page is either in a collection or in menu
-  const isPublished = isInCollection || isInMenu(props.path)
-
-  if (isInCollection) {
-    return (
-      <>
-        <header>
-          <h1>{page.title}</h1>
-          {/* dennis todo: should be admin in the future */}
-          {
-            /* dropdown & publish button */
-            userRole === UserRole.Editor && (
-              <div>
-                <div>
-                  <label>
-                    Set Page Location:
-                    <select
-                      value={selectedLocation}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
-                    >
-                      <option value="">None</option>
-                      {menu?.items?.map((item: any) => (
-                        <option key={item.label} value={item.path}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    disabled={
-                      (isPublished && locationSelected) ||
-                      (!isPublished && !locationSelected)
-                    }
-                  >
-                    {isPublished && !locationSelected ? "Unpublish" : "Publish"}
-                  </button>
-                </div>
-                <Link href={`/edit?path=${props.path}`}>Edit</Link>
-              </div>
-            )
-          }
-        </header>
-        {/* html chceking here please*/}
-        {content.charAt(0) === "<" ? (
-          <div dangerouslySetInnerHTML={{ __html: content }} />
-        ) : (
-          <Markdown>{content}</Markdown>
-        )}
-      </>
-    )
-  }
 
   return (
     <>
-      {
-        /* check if page is in menu */
-        !isInMenu(props.path) && (
-          <Alert>
-            Page content found. Add it to the menu to view it. {props.path}
-          </Alert>
-        )
-      }
+      {!isPublished && (
+        <Alert>
+          Page content found. Add it to the menu to view it. {props.path}
+        </Alert>
+      )}
       <header>
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
