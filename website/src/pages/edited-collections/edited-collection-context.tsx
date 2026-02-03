@@ -18,18 +18,16 @@ type CollectionContext = {
   setSelected: (chapters: Chapter[]) => void
 }
 
-const CollectionContext = createContext<CollectionContext | undefined>(
-  undefined
+const CollectionContext = createContext<CollectionContext>(
+  {} as CollectionContext
 )
 
 export const CollectionProvider = (props: { children: any }) => {
-  const routeParams = useRouteParams()
-  const collectionSlug = routeParams?.["collectionSlug"] as string | undefined
+  const { collectionSlug } = useRouteParams()
 
   // Queries for chapters of a collection.
   const [{ data }] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug! },
-    pause: !collectionSlug, // Don't run the query if we don't have a slug yet
   })
 
   // Add fallback query for when the singular query fails
@@ -91,11 +89,7 @@ export const CollectionProvider = (props: { children: any }) => {
 }
 
 export const useFunctions = () => {
-  const context = useContext(CollectionContext)
-  if (!context) {
-    throw new Error("useFunctions must be used within a CollectionProvider")
-  }
-  const { selected, setSelected } = context
+  const { selected, setSelected } = useContext(CollectionContext)
 
   function onSelect(chapter: Chapter) {
     // The last chapter selected is the currentmost selected chapter.
@@ -136,14 +130,11 @@ export const useFunctions = () => {
 export const useChapters = () => {
   const context = useContext(CollectionContext)
 
-  return context?.chapters
+  return context.chapters
 }
 
 export const useDialog = () => {
   const context = useContext(CollectionContext)
-  if (!context) {
-    throw new Error("useDialog must be used within a CollectionProvider")
-  }
 
   return context.dialog
 }
@@ -203,16 +194,8 @@ function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
   // Value: Chapter
   const slugToChapter = new Map<string, Chapter>()
 
-  // Sort chapters by path length (depth) first, then by indexInParent within each depth
-  // This ensures parents are processed before children, and siblings are in correct order
-  const sortedChapters = [...chapters].sort((a, b) => {
-    const depthDiff = (a?.path.length ?? 0) - (b?.path.length ?? 0)
-    if (depthDiff !== 0) return depthDiff
-    return (a?.indexInParent ?? 0) - (b?.indexInParent ?? 0)
-  })
-
-  for (let i = 0; i < sortedChapters.length; i++) {
-    const curr = sortedChapters[i]
+  for (let i = 0; i < chapters.length; i++) {
+    const curr = chapters[i]
 
     if (curr) {
       // Create a new Chapter with the backend chapter's fields.
@@ -228,10 +211,7 @@ function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
       slugToChapter.set(curr.slug, chapter)
 
       // Get this chapter's parent slug, which is the second to last string in its path. i.e. cwkw.chaptera -> parent slug: cwkw
-      // For top-level chapters, path.length is 2 (collection, chapter), so parent is path[0]
-      // For nested chapters, path.length > 2, so parent is path[path.length - 2]
-      const parentSlug =
-        curr.path.length > 1 ? curr.path[curr.path.length - 2] : undefined
+      const parentSlug = curr.path[curr.indexInParent - 1]
 
       if (parentSlug) {
         // Get the parent chapter itself from the parent slug.
@@ -246,22 +226,8 @@ function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
           // Otherwise, add it to the nested list of chapters (the final result).
           nestedChapters.push(chapter)
         }
-      } else {
-        // If there's no parent (shouldn't happen for valid data), add to top level
-        nestedChapters.push(chapter)
       }
     }
   }
-
-  // Sort all chapters and their children by indexInParent to ensure correct order
-  const sortChapters = (chapters: Chapter[]): Chapter[] => {
-    return chapters
-      .sort((a, b) => a.indexInParent - b.indexInParent)
-      .map((chapter) => ({
-        ...chapter,
-        children: chapter.children ? sortChapters(chapter.children) : undefined,
-      }))
-  }
-
-  return sortChapters(nestedChapters)
+  return nestedChapters
 }
