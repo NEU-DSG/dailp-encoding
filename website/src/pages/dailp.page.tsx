@@ -62,7 +62,8 @@ export const DailpPageContents = (props: { path: string }) => {
 
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
-  if (collectionSlug && collectionSlugs.includes(collectionSlug)) {
+  const isInCollection = (collectionSlug && collectionSlugs.includes(collectionSlug))
+  if (isInCollection) {
     const userRole = useUserRole()
 
     return (
@@ -88,7 +89,7 @@ export const DailpPageContents = (props: { path: string }) => {
 
   // true if page is either in a collection or in menu
   const isPublished =
-    // (collectionSlug && collectionSlugs.includes(collectionSlug)) ||
+    isInCollection ||
     isInMenu(props.path)
   // stores current "set page location" dropdown selection
   const [selectedLocation, setSelectedLocation] = useState<string>("")
@@ -130,7 +131,7 @@ export const DailpPageContents = (props: { path: string }) => {
                   (!isPublished && !locationSelected)
                 }
               >
-                Publish
+                {isPublished && !locationSelected ? "Unpublish" : "Publish"}
               </button>
             </div>
           )
