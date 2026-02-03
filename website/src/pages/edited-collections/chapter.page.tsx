@@ -2,7 +2,6 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
@@ -13,61 +12,36 @@ import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
-  collectionSlug?: string
-  chapterSlug?: string
-  chapter?: Dailp.CollectionChapterQuery["chapter"]
+  collectionSlug: string
+  chapterSlug: string
 }) => {
-  const routeParams = useRouteParams()
-  const collectionSlug =
-    props.collectionSlug ??
-    (routeParams?.["collectionSlug"] as string | undefined)
-  const chapterSlug =
-    props.chapterSlug ?? (routeParams?.["chapterSlug"] as string | undefined)
-
-  // Query will use cache if data was prefetched in chapter.page.client.ts
   const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
     variables: {
-      collectionSlug: collectionSlug?.replaceAll("-", "_")!,
-      chapterSlug: chapterSlug?.replaceAll("-", "_")!,
+      collectionSlug: props.collectionSlug,
+      chapterSlug: props.chapterSlug,
     },
-    pause: !collectionSlug || !chapterSlug,
   })
 
   const dialog = useDialog()
 
-  const subchapters = chapterSlug ? useSubchapters(chapterSlug) : undefined
+  const subchapters = useSubchapters(props.chapterSlug)
 
-  // Use prefetched chapter from props for immediate render, otherwise use query result
-  // The query will read from cache if prefetched, avoiding duplicate network requests
-  const chapter = props.chapter ?? data?.chapter
-
-  if (!collectionSlug || !chapterSlug) {
-    return <>Loading...</>
-  }
+  const chapter = data?.chapter
 
   if (fetching) {
     return <>Loading...</>
   }
 
   if (error) {
-    return (
-      <CWKWLayout>
-        <main className={util.paddedCenterColumn}>
-          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
-            <h1>Error</h1>
-            <p>{error.message}</p>
-          </article>
-        </main>
-      </CWKWLayout>
-    )
+    return <>Error: {error.message}</>
   }
 
   if (!chapter) {
     return (
-      <CWKWLayout>
-        Chapter not found for collection: {collectionSlug}, chapter:{" "}
-        {chapterSlug}
-      </CWKWLayout>
+      <>
+        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
+        {props.chapterSlug}
+      </>
     )
   }
 
@@ -86,7 +60,7 @@ const ChapterPage = (props: {
                   {chapter.breadcrumbs
                     .map((crumb) => (
                       <Link
-                        href={`${collectionRoute(collectionSlug)}/${
+                        href={`${collectionRoute(props.collectionSlug)}/${
                           crumb.slug
                         }`}
                         key={crumb.slug}
@@ -96,9 +70,7 @@ const ChapterPage = (props: {
                     ))
                     .concat(
                       <Link
-                        href={`${collectionRoute(collectionSlug)}/${
-                          chapter.slug
-                        }`}
+                        href={`${collectionRoute}/${chapter.slug}`}
                         key={chapter.slug}
                       >
                         {chapter.title}
@@ -108,7 +80,10 @@ const ChapterPage = (props: {
               </header>
               {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
               <DailpPageContents
-                path={`/${collectionSlug}/${chapter.slug.replace(/_/g, "-")}`}
+                path={`/${props.collectionSlug}/${chapter.slug.replace(
+                  /_/g,
+                  "-"
+                )}`}
               />
             </>
           ) : null}
@@ -118,7 +93,7 @@ const ChapterPage = (props: {
             <>
               <DocumentTitleHeader
                 breadcrumbs={chapter.breadcrumbs}
-                rootPath={collectionRoute(collectionSlug)}
+                rootPath={collectionRoute(props.collectionSlug)}
                 doc={document}
               />
               <TabSet doc={document} />
@@ -128,7 +103,7 @@ const ChapterPage = (props: {
           <ul>
             {subchapters?.map((chapter) => (
               <li key={chapter.slug}>
-                <Link href={chapterRoute(collectionSlug, chapter.slug)}>
+                <Link href={chapterRoute(props.collectionSlug!, chapter.slug)}>
                   {chapter.title}
                 </Link>
               </li>
