@@ -1,4 +1,5 @@
 import React from "react"
+import { useState } from "react"
 import Markdown from "react-markdown"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
@@ -85,6 +86,14 @@ export const DailpPageContents = (props: { path: string }) => {
 
   const userRole = useUserRole()
 
+  // true if page is either in a collection or in menu
+  const isPublished =
+    // (collectionSlug && collectionSlugs.includes(collectionSlug)) ||
+    isInMenu(props.path)
+  // stores current "set page location" dropdown selection
+  const [selectedLocation, setSelectedLocation] = useState<string>("")
+  const locationSelected = selectedLocation !== ""
+
   return (
     <>
       {
@@ -97,23 +106,35 @@ export const DailpPageContents = (props: { path: string }) => {
       }
       <header>
         <h1>{page.title}</h1>
-        {/* dropdown & publish button */}
-        {userRole === UserRole.Editor && (
-          <div>
-            <label>
-              Page Location:
-              <select>
-                <option value="">None</option>
-                {menu?.items?.map((item: any) => (
-                  <option key={item.label} value={item.path}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button>Publish</button>
-          </div>
-        )}
+        {
+          /* dropdown & publish button */
+          userRole === UserRole.Editor && (
+            <div>
+              <label>
+                Set Page Location:
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                >
+                  <option value="">None</option>
+                  {menu?.items?.map((item: any) => (
+                    <option key={item.label} value={item.path}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                disabled={
+                  (isPublished && locationSelected) ||
+                  (!isPublished && !locationSelected)
+                }
+              >
+                Publish
+              </button>
+            </div>
+          )
+        }
         {/* dennis todo: should be admin in the future */}
         {userRole === UserRole.Editor && (
           <Link href={`/edit?path=${props.path}`}>Edit</Link>
