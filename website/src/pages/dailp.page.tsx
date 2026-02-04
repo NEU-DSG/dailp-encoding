@@ -51,11 +51,12 @@ export const DailpPageContents = (props: { path: string }) => {
     )
   }
 
-  /* keep these variables above early returns to prevent React error */
+  // keep these variables above early returns to prevent React error
   // stores current "set page location" dropdown selection
   const [selectedLocation, setSelectedLocation] = useState<string>("")
-  const locationSelected = selectedLocation !== ""
+  const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
+
   let collectionSlugs = ["cwkw", "willie-jumper-stories"]
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
@@ -93,7 +94,9 @@ export const DailpPageContents = (props: { path: string }) => {
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                   >
-                    <option value="">None</option>
+                    <option key={"None"} value="">
+                      None
+                    </option>
                     {menu?.items?.map((item: any) => (
                       <option key={item.label} value={item.path}>
                         {item.label}
@@ -103,11 +106,11 @@ export const DailpPageContents = (props: { path: string }) => {
                 </label>
                 <button
                   disabled={
-                    (isPublished && locationSelected) ||
-                    (!isPublished && !locationSelected)
+                    (isPublished && isLocationSelected) ||
+                    (!isPublished && !isLocationSelected)
                   }
                 >
-                  {isPublished && !locationSelected ? "Unpublish" : "Publish"}
+                  {isPublished && !isLocationSelected ? "Unpublish" : "Publish"}
                 </button>
               </div>
               <Link href={`/edit?path=${props.path}`}>Edit</Link>
