@@ -1,4 +1,3 @@
-import { wordpressUrl } from "src/theme.css"
 import Link from "./components/link"
 import * as css from "./footer.css"
 import { usePageContext } from "./renderer/PageShell"
@@ -12,6 +11,7 @@ const Footer = () => {
       {/* Main Footer section */}
       <div className={css.darkSection}>
         <div className={css.darkContainer}>
+
           <div className={css.footerGrid}>
             {/* Northeastern */}
             <div className={css.northeasternColumn}>
@@ -27,29 +27,11 @@ const Footer = () => {
               <div className={css.footerColumn}>
                 <h4 className={css.sectionTitle}>Tools</h4>
                 <nav className={css.toolsNav}>
-                  <Link href="/glossary" className={css.toolsLink}>
-                    Glossary of Terms
-                  </Link>
-                  <Link href="/search" className={css.toolsLink}>
-                    Word Search
-                  </Link>
-                  <Link
-                    href="https://github.com/neu-dsg/dailp-encoding"
-                    className={css.toolsLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Source Code
-                  </Link>
-                  <Link
-                    href="https://github.com/NEU-DSG/dailp-encoding/wiki/User-Workflows"
-                    className={css.toolsLink}
-                  >
-                    User Tutorials
-                  </Link>
-                  <Link href="/support" className={css.toolsLink}>
-                    Support
-                  </Link>
+                  <Link href="/glossary" className={css.toolsLink}>Glossary of Terms</Link>
+                  <Link href="/search" className={css.toolsLink}>Word Search</Link>
+                  <Link href="https://github.com/neu-dsg/dailp-encoding" className={css.toolsLink} target="_blank" rel="noopener noreferrer">Source Code</Link>
+                  <Link href="https://github.com/NEU-DSG/dailp-encoding/wiki/User-Workflows" className={css.toolsLink}>User Tutorials</Link>
+                  <Link href="/support" className={css.toolsLink}>Support</Link>
                 </nav>
               </div>
 
@@ -59,11 +41,10 @@ const Footer = () => {
             </div>
 
             {/* About */}
-            <div className={`${css.footerColumn} ${css.aboutSection}`}>
+            <div className={css.footerColumn}>
               <h4 className={css.sectionTitle}>About</h4>
               <p className={css.aboutText}>
-                The Digital Archive of Indigenous Language Persistence (DAILP)
-                is licensed under{" "}
+                The Digital Archive of Indigenous Language Persistence (DAILP) is licensed under{" "}
                 <Link
                   href="https://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1"
                   className={css.aboutLink}
@@ -159,6 +140,7 @@ const Footer = () => {
             This site is licensed under a Creative Commons Attribution
             NonCommercial 4.0 International license.
           </div>
+
         </div>
       </div>
     </footer>
