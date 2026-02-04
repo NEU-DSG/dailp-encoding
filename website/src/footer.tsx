@@ -1,248 +1,86 @@
 import Link from "./components/link"
-import { CreativeCommonsBy } from "src/components/attributions/creative-commons"
 import { usePageContext } from "./renderer/PageShell"
 import * as css from "./footer.css"
 import { wordpressUrl } from "src/theme.css"
 
-/** University affiliation, related navigation links, and contact info. */
 const Footer = () => {
   const { buildDate } = usePageContext()
   const currentYear = new Date().getFullYear()
 
   return (
     <footer className={css.footer}>
-      {/* Supported By */}
+      {/* Supported By section */}
       <div className={css.sponsorSection}>
         <h2 className={css.supportedByTitle}>Supported By</h2>
 
         <div className={css.sponsorLogosContainer}>
-          <Link
-            href="https://www.hluce.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/04/LUCE-Logo-Full-Color-L-768x242.png`}
-              alt="Henry Luce Foundation"
-              className={css.sponsorLogo}
-            />
-          </Link>
-
-          <Link
-            href="https://www.archives.gov/nhprc"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/12/nhprc-logo-239x300.jpg`}
-              alt="National Archives: NHPRC"
-              className={css.sponsorLogoTall}
-            />
-          </Link>
-
-          <Link
-            href="https://www.mellon.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://nff.org/sites/default/files/paragraphs/media/image-small/Mellon_Logomark_Lockup_Black.png"
-              alt="Mellon Foundation"
-              className={css.sponsorLogo}
-            />
-          </Link>
-
-          <Link
-            href="https://librarynews.northeastern.edu/?p=275791"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://www.humanitiestennessee.org/wp-content/uploads/2021/06/SHARP.jpg"
-              alt="SHARP Grant"
-              className={css.sponsorLogoTall}
-            />
-          </Link>
-
-          <Link
-            href="https://www.neh.gov/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src={`${wordpressUrl}/wp-content/uploads/2021/12/NEH-Preferred-Seal820-768x348.jpg`}
-              alt="National Endowment for the Humanities"
-              className={css.sponsorLogoTall}
-            />
-          </Link>
+          {/* ADD LOGOS */}
         </div>
       </div>
 
-      {/* Main Footer */}
+      {/* Main Footer section */}
       <div className={css.darkSection}>
         <div className={css.darkContainer}>
+
           <div className={css.footerGrid}>
 
-            {/* University + Sitemap */}
-            <div className={css.universityColumn}>
+            {/* Northeastern */}
+            <div className={css.northeasternColumn}>
               <div>
-                <h3 className={css.universityTitle}>
-                  Northeastern
-                  <br />
-                  University
-                </h3>
-
-                <address className={css.address}>
-                  360 Huntington Ave,
-                  <br />
-                  Boston, MA 02115
-                </address>
+                <img
+                  src='https://masspromise.northeastern.edu/files/2023/06/Monogram-Wordmark_KO.png'
+                  alt="Northeastern University Logo"
+                  className={css.neuLogo}
+                />
               </div>
 
-              <div>
-                <h4 className={css.sectionTitle}>Sitemap</h4>
-
-                <nav className={css.sitemapNav}>
-                  <Link href="/" className={css.sitemapLink}>
-                    Home
-                  </Link>
-
-                  <Link href="/glossary" className={css.sitemapLink}>
-                    Glossary of Terms
-                  </Link>
-
-                  <Link href="/search" className={css.sitemapLink}>
-                    Word Search
-                  </Link>
-
-                  <Link href="/goals" className={css.sitemapLink}>
-                    Goals
-                  </Link>
-
-                  <Link href="/team" className={css.sitemapLink}>
-                    Team
-                  </Link>
+              {/* Tools */}
+              <div className={css.footerColumn}>
+                <h4 className={css.sectionTitle}>Tools</h4>
+                <nav className={css.toolsNav}>
+                  <Link href="/glossary" className={css.toolsLink}>Glossary of Terms</Link>
+                  <Link href="/search" className={css.toolsLink}>Word Search</Link>
+                  <Link href="https://github.com/neu-dsg/dailp-encoding" className={css.toolsLink} target="_blank" rel="noopener noreferrer">Source Code</Link>
+                  <Link href="https://github.com/NEU-DSG/dailp-encoding/wiki/User-Workflows" className={css.toolsLink}>User Tutorials</Link>
+                  <Link href="/support" className={css.toolsLink}>Support</Link>
                 </nav>
               </div>
+
+              <p className={css.lastUpdated}>
+                Last Updated on {buildDate.toDateString()}
+              </p>
             </div>
 
             {/* About */}
-            <div className={css.aboutSection}>
+            <div className={css.footerColumn}>
               <h4 className={css.sectionTitle}>About</h4>
-
               <p className={css.aboutText}>
-                The Digital Archive of Indigenous Language Persistence (DAILP) by{" "}
+                The Digital Archive of Indigenous Language Persistence (DAILP) is licensed under{" "}
                 <Link
-                  href="https://www.ellencushman.com"
-                  className={css.aboutLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Ellen Cushman
-                </Link>
-                ,{" "}
-                <Link
-                  href="https://snead.xyz"
-                  className={css.aboutLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Shelby Snead
-                </Link>
-                , Naomi Trevino, Jeffrey Bourns, Aparna Dutta, and Henry Volchonok is
-                licensed under{" "}
-                <Link
-                  href="https://creativecommons.org/licenses/by-nc/4.0/"
+                  href="https://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1"
                   className={css.aboutLink}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   CC BY-NC 4.0
                 </Link>
-
-                <span className={css.ccIcons}>
-                  <svg
-                    className={css.ccIcon}
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <text
-                      x="12"
-                      y="16"
-                      fontSize="10"
-                      textAnchor="middle"
-                      fill="currentColor"
-                    >
-                      CC
-                    </text>
-                  </svg>
-
-                  <svg
-                    className={css.ccIcon}
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <circle cx="12" cy="8" r="2" />
-                    <path
-                      d="M12 12v6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                  </svg>
-
-                  <svg
-                    className={css.ccIcon}
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <text
-                      x="12"
-                      y="16"
-                      fontSize="10"
-                      textAnchor="middle"
-                    >
-                      $
-                    </text>
-                    <line
-                      x1="4"
-                      y1="4"
-                      x2="20"
-                      y2="20"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                  </svg>
-                </span>
+                . Phase III is by{" "}
+                <Link
+                  href="https://www.ellencushman.com/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ellen Cushman
+                </Link>
+                , Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, Dennis Wang, Alison Ye, Molly Lane, Matthew Getner, Katie Nguyen, and Andrea Son.
               </p>
 
               <p className={css.aboutText}>
-                This project was created with help from the{" "}
+              <br />
+                DAILP was created with help from the{" "}
                 <Link
-                  href="http://dsg.northeastern.edu/"
+                  href="https://dsg.northeastern.edu/"
                   className={css.aboutLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -251,70 +89,24 @@ const Footer = () => {
                 </Link>{" "}
                 at the{" "}
                 <Link
-                  href="http://library.northeastern.edu/"
+                  href="https://library.northeastern.edu/"
                   className={css.aboutLink}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Northeastern University Library
                 </Link>
-              </p>
-
-              <Link
-                href="https://github.com/neu-dsg/dailp-encoding"
-                className={css.sourceLink}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Browse the source code
-              </Link>
-
-              <p className={css.lastUpdated}>
-                Last Updated on {buildDate.toDateString()}
+                .
               </p>
             </div>
 
-            {/* Contact */}
-            <div>
-              <h4 className={css.sectionTitle}>Contact</h4>
-
-              <nav className={css.contactNav}>
-                <Link
-                  href="mailto:contact@dailp.northeastern.edu"
-                  className={css.contactLink}
-                >
-                  <i className="fa-regular fa-envelope" />
-                  Email
-                </Link>
-
-                <Link
-                  href="https://www.linkedin.com/company/dailp"
-                  className={css.contactLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <i className="fa-brands fa-linkedin-in" />
-                  LinkedIn
-                </Link>
-
-                <Link
-                  href="https://github.com/neu-dsg/dailp-encoding"
-                  className={css.contactLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <i className="fa-brands fa-github" />
-                  GitHub
-                </Link>
-              </nav>
-            </div>
           </div>
 
-          {/* Copyright */}
-          <div className={css.copyrightSection}>
-            © {currentYear} Digital Archive of Indigenous Language Persistence
-            (DAILP)
+          {/* Bottom Row */}
+          <div className={css.footerBottom}>
+            This site is licensed under a Creative Commons Attribution NonCommercial 4.0 International license.
           </div>
+
         </div>
       </div>
     </footer>

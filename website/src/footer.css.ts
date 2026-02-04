@@ -7,7 +7,6 @@ export const footer = style([hideOnPrint])
 export const sponsorSection = style({
   backgroundColor: "#FAF4EF",
   padding: "48px 32px",
-
   "@media": {
     "screen and (min-width: 768px)": {
       padding: "48px 64px",
@@ -30,7 +29,6 @@ export const sponsorLogosContainer = style({
   gap: "32px",
   maxWidth: "1152px",
   margin: "0 auto",
-
   "@media": {
     "screen and (min-width: 768px)": {
       gap: "48px",
@@ -45,7 +43,6 @@ export const sponsorLogo = style({
   height: "64px",
   width: "auto",
   objectFit: "contain",
-
   "@media": {
     "screen and (min-width: 768px)": {
       height: "80px",
@@ -57,7 +54,6 @@ export const sponsorLogoTall = style({
   height: "80px",
   width: "auto",
   objectFit: "contain",
-
   "@media": {
     "screen and (min-width: 768px)": {
       height: "96px",
@@ -69,7 +65,6 @@ export const darkSection = style({
   backgroundColor: "#405372",
   color: "white",
   padding: "48px 0",
-
   "@media": {
     "screen and (min-width: 768px)": {
       padding: "48px 64px",
@@ -81,46 +76,67 @@ export const darkContainer = style({
   width: "100%",
   maxWidth: "1150px",
   margin: "0 auto",
-  padding: "0 64px",
+  padding: "0 32px",
 })
 
 export const footerGrid = style({
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: "30px",
+  gap: "40px",
+  gridTemplateColumns: "1fr",
 
   "@media": {
-    "screen and (min-width: 768px)": {
+    // Tablet/Mobile
+    "screen and (min-width: 600px)": {
+      gridTemplateColumns: "1fr 1fr",
+      gap: "48px",
+    },
+
+    // Computer
+    "screen and (min-width: 900px)": {
       gridTemplateColumns: "1fr 1fr 1fr",
-      gap: "32px",
+      gap: "56px",
     },
   },
 })
 
-export const universityColumn = style({
+export const northeasternColumn = style({
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "20px",
+  gridColumn: "auto",
 })
 
-export const universityTitle = style({
-  fontSize: "1.5rem",
-  fontFamily: fonts.header,
-  color: "white",
-  lineHeight: 1.2,
+export const neuLogo = style({
+  width: "150px",
+  height: "auto",
   marginBottom: "16px",
+})
 
-  "@media": {
-    "screen and (min-width: 768px)": {
-      fontSize: "1.875rem",
-    },
+export const toolsNav = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+})
+
+export const toolsLink = style({
+  color: "white",
+  textDecoration: "underline",
+  fontSize: "0.875rem",
+  transition: "opacity 0.2s",
+  ":hover": {
+    fontWeight: "bold",
   },
 })
 
-export const address = style({
-  fontStyle: "normal",
+export const lastUpdated = style({
   fontSize: "0.875rem",
-  lineHeight: 1.6,
+})
+
+export const footerColumn = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 0,
+  paddingBottom: "3rem",
 })
 
 export const sectionTitle = style({
@@ -130,93 +146,25 @@ export const sectionTitle = style({
   marginBottom: "16px",
 })
 
-export const sitemapNav = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-})
-
-export const sitemapLink = style({
-  color: "white",
-  textDecoration: "underline",
-  fontSize: "0.875rem",
-  transition: "opacity 0.2s",
-
-  ":hover": {
-    opacity: 0.8,
-  },
-})
-
-export const aboutSection = style({})
-
 export const aboutText = style({
   fontSize: "0.875rem",
   lineHeight: 1.6,
-  marginBottom: "16px",
+  marginBottom: 0,
+  marginTop: 0,
 })
 
 export const aboutLink = style({
   color: "white",
   textDecoration: "underline",
-
   ":hover": {
     opacity: 0.8,
   },
 })
 
-export const ccIcons = style({
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "4px",
-  verticalAlign: "middle",
-  marginLeft: "4px",
-})
-
-export const ccIcon = style({
-  width: "16px",
-  height: "16px",
-})
-
-export const sourceLink = style({
-  color: "white",
-  textDecoration: "underline",
-  fontSize: "0.875rem",
-  display: "block",
-  marginBottom: "16px",
-
-  ":hover": {
-    opacity: 0.8,
-  },
-})
-
-export const lastUpdated = style({
-  fontSize: "0.875rem",
-})
-
-export const contactNav = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-})
-
-export const contactLink = style({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  color: "white",
-  textDecoration: "underline",
-  fontSize: "0.875rem",
-  transition: "opacity 0.2s",
-
-  ":hover": {
-    opacity: 0.8,
-  },
-})
-
-export const copyrightSection = style({
-  marginTop: "48px",
-  paddingTop: "32px",
-  borderTop: "1px solid rgba(255,255,255,0.2)",
+export const footerBottom = style({
+  gridColumn: "1 / -1",
   textAlign: "center",
+  padding: "24px 0",
+  borderTop: "1px solid rgba(255,255,255,0.2)",
   fontSize: "0.875rem",
 })
