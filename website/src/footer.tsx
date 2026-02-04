@@ -9,15 +9,6 @@ const Footer = () => {
 
   return (
     <footer className={css.footer}>
-      {/* Supported By section */}
-      <div className={css.sponsorSection}>
-        <h2 className={css.supportedByTitle}>Supported By</h2>
-
-        <div className={css.sponsorLogosContainer}>
-          {/* ADD LOGOS */}
-        </div>
-      </div>
-
       {/* Main Footer section */}
       <div className={css.darkSection}>
         <div className={css.darkContainer}>

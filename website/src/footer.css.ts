@@ -4,63 +4,6 @@ import { fonts } from "./style/constants"
 
 export const footer = style([hideOnPrint])
 
-export const sponsorSection = style({
-  backgroundColor: "#FAF4EF",
-  padding: "48px 32px",
-  "@media": {
-    "screen and (min-width: 768px)": {
-      padding: "48px 64px",
-    },
-  },
-})
-
-export const supportedByTitle = style({
-  textAlign: "center",
-  color: "#8b4513",
-  marginBottom: "32px",
-  fontFamily: fonts.header,
-})
-
-export const sponsorLogosContainer = style({
-  display: "flex",
-  flexWrap: "wrap",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "32px",
-  maxWidth: "1152px",
-  margin: "0 auto",
-  "@media": {
-    "screen and (min-width: 768px)": {
-      gap: "48px",
-    },
-    "screen and (min-width: 1024px)": {
-      gap: "64px",
-    },
-  },
-})
-
-export const sponsorLogo = style({
-  height: "64px",
-  width: "auto",
-  objectFit: "contain",
-  "@media": {
-    "screen and (min-width: 768px)": {
-      height: "80px",
-    },
-  },
-})
-
-export const sponsorLogoTall = style({
-  height: "80px",
-  width: "auto",
-  objectFit: "contain",
-  "@media": {
-    "screen and (min-width: 768px)": {
-      height: "96px",
-    },
-  },
-})
-
 export const darkSection = style({
   backgroundColor: "#405372",
   color: "white",
@@ -107,7 +50,7 @@ export const northeasternColumn = style({
 })
 
 export const neuLogo = style({
-  width: "150px",
+  width: "200px",
   height: "auto",
   marginBottom: "16px",
 })
