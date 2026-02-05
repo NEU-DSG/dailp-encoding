@@ -4,13 +4,14 @@ import Markdown from "react-markdown"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
-  useAllCollectionsQuery,
+  useEditedCollectionQuery,
   useMenuBySlugQuery,
   usePageByPathQuery,
 } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
+import chapterPageRoute from "./edited-collections/chapter.page.route"
 
 interface DailpPageProps {
   "*": string
@@ -38,13 +39,18 @@ export const DailpPageContents = (props: { path: string }) => {
     pause: fetching, // Don't fetch menu until page query is complete
   })
 
-  const [{ data: collectionData }] = useAllCollectionsQuery({
-    pause: fetching,
+  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
+  // check if page belongs in a collection
+  const collectionSlug = props.path.split("/")[1]
+
+  const [{ data: collectionData }] = useEditedCollectionQuery({
+    variables: { slug: collectionSlug || "" },
+    pause: fetching || !collectionSlug,
   })
 
   const page = data?.pageByPath
+  const collectionChapters = collectionData?.editedCollection?.chapters
   const menu = menuData?.menuBySlug
-  const collection = collectionData?.allCollections
   const firstBlock = page?.body?.[0]
   const content =
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
@@ -65,10 +71,6 @@ export const DailpPageContents = (props: { path: string }) => {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
-
-  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
-  // check if page belongs in a collection
-  const collectionSlug = props.path.split("/")[1]
 
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
@@ -108,9 +110,9 @@ export const DailpPageContents = (props: { path: string }) => {
                       None
                     </option>
                     {isInCollection
-                      ? collection?.map((item: any) => (
-                          <option key={item.name} value={item.slug}>
-                            {item.name}
+                      ? collectionChapters?.map((item: any) => (
+                          <option key={item.title} value={item.path}>
+                            {item.title}
                           </option>
                         ))
                       : menu?.items?.map((item: any) => (
