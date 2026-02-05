@@ -123,6 +123,43 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  keywords {
+    id
+    name
+    status
+  }
+  languages {
+    id
+    name
+    status
+  }
+  subjectHeadings {
+    id
+    name
+    status
+  }
+  spatialCoverage {
+    id
+    name
+    status
+  }
+  creators {
+    id
+    name
+  }
+  contributors {
+    id
+    name
+    role
+  }
+  format {
+    id
+    name
+  }
+  genre {
+    id
+    name
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
@@ -305,16 +342,53 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
+    format {
+      id
+      name
+      status
+    }
+    genre {
+      id
+      name
+      status
+    }
     date {
+      day
+      month
       year
     }
     contributors {
+      id
       name
       role
     }
     sources {
       name
       link
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
     }
   }
 }
@@ -622,6 +696,8 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
+    collectionSlug
+    chapterSlug
   }
 }
 
@@ -678,6 +754,12 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+query AllPages {
+  allPages {
+    path
+  }
+}
+
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
@@ -692,6 +774,7 @@ query pageByPath($path: String!) {
     }
   }
 }
+
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
@@ -722,4 +805,8 @@ mutation UpdateMenu($menu: MenuUpdate!) {
       }
     }
   }
+}
+
+mutation ValidateTurnstileToken($token: String!) {
+  validateTurnstileToken(token: $token)
 }

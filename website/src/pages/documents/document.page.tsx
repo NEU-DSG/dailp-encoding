@@ -49,6 +49,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { EditingProvider } from "./editing-context"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -124,13 +125,13 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
-    variables: { slug: doc.slug! },
-  })
-  const docData = data?.document
-  if (!docData) {
-    return null
-  }
+  // const [{ data }] = Dailp.useDocumentDetailsQuery({
+  //   variables: { slug: doc.slug! },
+  // })
+  // const docData = data?.document
+  // if (!docData) {
+  //   return null
+  // }
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:
@@ -214,7 +215,9 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         {/* Document Info Component */}
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
-          <DocumentInfo doc={doc} />
+          <EditingProvider>
+            <DocumentInfo doc={doc} />
+          </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
     </>
@@ -579,8 +582,10 @@ export const DocumentTitleHeader = (p: {
                   )}
                 </div>
               ))}
-              <RecordDocumentAudioPanel document={p.doc} />
             </>
+          )}
+          {(role === UserRole.Editor || role === UserRole.Contributor) && (
+            <RecordDocumentAudioPanel document={p.doc} />
           )}
         </div>
       </div>
