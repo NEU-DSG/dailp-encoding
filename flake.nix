@@ -45,7 +45,6 @@
             (filter.inDirectory "types")
             (filter.inDirectory "graphql")
             (filter.inDirectory "migration")
-            (filter.inDirectory "admin-event-handlers")
             ./Cargo.toml
             ./Cargo.lock
             ./rust-toolchain.toml
@@ -91,8 +90,6 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
-              cp -f ${targetPackage}/bin/auth-post-confirmation $out/bootstrap
-              zip -j $out/auth-post-confirmation.zip $out/bootstrap
             '';
           };
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
