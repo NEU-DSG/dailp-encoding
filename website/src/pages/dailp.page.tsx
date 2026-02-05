@@ -3,7 +3,11 @@ import { useState } from "react"
 import Markdown from "react-markdown"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
-import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
+import {
+  useAllCollectionsQuery,
+  useMenuBySlugQuery,
+  usePageByPathQuery,
+} from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
@@ -34,8 +38,13 @@ export const DailpPageContents = (props: { path: string }) => {
     pause: fetching, // Don't fetch menu until page query is complete
   })
 
+  const [{ data: collectionData }] = useAllCollectionsQuery({
+    pause: fetching,
+  })
+
   const page = data?.pageByPath
   const menu = menuData?.menuBySlug
+  const collection = collectionData?.allCollections
   const firstBlock = page?.body?.[0]
   const content =
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
@@ -60,6 +69,7 @@ export const DailpPageContents = (props: { path: string }) => {
   let collectionSlugs = ["cwkw", "willie-jumper-stories"]
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
+
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
   // true if page is either in a collection or in menu
@@ -97,11 +107,17 @@ export const DailpPageContents = (props: { path: string }) => {
                     <option key={"None"} value="">
                       None
                     </option>
-                    {menu?.items?.map((item: any) => (
-                      <option key={item.label} value={item.path}>
-                        {item.label}
-                      </option>
-                    ))}
+                    {isInCollection
+                      ? collection?.map((item: any) => (
+                          <option key={item.name} value={item.slug}>
+                            {item.name}
+                          </option>
+                        ))
+                      : menu?.items?.map((item: any) => (
+                          <option key={item.label} value={item.path}>
+                            {item.label}
+                          </option>
+                        ))}
                   </select>
                 </label>
                 <button
