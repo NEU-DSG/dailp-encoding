@@ -123,6 +123,21 @@ export const DailpPageContents = (props: { path: string }) => {
                   </select>
                 </label>
                 <button
+                  onClick={(e) => {
+                    const action =
+                      isPublished && !isLocationSelected
+                        ? "unpublish"
+                        : "publish"
+                    const confirm = window.confirm(
+                      `Are you sure you want to ${action} this page?`
+                    )
+                    if (!confirm) {
+                      e.preventDefault()
+                      return
+                    }
+                    // add publish/unpublish logic here
+                    console.log(`${action} confirmed`)
+                  }}
                   disabled={
                     (isPublished && isLocationSelected) ||
                     (!isPublished && !isLocationSelected)
