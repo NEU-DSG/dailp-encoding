@@ -136,7 +136,7 @@ export const DailpPageContents = (props: { path: string }) => {
             }
           }
 
-          // looks through entire menu
+          // looks through entire menu to get rid of all instances of selected page
           if (action === "unpublish") {
             return {
               ...item,
@@ -156,6 +156,8 @@ export const DailpPageContents = (props: { path: string }) => {
       }
 
       updateMenu({ menu: menuUpdate })
+      // reset dropdown to "None" after action
+      setSelectedLocation("")
     }
   }
 
