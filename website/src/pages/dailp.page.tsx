@@ -163,27 +163,35 @@ export const DailpPageContents = (props: { path: string }) => {
 
                       const updatedItems =
                         menu?.items?.map((item) => {
-                          // If this is the selected top-level menu item, add/remove the page
-                          if (item.path === selectedLocation) {
+                          if (
+                            action === "publish" &&
+                            item.path === selectedLocation
+                          ) {
                             const currentItems = item.items || []
-                            const newItems =
-                              action === "publish"
-                                ? [
-                                    ...currentItems,
-                                    {
-                                      label: page.title,
-                                      path: props.path,
-                                      items: [],
-                                    },
-                                  ]
-                                : currentItems.filter(
-                                    (subItem) => subItem.path !== props.path
-                                  )
                             return {
                               ...item,
-                              items: newItems,
+                              items: [
+                                ...currentItems,
+                                {
+                                  label: page.title,
+                                  path: props.path,
+                                  items: [],
+                                },
+                              ],
                             }
                           }
+
+                          if (action === "unpublish") {
+                            return {
+                              ...item,
+                              items:
+                                item.items?.filter(
+                                  (subItem) => subItem.path !== props.path
+                                ) || null,
+                            }
+                          }
+
+                          // Return unchanged item for all other cases
                           return item
                         }) || []
 
@@ -195,12 +203,6 @@ export const DailpPageContents = (props: { path: string }) => {
                       }
 
                       updateMenu({ menu: menuUpdate })
-                      // update menu
-                      // use updateMenu function just created (provide it w/ menu update type, requires an id of menu i am updating
-                      // requires any new items i want to create
-                      // optionally, takes any label i want to give it,
-                      // menu item input..or update menu item that already exists?) (menu item input takes )
-                      // use menu?.items? to send that as input for the menu item ^
                     }
                   }}
                   disabled={
