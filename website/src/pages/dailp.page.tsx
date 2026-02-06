@@ -136,6 +136,7 @@ export const DailpPageContents = (props: { path: string }) => {
             }
           }
 
+          // looks through entire menu
           if (action === "unpublish") {
             return {
               ...item,
@@ -157,6 +158,18 @@ export const DailpPageContents = (props: { path: string }) => {
       updateMenu({ menu: menuUpdate })
     }
   }
+
+  const locationList = isInCollection
+    ? collectionSections?.map((item) => (
+        <option key={item} value={item}>
+          {item}
+        </option>
+      ))
+    : menu?.items?.map((item) => (
+        <option key={item.label} value={item.path}>
+          {item.label}
+        </option>
+      ))
 
   return (
     <>
@@ -182,17 +195,7 @@ export const DailpPageContents = (props: { path: string }) => {
                     <option key={"None"} value="">
                       None
                     </option>
-                    {isInCollection
-                      ? collectionSections?.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))
-                      : menu?.items?.map((item) => (
-                          <option key={item.label} value={item.path}>
-                            {item.label}
-                          </option>
-                        ))}
+                    {locationList}
                   </select>
                 </label>
                 <button
