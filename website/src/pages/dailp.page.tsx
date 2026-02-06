@@ -4,10 +4,13 @@ import Markdown from "react-markdown"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
+  CollectionSection,
+  MenuUpdate,
   useEditedCollectionQuery,
   useMenuBySlugQuery,
   usePageByPathQuery,
 } from "src/graphql/dailp"
+import * as Dailp from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
@@ -43,13 +46,19 @@ export const DailpPageContents = (props: { path: string }) => {
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
 
-  const [{ data: collectionData }] = useEditedCollectionQuery({
-    variables: { slug: collectionSlug || "" },
-    pause: fetching || !collectionSlug,
-  })
+  // const [{ data: collectionData }] = useEditedCollectionQuery({
+  //   variables: { slug: collectionSlug || "" },
+  //   pause: fetching || !collectionSlug,
+  // })
 
   const page = data?.pageByPath
-  const collectionChapters = collectionData?.editedCollection?.chapters
+  const collectionSections = [
+    CollectionSection.Intro,
+    CollectionSection.Body,
+    CollectionSection.Credit,
+  ]
+  // const collectionChapters = collectionData?.editedCollection?.chapters?.filter((chapter) =>
+  //   (chapter.))
   const menu = menuData?.menuBySlug
   const firstBlock = page?.body?.[0]
   const content =
@@ -71,6 +80,7 @@ export const DailpPageContents = (props: { path: string }) => {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
+  const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
 
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
@@ -110,12 +120,12 @@ export const DailpPageContents = (props: { path: string }) => {
                       None
                     </option>
                     {isInCollection
-                      ? collectionChapters?.map((item: any) => (
-                          <option key={item.title} value={item.path}>
-                            {item.title}
+                      ? collectionSections?.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
                           </option>
                         ))
-                      : menu?.items?.map((item: any) => (
+                      : menu?.items?.map((item) => (
                           <option key={item.label} value={item.path}>
                             {item.label}
                           </option>
@@ -136,7 +146,62 @@ export const DailpPageContents = (props: { path: string }) => {
                       return
                     }
                     // add publish/unpublish logic here
-                    console.log(`${action} confirmed`)
+                    if (isInCollection) {
+                      // update table of contents
+                      // publish page code not merged yet
+                    } else {
+                      const toMenuItemInput = (
+                        nodes: any[] | undefined
+                      ): ReadonlyArray<Dailp.MenuItemInput> | null => {
+                        if (!nodes || !nodes.length) return null
+                        return nodes.map((n) => ({
+                          label: n?.label,
+                          path: n?.path,
+                          items: toMenuItemInput(n?.items ?? []),
+                        })) as ReadonlyArray<Dailp.MenuItemInput>
+                      }
+
+                      const updatedItems =
+                        menu?.items?.map((item) => {
+                          // If this is the selected top-level menu item, add/remove the page
+                          if (item.path === selectedLocation) {
+                            const currentItems = item.items || []
+                            const newItems =
+                              action === "publish"
+                                ? [
+                                    ...currentItems,
+                                    {
+                                      label: page.title,
+                                      path: props.path,
+                                      items: [],
+                                    },
+                                  ]
+                                : currentItems.filter(
+                                    (subItem) => subItem.path !== props.path
+                                  )
+                            return {
+                              ...item,
+                              items: newItems,
+                            }
+                          }
+                          return item
+                        }) || []
+
+                      const itemsInput = toMenuItemInput(updatedItems)
+                      const menuUpdate: Dailp.MenuUpdate = {
+                        id: menu?.id!,
+                        name: menu?.name!,
+                        items: itemsInput,
+                      }
+
+                      updateMenu({ menu: menuUpdate })
+                      // update menu
+                      // use updateMenu function just created (provide it w/ menu update type, requires an id of menu i am updating
+                      // requires any new items i want to create
+                      // optionally, takes any label i want to give it,
+                      // menu item input..or update menu item that already exists?) (menu item input takes )
+                      // use menu?.items? to send that as input for the menu item ^
+                    }
                   }}
                   disabled={
                     (isPublished && isLocationSelected) ||
