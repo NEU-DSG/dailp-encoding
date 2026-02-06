@@ -95,6 +95,69 @@ export const DailpPageContents = (props: { path: string }) => {
     return <Alert>Page content not found. {props.path}</Alert>
   }
 
+  const handlePublishClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const action = isPublished && !isLocationSelected ? "unpublish" : "publish"
+    const confirm = window.confirm(
+      `Are you sure you want to ${action} this page?`
+    )
+    if (!confirm) {
+      e.preventDefault()
+      return
+    }
+    if (isInCollection) {
+      // update table of contents
+      // publish page code not merged yet
+    } else {
+      const toMenuItemInput = (
+        nodes: any[] | undefined
+      ): ReadonlyArray<Dailp.MenuItemInput> | null => {
+        if (!nodes || !nodes.length) return null
+        return nodes.map((n) => ({
+          label: n?.label,
+          path: n?.path,
+          items: toMenuItemInput(n?.items ?? []),
+        })) as ReadonlyArray<Dailp.MenuItemInput>
+      }
+
+      const updatedItems =
+        menu?.items?.map((item) => {
+          if (action === "publish" && item.path === selectedLocation) {
+            const currentItems = item.items || []
+            return {
+              ...item,
+              items: [
+                ...currentItems,
+                {
+                  label: page.title,
+                  path: props.path,
+                  items: [],
+                },
+              ],
+            }
+          }
+
+          if (action === "unpublish") {
+            return {
+              ...item,
+              items:
+                item.items?.filter((subItem) => subItem.path !== props.path) ||
+                null,
+            }
+          }
+          return item
+        }) || []
+
+      const itemsInput = toMenuItemInput(updatedItems)
+      const menuUpdate: Dailp.MenuUpdate = {
+        id: menu?.id!,
+        name: menu?.name!,
+        items: itemsInput,
+      }
+
+      updateMenu({ menu: menuUpdate })
+    }
+  }
+
   return (
     <>
       {!isPublished && (
@@ -133,78 +196,7 @@ export const DailpPageContents = (props: { path: string }) => {
                   </select>
                 </label>
                 <button
-                  onClick={(e) => {
-                    const action =
-                      isPublished && !isLocationSelected
-                        ? "unpublish"
-                        : "publish"
-                    const confirm = window.confirm(
-                      `Are you sure you want to ${action} this page?`
-                    )
-                    if (!confirm) {
-                      e.preventDefault()
-                      return
-                    }
-                    // add publish/unpublish logic here
-                    if (isInCollection) {
-                      // update table of contents
-                      // publish page code not merged yet
-                    } else {
-                      const toMenuItemInput = (
-                        nodes: any[] | undefined
-                      ): ReadonlyArray<Dailp.MenuItemInput> | null => {
-                        if (!nodes || !nodes.length) return null
-                        return nodes.map((n) => ({
-                          label: n?.label,
-                          path: n?.path,
-                          items: toMenuItemInput(n?.items ?? []),
-                        })) as ReadonlyArray<Dailp.MenuItemInput>
-                      }
-
-                      const updatedItems =
-                        menu?.items?.map((item) => {
-                          if (
-                            action === "publish" &&
-                            item.path === selectedLocation
-                          ) {
-                            const currentItems = item.items || []
-                            return {
-                              ...item,
-                              items: [
-                                ...currentItems,
-                                {
-                                  label: page.title,
-                                  path: props.path,
-                                  items: [],
-                                },
-                              ],
-                            }
-                          }
-
-                          if (action === "unpublish") {
-                            return {
-                              ...item,
-                              items:
-                                item.items?.filter(
-                                  (subItem) => subItem.path !== props.path
-                                ) || null,
-                            }
-                          }
-
-                          // Return unchanged item for all other cases
-                          return item
-                        }) || []
-
-                      const itemsInput = toMenuItemInput(updatedItems)
-                      const menuUpdate: Dailp.MenuUpdate = {
-                        id: menu?.id!,
-                        name: menu?.name!,
-                        items: itemsInput,
-                      }
-
-                      updateMenu({ menu: menuUpdate })
-                    }
-                  }}
+                  onClick={handlePublishClick}
                   disabled={
                     (isPublished && isLocationSelected) ||
                     (!isPublished && !isLocationSelected)
