@@ -64,7 +64,37 @@ const Footer = () => {
                 >
                   Ellen Cushman
                 </Link>
-                , Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, Dennis Wang, Alison Ye, Molly Lane, Matthew Getner, Katie Nguyen, and Andrea Son.
+                , Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, {" "}
+
+                <Link
+                  href="https://denniswang-20.vercel.app/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Dennis Wang
+                </Link>, {" "}
+
+                <Link
+                  href="https://alisonye.netlify.app/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Alison Ye
+                </Link>,
+                 Molly Lane, Matthew Getner, {" "}
+
+                 <Link
+                  href="https://www.linkedin.com/in/nguyen-katie-neu/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Katie Nguyen
+                </Link>, {" "}
+                 
+                and Andrea Son.
               </p>
 
               <p className={css.aboutText}>
