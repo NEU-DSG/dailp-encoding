@@ -1,15 +1,9 @@
-<<<<<<< HEAD
-use crate::{user::User, Database, PersonFullName};
-use async_graphql::{SimpleObject, Union};
-use serde::{Deserialize, Serialize};
-=======
 use std::{fmt, str::FromStr};
 
 use crate::{user::User, Database, PersonFullName};
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
->>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -24,28 +18,13 @@ pub struct Admin {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
-<<<<<<< HEAD
-=======
     /// UUID of the contributor
     pub id: uuid::Uuid,
->>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
     pub role: Option<ContributorRole>,
 }
-<<<<<<< HEAD
-impl Contributor {
-    /// Create new contributor with the role "Author"
-    pub fn new_author(name: String) -> Self {
-        Self {
-            name,
-            role: Some(ContributorRole::Author),
-        }
-    }
-}
-=======
->>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 
 #[async_graphql::ComplexObject]
 impl Contributor {
@@ -83,46 +62,11 @@ pub struct ContributorDetails {
     pub is_visible: bool,
 }
 
-<<<<<<< HEAD
-/// A Contributor registered in the DAILP database
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, SimpleObject)]
-pub struct RegisteredContributor {
-    /// UUID of the contributor
-    pub id: uuid::Uuid,
-    /// Name or identifier of the contributor
-    pub name: String,
-    /// Roles of the contributor
-    pub roles: Vec<ContributorRole>,
-}
-
-/// A Contributor not registered in the DAILP database
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
-pub struct UnregisteredContributor {
-    /// Name or identifier of the contributor
-    pub name: String,
-    /// Roles of the contributor
-    pub roles: Vec<ContributorRole>,
-}
-
-/// Used to reference a Contributor that may or may not be registered in the DAILP database
-#[derive(Clone, Debug, Serialize, Deserialize, Union)]
-pub enum ContributorReference {
-    /// A linked contributor in the database
-    Registered(RegisteredContributor),
-    /// Unregistered or historical person
-    Unregistered(UnregisteredContributor),
-}
-
-/// A contributor can have to any number of roles, which define most of their
-/// contributions to the associated item (add or revise as needed)
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum)]
-=======
 /// A contributor can have to any number of roles, which define most of their
 /// contributions to the associated item (add or revise as needed)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum, Type)]
 #[sqlx(type_name = "contributor_role")]
 #[sqlx(rename_all = "snake_case")]
->>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
     Transcriber,
