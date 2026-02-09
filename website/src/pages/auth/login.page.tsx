@@ -57,8 +57,6 @@ const LoginPage = () => {
       })
     },
   })
-  // Avoid flashing the login form if we're redirecting
-  if (user) return null
 
   const [TurnstileClient, setTurnstileClient] =
     useState<ForwardRefExoticComponent<
@@ -72,6 +70,8 @@ const LoginPage = () => {
       setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
     })
   }, [])
+  // Avoid flashing the login form if we're redirecting
+  if (user) return null
 
   return (
     <UserAuthPageTemplate
@@ -98,15 +98,19 @@ const LoginPage = () => {
         />
         <ResetLink />
         <SignupLink />
+        {
+          /// NOTE: We use TurnstileClient over Turnstile component to avoid acant find jsx error
+          /// Reference: https://github.com/marsidev/react-turnstile/issues/96
+          TurnstileClient && siteKey && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <TurnstileClient
+                siteKey={siteKey}
+                onSuccess={(token) => setTurnstileToken(token)}
+              />
+            </div>
+          )
+        }
         <FormSubmitButton form={loginForm} label="Log In" />
-        {TurnstileClient && siteKey && (
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <TurnstileClient
-              siteKey={siteKey}
-              onSuccess={(token) => setTurnstileToken(token)}
-            />
-          </div>
-        )}
       </Form>
     </UserAuthPageTemplate>
   )
