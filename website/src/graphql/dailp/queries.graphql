@@ -13,67 +13,57 @@ query DocumentsPages {
   }
 }
 
-query AnnotatedDocument($slug: String!) {
-  document(slug: $slug) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
+# Data about a document needed to render various high level components, such as
+# a DocumentHeader. Contrast with the fields resolved on DocumentContents query.
+fragment DocumentFields on AnnotatedDoc {
+  id
+  title
+  slug
+  isReference
+  date {
+    year
+  }
+  bookmarkedOn {
+    formattedDate
+  }
+  sources {
+    name
+    link
+  }
+  editedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
     }
-    bookmarkedOn {
+    recordedAt {
       formattedDate
     }
-    sources {
-      name
-      link
+  }
+  userContributedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
     }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
+    recordedAt {
+      formattedDate
     }
-    translatedPages {
-      image {
-        url
-      }
+  }
+  translatedPages {
+    image {
+      url
     }
-    chapters {
-      path
-    }
+  }
+  chapters {
+    id
+    path
   }
 }
 
-query AnnotatedDocumentById($id: UUID!) {
-  documentByUuid(id: $id) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      path
-    }
+query AnnotatedDocument($slug: String!) {
+  document(slug: $slug) {
+    ...DocumentFields
   }
 }
 
@@ -117,6 +107,12 @@ fragment AudioSliceFields on AudioSlice {
   startTime
   endTime
   includeInEditedCollection
+  recordedBy {
+    displayName
+  }
+  recordedAt {
+    formattedDate
+  }
 }
 
 fragment DocFormFields on AnnotatedDoc {
@@ -126,6 +122,43 @@ fragment DocFormFields on AnnotatedDoc {
     day
     month
     year
+  }
+  keywords {
+    id
+    name
+    status
+  }
+  languages {
+    id
+    name
+    status
+  }
+  subjectHeadings {
+    id
+    name
+    status
+  }
+  spatialCoverage {
+    id
+    name
+    status
+  }
+  creators {
+    id
+    name
+  }
+  contributors {
+    id
+    name
+    role
+  }
+  format {
+    id
+    name
+  }
+  genre {
+    id
+    name
   }
 }
 
@@ -174,12 +207,22 @@ fragment FormFields on AnnotatedForm {
   }
   editedAudio {
     ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
+    recordedAt {
+      formattedDate
+    }
   }
   userContributedAudio {
     ...AudioSliceFields
     recordedBy {
       id
       displayName
+    }
+    recordedAt {
+      formattedDate
     }
   }
   position {
@@ -299,16 +342,53 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
+    format {
+      id
+      name
+      status
+    }
+    genre {
+      id
+      name
+      status
+    }
     date {
+      day
+      month
       year
     }
     contributors {
+      id
       name
       role
     }
     sources {
       name
       link
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
     }
   }
 }
@@ -374,7 +454,7 @@ query DocSlice(
 ) {
   document(slug: $slug) {
     title
-    audioRecording {
+    ingestedAudioTrack {
       resourceUrl
       startTime
       endTime
@@ -397,68 +477,14 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       slug
     }
     document {
-      id
-      title
-      slug
-      isReference
-      date {
-        year
-      }
-      bookmarkedOn {
-        formattedDate
-      }
-      sources {
-        name
-        link
-      }
-      audioRecording {
-        resourceUrl
-        startTime
-        endTime
-      }
-      translatedPages {
-        image {
-          url
-        }
-      }
-      chapters {
-        id
-        path
-      }
+      ...DocumentFields
     }
   }
 }
 
 query BookmarkedDocuments {
   bookmarkedDocuments {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      id
-      path
-    }
+    ...DocumentFields
   }
 }
 
@@ -523,6 +549,15 @@ mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
   }
 }
 
+mutation CurateDocumentAudio($input: CurateDocumentAudioInput!) {
+  curateDocumentAudio(input: $input) {
+    id
+    editedAudio {
+      ...AudioSliceFields
+    }
+  }
+}
+
 mutation CurateWordAudio($input: CurateWordAudioInput!) {
   curateWordAudio(input: $input) {
     # ...FormFields
@@ -537,67 +572,42 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
-mutation AddBookmark($documentId: UUID!) {
-  addBookmark(documentId: $documentId) {
+mutation AttachAudioToDocument($input: AttachAudioToDocumentInput!) {
+  attachAudioToDocument(input: $input) {
     id
     title
     slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedAt {
+        formattedDate
+      }
+      recordedBy {
+        id
+        displayName
       }
     }
-    chapters {
-      path
-    }
+  }
+}
+
+fragment BookmarkedDocument on AnnotatedDoc {
+  id
+  title
+  slug
+  bookmarkedOn {
+    formattedDate
+  }
+}
+
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
+    ...BookmarkedDocument
   }
 }
 
 mutation RemoveBookmark($documentId: UUID!) {
   removeBookmark(documentId: $documentId) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      path
-    }
+    ...BookmarkedDocument
   }
 }
 
@@ -686,6 +696,8 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
+    collectionSlug
+    chapterSlug
   }
 }
 
@@ -742,6 +754,12 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+query AllPages {
+  allPages {
+    path
+  }
+}
+
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
@@ -786,4 +804,8 @@ mutation UpdateMenu($menu: MenuUpdate!) {
       }
     }
   }
+}
+
+mutation ValidateTurnstileToken($token: String!) {
+  validateTurnstileToken(token: $token)
 }

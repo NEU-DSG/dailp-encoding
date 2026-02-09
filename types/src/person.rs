@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 use crate::{user::User, Database, PersonFullName};
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
+=======
+use std::{fmt, str::FromStr};
+
+use crate::{user::User, Database, PersonFullName};
+use async_graphql::{SimpleObject, Union};
+use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, Type};
+>>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -15,11 +24,17 @@ pub struct Admin {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
+<<<<<<< HEAD
+=======
+    /// UUID of the contributor
+    pub id: uuid::Uuid,
+>>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
     pub role: Option<ContributorRole>,
 }
+<<<<<<< HEAD
 impl Contributor {
     /// Create new contributor with the role "Author"
     pub fn new_author(name: String) -> Self {
@@ -29,6 +44,8 @@ impl Contributor {
         }
     }
 }
+=======
+>>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 
 #[async_graphql::ComplexObject]
 impl Contributor {
@@ -66,6 +83,7 @@ pub struct ContributorDetails {
     pub is_visible: bool,
 }
 
+<<<<<<< HEAD
 /// A Contributor registered in the DAILP database
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, SimpleObject)]
 pub struct RegisteredContributor {
@@ -98,68 +116,98 @@ pub enum ContributorReference {
 /// A contributor can have to any number of roles, which define most of their
 /// contributions to the associated item (add or revise as needed)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum)]
+=======
+/// A contributor can have to any number of roles, which define most of their
+/// contributions to the associated item (add or revise as needed)
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum, Type)]
+#[sqlx(type_name = "contributor_role")]
+#[sqlx(rename_all = "snake_case")]
+>>>>>>> b5393bec41484a39920bd39e1032b4c56ac3534d
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
     Transcriber,
     /// Translated text into another language
     Translator,
-    /// Edited the text or translation for clarity or structure
-    Editor,
     /// Added linguistic, cultural, etc. annotations
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
-    /// Creator of a document
+    /// Author of a document
     Author,
+    /// Edited a document
+    Editor,
 }
 
-/// Draft of function for converting a string to a ContributorRole
-impl std::str::FromStr for ContributorRole {
-    type Err = String;
+impl From<String> for ContributorRole {
+    //type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from(s: String) -> Self {
         match s.to_lowercase().as_str() {
-            "annotator" => Ok(ContributorRole::Annotator),
-            "author" => Ok(ContributorRole::Author),
-            "culturalAdvisior" => Ok(ContributorRole::CulturalAdvisor),
-            "editor" => Ok(ContributorRole::Editor),
-            "transcriber" => Ok(ContributorRole::Transcriber),
-            "translator" => Ok(ContributorRole::Translator),
-            other => Err(format!("Unknown contributor role: {}", other)),
+            "transcriber" => ContributorRole::Transcriber,
+            "translator" => ContributorRole::Translator,
+            "annotator" => ContributorRole::Annotator,
+            "culturaladvisor" => ContributorRole::CulturalAdvisor,
+            "author" => ContributorRole::Author,
+            "editor" => ContributorRole::Editor,
+            other => panic!("{} is not a valid contributor role", s),
         }
     }
 }
 
-// Display for ContributorRole
-impl std::fmt::Display for ContributorRole {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ContributorRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            ContributorRole::Annotator => "Annotator",
-            ContributorRole::Author => "Author",
-            ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Editor => "Editor",
-            ContributorRole::Translator => "Translator",
             ContributorRole::Transcriber => "Transcriber",
+            ContributorRole::Translator => "Translator",
+            ContributorRole::Annotator => "Annotator",
+            ContributorRole::CulturalAdvisor => "CulturalAdvisor",
+            ContributorRole::Author => "Author",
+            ContributorRole::Editor => "Editor",
         };
         write!(f, "{}", s)
     }
 }
 
-/// Provides helper method for parsing and formatting a ContributorRole
 impl ContributorRole {
-    /// Attempts to parse a string into a ContributorRole, returning 'None' if parsing fails
+    /// Attempts to parse a string into a ContributorRole, returning None if parsing fails
     pub fn from_option_str(s: &str) -> Option<Self> {
-        s.parse::<ContributorRole>().ok()
+        // TODO: Make ContributorRole::from return a ContributorRole instead of a panic
+        Some(ContributorRole::from(s.to_string()))
     }
-}
 
-/// Provides helper method for working with optional ContributorRole values.
-impl ContributorRole {
     /// Converts a ContributorRole into its string representation
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
     }
 }
+
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct ContributorAttributionInput {
+    pub name: String,
+    pub role: Option<ContributorRole>,
+}
+
+/// The creator of a document
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+// For updating creators
+#[derive(async_graphql::InputObject, Clone, Debug)]
+pub struct CreatorUpdate {
+    /// UUID for the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+#[async_graphql::ComplexObject]
+impl Creator {}
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
