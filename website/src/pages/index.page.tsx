@@ -127,11 +127,7 @@ const IndexPage = () => {
                         ? collection.description
                         : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                     }
-<<<<<<< HEAD
                     buttonLabel="Please click to to view the collection"
-=======
-                    buttonLabel="View Collection"
->>>>>>> 490ab37634f1263916f823d9f83022f9fa7985d8
                   />
                 ))}
               </div>
