@@ -41,7 +41,7 @@ const Footer = () => {
             </div>
 
             {/* About */}
-            <div className={css.footerColumn}>
+            <div className={`${css.footerColumn} ${css.aboutSection}`}>
               <h4 className={css.sectionTitle}>About</h4>
               <p className={css.aboutText}>
                 The Digital Archive of Indigenous Language Persistence (DAILP) is licensed under{" "}
