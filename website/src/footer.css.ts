@@ -89,8 +89,22 @@ export const sectionTitle = style({
   marginBottom: "16px",
 })
 
+export const aboutSection = style({
+  gridColumn: "span 2",
+  maxWidth: "500px",
+  paddingTop: "20px",
+
+  "@media": {
+    "screen and (max-width: 767px)": {
+      gridColumn: "auto",
+      paddingTop: 0,
+    },
+  },
+})
+
 export const aboutText = style({
   fontSize: "0.875rem",
+  width: "100%",
   lineHeight: 1.6,
   marginBottom: 0,
   marginTop: 0,

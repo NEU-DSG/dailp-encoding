@@ -6,34 +6,41 @@ export const NavBar = () => {
     <nav className={navBar}>
       <ul className={navLinks}>
         <li><a href="/">HOME</a></li>
-        
+
         {/* Change links? */}
         <DropdownNavItem
           label="ABOUT"
           links={[
-            { text: "Support", href: "https://dev.dailp.northeastern.edu/collections/cwkw" },
-            { text: "Goals", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
-            { text: "Team", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
-            { text: "Former Contributors", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
-            { text: "Project History", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
-            { text: "References", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
+            { text: "Support", href: "/support" },
+            { text: "Goals", href: "/goals" },
+            { text: "Team", href: "/team" },
+            { text: "Former Contributors", href: "/former-contributors" },
+            { text: "Project History", href: "/project-history" },
+            { text: "Why DAILP? Why Now?", href: "/why-this-archive-why-now" },
+            { text: "References", href: "/sources" },
           ]}
         />
 
         <DropdownNavItem
           label="COLLECTIONS"
           links={[
-            { text: "Cherokees Writing the Keetoowah Way", href: "https://dev.dailp.northeastern.edu/collections/cwkw" },
-            { text: "Willie Jumper Manuscripts", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
+            {
+              text: "Cherokees Writing the Keetoowah Way",
+              href: "/collections/cwkw",
+            },
+            {
+              text: "Willie Jumper Manuscripts",
+              href: "/collections/willie-jumper-stories",
+            },
           ]}
         />
 
         <DropdownNavItem
           label="TOOLS"
           links={[
-            { text: "Glossary of Terms", href: "https://dev.dailp.northeastern.edu/collections/cwkw" },
-            { text: "Word Search", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
-            { text: "Further Learning", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
+            { text: "Glossary of Terms", href: "/glossary" },
+            { text: "Word Search", href: "/search?query" },
+            { text: "Further Learning", href: "/further-learning" },
           ]}
         />
 
@@ -58,6 +65,6 @@ export const NavBar = () => {
   )
 }
 
-{/* ADD MOBILE NAV BAR */}
+{/* ADD MOBILE NAV BAR */ }
 
 export default NavBar
