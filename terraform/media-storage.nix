@@ -80,7 +80,10 @@
         "s3:GetObject"
         "S3:PutObject"
       ];
-      resources = [ "$\{aws_s3_bucket.media_storage.arn}/user-uploaded-audio/*" ];
+      resources = [ 
+        "$\{aws_s3_bucket.media_storage.arn}/user-uploaded-audio/*"
+        "$\{aws_s3_bucket.media_storage.arn}/user-uploaded-images/*"
+       ];
     };
     allow_dailp_deploy_principal.statement = {
       sid = "AllowDailpDeployPrincipals";
