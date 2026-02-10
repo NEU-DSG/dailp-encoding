@@ -5,7 +5,9 @@ export const NavBar = () => {
   return (
     <nav className={navBar}>
       <ul className={navLinks}>
-        <li><a href="/">HOME</a></li>
+        <li>
+          <a href="/">HOME</a>
+        </li>
 
         {/* Change links? */}
         <DropdownNavItem
