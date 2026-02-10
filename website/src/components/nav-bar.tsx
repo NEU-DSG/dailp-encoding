@@ -38,9 +38,9 @@ export const NavBar = () => {
         <DropdownNavItem
           label="TOOLS"
           links={[
-            { text: "Glossary of Terms", href: "/glossary" },
-            { text: "Word Search", href: "/search?query" },
-            { text: "Further Learning", href: "/further-learning" },
+            { text: "Glossary of Terms", href: "/tools/glossary" },
+            { text: "Word Search", href: "/tools/search?query" },
+            { text: "Further Learning", href: "/tools/further-learning" },
           ]}
         />
 

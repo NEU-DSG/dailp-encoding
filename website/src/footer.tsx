@@ -55,7 +55,7 @@ const Footer = () => {
                 >
                   CC BY-NC 4.0
                 </Link>
-                . Phase III is by{" "}
+                . Phase III is by {" "}
                 <Link
                   href="https://www.ellencushman.com/"
                   className={css.aboutLink}
@@ -63,8 +63,9 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Ellen Cushman
-                </Link>
-                , Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, {" "}
+                </Link>, {" "}
+
+                Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, {" "}
 
                 <Link
                   href="https://denniswang-20.vercel.app/"
@@ -82,10 +83,11 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Alison Ye
-                </Link>,
-                 Molly Lane, Matthew Getner, {" "}
+                </Link>, {" "}
 
-                 <Link
+                Molly Lane, Matthew Gentner, {" "}
+
+                <Link
                   href="https://www.linkedin.com/in/nguyen-katie-neu/"
                   className={css.aboutLink}
                   target="_blank"
@@ -93,12 +95,12 @@ const Footer = () => {
                 >
                   Katie Nguyen
                 </Link>, {" "}
-                 
+
                 and Andrea Son.
               </p>
 
               <p className={css.aboutText}>
-              <br />
+                <br />
                 DAILP was created with help from the{" "}
                 <Link
                   href="https://dsg.northeastern.edu/"
