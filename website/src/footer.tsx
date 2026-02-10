@@ -53,7 +53,7 @@ const Footer = () => {
                 >
                   CC BY-NC 4.0
                 </Link>
-                . Phase III is by{" "}
+                . Phase III is by {" "}
                 <Link
                   href="https://www.ellencushman.com/"
                   className={css.aboutLink}
