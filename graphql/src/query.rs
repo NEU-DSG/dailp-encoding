@@ -14,7 +14,7 @@ use dailp::{
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
-use reqwest::Client;
+use reqwest::{header, Client};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -978,6 +978,7 @@ impl Mutation {
 
         let response = client
             .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .form(&params)
             .send()
             .await?;
