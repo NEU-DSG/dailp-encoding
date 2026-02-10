@@ -10,7 +10,9 @@ use std::str::FromStr;
 use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
-use crate::collection::EditedCollection;
+use crate::collection::{
+    AddChapterInput, CollectionSection, EditedCollection, UpdateCollectionChapterOrderInput,
+};
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
@@ -1802,6 +1804,98 @@ impl Database {
         Ok(())
     }
 
+    pub async fn upsert_collection_chapter(&self, collection: UpsertChapterInput) -> Result<()> {
+        let title: Option<String> = match collection.title {
+            MaybeUndefined::Value(title) => Some(title),
+            _ => None,
+        };
+        let section: Option<CollectionSection> = match collection.section {
+            MaybeUndefined::Value(section) => Some(section),
+            _ => None,
+        };
+        let index_in_parent: Option<i64> = match collection.index_in_parent {
+            MaybeUndefined::Value(index_in_parent) => Some(index_in_parent),
+            _ => None,
+        };
+        query_file!(
+            "queries/upsert_collection_chapter.sql",
+            collection.id,
+            title,
+            section as _,
+            index_in_parent,
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn batch_upsert_collection_chapters(
+        &self,
+        chapters: Vec<UpsertChapterInput>,
+    ) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+
+        for collection in chapters {
+            let title: Option<String> = if collection.title.is_undefined() {
+                None
+            } else {
+                collection.title.take()
+            };
+            let section: Option<CollectionSection> = if collection.section.is_undefined() {
+                None
+            } else {
+                collection.section.take()
+            };
+            let index_in_parent: Option<i64> = if collection.index_in_parent.is_undefined() {
+                None
+            } else {
+                collection.index_in_parent.take()
+            };
+            query_file!(
+                "queries/upsert_collection_chapter.sql",
+                collection.id,
+                title,
+                section as _,
+                index_in_parent,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn update_collection_chapter_order(
+        &self,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+
+        // Update each chapter's index_in_parent and section within a transaction
+        // Use a dedicated query that only updates these fields without touching title
+        for chapter in input.chapters {
+            query_file!(
+                "queries/update_chapter_order.sql",
+                chapter.id,
+                chapter.section as CollectionSection,
+                chapter.index_in_parent,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<()> {
+        query_file!("queries/remove_collection_chapter.sql", chapter_id)
+            .execute(&self.client)
+            .await?;
+        Ok(())
+    }
+
     pub async fn insert_edited_collection(
         &self,
         collection: CreateEditedCollectionInput,
@@ -2404,6 +2498,7 @@ impl Database {
         &self,
         document: AnnotatedDoc,
         collection_id: Uuid,
+        section: CollectionSection,
     ) -> Result<(DocumentId, Uuid)> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
@@ -2428,7 +2523,7 @@ impl Database {
         {
             let contributors = meta.contributors.iter().flatten();
             let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
-            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let doc_id: Vec<Uuid> = vec![document_uuid];
             let roles: Vec<String> = contributors
                 .clone()
                 .map(|c| {
@@ -2451,22 +2546,42 @@ impl Database {
         }
 
         let collection_slug = self.collection_slug_by_id(collection_id).await?;
+        let collection_slug_str = collection_slug
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Collection slug not found"))?;
+
+        // Collection slugs in chapter_path have dashes replaced with underscores
+        let collection_slug_for_path = collection_slug_str.replace("-", "_");
+
+        // Get the count of top-level chapters in this section to determine the correct index_in_parent
+        let chapter_count = query_file_scalar!(
+            "queries/count_top_level_chapters_in_section.sql",
+            collection_slug_for_path.as_str(),
+            section as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?
+        .unwrap_or(0i64);
+
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
         let chapter_path = PgLTree::from_str(&format!(
             "{}.{}",
-            collection_slug.unwrap().replace("-", "_"),
+            collection_slug_str.replace("-", "_"),
             chapter_slug
         ))?;
+
+        // Use chapter_count + 1 as index_in_parent so the new chapter appears at the end
+        let index_in_parent = chapter_count + 1;
 
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",
             meta.title, // Use document title as chapter title
             document_uuid,
             None::<i64>, // wordpress_id
-            0i64,        // index_in_parent (we can increment this later if needed)
+            index_in_parent,
             chapter_path,
-            crate::CollectionSection::Body as crate::CollectionSection
+            section as crate::CollectionSection
         )
         .fetch_one(&mut *tx)
         .await?;

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Count top-level chapters in a section for a collection\n-- $1: collection_slug (text)\n-- $2: section (collection_section enum)\n-- Returns: count of top-level chapters (chapters with nlevel(chapter_path) = 2)\nselect count(*)::bigint\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = $1\n  and section = $2\n  and nlevel(chapter_path) = 2;\n\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "828ede0169f161f1cf67d7f1e499d71769ff81a434a44b40b034cd682745eb22"
+}
