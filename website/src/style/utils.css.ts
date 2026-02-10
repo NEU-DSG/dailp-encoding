@@ -151,7 +151,7 @@ export const section = style({
   flexDirection: "column",
   gap: "1.25rem",
   marginTop: "4rem",
-});
+})
 
 export const cardGroup = style({
   paddingTop: "0px",

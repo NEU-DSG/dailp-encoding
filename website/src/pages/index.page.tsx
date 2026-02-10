@@ -4,13 +4,19 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
 import { Card, WordpressPage } from "src/components"
-import { fullWidth, paddedCenterColumn, storyCardGroup, section, cardGroup } from "src/style/utils.css"
+import CollectionCard from "src/components/collection-card"
+import HomepageHeader from "src/components/homepage-header"
+import StoryCard from "src/components/story-card"
+import {
+  cardGroup,
+  fullWidth,
+  paddedCenterColumn,
+  section,
+  storyCardGroup,
+} from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
-import HomepageHeader from "src/components/homepage-header"
-import StoryCard from "src/components/story-card"
-import CollectionCard from "src/components/collection-card"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -39,11 +45,11 @@ const IndexPage = () => {
       <HomepageHeader
         button_left={{
           text: "Our Team",
-          link: "/home/credits/"
+          link: "/home/credits/",
         }}
         button_right={{
           text: "Our Collections",
-          link: "#collection-section"
+          link: "#collection-section",
         }}
       />
       <main className={paddedCenterColumn}>
@@ -60,7 +66,7 @@ const IndexPage = () => {
                 thumbnail="https://wp.dailp.northeastern.edu/wp-content/uploads/2022/06/20181124-IMG-1118-PS-bw-WKG1-1.jpeg"
                 header={{
                   text: "Dollie Duncan Letter Inspires Opera",
-                  link: "https://dev.dailp.northeastern.edu/dollie-duncan-letter-inspires-opera"
+                  link: "https://dev.dailp.northeastern.edu/dollie-duncan-letter-inspires-opera",
                 }}
                 subheading="Victor Mendevil"
               />
@@ -68,7 +74,7 @@ const IndexPage = () => {
               <StoryCard
                 header={{
                   text: "About the Editors of CWKW",
-                  link: "https://dev.dailp.northeastern.edu/editors"
+                  link: "https://dev.dailp.northeastern.edu/editors",
                 }}
                 subheading="Megan Cassidy"
               />
@@ -76,7 +82,7 @@ const IndexPage = () => {
               <StoryCard
                 header={{
                   text: "The Importance of Language Persistence",
-                  link: "https://dev.dailp.northeastern.edu/dailp-language-preservation-narrative"
+                  link: "https://dev.dailp.northeastern.edu/dailp-language-preservation-narrative",
                 }}
                 subheading="Megan Cassidy"
               />

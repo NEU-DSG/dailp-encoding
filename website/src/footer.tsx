@@ -1,7 +1,7 @@
-import Link from "./components/link"
-import { usePageContext } from "./renderer/PageShell"
-import * as css from "./footer.css"
 import { wordpressUrl } from "src/theme.css"
+import Link from "./components/link"
+import * as css from "./footer.css"
+import { usePageContext } from "./renderer/PageShell"
 
 const Footer = () => {
   const { buildDate } = usePageContext()
@@ -12,14 +12,12 @@ const Footer = () => {
       {/* Main Footer section */}
       <div className={css.darkSection}>
         <div className={css.darkContainer}>
-
           <div className={css.footerGrid}>
-
             {/* Northeastern */}
             <div className={css.northeasternColumn}>
               <div>
                 <img
-                  src='https://masspromise.northeastern.edu/files/2023/06/Monogram-Wordmark_KO.png'
+                  src="https://masspromise.northeastern.edu/files/2023/06/Monogram-Wordmark_KO.png"
                   alt="Northeastern University Logo"
                   className={css.neuLogo}
                 />
@@ -29,11 +27,29 @@ const Footer = () => {
               <div className={css.footerColumn}>
                 <h4 className={css.sectionTitle}>Tools</h4>
                 <nav className={css.toolsNav}>
-                  <Link href="/glossary" className={css.toolsLink}>Glossary of Terms</Link>
-                  <Link href="/search" className={css.toolsLink}>Word Search</Link>
-                  <Link href="https://github.com/neu-dsg/dailp-encoding" className={css.toolsLink} target="_blank" rel="noopener noreferrer">Source Code</Link>
-                  <Link href="https://github.com/NEU-DSG/dailp-encoding/wiki/User-Workflows" className={css.toolsLink}>User Tutorials</Link>
-                  <Link href="/support" className={css.toolsLink}>Support</Link>
+                  <Link href="/glossary" className={css.toolsLink}>
+                    Glossary of Terms
+                  </Link>
+                  <Link href="/search" className={css.toolsLink}>
+                    Word Search
+                  </Link>
+                  <Link
+                    href="https://github.com/neu-dsg/dailp-encoding"
+                    className={css.toolsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Source Code
+                  </Link>
+                  <Link
+                    href="https://github.com/NEU-DSG/dailp-encoding/wiki/User-Workflows"
+                    className={css.toolsLink}
+                  >
+                    User Tutorials
+                  </Link>
+                  <Link href="/support" className={css.toolsLink}>
+                    Support
+                  </Link>
                 </nav>
               </div>
 
@@ -46,7 +62,8 @@ const Footer = () => {
             <div className={`${css.footerColumn} ${css.aboutSection}`}>
               <h4 className={css.sectionTitle}>About</h4>
               <p className={css.aboutText}>
-                The Digital Archive of Indigenous Language Persistence (DAILP) is licensed under{" "}
+                The Digital Archive of Indigenous Language Persistence (DAILP)
+                is licensed under{" "}
                 <Link
                   href="https://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1"
                   className={css.aboutLink}
@@ -55,7 +72,7 @@ const Footer = () => {
                 >
                   CC BY-NC 4.0
                 </Link>
-                . Phase III is by {" "}
+                . Phase III is by{" "}
                 <Link
                   href="https://www.ellencushman.com/"
                   className={css.aboutLink}
@@ -63,10 +80,9 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Ellen Cushman
-                </Link>, {" "}
-
-                Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul, Jae Messersmith, {" "}
-
+                </Link>
+                , Naomi Trevino, Cara Hullings, Hailey Punis, Nop Lertsumitkul,
+                Jae Messersmith,{" "}
                 <Link
                   href="https://denniswang-20.vercel.app/"
                   className={css.aboutLink}
@@ -74,8 +90,8 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Dennis Wang
-                </Link>, {" "}
-
+                </Link>
+                ,{" "}
                 <Link
                   href="https://alisonye.netlify.app/"
                   className={css.aboutLink}
@@ -83,10 +99,8 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Alison Ye
-                </Link>, {" "}
-
-                Molly Lane, Matthew Gentner, {" "}
-
+                </Link>
+                , Molly Lane, Matthew Gentner,{" "}
                 <Link
                   href="https://www.linkedin.com/in/nguyen-katie-neu/"
                   className={css.aboutLink}
@@ -94,9 +108,8 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Katie Nguyen
-                </Link>, {" "}
-
-                and Andrea Son.
+                </Link>
+                , and Andrea Son.
               </p>
 
               <p className={css.aboutText}>
@@ -122,14 +135,13 @@ const Footer = () => {
                 .
               </p>
             </div>
-
           </div>
 
           {/* Bottom Row */}
           <div className={css.footerBottom}>
-            This site is licensed under a Creative Commons Attribution NonCommercial 4.0 International license.
+            This site is licensed under a Creative Commons Attribution
+            NonCommercial 4.0 International license.
           </div>
-
         </div>
       </div>
     </footer>

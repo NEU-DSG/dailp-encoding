@@ -20,7 +20,7 @@ export const navLinks = style({
   flexDirection: "row",
   gap: "2.5rem",
   margin: 0,
-  padding: 0, 
+  padding: 0,
   marginLeft: "3rem",
   height: "100%",
   alignItems: "stretch",
@@ -59,7 +59,7 @@ export const navIcons = style({
   width: "100%",
   paddingRight: "3rem",
   transition: "color 0.3s",
-  cursor: "pointer"
+  cursor: "pointer",
 })
 
 globalStyle(`${navIcons} i:hover`, {

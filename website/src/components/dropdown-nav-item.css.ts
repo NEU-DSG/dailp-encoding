@@ -1,4 +1,4 @@
-import { style, globalStyle } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { fonts } from "src/style/theme-contract.css"
 
 export const dropdownContainer = style({
@@ -66,23 +66,26 @@ export const dropdownItem = style({
   color: "#000000",
   fontFamily: fonts.header,
   textDecoration: "none",
-  ":hover": { 
+  ":hover": {
     backgroundColor: "#ECECEC",
-    textDecoration: "none"
-},
+    textDecoration: "none",
+  },
 })
 
-globalStyle(`${dropdownMenu} a, ${dropdownMenu} a:visited, ${dropdownMenu} a:active`, {
-  display: "flex",
-  color: "#000000",
-  textDecoration: "none",
-  listStyleType: "none",
-  width: "100%",
-  borderBottom: "1px solid black",
-  fontWeight: "500",
-  fontFamily: "Inter",
-  alignItems: "center",
-})
+globalStyle(
+  `${dropdownMenu} a, ${dropdownMenu} a:visited, ${dropdownMenu} a:active`,
+  {
+    display: "flex",
+    color: "#000000",
+    textDecoration: "none",
+    listStyleType: "none",
+    width: "100%",
+    borderBottom: "1px solid black",
+    fontWeight: "500",
+    fontFamily: "Inter",
+    alignItems: "center",
+  }
+)
 
 globalStyle(`${dropdownMenu} a:hover`, {
   backgroundColor: "#ECECEC",

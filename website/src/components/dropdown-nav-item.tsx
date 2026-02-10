@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import * as styles from "./dropdown-nav-item.css"
 import { DropdownToggle } from "./dropdown-toggle"
 
@@ -21,7 +21,11 @@ export const DropdownNavItem = (props: {
 
   return (
     <li ref={ref} className={styles.dropdownContainer}>
-      <DropdownToggle label={props.label} isOpen={open} onToggle={() => setOpen(!open)} />
+      <DropdownToggle
+        label={props.label}
+        isOpen={open}
+        onToggle={() => setOpen(!open)}
+      />
 
       {open && (
         <ul className={styles.dropdownMenu}>

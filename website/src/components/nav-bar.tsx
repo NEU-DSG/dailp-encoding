@@ -1,11 +1,13 @@
-import { navBar, navIcons, navLinks } from "./nav-bar.css"
 import { DropdownNavItem } from "./dropdown-nav-item"
+import { navBar, navIcons, navLinks } from "./nav-bar.css"
 
 export const NavBar = () => {
   return (
     <nav className={navBar}>
       <ul className={navLinks}>
-        <li><a href="/">HOME</a></li>
+        <li>
+          <a href="/">HOME</a>
+        </li>
 
         {/* Change links? */}
         <DropdownNavItem
@@ -48,23 +50,35 @@ export const NavBar = () => {
         <DropdownNavItem
           label="FEATURED"
           links={[
-            { text: "Stories", href: "https://dev.dailp.northeastern.edu/collections/cwkw" },
-            { text: "Spotlights", href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories" },
+            {
+              text: "Stories",
+              href: "https://dev.dailp.northeastern.edu/collections/cwkw",
+            },
+            {
+              text: "Spotlights",
+              href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories",
+            },
           ]}
         />
 
-        <li><a href="/credit">CREDIT</a></li>
+        <li>
+          <a href="/credit">CREDIT</a>
+        </li>
 
         <li className={navIcons}>
-          <i className="fa-solid fa-user"></i> {/* Only show for logged in users, otherwise  "Log in" */}
+          <i className="fa-solid fa-user"></i>{" "}
+          {/* Only show for logged in users, otherwise  "Log in" */}
           <i className="fa-solid fa-gear"></i>
-          <i className="fa-solid fa-bell"></i> {/* Only show for logged in users */}
+          <i className="fa-solid fa-bell"></i>{" "}
+          {/* Only show for logged in users */}
         </li>
       </ul>
     </nav>
   )
 }
 
-{/* ADD MOBILE NAV BAR */ }
+{
+  /* ADD MOBILE NAV BAR */
+}
 
 export default NavBar

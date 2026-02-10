@@ -8,6 +8,7 @@ import Link from "src/components/link"
 import "src/style/global.css"
 import { themeClass } from "src/theme.css"
 import { LayoutClient } from "./client/layout"
+import NavBar from "./components/nav-bar"
 import { Environment, deploymentEnvironment } from "./env"
 import Footer from "./footer"
 import * as css from "./layout.css"
@@ -16,7 +17,6 @@ import { HeaderPrefDrawer } from "./mode"
 import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
 import { PreferencesProvider } from "./preferences-context"
 import "./wordpress.css"
-import NavBar from "./components/nav-bar"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
 

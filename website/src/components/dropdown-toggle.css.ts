@@ -1,4 +1,4 @@
-import { style, globalStyle } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { fonts } from "src/style/constants"
 
 export const dropdownToggle = style({
@@ -26,7 +26,7 @@ export const toggleIcon = style({
   },
 })
 
-export const toggleText = style ({
+export const toggleText = style({
   color: "white",
   fontFamily: fonts.header,
   fontWeight: "500",

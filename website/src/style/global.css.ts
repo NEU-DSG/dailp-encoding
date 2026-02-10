@@ -175,4 +175,3 @@ globalStyle("input", {
     },
   },
 })
-
