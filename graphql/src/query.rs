@@ -378,6 +378,15 @@ impl Query {
             .await?)
     }
 
+    /// Gets all dailp_user with their id, username, and role for now
+    async fn list_users(&self, context: $Context<'_>) -> FieldResult<Vec<User>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_users()
+            .await?)
+    }
+
     async fn abbreviation_id_from_short_name(
         &self,
         context: &Context<'_>,
@@ -637,6 +646,8 @@ impl Mutation {
             .await?
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
+
+
 
     /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
