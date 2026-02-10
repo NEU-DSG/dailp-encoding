@@ -895,6 +895,14 @@ impl Database {
         Ok(format!("document: {}, user: {}", document_id, user_id))
     }
 
+    pub async fn all_users(&self) -> Result<Vec<User>> {
+        let bookmarks = query_file!("queries/all_user.sql", user_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(users)
+    }
+
     pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
         let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
             .fetch_all(&self.client)
