@@ -173,6 +173,30 @@ export const DailpPageContents = (props: { path: string }) => {
         </option>
       ))
 
+  if (isInCollection) {
+    return (
+      <>
+        <header>
+          <h1>{page.title}</h1>
+          {/* dennis todo: should be admin in the future */}
+          {
+            /* dropdown & publish button */
+            userRole === UserRole.Editor && (
+              <div>
+                <Link href={`/edit?path=${props.path}`}>Edit</Link>
+              </div>
+            )
+          }
+        </header>
+        {content.charAt(0) === "<" ? (
+          <div dangerouslySetInnerHTML={{ __html: content }} />
+        ) : (
+          <Markdown>{content}</Markdown>
+        )}
+      </>
+    )
+  }
+
   return (
     <>
       {!isPublished && (
