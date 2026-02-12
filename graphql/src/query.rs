@@ -968,7 +968,9 @@ impl Mutation {
         context: &Context<'_>,
         token: String,
     ) -> FieldResult<bool> {
-        // post to https://challenges.cloudflare.com/turnstile/v0/siteverify
+        // POST to SiteVerify API directly unless an override is provided. Used for AWS Infra testing
+        let turnstile_api = std::env::var("TURNSTILE_API")
+            .unwrap_or("https://challenges.cloudflare.com/turnstile/v0/siteverify".to_string());
         let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
         let params = [("secret", secret), ("response", token)];
         let client = reqwest::Client::new();
@@ -977,7 +979,7 @@ impl Mutation {
         debug!("Payload: {:?}", params);
 
         let response = client
-            .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+            .post(turnstile_api)
             .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .form(&params)
             .send()
