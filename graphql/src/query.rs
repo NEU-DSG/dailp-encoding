@@ -14,7 +14,7 @@ use dailp::{
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
-use reqwest::Client;
+use reqwest::{header, Client};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -375,6 +375,15 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .dailp_user_by_id(&id)
+            .await?)
+    }
+
+    /// Gets all dailp_user with their id, username, and role for now
+    async fn list_users(&self, context: &Context<'_>) -> FieldResult<Vec<User>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_users()
             .await?)
     }
 
@@ -978,6 +987,7 @@ impl Mutation {
 
         let response = client
             .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .form(&params)
             .send()
             .await?;
