@@ -895,6 +895,33 @@ impl Database {
         Ok(format!("document: {}, user: {}", document_id, user_id))
     }
 
+    pub async fn all_users(&self) -> Result<Vec<User>> {
+        let rows = query_file!("queries/all_user.sql")
+            .fetch_all(&self.client)
+            .await?;
+
+        let users = rows
+            .into_iter()
+            .map(|row| {
+                let created_at = Date::from(row.created_at);
+                let role = UserGroup::from(row.role);
+
+                User {
+                    id: UserId(row.id.to_string()),
+                    display_name: row.display_name,
+                    created_at: Some(created_at),
+                    avatar_url: row.avatar_url,
+                    bio: row.bio,
+                    organization: row.organization,
+                    location: row.location,
+                    role: Some(role),
+                }
+            })
+            .collect();
+
+        Ok(users) // come back to see if list conversions are needed
+    }
+
     pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
         let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
             .fetch_all(&self.client)
