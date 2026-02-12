@@ -6,7 +6,7 @@ import { Link } from "src/components"
 import {
   CollectionSection,
   MenuUpdate,
-  useEditedCollectionQuery,
+  useEditedCollectionsQuery,
   useMenuBySlugQuery,
   usePageByPathQuery,
 } from "src/graphql/dailp"
@@ -42,14 +42,20 @@ export const DailpPageContents = (props: { path: string }) => {
     pause: fetching, // Don't fetch menu until page query is complete
   })
 
-  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
+  const [{ data: collectionData }] = useEditedCollectionsQuery({
+    pause: fetching,
+  })
+
+  let collectionSlugs =
+    collectionData?.allEditedCollections?.map((collection) =>
+      collection.slug.replaceAll("_", "-")
+    ) ?? []
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
 
-  // const [{ data: collectionData }] = useEditedCollectionQuery({
-  //   variables: { slug: collectionSlug || "" },
-  //   pause: fetching || !collectionSlug,
-  // })
+  // todo: need way to differentiate between documents and pages in chapters
+  // const collectionChapters = collectionData?.editedCollection?.chapters?.filter((chapter) =>
+  //   (chapter.))
 
   const page = data?.pageByPath
   const collectionSections = [
@@ -57,8 +63,6 @@ export const DailpPageContents = (props: { path: string }) => {
     CollectionSection.Body,
     CollectionSection.Credit,
   ]
-  // const collectionChapters = collectionData?.editedCollection?.chapters?.filter((chapter) =>
-  //   (chapter.))
   const menu = menuData?.menuBySlug
   const firstBlock = page?.body?.[0]
   const content =
@@ -84,7 +88,6 @@ export const DailpPageContents = (props: { path: string }) => {
 
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
-  // true if page is either in a collection or in menu
   const isPublished = isInCollection || isInMenu(props.path)
 
   if (fetching) {
@@ -105,7 +108,7 @@ export const DailpPageContents = (props: { path: string }) => {
       return
     }
     if (isInCollection) {
-      // update table of contents
+      // update table of contents method here
       // publish page code not merged yet
     } else {
       const toMenuItemInput = (
@@ -173,20 +176,18 @@ export const DailpPageContents = (props: { path: string }) => {
         </option>
       ))
 
+  // katie todo: delete this after backend method to change collection table of contents is implemented
   if (isInCollection) {
     return (
       <>
         <header>
           <h1>{page.title}</h1>
           {/* dennis todo: should be admin in the future */}
-          {
-            /* dropdown & publish button */
-            userRole === UserRole.Editor && (
-              <div>
-                <Link href={`/edit?path=${props.path}`}>Edit</Link>
-              </div>
-            )
-          }
+          {userRole === UserRole.Editor && (
+            <div>
+              <Link href={`/edit?path=${props.path}`}>Edit</Link>
+            </div>
+          )}
         </header>
         {content.charAt(0) === "<" ? (
           <div dangerouslySetInnerHTML={{ __html: content }} />
