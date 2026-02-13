@@ -3576,6 +3576,10 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
+    genre {
+      id
+      name
+    }
   }
 `
 export const FormFieldsFragmentDoc = gql`
