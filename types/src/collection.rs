@@ -51,7 +51,7 @@ pub struct CollectionChapter {
     /// Full path of the chapter
     pub path: Vec<String>,
     // /// Whether the chapter is a page or a document
-    // pub contentType: 
+    // pub contentType:
 }
 
 /// Enum to represent the sections in an edited collection
@@ -67,7 +67,17 @@ pub enum CollectionSection {
 }
 
 /// Enum to represent whether a chapter in a collection's table of contents is a page or a document
-#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, async_graphql::Enum, serde::Serialize, serde::Deserialize)]
+#[derive(
+    async_graphql::Enum,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Debug,
+    async_graphql::Enum,
+    serde::Serialize,
+    serde::Deserialize,
+)]
 pub enum ChapterContents {
     Document,
     Page,
@@ -136,5 +146,3 @@ pub struct CreateEditedCollectionInput {
     /// URL of the thumbnail image for the collection
     pub thumbnail_url: String,
 }
-
-
