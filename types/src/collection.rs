@@ -50,6 +50,8 @@ pub struct CollectionChapter {
     #[graphql(skip)]
     /// Full path of the chapter
     pub path: Vec<String>,
+    // /// Whether the chapter is a page or a document
+    // pub contentType: 
 }
 
 /// Enum to represent the sections in an edited collection
@@ -62,6 +64,13 @@ pub enum CollectionSection {
     Body,
     /// Credit
     Credit,
+}
+
+/// Enum to represent whether a chapter in a collection's table of contents is a page or a document
+#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, async_graphql::Enum, serde::Serialize, serde::Deserialize)]
+pub enum ChapterContents {
+    Document,
+    Page,
 }
 
 #[async_graphql::ComplexObject]
@@ -111,6 +120,10 @@ impl CollectionChapter {
             .chapter_breadcrumbs(self.path.clone())
             .await?)
     }
+
+    async fn content_type(&self, context: &Context<'_>) -> FieldResult<ChapterContents> {
+        // return data with ChapterContents type which is either a Document or Page
+    }
 }
 
 /// Input for creating an edited collection
@@ -123,3 +136,5 @@ pub struct CreateEditedCollectionInput {
     /// URL of the thumbnail image for the collection
     pub thumbnail_url: String,
 }
+
+
