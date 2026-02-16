@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with word_input as (\n  select * from unnest(\n    $1::uuid[], $2::text[], $3::text[], $4::text[], $5::date[], $6::text[], $7::text[], $8::bigint[]\n  ) as t(document_id, source_text, simple_phonetics, english_gloss, recorded_at, commentary, page_number, index_in_document)\n),\ninserted_words as (\n  insert into word (document_id, english_gloss, recorded_at, commentary, page_number, index_in_document)\n  select document_id, english_gloss, recorded_at, commentary, page_number, index_in_document\n  from word_input\n  returning id, document_id, index_in_document\n),\nsource_insert as (\n  insert into word_spelling (word_id, spelling_system, value)\n  select distinct on (iw.id) iw.id,\n    (select id from spelling_system where name = 'Source'),\n    wi.source_text\n  from inserted_words iw\n  join word_input wi on wi.document_id = iw.document_id\n    and wi.index_in_document = iw.index_in_document\n  where wi.source_text is not null\n  on conflict (word_id, spelling_system) do update set value = excluded.value\n),\nphonetics_insert as (\n  insert into word_spelling (word_id, spelling_system, value)\n  select distinct on (iw.id) iw.id,\n    (select id from spelling_system where name = 'Simple Phonetics'),\n    wi.simple_phonetics\n  from inserted_words iw\n  join word_input wi on wi.document_id = iw.document_id\n    and wi.index_in_document = iw.index_in_document\n  where wi.simple_phonetics is not null\n  on conflict (word_id, spelling_system) do update set value = excluded.value\n)\nselect id from inserted_words\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "DateArray",
+        "TextArray",
+        "TextArray",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c58f69a94b128538bc25a6e6b3a1cf7860f5330b2f63fd37c219e7dc634902cd"
+}

@@ -74,7 +74,7 @@ export type AnnotatedDoc = {
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
-  readonly forms: ReadonlyArray<AnnotatedForm>
+  readonly forms: ReadonlyArray<Word>
   /** The genre of the document, used to group similar ones */
   readonly genre: Genre
   /** Official short identifier for this document */
@@ -113,7 +113,7 @@ export type AnnotatedDoc = {
    * All words in the document that have unanalyzed or unfamiliar parts.
    * These words need to be corrected or reviewed further.
    */
-  readonly unresolvedForms: ReadonlyArray<AnnotatedForm>
+  readonly unresolvedForms: ReadonlyArray<Word>
   /**
    * Audio for this word that has been recorded by community members. Will be
    * empty if user does not have access to uncurated contributions.
@@ -127,109 +127,8 @@ export type AnnotatedDocFormsArgs = {
   start: InputMaybe<Scalars["Int"]>
 }
 
-/**
- * A single word in an annotated document.
- * One word contains several layers of interpretation, including the original
- * source text, multiple layers of linguistic annotation, and annotator notes.
- * TODO Split into two types, one for migration and one for SQL + GraphQL
- */
-export type AnnotatedForm = {
-  readonly __typename?: "AnnotatedForm"
-  /** Further details about the annotation layers, including uncertainty */
-  readonly commentary: Maybe<Scalars["String"]>
-  /** Get comments on this word */
-  readonly comments: ReadonlyArray<Comment>
-  /** The date and time this form was recorded */
-  readonly dateRecorded: Maybe<Date>
-  /** The document that contains this word. */
-  readonly document: Maybe<AnnotatedDoc>
-  /** Unique identifier of the containing document */
-  readonly documentId: Scalars["UUID"]
-  /**
-   * A slices of audio associated with this word in the context of a document.
-   * This audio has been selected by an editor from contributions, or is the
-   * same as the ingested audio track, if one is available.
-   */
-  readonly editedAudio: ReadonlyArray<AudioSlice>
-  /** English gloss for the whole word */
-  readonly englishGloss: ReadonlyArray<Scalars["String"]>
-  /** Unique identifier of this form */
-  readonly id: Scalars["UUID"]
-  /** Number of words preceding this one in the containing document */
-  readonly index: Scalars["Int"]
-  /** The audio for this word that was ingested from GoogleSheets, if there is any. */
-  readonly ingestedAudioTrack: Maybe<AudioSlice>
-  /** The character index of a mid-word line break, if there is one */
-  readonly lineBreak: Maybe<Scalars["Int"]>
-  /** A normalized version of the word */
-  readonly normalizedSource: Maybe<Scalars["String"]>
-  /** The character index of a mid-word page break, if there is one */
-  readonly pageBreak: Maybe<Scalars["Int"]>
-  /** Underlying phonemic representation of this word */
-  readonly phonemic: Maybe<Scalars["String"]>
-  /** Position of the form within the context of its parent document */
-  readonly position: PositionInDocument
-  readonly romanizedSource: Maybe<Scalars["String"]>
-  /**
-   * The root morpheme of the word.
-   * For example, a verb form glossed as "he catches" might have a root morpheme
-   * corresponding to "catch."
-   */
-  readonly root: Maybe<WordSegment>
-  readonly segments: ReadonlyArray<WordSegment>
-  /** All other observed words with the same root morpheme as this word. */
-  readonly similarForms: ReadonlyArray<AnnotatedForm>
-  /** Original source text */
-  readonly source: Scalars["String"]
-  /**
-   * Audio for this word that has been recorded by community members. Will be
-   * empty if user does not have access to uncurated contributions.
-   * TODO! User guard for contributors only
-   */
-  readonly userContributedAudio: ReadonlyArray<AudioSlice>
-}
-
-/**
- * A single word in an annotated document.
- * One word contains several layers of interpretation, including the original
- * source text, multiple layers of linguistic annotation, and annotator notes.
- * TODO Split into two types, one for migration and one for SQL + GraphQL
- */
-export type AnnotatedFormRomanizedSourceArgs = {
-  system: CherokeeOrthography
-}
-
-/**
- * A single word in an annotated document.
- * One word contains several layers of interpretation, including the original
- * source text, multiple layers of linguistic annotation, and annotator notes.
- * TODO Split into two types, one for migration and one for SQL + GraphQL
- */
-export type AnnotatedFormSegmentsArgs = {
-  system: CherokeeOrthography
-}
-
-/**
- * A single word in an annotated document that can be edited.
- * All fields except id are optional.
- */
-export type AnnotatedFormUpdate = {
-  /** Possible update to commentary */
-  readonly commentary: InputMaybe<Scalars["String"]>
-  /** Possible updated english gloss */
-  readonly englishGloss: InputMaybe<Scalars["String"]>
-  /** Unique identifier of the form */
-  readonly id: Scalars["UUID"]
-  /** Possible update to normalized source content */
-  readonly romanizedSource: InputMaybe<Scalars["String"]>
-  /** Updated segments */
-  readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
-  /** Possible update to source content */
-  readonly source: InputMaybe<Scalars["String"]>
-}
-
 /** Element within a spreadsheet before being transformed into a full document. */
-export type AnnotatedSeg = AnnotatedForm | LineBreak
+export type AnnotatedSeg = LineBreak | Word
 
 /** Represents the status of a suggestion made by a contributor */
 export enum ApprovalStatus {
@@ -347,7 +246,7 @@ export type Comment = {
 }
 
 /** Type representing the object that a comment is attached to */
-export type CommentParent = AnnotatedForm | DocumentParagraph
+export type CommentParent = DocumentParagraph | Word
 
 /** An enum listing the possible types that a comment could be attached to */
 export enum CommentParentType {
@@ -682,7 +581,7 @@ export type FormatUpdate = {
 export type FormsInTime = {
   readonly __typename?: "FormsInTime"
   readonly end: Maybe<Date>
-  readonly forms: ReadonlyArray<AnnotatedForm>
+  readonly forms: ReadonlyArray<Word>
   readonly start: Maybe<Date>
 }
 
@@ -720,7 +619,7 @@ export type GenreUpdate = {
  * Physical units would be better, but IIIF only allows pixels and percentages.
  *
  * Potential use case:
- * Each document is represented by an ordered list of [AnnotatedForm]s. Each
+ * Each document is represented by an ordered list of [Word]s. Each
  * form has some geometry on the source image. There are a bunch of other
  * annotations on the source image that are unordered. These may be specific
  * syllabary characters, notes about the handwriting, etc. Using MongoDB
@@ -850,7 +749,7 @@ export type MenuUpdate = {
 export type MorphemeReference = {
   readonly __typename?: "MorphemeReference"
   /** List of words that contain this morpheme. */
-  readonly forms: ReadonlyArray<AnnotatedForm>
+  readonly forms: ReadonlyArray<Word>
   /** Phonemic shape of the morpheme. */
   readonly morpheme: Scalars["String"]
 }
@@ -922,12 +821,12 @@ export type Mutation = {
    * Attach audio that has already been uploaded to S3 to a particular word
    * Assumes user requesting mutation recoreded the audio
    */
-  readonly attachAudioToWord: AnnotatedForm
+  readonly attachAudioToWord: Word
   readonly createEditedCollection: Scalars["String"]
   /** Decide if a piece of document audio should be included in edited collection */
   readonly curateDocumentAudio: AnnotatedDoc
   /** Decide if a piece of word audio should be included in edited collection */
-  readonly curateWordAudio: AnnotatedForm
+  readonly curateWordAudio: Word
   /**
    * Delete a comment.
    * Will fail if the user making the request is not the poster.
@@ -952,7 +851,7 @@ export type Mutation = {
   readonly updateParagraph: DocumentParagraph
   /** Updates a dailp_user's information */
   readonly updateUser: User
-  readonly updateWord: AnnotatedForm
+  readonly updateWord: Word
   readonly upsertPage: Scalars["String"]
 }
 
@@ -1039,7 +938,7 @@ export type MutationUpdateUserArgs = {
 }
 
 export type MutationUpdateWordArgs = {
-  word: AnnotatedFormUpdate
+  word: WordUpdate
 }
 
 export type MutationUpsertPageArgs = {
@@ -1182,16 +1081,16 @@ export type Query = {
    * Search for words with the exact same syllabary string, or with very
    * similar looking characters.
    */
-  readonly syllabarySearch: ReadonlyArray<AnnotatedForm>
+  readonly syllabarySearch: ReadonlyArray<Word>
   /** Basic information about the currently authenticated user, if any. */
   readonly userInfo: Maybe<UserInfo>
   /** Get a single word given the word ID */
-  readonly wordById: AnnotatedForm
+  readonly wordById: Word
   /**
    * Search for words that match any one of the given queries.
    * Each query may match against multiple fields of a word.
    */
-  readonly wordSearch: ReadonlyArray<AnnotatedForm>
+  readonly wordSearch: ReadonlyArray<Word>
 }
 
 export type QueryAbbreviationIdFromShortNameArgs = {
@@ -1391,6 +1290,79 @@ export type UserUpdate = {
   readonly role: InputMaybe<UserGroup>
 }
 
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type Word = {
+  readonly __typename?: "Word"
+  /** Further details about the annotation layers, including uncertainty */
+  readonly commentary: Maybe<Scalars["String"]>
+  /** Get comments on this word */
+  readonly comments: ReadonlyArray<Comment>
+  /** The date and time this form was recorded */
+  readonly dateRecorded: Maybe<Date>
+  /** The document that contains this word. */
+  readonly document: Maybe<AnnotatedDoc>
+  /** Unique identifier of the containing document */
+  readonly documentId: Scalars["UUID"]
+  /**
+   * A slices of audio associated with this word in the context of a document.
+   * This audio has been selected by an editor from contributions, or is the
+   * same as the ingested audio track, if one is available.
+   */
+  readonly editedAudio: ReadonlyArray<AudioSlice>
+  /** English gloss for the whole word */
+  readonly englishGloss: ReadonlyArray<Scalars["String"]>
+  /** Unique identifier of this form */
+  readonly id: Scalars["UUID"]
+  /** Number of words preceding this one in the containing document */
+  readonly index: Scalars["Int"]
+  /** The audio for this word that was ingested from GoogleSheets, if there is any. */
+  readonly ingestedAudioTrack: Maybe<AudioSlice>
+  /** Position of the form within the context of its parent document */
+  readonly position: PositionInDocument
+  readonly romanizedSource: Maybe<Scalars["String"]>
+  /**
+   * The root morpheme of the word.
+   * For example, a verb form glossed as "he catches" might have a root morpheme
+   * corresponding to "catch."
+   */
+  readonly root: Maybe<WordSegment>
+  readonly segments: ReadonlyArray<WordSegment>
+  /** All other observed words with the same root morpheme as this word. */
+  readonly similarForms: ReadonlyArray<Word>
+  readonly source: Maybe<Scalars["String"]>
+  /**
+   * Audio for this word that has been recorded by community members. Will be
+   * empty if user does not have access to uncurated contributions.
+   * TODO! User guard for contributors only
+   */
+  readonly userContributedAudio: ReadonlyArray<AudioSlice>
+}
+
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type WordRomanizedSourceArgs = {
+  system: CherokeeOrthography
+}
+
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type WordSegmentsArgs = {
+  system: CherokeeOrthography
+}
+
 export type WordSegment = {
   readonly __typename?: "WordSegment"
   /** English gloss in standard DAILP format that refers to a lexical item */
@@ -1421,6 +1393,25 @@ export enum WordSegmentRole {
   Morpheme = "MORPHEME",
 }
 
+/**
+ * A single word in an annotated document that can be edited.
+ * All fields except id are optional.
+ */
+export type WordUpdate = {
+  /** Possible update to commentary */
+  readonly commentary: InputMaybe<Scalars["String"]>
+  /** Possible updated english gloss */
+  readonly englishGloss: InputMaybe<Scalars["String"]>
+  /** Unique identifier of the form */
+  readonly id: Scalars["UUID"]
+  /** Possible update to normalized source content */
+  readonly romanizedSource: InputMaybe<Scalars["String"]>
+  /** Updated segments */
+  readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
+  /** Possible update to source content */
+  readonly source: InputMaybe<Scalars["String"]>
+}
+
 /** A list of words grouped by the document that contains them. */
 export type WordsInDocument = {
   readonly __typename?: "WordsInDocument"
@@ -1429,7 +1420,7 @@ export type WordsInDocument = {
   /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<DocumentType>
   /** List of annotated and potentially segmented forms */
-  readonly forms: ReadonlyArray<AnnotatedForm>
+  readonly forms: ReadonlyArray<Word>
 }
 
 export type CollectionsListingQueryVariables = Exact<{ [key: string]: never }>
@@ -1631,13 +1622,13 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                     "id" | "translation" | "index"
                   > & {
                       readonly source: ReadonlyArray<
-                        | ({ readonly __typename: "AnnotatedForm" } & Pick<
-                            AnnotatedForm,
+                        | { readonly __typename: "LineBreak" }
+                        | ({ readonly __typename: "Word" } & Pick<
+                            Word,
                             | "id"
                             | "index"
                             | "source"
                             | "romanizedSource"
-                            | "phonemic"
                             | "englishGloss"
                             | "commentary"
                           > & {
@@ -1738,7 +1729,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 >
                               >
                             })
-                        | { readonly __typename: "LineBreak" }
                       >
                       readonly comments: ReadonlyArray<
                         { readonly __typename?: "Comment" } & Pick<
@@ -1752,13 +1742,12 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
           >
         >
         readonly forms?: ReadonlyArray<
-          { readonly __typename: "AnnotatedForm" } & Pick<
-            AnnotatedForm,
+          { readonly __typename: "Word" } & Pick<
+            Word,
             | "id"
             | "index"
             | "source"
             | "romanizedSource"
-            | "phonemic"
             | "englishGloss"
             | "commentary"
           > & {
@@ -1931,13 +1920,13 @@ export type ParagraphFormFieldsFragment = {
   readonly __typename: "DocumentParagraph"
 } & Pick<DocumentParagraph, "id" | "index" | "translation"> & {
     readonly source: ReadonlyArray<
-      | ({ readonly __typename: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
+      | { readonly __typename: "LineBreak" }
+      | ({ readonly __typename: "Word" } & Pick<
+          Word,
           | "id"
           | "index"
           | "source"
           | "romanizedSource"
-          | "phonemic"
           | "englishGloss"
           | "commentary"
         > & {
@@ -2030,7 +2019,6 @@ export type ParagraphFormFieldsFragment = {
               { readonly __typename?: "Comment" } & Pick<Comment, "id">
             >
           })
-      | { readonly __typename: "LineBreak" }
     >
     readonly comments: ReadonlyArray<
       { readonly __typename?: "Comment" } & Pick<Comment, "id">
@@ -2041,17 +2029,9 @@ export type CommentFormFieldsFragment = {
   readonly __typename?: "Comment"
 } & Pick<Comment, "id" | "textContent" | "commentType" | "edited">
 
-export type FormFieldsFragment = {
-  readonly __typename: "AnnotatedForm"
-} & Pick<
-  AnnotatedForm,
-  | "id"
-  | "index"
-  | "source"
-  | "romanizedSource"
-  | "phonemic"
-  | "englishGloss"
-  | "commentary"
+export type FormFieldsFragment = { readonly __typename: "Word" } & Pick<
+  Word,
+  "id" | "index" | "source" | "romanizedSource" | "englishGloss" | "commentary"
 > & {
     readonly segments: ReadonlyArray<
       { readonly __typename?: "WordSegment" } & Pick<
@@ -2199,13 +2179,9 @@ export type WordSearchQueryVariables = Exact<{
 
 export type WordSearchQuery = { readonly __typename?: "Query" } & {
   readonly wordSearch: ReadonlyArray<
-    { readonly __typename?: "AnnotatedForm" } & Pick<
-      AnnotatedForm,
-      | "source"
-      | "normalizedSource"
-      | "romanizedSource"
-      | "englishGloss"
-      | "index"
+    { readonly __typename?: "Word" } & Pick<
+      Word,
+      "source" | "romanizedSource" | "englishGloss" | "index"
     > & {
         readonly document: Maybe<
           { readonly __typename?: "AnnotatedDoc" } & Pick<
@@ -2260,14 +2236,9 @@ export type TimelineQuery = { readonly __typename?: "Query" } & {
       >
       readonly end: Maybe<{ readonly __typename?: "Date" } & Pick<Date, "year">>
       readonly forms: ReadonlyArray<
-        { readonly __typename?: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
-          | "source"
-          | "normalizedSource"
-          | "romanizedSource"
-          | "phonemic"
-          | "documentId"
-          | "englishGloss"
+        { readonly __typename?: "Word" } & Pick<
+          Word,
+          "source" | "romanizedSource" | "documentId" | "englishGloss"
         >
       >
     }
@@ -2344,9 +2315,9 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
       "documentType"
     > & {
         readonly forms: ReadonlyArray<
-          { readonly __typename?: "AnnotatedForm" } & Pick<
-            AnnotatedForm,
-            "index" | "source" | "normalizedSource" | "englishGloss"
+          { readonly __typename?: "Word" } & Pick<
+            Word,
+            "index" | "source" | "englishGloss"
           > & {
               readonly document: Maybe<
                 { readonly __typename?: "AnnotatedDoc" } & Pick<
@@ -2397,13 +2368,12 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
           >
         >
         readonly forms: ReadonlyArray<
-          { readonly __typename: "AnnotatedForm" } & Pick<
-            AnnotatedForm,
+          { readonly __typename: "Word" } & Pick<
+            Word,
             | "id"
             | "index"
             | "source"
             | "romanizedSource"
-            | "phonemic"
             | "englishGloss"
             | "commentary"
           > & {
@@ -2719,10 +2689,7 @@ export type WordCommentsQueryVariables = Exact<{
 }>
 
 export type WordCommentsQuery = { readonly __typename?: "Query" } & {
-  readonly wordById: { readonly __typename?: "AnnotatedForm" } & Pick<
-    AnnotatedForm,
-    "id"
-  > & {
+  readonly wordById: { readonly __typename?: "Word" } & Pick<Word, "id"> & {
       readonly comments: ReadonlyArray<
         { readonly __typename?: "Comment" } & Pick<
           Comment,
@@ -2779,18 +2746,17 @@ export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
 }
 
 export type UpdateWordMutationVariables = Exact<{
-  word: AnnotatedFormUpdate
+  word: WordUpdate
   morphemeSystem: CherokeeOrthography
 }>
 
 export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
-  readonly updateWord: { readonly __typename: "AnnotatedForm" } & Pick<
-    AnnotatedForm,
+  readonly updateWord: { readonly __typename: "Word" } & Pick<
+    Word,
     | "id"
     | "index"
     | "source"
     | "romanizedSource"
-    | "phonemic"
     | "englishGloss"
     | "commentary"
   > & {
@@ -2882,8 +2848,8 @@ export type AttachAudioToWordMutationVariables = Exact<{
 }>
 
 export type AttachAudioToWordMutation = { readonly __typename?: "Mutation" } & {
-  readonly attachAudioToWord: { readonly __typename?: "AnnotatedForm" } & Pick<
-    AnnotatedForm,
+  readonly attachAudioToWord: { readonly __typename?: "Word" } & Pick<
+    Word,
     "id"
   > & {
       readonly userContributedAudio: ReadonlyArray<
@@ -2947,8 +2913,8 @@ export type CurateWordAudioMutationVariables = Exact<{
 }>
 
 export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
-  readonly curateWordAudio: { readonly __typename?: "AnnotatedForm" } & Pick<
-    AnnotatedForm,
+  readonly curateWordAudio: { readonly __typename?: "Word" } & Pick<
+    Word,
     "id"
   > & {
       readonly userContributedAudio: ReadonlyArray<
@@ -3087,7 +3053,10 @@ export type UpdateCommentMutationVariables = Exact<{
 
 export type UpdateCommentMutation = { readonly __typename?: "Mutation" } & {
   readonly updateComment:
-    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      > & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3109,10 +3078,7 @@ export type UpdateCommentMutation = { readonly __typename?: "Mutation" } & {
               }
           >
         })
-    | ({ readonly __typename: "DocumentParagraph" } & Pick<
-        DocumentParagraph,
-        "id"
-      > & {
+    | ({ readonly __typename: "Word" } & Pick<Word, "id"> & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3142,7 +3108,10 @@ export type PostCommentMutationVariables = Exact<{
 
 export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
   readonly postComment:
-    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      > & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3164,10 +3133,7 @@ export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
               }
           >
         })
-    | ({ readonly __typename: "DocumentParagraph" } & Pick<
-        DocumentParagraph,
-        "id"
-      > & {
+    | ({ readonly __typename: "Word" } & Pick<Word, "id"> & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3197,7 +3163,10 @@ export type DeleteCommentMutationVariables = Exact<{
 
 export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
   readonly deleteComment:
-    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      > & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3219,10 +3188,7 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
               }
           >
         })
-    | ({ readonly __typename: "DocumentParagraph" } & Pick<
-        DocumentParagraph,
-        "id"
-      > & {
+    | ({ readonly __typename: "Word" } & Pick<Word, "id"> & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
@@ -3514,13 +3480,12 @@ export const DocFormFieldsFragmentDoc = gql`
   }
 `
 export const FormFieldsFragmentDoc = gql`
-  fragment FormFields on AnnotatedForm {
+  fragment FormFields on Word {
     __typename
     id
     index
     source
     romanizedSource(system: $morphemeSystem)
-    phonemic
     segments(system: $morphemeSystem) {
       morpheme
       gloss
@@ -3685,7 +3650,7 @@ export const DocumentContentsDocument = gql`
           __typename
           source {
             __typename
-            ... on AnnotatedForm {
+            ... on Word {
               ...FormFields
             }
           }
@@ -3793,7 +3758,6 @@ export const WordSearchDocument = gql`
   query WordSearch($query: String!) {
     wordSearch(query: $query) {
       source
-      normalizedSource
       romanizedSource(system: LEARNER)
       englishGloss
       index
@@ -3870,9 +3834,7 @@ export const TimelineDocument = gql`
       }
       forms {
         source
-        normalizedSource
         romanizedSource(system: LEARNER)
-        phonemic
         documentId
         englishGloss
       }
@@ -3969,7 +3931,6 @@ export const MorphemeDocument = gql`
       forms {
         index
         source
-        normalizedSource
         englishGloss
         document {
           id
@@ -4135,7 +4096,7 @@ export function useParagraphCommentsQuery(
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord(
-    $word: AnnotatedFormUpdate!
+    $word: WordUpdate!
     $morphemeSystem: CherokeeOrthography!
   ) {
     updateWord(word: $word) {
@@ -4327,7 +4288,7 @@ export function useUpdateDocumentMetadataMutation() {
 export const UpdateCommentDocument = gql`
   mutation UpdateComment($comment: CommentUpdate!) {
     updateComment(comment: $comment) {
-      ... on AnnotatedForm {
+      ... on Word {
         __typename
         id
         comments {
@@ -4355,7 +4316,7 @@ export function useUpdateCommentMutation() {
 export const PostCommentDocument = gql`
   mutation PostComment($input: PostCommentInput!) {
     postComment(input: $input) {
-      ... on AnnotatedForm {
+      ... on Word {
         __typename
         id
         comments {
@@ -4382,7 +4343,7 @@ export function usePostCommentMutation() {
 export const DeleteCommentDocument = gql`
   mutation DeleteComment($commentId: DeleteCommentInput!) {
     deleteComment(input: $commentId) {
-      ... on AnnotatedForm {
+      ... on Word {
         __typename
         id
         comments {

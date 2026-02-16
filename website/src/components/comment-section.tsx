@@ -20,7 +20,7 @@ export const CommentSection = (p: {
       <div>
         {p.parent.__typename === "DocumentParagraph" ? (
           <ParagraphCommentSection paragraph={p.parent} />
-        ) : p.parent.__typename === "AnnotatedForm" ? (
+        ) : p.parent.__typename === "Word" ? (
           <WordCommentSection word={p.parent} />
         ) : (
           ""

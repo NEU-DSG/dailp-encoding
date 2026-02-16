@@ -90,7 +90,7 @@ async fn parse_early_vocab(
     sheet_id: &str,
     meta: EarlyVocabMetadata,
 ) -> Result<Vec<dailp::LexicalConnection>> {
-    use dailp::{Date, DocumentMetadata, SheetResult, WordSegment};
+    use dailp::{Date, DocumentMetadata, SheetResult, Spelling, SpellingSystem, WordSegment};
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let doc_meta_result =
@@ -195,17 +195,22 @@ async fn parse_early_vocab(
                 }
             }
 
+            let mut spellings = Vec::new();
+            spellings.push(Spelling {
+                system: SpellingSystem::source(),
+                value: source,
+            });
+            spellings.push(Spelling {
+                system: SpellingSystem::simple_phonetics(),
+                value: simple_phonetics.unwrap_or_default(),
+            });
+
             Some((
-                dailp::AnnotatedForm {
-                    normalized_source,
-                    simple_phonetics,
+                dailp::Word {
                     segments,
-                    source,
-                    phonemic: None,
+                    spellings: spellings,
                     commentary,
                     english_gloss: vec![gloss],
-                    line_break: None,
-                    page_break: None,
                     position: dailp::PositionInDocument::new(doc_id, page_number, index as i64 + 1),
                     date_recorded: doc_meta.date.clone(),
                     id: None,

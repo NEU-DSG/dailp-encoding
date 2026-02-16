@@ -1,8 +1,9 @@
 use crate::spreadsheets::{LexicalEntryWithForms, SheetInterpretation};
 use anyhow::Result;
 use dailp::{
-    convert_udb, seg_verb_surface_forms, AnnotatedForm, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, MorphemeId, PositionInDocument, SheetResult, WordSegment,
+    convert_udb, seg_verb_surface_forms, Contributor, Database, Date, DocumentId, DocumentMetadata,
+    LexicalConnection, MorphemeId, PositionInDocument, SheetResult, Spelling, SpellingSystem, Word,
+    WordSegment,
 };
 use itertools::Itertools;
 
@@ -198,11 +199,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     Ok(())
 }
 
-async fn parse_numerals(
-    sheet_id: &str,
-    doc_id: DocumentId,
-    year: i32,
-) -> Result<Vec<AnnotatedForm>> {
+async fn parse_numerals(sheet_id: &str, doc_id: DocumentId, year: i32) -> Result<Vec<Word>> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
     let date = Date::from_ymd(year, 1, 1);
 
@@ -228,19 +225,24 @@ async fn parse_numerals(
             let syllabary = values.next()?;
             let position = PositionInDocument::new(doc_id, page_num, key);
             let segments = vec![WordSegment::new(root_dailp, gloss.clone(), None)];
-            Some(AnnotatedForm {
+            let mut spellings = Vec::new();
+            spellings.push(Spelling {
+                system: SpellingSystem::source(),
+                value: syllabary,
+            });
+            spellings.push(Spelling {
+                system: SpellingSystem::simple_phonetics(),
+                value: simple_phonetics,
+            });
+
+            Some(Word {
                 id: None,
                 position,
-                normalized_source: None,
-                simple_phonetics: Some(simple_phonetics),
-                phonemic: Some(root),
+                spellings: spellings,
                 segments: Some(segments),
                 english_gloss: vec![translation],
-                source: syllabary,
                 commentary: None,
                 date_recorded: Some(date.clone()),
-                line_break: None,
-                page_break: None,
                 ingested_audio_track: None,
             })
         });
@@ -315,17 +317,18 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             let morpheme_gloss = values.next()?;
             let morpheme_segments = values.next()?;
             let segments = WordSegment::parse_many(&morpheme_segments, &morpheme_gloss)?;
-            Some(AnnotatedForm {
+            let mut spellings = Vec::new();
+            spellings.push(Spelling {
+                system: SpellingSystem::source(),
+                value: syllabary,
+            });
+
+            Some(Word {
                 id: None,
                 position,
-                source: syllabary,
-                normalized_source: None,
-                simple_phonetics: None,
+                spellings: spellings,
                 english_gloss: vec![translation],
-                phonemic,
                 segments: Some(segments),
-                line_break: None,
-                page_break: None,
                 commentary: None,
                 date_recorded: meta.date.clone(),
                 ingested_audio_track: None,
@@ -406,24 +409,27 @@ fn parse_new_df(
                     meta.has_numeric,
                     meta.has_comment,
                 ),
-                entry: AnnotatedForm {
-                    id: None,
-                    simple_phonetics: None,
-                    normalized_source: None,
-                    phonemic: None,
-                    commentary: None,
-                    line_break: None,
-                    page_break: None,
-                    english_gloss: glosses,
-                    segments: Some(vec![WordSegment::new(
-                        convert_udb(&root).into_dailp(),
-                        root_gloss.to_owned(),
-                        None,
-                    )]),
-                    date_recorded: Some(date),
-                    source: root,
-                    position: pos,
-                    ingested_audio_track: None,
+                entry: {
+                    let mut spellings = Vec::new();
+                    spellings.push(Spelling {
+                        system: SpellingSystem::source(),
+                        value: root.clone(),
+                    });
+
+                    Word {
+                        id: None,
+                        spellings: spellings,
+                        commentary: None,
+                        english_gloss: glosses,
+                        segments: Some(vec![WordSegment::new(
+                            convert_udb(&root).into_dailp(),
+                            root_gloss.to_owned(),
+                            None,
+                        )]),
+                        date_recorded: Some(date),
+                        position: pos,
+                        ingested_audio_track: None,
+                    }
                 },
             })
         })
@@ -443,18 +449,23 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
         let normalized = row.next()?;
         let translation = row.next()?;
         let pos = PositionInDocument::new(meta.id, "1".to_owned(), index);
-        Some(AnnotatedForm {
+        let mut spellings = Vec::new();
+        spellings.push(Spelling {
+            system: SpellingSystem::source(),
+            value: syllabary,
+        });
+        spellings.push(Spelling {
+            system: SpellingSystem::simple_phonetics(),
+            value: normalized,
+        });
+
+        Some(Word {
             id: None,
-            simple_phonetics: Some(normalized),
-            normalized_source: None,
-            phonemic: None,
+            spellings: spellings,
             commentary: None,
-            line_break: None,
-            page_break: None,
             english_gloss: vec![translation],
             segments: None,
             date_recorded: meta.date.clone(),
-            source: syllabary,
             position: pos,
             ingested_audio_track: None,
         })

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with word_update as (\n  update word set\n      commentary =\n          case\n              when $2::text[] != '{}' and $2[1] is not null then $2[1]\n              else commentary\n          end,\n      english_gloss =\n          case\n              when $3::text[] != '{}' and $3[1] is not null then $3[1]\n              else english_gloss\n          end\n  where id = $1\n  returning document_id\n),\nspelling_upsert as (\n  insert into word_spelling (word_id, spelling_system, value)\n  select\n    $1,\n    (select id from spelling_system where name = 'Source'),\n    ($4::text[])[1]\n  where $4::text[] != '{}' and ($4::text[])[1] is not null\n  union all\n  select\n    $1,\n    (select id from spelling_system where name = 'Simple Phonetics'),\n    ($5::text[])[1]\n  where $5::text[] != '{}' and ($5::text[])[1] is not null\n  on conflict (word_id, spelling_system) do update set value = excluded.value\n)\nselect document_id from word_update;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "62c99cff4abc5e3d47c886001ad2018ad6a7d50c8702c14a2d19c0bbf63e9ef5"
+}

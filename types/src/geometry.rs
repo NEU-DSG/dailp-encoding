@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Physical units would be better, but IIIF only allows pixels and percentages.
 ///
 /// Potential use case:
-/// Each document is represented by an ordered list of [AnnotatedForm]s. Each
+/// Each document is represented by an ordered list of [Word]s. Each
 /// form has some geometry on the source image. There are a bunch of other
 /// annotations on the source image that are unordered. These may be specific
 /// syllabary characters, notes about the handwriting, etc. Using MongoDB

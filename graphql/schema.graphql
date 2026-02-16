@@ -66,13 +66,13 @@ type AnnotatedDoc {
 	All the words contained in this document, dropping structural formatting
 	like line and page breaks.
 	"""
-	forms(start: Int, end: Int): [AnnotatedForm!]!
+	forms(start: Int, end: Int): [Word!]!
 	formCount: Int!
 	"""
 	All words in the document that have unanalyzed or unfamiliar parts.
 	These words need to be corrected or reviewed further.
 	"""
-	unresolvedForms: [AnnotatedForm!]!
+	unresolvedForms: [Word!]!
 	"""
 	Collection chapters that contain this document.
 	"""
@@ -120,133 +120,9 @@ type AnnotatedDoc {
 }
 
 """
-A single word in an annotated document.
-One word contains several layers of interpretation, including the original
-source text, multiple layers of linguistic annotation, and annotator notes.
-TODO Split into two types, one for migration and one for SQL + GraphQL
-"""
-type AnnotatedForm {
-	"""
-	Original source text
-	"""
-	source: String!
-	"""
-	A normalized version of the word
-	"""
-	normalizedSource: String
-	"""
-	Underlying phonemic representation of this word
-	"""
-	phonemic: String
-	"""
-	English gloss for the whole word
-	"""
-	englishGloss: [String!]!
-	"""
-	Further details about the annotation layers, including uncertainty
-	"""
-	commentary: String
-	"""
-	The character index of a mid-word line break, if there is one
-	"""
-	lineBreak: Int
-	"""
-	The character index of a mid-word page break, if there is one
-	"""
-	pageBreak: Int
-	"""
-	Position of the form within the context of its parent document
-	"""
-	position: PositionInDocument!
-	"""
-	The date and time this form was recorded
-	"""
-	dateRecorded: Date
-	"""
-	The audio for this word that was ingested from GoogleSheets, if there is any.
-	"""
-	ingestedAudioTrack: AudioSlice
-	"""
-	The root morpheme of the word.
-	For example, a verb form glossed as "he catches" might have a root morpheme
-	corresponding to "catch."
-	"""
-	root: WordSegment
-	romanizedSource(system: CherokeeOrthography!): String
-	segments(system: CherokeeOrthography!): [WordSegment!]!
-	"""
-	All other observed words with the same root morpheme as this word.
-	"""
-	similarForms: [AnnotatedForm!]!
-	"""
-	The document that contains this word.
-	"""
-	document: AnnotatedDoc
-	"""
-	Number of words preceding this one in the containing document
-	"""
-	index: Int!
-	"""
-	Unique identifier of the containing document
-	"""
-	documentId: UUID!
-	"""
-	Unique identifier of this form
-	"""
-	id: UUID!
-	"""
-	A slices of audio associated with this word in the context of a document.
-	This audio has been selected by an editor from contributions, or is the
-	same as the ingested audio track, if one is available.
-	"""
-	editedAudio: [AudioSlice!]!
-	"""
-	Audio for this word that has been recorded by community members. Will be
-	empty if user does not have access to uncurated contributions.
-	TODO! User guard for contributors only
-	"""
-	userContributedAudio: [AudioSlice!]!
-	"""
-	Get comments on this word
-	"""
-	comments: [Comment!]!
-}
-
-"""
-A single word in an annotated document that can be edited.
-All fields except id are optional.
-"""
-input AnnotatedFormUpdate {
-	"""
-	Unique identifier of the form
-	"""
-	id: UUID!
-	"""
-	Possible update to source content
-	"""
-	source: String
-	"""
-	Possible update to normalized source content
-	"""
-	romanizedSource: String
-	"""
-	Possible update to commentary
-	"""
-	commentary: String
-	"""
-	Updated segments
-	"""
-	segments: [MorphemeSegmentUpdate!]
-	"""
-	Possible updated english gloss
-	"""
-	englishGloss: String
-}
-
-"""
 Element within a spreadsheet before being transformed into a full document.
 """
-union AnnotatedSeg = AnnotatedForm | LineBreak
+union AnnotatedSeg = Word | LineBreak
 
 """
 Represents the status of a suggestion made by a contributor
@@ -426,7 +302,7 @@ type Comment {
 """
 Type representing the object that a comment is attached to
 """
-union CommentParent = AnnotatedForm | DocumentParagraph
+union CommentParent = Word | DocumentParagraph
 
 """
 An enum listing the possible types that a comment could be attached to
@@ -911,7 +787,7 @@ input FormatUpdate {
 type FormsInTime {
 	start: Date
 	end: Date
-	forms: [AnnotatedForm!]!
+	forms: [Word!]!
 }
 
 """
@@ -960,7 +836,7 @@ all items in any bottom-right corner with Geometry(90%, 90%, 100%, 100%).
 Physical units would be better, but IIIF only allows pixels and percentages.
 
 Potential use case:
-Each document is represented by an ordered list of [AnnotatedForm]s. Each
+Each document is represented by an ordered list of [Word]s. Each
 form has some geometry on the source image. There are a bunch of other
 annotations on the source image that are unordered. These may be specific
 syllabary characters, notes about the handwriting, etc. Using MongoDB
@@ -1165,7 +1041,7 @@ type MorphemeReference {
 	"""
 	List of words that contain this morpheme.
 	"""
-	forms: [AnnotatedForm!]!
+	forms: [Word!]!
 }
 
 """
@@ -1267,7 +1143,7 @@ type Mutation {
 	updateParagraph(paragraph: ParagraphUpdate!): DocumentParagraph!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	updateWord(word: WordUpdate!): Word!
 	"""
 	Updates a dailp_user's information
 	"""
@@ -1283,7 +1159,7 @@ type Mutation {
 	"""
 	Decide if a piece of word audio should be included in edited collection
 	"""
-	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	curateWordAudio(input: CurateWordAudioInput!): Word!
 	"""
 	Decide if a piece of document audio should be included in edited collection
 	"""
@@ -1292,7 +1168,7 @@ type Mutation {
 	Attach audio that has already been uploaded to S3 to a particular word
 	Assumes user requesting mutation recoreded the audio
 	"""
-	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
+	attachAudioToWord(input: AttachAudioToWordInput!): Word!
 	"""
 	Attach audio that has already been uploaded to S3 to a particular document
 	Assumes user requesting mutation recorded the audio
@@ -1491,11 +1367,11 @@ type Query {
 	Search for words that match any one of the given queries.
 	Each query may match against multiple fields of a word.
 	"""
-	wordSearch(query: String!): [AnnotatedForm!]!
+	wordSearch(query: String!): [Word!]!
 	"""
 	Get a single word given the word ID
 	"""
-	wordById(id: UUID!): AnnotatedForm!
+	wordById(id: UUID!): Word!
 	"""
 	Get a single paragraph given the paragraph ID
 	"""
@@ -1504,7 +1380,7 @@ type Query {
 	Search for words with the exact same syllabary string, or with very
 	similar looking characters.
 	"""
-	syllabarySearch(query: String!): [AnnotatedForm!]!
+	syllabarySearch(query: String!): [Word!]!
 	"""
 	Basic information about the currently authenticated user, if any.
 	"""
@@ -1713,6 +1589,80 @@ input UserUpdate {
 	role: UserGroup
 }
 
+"""
+A single word in an annotated document.
+One word contains several layers of interpretation, including the original
+source text, multiple layers of linguistic annotation, and annotator notes.
+TODO Split into two types, one for migration and one for SQL + GraphQL
+"""
+type Word {
+	"""
+	English gloss for the whole word
+	"""
+	englishGloss: [String!]!
+	"""
+	Further details about the annotation layers, including uncertainty
+	"""
+	commentary: String
+	"""
+	Position of the form within the context of its parent document
+	"""
+	position: PositionInDocument!
+	"""
+	The date and time this form was recorded
+	"""
+	dateRecorded: Date
+	"""
+	The audio for this word that was ingested from GoogleSheets, if there is any.
+	"""
+	ingestedAudioTrack: AudioSlice
+	"""
+	The root morpheme of the word.
+	For example, a verb form glossed as "he catches" might have a root morpheme
+	corresponding to "catch."
+	"""
+	root: WordSegment
+	source: String
+	romanizedSource(system: CherokeeOrthography!): String
+	segments(system: CherokeeOrthography!): [WordSegment!]!
+	"""
+	All other observed words with the same root morpheme as this word.
+	"""
+	similarForms: [Word!]!
+	"""
+	The document that contains this word.
+	"""
+	document: AnnotatedDoc
+	"""
+	Number of words preceding this one in the containing document
+	"""
+	index: Int!
+	"""
+	Unique identifier of the containing document
+	"""
+	documentId: UUID!
+	"""
+	Unique identifier of this form
+	"""
+	id: UUID!
+	"""
+	A slices of audio associated with this word in the context of a document.
+	This audio has been selected by an editor from contributions, or is the
+	same as the ingested audio track, if one is available.
+	"""
+	editedAudio: [AudioSlice!]!
+	"""
+	Audio for this word that has been recorded by community members. Will be
+	empty if user does not have access to uncurated contributions.
+	TODO! User guard for contributors only
+	"""
+	userContributedAudio: [AudioSlice!]!
+	"""
+	Get comments on this word
+	"""
+	comments: [Comment!]!
+}
+
 type WordSegment {
 	"""
 	Phonemic representation of the morpheme
@@ -1749,6 +1699,37 @@ enum WordSegmentRole {
 }
 
 """
+A single word in an annotated document that can be edited.
+All fields except id are optional.
+"""
+input WordUpdate {
+	"""
+	Unique identifier of the form
+	"""
+	id: UUID!
+	"""
+	Possible update to source content
+	"""
+	source: String
+	"""
+	Possible update to normalized source content
+	"""
+	romanizedSource: String
+	"""
+	Possible update to commentary
+	"""
+	commentary: String
+	"""
+	Updated segments
+	"""
+	segments: [MorphemeSegmentUpdate!]
+	"""
+	Possible updated english gloss
+	"""
+	englishGloss: String
+}
+
+"""
 A list of words grouped by the document that contains them.
 """
 type WordsInDocument {
@@ -1763,7 +1744,7 @@ type WordsInDocument {
 	"""
 	List of annotated and potentially segmented forms
 	"""
-	forms: [AnnotatedForm!]!
+	forms: [Word!]!
 }
 
 schema {

@@ -20,6 +20,8 @@ use crate::page::NewPageInput;
 use crate::page::Page;
 use crate::parse_orthography_system;
 use crate::person::Creator;
+use crate::spelling::Spelling;
+use crate::spelling::SpellingSystem;
 use crate::user::User;
 use crate::user::UserId;
 use crate::Orthography;
@@ -195,7 +197,7 @@ impl Database {
         .await?)
     }
 
-    pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
+    pub async fn word_by_id(&self, word_id: &Uuid) -> Result<Word> {
         Ok(query_file_as!(BasicWord, "queries/word_by_id.sql", word_id)
             .fetch_one(&self.client)
             .await?
@@ -209,7 +211,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
+    pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<Word>> {
         let alternate_spellings: Vec<_> = CherokeeOrthography::similar_syllabary_strings(syllabary)
             .into_iter()
             // Convert into "LIKE"-compatible format
@@ -229,7 +231,7 @@ impl Database {
         &self,
         document_id: Option<DocumentId>,
         gloss: &str,
-    ) -> Result<Vec<AnnotatedForm>> {
+    ) -> Result<Vec<Word>> {
         let items = query_file_as!(
             BasicWord,
             "queries/connected_forms.sql",
@@ -262,20 +264,30 @@ impl Database {
                     morpheme: shape,
                     forms: forms
                         .into_iter()
-                        .map(|w| AnnotatedForm {
+                        .map(|w| Word {
                             id: Some(w.word_id),
-                            source: w.source_text,
-                            normalized_source: None,
-                            simple_phonetics: w.simple_phonetics,
-                            phonemic: w.phonemic,
+                            spellings: {
+                                let mut s = Vec::new();
+                                if !w.source_text.is_empty() {
+                                    s.push(Spelling {
+                                        system: SpellingSystem::source(),
+                                        value: w.source_text,
+                                    });
+                                }
+                                if !w.simple_phonetics.is_empty() {
+                                    s.push(Spelling {
+                                        system: SpellingSystem::simple_phonetics(),
+                                        value: w.simple_phonetics,
+                                    });
+                                }
+                                s
+                            },
                             // TODO Fill in
                             segments: None,
                             english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                             commentary: w.commentary,
                             ingested_audio_track: None,
                             date_recorded: None,
-                            line_break: None,
-                            page_break: None,
                             position: PositionInDocument::new(
                                 DocumentId(w.document_id),
                                 w.page_number.unwrap_or_default(),
@@ -341,19 +353,29 @@ impl Database {
                 },
                 forms: forms
                     .into_iter()
-                    .map(|w| AnnotatedForm {
+                    .map(|w| Word {
                         id: Some(w.id),
-                        source: w.source_text,
-                        normalized_source: None,
-                        simple_phonetics: w.simple_phonetics,
-                        phonemic: w.phonemic,
+                        spellings: {
+                            let mut s = Vec::new();
+                            if !w.source_text.is_empty() {
+                                s.push(Spelling {
+                                    system: SpellingSystem::source(),
+                                    value: w.source_text,
+                                });
+                            }
+                            if !w.simple_phonetics.is_empty() {
+                                s.push(Spelling {
+                                    system: SpellingSystem::simple_phonetics(),
+                                    value: w.simple_phonetics,
+                                });
+                            }
+                            s
+                        },
                         segments: None,
                         english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                         commentary: w.commentary,
                         ingested_audio_track: None,
                         date_recorded: None,
-                        line_break: None,
-                        page_break: None,
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
                             w.page_number.unwrap_or_default(),
@@ -566,7 +588,7 @@ impl Database {
             .collect())
     }
 
-    pub async fn search_words_any_field(&self, query: String) -> Result<Vec<AnnotatedForm>> {
+    pub async fn search_words_any_field(&self, query: String) -> Result<Vec<Word>> {
         let like_query = format!("%{}%", query);
         let results = query_file_as!(BasicWord, "queries/search_words_any_field.sql", like_query)
             .fetch_all(&self.client)
@@ -661,7 +683,7 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+    pub async fn update_word(&self, word: WordUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
         let source = word.source.into_vec();
@@ -676,10 +698,10 @@ impl Database {
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
-            &source as _,
-            &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _
+            &english_gloss as _,
+            &source as _,
+            &simple_phonetics as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -1156,7 +1178,7 @@ impl Database {
         document_id: DocumentId,
         start: Option<i64>,
         end: Option<i64>,
-    ) -> Result<impl Iterator<Item = AnnotatedForm>> {
+    ) -> Result<impl Iterator<Item = Word>> {
         let words = query_file_as!(
             BasicWord,
             "queries/document_words.sql",
@@ -1338,7 +1360,13 @@ impl Database {
                         .iter()
                         .map(|e| {
                             if let AnnotatedSeg::Word(word) = e {
-                                word.source.chars().count()
+                                word.spellings
+                                    .iter()
+                                    .find(|s| s.system.0 == "Source")
+                                    .map(|s| s.value.clone())
+                                    .unwrap_or_default()
+                                    .chars()
+                                    .count()
                             } else {
                                 0
                             }
@@ -1358,9 +1386,19 @@ impl Database {
                     for element in paragraph.source {
                         match element {
                             AnnotatedSeg::Word(word) => {
-                                let len = word.source.chars().count() as i64;
+                                let source_value = word
+                                    .spellings
+                                    .iter()
+                                    .find(|s| s.system.0 == "Source")
+                                    .map(|s| s.value.clone())
+                                    .unwrap_or_default();
+                                let len = source_value.chars().count() as i64;
                                 let (char_index, character): (Vec<_>, Vec<_>) = word
-                                    .source
+                                    .spellings
+                                    .iter()
+                                    .find(|s| s.system.0 == "Source")
+                                    .map(|s| s.value.clone())
+                                    .unwrap_or_default()
                                     .chars()
                                     .enumerate()
                                     .map(|(idx, c)| {
@@ -1447,7 +1485,7 @@ impl Database {
             .collect())
     }
 
-    pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
+    pub async fn insert_one_word(&self, form: Word) -> Result<()> {
         let doc_id = form.position.document_id.0;
         let mut tx = self.client.begin().await?;
         self.insert_word(&mut tx, form, doc_id, None, None).await?;
@@ -1457,8 +1495,8 @@ impl Database {
     pub async fn insert_lexical_entries(
         &self,
         document_id: DocumentId,
-        stems: Vec<AnnotatedForm>,
-        surface_forms: Vec<AnnotatedForm>,
+        stems: Vec<Word>,
+        surface_forms: Vec<Word>,
     ) -> Result<()> {
         let mut tx = self.client.begin().await?;
 
@@ -1502,11 +1540,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn only_insert_words(
-        &self,
-        document_id: DocumentId,
-        forms: Vec<AnnotatedForm>,
-    ) -> Result<()> {
+    pub async fn only_insert_words(&self, document_id: DocumentId, forms: Vec<Word>) -> Result<()> {
         let mut tx = self.client.begin().await?;
         // Clear all contents before inserting more.
         query_file!("queries/clear_dictionary_document.sql", document_id.0)
@@ -1522,14 +1556,13 @@ impl Database {
     pub async fn insert_lexical_words<'a>(
         &self,
         tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
-        forms: Vec<AnnotatedForm>,
+        forms: Vec<Word>,
     ) -> Result<()> {
         let mut tx = tx.begin().await?;
         let (
             document_id,
             source_text,
             simple_phonetics,
-            phonemic,
             english_gloss,
             recorded_at,
             commentary,
@@ -1544,15 +1577,19 @@ impl Database {
             Vec<_>,
             Vec<_>,
             Vec<_>,
-            Vec<_>,
         ) = forms
             .iter()
             .map(|form| {
                 (
                     form.position.document_id.0,
-                    &*form.source,
-                    form.simple_phonetics.as_deref(),
-                    form.phonemic.as_deref(),
+                    form.spellings
+                        .iter()
+                        .find(|s| s.system == SpellingSystem::source())
+                        .map(|s| s.value.clone()),
+                    form.spellings
+                        .iter()
+                        .find(|s| s.system == SpellingSystem::simple_phonetics())
+                        .map(|s| s.value.clone()),
                     form.english_gloss.first().map(|s| &**s),
                     form.date_recorded.as_ref().map(|d| d.0),
                     form.commentary.as_deref(),
@@ -1567,7 +1604,6 @@ impl Database {
             &*document_id,
             &*source_text as _,
             &*simple_phonetics as _,
-            &*phonemic as _,
             &*english_gloss as _,
             &*recorded_at as _,
             &*commentary as _,
@@ -1642,7 +1678,7 @@ impl Database {
     pub async fn insert_word<'a>(
         &self,
         tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
-        form: AnnotatedForm,
+        form: Word,
         document_id: Uuid,
         page_id: Option<Uuid>,
         char_range: Option<PgRange<i64>>,
@@ -1661,9 +1697,6 @@ impl Database {
             .map(i64::from);
         let word_id: Uuid = query_file_scalar!(
             "queries/upsert_word_in_document.sql",
-            form.source,
-            form.simple_phonetics,
-            form.phonemic,
             form.english_gloss.get(0),
             form.date_recorded as Option<Date>,
             form.commentary,
@@ -1674,7 +1707,15 @@ impl Database {
             char_range,
             form.ingested_audio_track.map(|t| t.resource_url),
             audio_start,
-            audio_end
+            audio_end,
+            form.spellings
+                .iter()
+                .find(|s| s.system == SpellingSystem::source())
+                .map(|s| s.value.clone()),
+            form.spellings
+                .iter()
+                .find(|s| s.system == SpellingSystem::simple_phonetics())
+                .map(|s| s.value.clone())
         )
         .fetch_one(&mut *tx)
         .await?;
@@ -2133,7 +2174,13 @@ impl Database {
                         .iter()
                         .map(|e| {
                             if let AnnotatedSeg::Word(word) = e {
-                                word.source.chars().count()
+                                let source_value = word
+                                    .spellings
+                                    .iter()
+                                    .find(|s| s.system.0 == "Source")
+                                    .map(|s| s.value.clone())
+                                    .unwrap_or_default();
+                                source_value.chars().count()
                             } else {
                                 0
                             }
@@ -2157,7 +2204,13 @@ impl Database {
                     for word_seg in section.source {
                         match word_seg {
                             AnnotatedSeg::Word(word) => {
-                                let word_len = word.source.chars().count() as i64;
+                                let source_value = word
+                                    .spellings
+                                    .iter()
+                                    .find(|s| s.system.0 == "Source")
+                                    .map(|s| s.value.clone())
+                                    .unwrap_or_default();
+                                let word_len = source_value.chars().count() as i64;
                                 let word_char_range: PgRange<i64> =
                                     (word_char_index..word_char_index + word_len).into();
 
@@ -2584,8 +2637,7 @@ impl Loader<WordsInParagraph> for Database {
                         (BasicWord {
                             id: Some(w.id),
                             source_text: Some(w.source_text),
-                            simple_phonetics: w.simple_phonetics,
-                            phonemic: w.phonemic,
+                            simple_phonetics: Some(w.simple_phonetics),
                             english_gloss: w.english_gloss,
                             commentary: w.commentary,
                             document_id: Some(w.document_id),
@@ -2809,13 +2861,12 @@ impl From<BasicAudioSlice> for AudioSlice {
     }
 }
 
-/// A struct representing a Word/AnnotatedForm that can be easily pulled from
+/// A struct representing a Word/Word that can be easily pulled from
 /// the database
 struct BasicWord {
     id: Option<Uuid>,
     source_text: Option<String>,
     simple_phonetics: Option<String>,
-    phonemic: Option<String>,
     english_gloss: Option<String>,
     commentary: Option<String>,
     document_id: Option<Uuid>,
@@ -2848,24 +2899,32 @@ impl BasicWord {
     }
 }
 
-impl From<BasicWord> for AnnotatedForm {
+impl From<BasicWord> for Word {
     fn from(w: BasicWord) -> Self {
         // up here because we need to borrow the basic type before we start moving things
         let ingested_audio_track = w.audio_slice().map(AudioSlice::from);
+        let mut spellings = Vec::new();
+        if let Some(source) = w.source_text {
+            spellings.push(Spelling {
+                system: SpellingSystem::source(),
+                value: source,
+            });
+        }
+        if let Some(phonetics) = w.simple_phonetics {
+            spellings.push(Spelling {
+                system: SpellingSystem::simple_phonetics(),
+                value: phonetics,
+            });
+        }
         Self {
             id: w.id,
-            source: w.source_text.unwrap_or_default(),
-            normalized_source: None,
-            simple_phonetics: w.simple_phonetics,
-            phonemic: w.phonemic,
+            spellings: spellings,
             // TODO Fill in?
             segments: None,
             english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
             commentary: w.commentary,
             ingested_audio_track,
             date_recorded: None,
-            line_break: None,
-            page_break: None,
             position: PositionInDocument::new(
                 DocumentId(w.document_id.unwrap_or_default()),
                 w.page_number.unwrap_or_default(),
@@ -3027,7 +3086,7 @@ pub struct MorphemeReference {
     /// Phonemic shape of the morpheme.
     pub morpheme: String,
     /// List of words that contain this morpheme.
-    pub forms: Vec<AnnotatedForm>,
+    pub forms: Vec<Word>,
 }
 
 /// A list of words grouped by the document that contains them.
@@ -3038,5 +3097,5 @@ pub struct WordsInDocument {
     /// What kind of document contains these words (e.g. manuscript vs dictionary)
     pub document_type: Option<DocumentType>,
     /// List of annotated and potentially segmented forms
-    pub forms: Vec<AnnotatedForm>,
+    pub forms: Vec<Word>,
 }

@@ -5,8 +5,6 @@
 | column                               | type                     | description                                                                                         |
 | ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------- |
 | `id`                                 | `uuid`                   | Primary key                                                                                         |
-| `source_text`                        | `text`                   | Unambiguous transcription of the whole word                                                         |
-| `simple_phonetics`                   | `text?`                  | Romanized phonetic spelling                                                                         |
 | `phonemic`                           | `text?`                  | Underlying phonemic representation, with more pronunciation details                                 |
 | `english_gloss`                      | `text?`                  | English translation                                                                                 |
 | `recorded_at`                        | `date?`                  | When this word was written, only specified if it differs from when the document overall was written |

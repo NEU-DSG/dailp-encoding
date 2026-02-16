@@ -6,20 +6,20 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput, CollectionChapter,
+    Contributor, ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput,
+    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution, Spelling,
+    SpellingSystem, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid, Word,
 };
 use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
-        ParagraphUpdate, WordsInDocument,
+        AbstractMorphemeTag, AnnotatedDoc, CherokeeOrthography, Database, EditedCollection, Menu,
+        MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordUpdate,
+        WordsInDocument,
     },
 };
 
@@ -313,7 +313,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         query: String,
-    ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
+    ) -> FieldResult<Vec<dailp::Word>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -322,11 +322,7 @@ impl Query {
     }
 
     /// Get a single word given the word ID
-    async fn word_by_id(
-        &self,
-        context: &Context<'_>,
-        id: Uuid,
-    ) -> FieldResult<dailp::AnnotatedForm> {
+    async fn word_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<dailp::Word> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -353,7 +349,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         query: String,
-    ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
+    ) -> FieldResult<Vec<dailp::Word>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -567,11 +563,7 @@ impl Mutation {
     #[graphql(
         guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
     )]
-    async fn update_word(
-        &self,
-        context: &Context<'_>,
-        word: AnnotatedFormUpdate,
-    ) -> FieldResult<AnnotatedForm> {
+    async fn update_word(&self, context: &Context<'_>, word: WordUpdate) -> FieldResult<Word> {
         let database = context.data::<DataLoader<Database>>()?.loader();
         Ok(database
             .word_by_id(&database.update_word(word).await?)
@@ -642,7 +634,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         input: CurateWordAudioInput,
-    ) -> FieldResult<dailp::AnnotatedForm> {
+    ) -> FieldResult<dailp::Word> {
         // TODO: should this return a typed id ie. AudioSliceId?
         let user = context
             .data_opt::<UserInfo>()
@@ -700,7 +692,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         input: AttachAudioToWordInput,
-    ) -> FieldResult<dailp::AnnotatedForm> {
+    ) -> FieldResult<dailp::Word> {
         // TODO: should this return a typed id ie. AudioSliceId?
         let user = context
             .data_opt::<UserInfo>()
@@ -793,17 +785,17 @@ impl Mutation {
             let translation: Option<String> = Some(input.english_translation_lines[i].join(" "));
             let mut segs = Vec::new();
             for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
-                let form = AnnotatedForm {
+                let mut spellings = Vec::new();
+                spellings.push(Spelling {
+                    system: SpellingSystem::source(),
+                    value: src_word.to_string(),
+                });
+                let form = Word {
                     id: None,
-                    source: src_word.clone(),
-                    normalized_source: None,
-                    simple_phonetics: None,
-                    phonemic: None,
+                    spellings: spellings,
                     segments: None,
                     english_gloss: vec![],
                     commentary: None,
-                    line_break: None,
-                    page_break: None,
                     position: PositionInDocument {
                         document_id: dailp::DocumentId(document_id),
                         page_number: "1".to_string(),
@@ -966,7 +958,7 @@ impl Mutation {
 struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
-    forms: Vec<dailp::AnnotatedForm>,
+    forms: Vec<dailp::Word>,
 }
 
 #[derive(async_graphql::InputObject, Debug, Clone)]

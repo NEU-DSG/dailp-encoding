@@ -81,7 +81,7 @@ query DocumentContents(
         __typename
         source {
           __typename
-          ... on AnnotatedForm {
+          ... on Word {
             ...FormFields
           }
         }
@@ -183,13 +183,12 @@ fragment CommentFormFields on Comment {
   edited
 }
 
-fragment FormFields on AnnotatedForm {
+fragment FormFields on Word {
   __typename
   id
   index
   source
   romanizedSource(system: $morphemeSystem)
-  phonemic
   segments(system: $morphemeSystem) {
     morpheme
     gloss
@@ -281,7 +280,6 @@ query EditedCollection($slug: String!) {
 query WordSearch($query: String!) {
   wordSearch(query: $query) {
     source
-    normalizedSource
     romanizedSource(system: LEARNER)
     englishGloss
     index
@@ -328,9 +326,7 @@ query Timeline($gloss: String!) {
     }
     forms {
       source
-      normalizedSource
       romanizedSource(system: LEARNER)
-      phonemic
       documentId
       englishGloss
     }
@@ -387,7 +383,6 @@ query Morpheme($documentId: UUID, $morphemeGloss: String!) {
     forms {
       index
       source
-      normalizedSource
       englishGloss
       document {
         id
@@ -489,10 +484,7 @@ query ParagraphComments($paragraphId: UUID!) {
   }
 }
 
-mutation UpdateWord(
-  $word: AnnotatedFormUpdate!
-  $morphemeSystem: CherokeeOrthography!
-) {
+mutation UpdateWord($word: WordUpdate!, $morphemeSystem: CherokeeOrthography!) {
   updateWord(word: $word) {
     ...FormFields
   }
@@ -599,7 +591,7 @@ mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
 
 mutation UpdateComment($comment: CommentUpdate!) {
   updateComment(comment: $comment) {
-    ... on AnnotatedForm {
+    ... on Word {
       __typename
       id
       comments {
@@ -618,7 +610,7 @@ mutation UpdateComment($comment: CommentUpdate!) {
 
 mutation PostComment($input: PostCommentInput!) {
   postComment(input: $input) {
-    ... on AnnotatedForm {
+    ... on Word {
       __typename
       id
       comments {
@@ -637,7 +629,7 @@ mutation PostComment($input: PostCommentInput!) {
 
 mutation DeleteComment($commentId: DeleteCommentInput!) {
   deleteComment(input: $commentId) {
-    ... on AnnotatedForm {
+    ... on Word {
       __typename
       id
       comments {

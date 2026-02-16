@@ -81,7 +81,13 @@ impl Manifest {
                                     body: AnnotationBody::TextualBody(TextualBody {
                                         language: "en".to_string(),
                                         format: "text/html".to_string(),
-                                        value: word.source.clone(),
+                                        value: word
+                                            .spellings
+                                            .iter()
+                                            .find(|s| s.system.0 == "Source")
+                                            .map(|s| s.value.clone())
+                                            .unwrap_or_default()
+                                            .clone(),
                                     }),
                                     target: AnnotationTarget::Selector(TargetSelector {
                                         id: canvas_uri.clone(),
