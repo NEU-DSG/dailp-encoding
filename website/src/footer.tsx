@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-import { wordpressUrl } from "src/theme.css"
->>>>>>> 0521a92b (Fix formatting)
 import Link from "./components/link"
 import * as css from "./footer.css"
 import { usePageContext } from "./renderer/PageShell"
@@ -103,6 +99,7 @@ const Footer = () => {
                   Dennis Wang
                 </Link>
                 ,{" "}
+
                 <Link
                   href="https://alisonye.netlify.app/"
                   className={css.aboutLink}
@@ -112,6 +109,7 @@ const Footer = () => {
                   Alison Ye
                 </Link>
                 , Molly Lane, Matthew Gentner,{" "}
+               
                 <Link
                   href="https://www.linkedin.com/in/nguyen-katie-neu/"
                   className={css.aboutLink}
