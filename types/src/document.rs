@@ -827,7 +827,6 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
-
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server
