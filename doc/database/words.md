@@ -4,8 +4,7 @@
 
 | column                               | type                     | description                                                                                         |
 | ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------- |
-| `id`                                 | `uuid`                   | Primary key                                                                                         |
-| `phonemic`                           | `text?`                  | Underlying phonemic representation, with more pronunciation details                                 |
+| `id`                                 | `uuid`                   | Primary key                                                                                         |                         |
 | `english_gloss`                      | `text?`                  | English translation                                                                                 |
 | `recorded_at`                        | `date?`                  | When this word was written, only specified if it differs from when the document overall was written |
 | `commentary`                         | `text?`                  | Linguistic or historical commentary supplied by an annotator                                        |

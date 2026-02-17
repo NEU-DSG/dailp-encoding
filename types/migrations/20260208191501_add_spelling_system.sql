@@ -16,3 +16,4 @@ insert into spelling_system (name) values
 
 alter table word drop column source_text;
 alter table word drop column simple_phonetics;
+alter table word drop column phonemic;
