@@ -21,9 +21,6 @@ in {
           You can access the confirmation page at https://${subdomain}dailp.northeastern.edu/auth/confirmation
         '';
       };
-      # lambda_config = {
-      #   post_confirmation = "\${aws_lambda_function.post_confirmation_event.arn}";
-      # };
     };
     aws_cognito_user_pool_client.main = {
       name = prefixName "user-pool-client";
