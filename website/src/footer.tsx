@@ -89,8 +89,7 @@ const Footer = () => {
                 >
                   Hailey Punis
                 </Link>
-                , Nop Lertsumitkul, {" "}
-                
+                , Nop Lertsumitkul,{" "}
                 <Link
                   href="https://jaemesser.my.canva.site/"
                   className={css.aboutLink}
@@ -98,8 +97,8 @@ const Footer = () => {
                   rel="noopener noreferrer"
                 >
                   Jae Messersmith
-                </Link>, {" "}
-
+                </Link>
+                ,{" "}
                 <Link
                   href="https://denniswang-20.vercel.app/"
                   className={css.aboutLink}
@@ -109,7 +108,6 @@ const Footer = () => {
                   Dennis Wang
                 </Link>
                 ,{" "}
-
                 <Link
                   href="https://alisonye.netlify.app/"
                   className={css.aboutLink}
@@ -119,7 +117,6 @@ const Footer = () => {
                   Alison Ye
                 </Link>
                 , Molly Lane, Matthew Gentner,{" "}
-               
                 <Link
                   href="https://www.linkedin.com/in/nguyen-katie-neu/"
                   className={css.aboutLink}
