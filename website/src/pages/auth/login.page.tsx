@@ -22,8 +22,8 @@ const LoginPage = () => {
     user,
     operations: { loginUser },
   } = useUser()
-  const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
-  const [turnstileToken, setTurnstileToken] = useState("")
+  // const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  // const [turnstileToken, setTurnstileToken] = useState("")
 
   // If already authenticated, redirect away from the login page
   useEffect(() => {
@@ -42,34 +42,36 @@ const LoginPage = () => {
       }
     },
     onSubmit: (values) => {
-      if (!turnstileToken) {
-        throw { turnstileToken: "A turnstile token is required" }
-      }
+      // if (!turnstileToken) {
+      //   throw { turnstileToken: "A turnstile token is required" }
+      // }
+      loginUser(values.email, values.password)
 
-      validateTurnstileToken({
-        token: turnstileToken,
-      }).then((result) => {
-        if (result.data?.validateTurnstileToken) {
-          loginUser(values.email, values.password)
-        } else {
-          throw { turnstileToken: "Invalid turnstile token" }
-        }
-      })
+      // validateTurnstileToken({
+      //   token: turnstileToken,
+      // }).then((result) => {
+      //   if (result.data?.validateTurnstileToken) {
+      //     loginUser(values.email, values.password)
+      //   } else {
+      //     throw { turnstileToken: "Invalid turnstile token" }
+      //   }
+      // })
     },
   })
 
-  const [TurnstileClient, setTurnstileClient] =
-    useState<ForwardRefExoticComponent<
-      TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
-    > | null>(null)
-  const [siteKey, setSiteKey] = useState<string | null>(null)
+  // const [TurnstileClient, setTurnstileClient] =
+  //   useState<ForwardRefExoticComponent<
+  //     TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
+  //   > | null>(null)
+  // const [siteKey, setSiteKey] = useState<string | null>(null)
 
-  useEffect(() => {
-    import("@marsidev/react-turnstile").then((m) => {
-      setTurnstileClient(m.Turnstile)
-      setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
-    })
-  }, [])
+  // useEffect(() => {
+  //   import("@marsidev/react-turnstile").then((m) => {
+  //     setTurnstileClient(m.Turnstile)
+  //     setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
+  //   })
+  // }, [])
+
   // Avoid flashing the login form if we're redirecting
   if (user) return null
 
@@ -101,14 +103,14 @@ const LoginPage = () => {
         {
           /// NOTE: We use TurnstileClient over Turnstile component to avoid acant find jsx error
           /// Reference: https://github.com/marsidev/react-turnstile/issues/96
-          TurnstileClient && siteKey && (
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <TurnstileClient
-                siteKey={siteKey}
-                onSuccess={(token) => setTurnstileToken(token)}
-              />
-            </div>
-          )
+          // TurnstileClient && siteKey && (
+          //   <div style={{ display: "flex", justifyContent: "center" }}>
+          //     <TurnstileClient
+          //       siteKey={siteKey}
+          //       onSuccess={(token) => setTurnstileToken(token)}
+          //     />
+          //   </div>
+          // )
         }
         <FormSubmitButton form={loginForm} label="Log In" />
       </Form>
