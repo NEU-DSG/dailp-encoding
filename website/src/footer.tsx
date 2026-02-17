@@ -89,7 +89,17 @@ const Footer = () => {
                 >
                   Hailey Punis
                 </Link>
-                , Nop Lertsumitkul, Jae Messersmith,{" "}
+                , Nop Lertsumitkul, {" "}
+                
+                <Link
+                  href="https://jaemesser.my.canva.site/"
+                  className={css.aboutLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Jae Messersmith
+                </Link>, {" "}
+
                 <Link
                   href="https://denniswang-20.vercel.app/"
                   className={css.aboutLink}
