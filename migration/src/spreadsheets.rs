@@ -13,9 +13,9 @@ use dailp::Uuid;
 use std::result::Result::Ok;
 
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedForm,
-    AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak, MorphemeId,
-    WordSegment,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedSeg,
+    Contributor, Date, DocumentId, DocumentMetadata, LineBreak, MorphemeId, Spelling,
+    SpellingSystem, Word, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
@@ -29,8 +29,8 @@ const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
 
 pub struct LexicalEntryWithForms {
-    pub entry: AnnotatedForm,
-    pub forms: Vec<AnnotatedForm>,
+    pub entry: Word,
+    pub forms: Vec<Word>,
 }
 
 /// Provides functions interpreting Google Sheets data into more
@@ -468,18 +468,19 @@ impl SheetInterpretation {
             let segment =
                 WordSegment::new(convert_udb(&root).into_dailp(), root_gloss.clone(), None);
 
-            let entry = AnnotatedForm {
+            let mut spellings = Vec::new();
+            spellings.push(Spelling {
+                system: SpellingSystem::source(),
+                value: root.clone(),
+            });
+
+            let entry = Word {
                 id: None,
-                normalized_source: None,
-                simple_phonetics: None,
-                phonemic: None,
+                spellings: spellings,
                 commentary: None,
-                line_break: None,
-                page_break: None,
                 segments: Some(vec![segment]),
                 english_gloss: vec![root_gloss.clone()],
                 date_recorded: Some(date),
-                source: root,
                 position,
                 ingested_audio_track: None,
             };
@@ -707,19 +708,20 @@ impl SheetInterpretation {
                 let segment =
                     WordSegment::new(convert_udb(&root).into_dailp(), root_gloss.clone(), None);
 
-                let entry = AnnotatedForm {
+                let mut spellings = Vec::new();
+                spellings.push(Spelling {
+                    system: SpellingSystem::source(),
+                    value: root.clone(),
+                });
+
+                let entry = Word {
                     id: None,
                     position,
-                    normalized_source: None,
-                    simple_phonetics: None,
-                    phonemic: None,
+                    spellings: spellings,
                     segments: Some(vec![segment]),
                     english_gloss: vec![root_gloss.clone()],
-                    source: root,
                     commentary: None,
                     date_recorded: Some(date),
-                    line_break: None,
-                    page_break: None,
                     ingested_audio_track: None,
                 };
 
@@ -1197,7 +1199,7 @@ impl SemanticLine {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AnnotatedLine {
-    pub words: Vec<AnnotatedForm>,
+    pub words: Vec<Word>,
     ends_page: bool,
 }
 
@@ -1261,7 +1263,7 @@ impl AnnotatedLine {
                 let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
                     .filter(|i| source_row.items.get(*i).is_some())
-                    .map(|i| -> Result<AnnotatedForm> {
+                    .map(|i| -> Result<Word> {
                         let source_text = &source_row.items[i];
                         let pb = source_text.find(PAGE_BREAK);
                         let morphemes = morpheme_row.items.get(i);
@@ -1276,7 +1278,7 @@ impl AnnotatedLine {
                             match annotations.get((word_index - 1) as usize) {
                                 Some(audio) => Some(audio.clone()),
                                 None => {
-                                    eprintln!("ERROR in document '{}' ({}), line {}, word {}: Missing audio annotation", 
+                                    eprintln!("ERROR in document '{}' ({}), line {}, word {}: Missing audio annotation",
                                             meta.short_name, meta.id.0, line_num, word_index);
                                     eprintln!("  Available audio annotations: {}", annotations.len());
                                     eprintln!("  Requested index: {}", word_index - 1);
@@ -1292,18 +1294,20 @@ impl AnnotatedLine {
                             None
                         };
 
-                        let w = AnnotatedForm {
-                            // TODO Extract into public function!
-                            // id: format!("{}.{}", meta.id.0, word_index),
+                        let mut spellings = Vec::new();
+                        spellings.push(Spelling {
+                            system: SpellingSystem::source(),
+                            value: source_text.trim().replace(LINE_BREAK, ""),
+                        });
+                        spellings.push(Spelling {
+                            system: SpellingSystem::simple_phonetics(),
+                            value: simple_phonetics_row.items.get(i).map(|x| x.replace("ʔ", "'")).unwrap_or_default(),
+                        });
+
+                        let w = Word {
                             id: None,
                             position: PositionInDocument::new(meta.id, "1".to_owned(), word_index),
-                            source: source_text.trim().replace(LINE_BREAK, ""),
-                            normalized_source: None,
-                            simple_phonetics: simple_phonetics_row
-                                .items
-                                .get(i)
-                                .map(|x| x.replace("ʔ", "'")),
-                            phonemic: phonemic_row.items.get(i).map(|x| x.to_owned()),
+                            spellings: spellings,
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
                                 WordSegment::parse_many(m, g)
                             } else {
@@ -1311,10 +1315,6 @@ impl AnnotatedLine {
                             },
                             english_gloss: vec![translation].into_iter().flatten().collect(),
                             commentary: commentary_row.items.get(i).map(|x| x.to_owned()),
-                            page_break: pb.map(|i| i as i32),
-                            line_break: pb
-                                .or_else(|| source_text.find(LINE_BREAK))
-                                .map(|i| i as i32),
                             date_recorded: None,
                             ingested_audio_track,
                         };
@@ -1386,7 +1386,7 @@ impl AnnotatedLine {
 
             for (_word_in_line_idx, word) in line.words.into_iter().enumerate() {
                 // Give the word an index within the whole document.
-                let word = AnnotatedForm {
+                let mut word = Word {
                     position: PositionInDocument::new(
                         *document_id,
                         (page_num + 1).to_string(),
@@ -1398,25 +1398,25 @@ impl AnnotatedLine {
                 // Keep a global word index for the whole document.
                 word_idx += 1;
 
-                // Account for mid-word line breaks.
-                if word.line_break.is_some() {
-                    line_num += 1;
-                }
-
-                let mut source = word.source.trim();
+                let mut source = word
+                    .spellings
+                    .iter()
+                    .find(|s| s.system.0 == "Source")
+                    .map(|s| s.value.clone())
+                    .unwrap_or_default();
                 let original_source = source.to_string(); // Keep for logging
 
                 // Check for the start of a block - this creates new paragraphs
                 let mut created_new_paragraph = false;
                 while source.starts_with(BLOCK_START) {
-                    source = &source[1..];
+                    source.remove(0);
                     match pages.last_mut() {
                         Some(current_page) => {
                             current_page.push(Vec::new());
                             created_new_paragraph = true;
                         }
                         None => {
-                            eprintln!("CRITICAL ERROR in document '{}' at line {}, word '{}': No current page when processing BLOCK_START", 
+                            eprintln!("CRITICAL ERROR in document '{}' at line {}, word '{}': No current page when processing BLOCK_START",
                                     document_id.0, line_num, original_source);
                             panic!("Pages structure is empty when processing BLOCK_START");
                         }
@@ -1425,17 +1425,21 @@ impl AnnotatedLine {
 
                 // Remove all ending brackets from the source (text cleanup).
                 while source.ends_with(BLOCK_END) {
-                    source = &source[..source.len() - 1];
+                    source.pop();
                 }
 
+                if let Some(spelling) = word.spellings.iter_mut().find(|s| s.system.0 == "Source") {
+                    spelling.value = source.to_string();
+                } else {
+                    word.spellings.push(Spelling {
+                        system: SpellingSystem("Source".to_string()),
+                        value: source.to_string(),
+                    });
+                }
+                word.date_recorded = date.clone();
+
                 // Construct the final word.
-                let finished_word = AnnotatedSeg::Word(AnnotatedForm {
-                    source: source.to_owned(),
-                    line_break: word.line_break.map(|_| line_num as i32),
-                    page_break: word.page_break.map(|_| page_num),
-                    date_recorded: date.clone(),
-                    ..word
-                });
+                let finished_word = AnnotatedSeg::Word(word);
 
                 // Add the current word to the current phrase or the root document.
                 match pages.last_mut() {

@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedForm, CherokeeOrthography, Database, Date, DocumentId, Geometry, PhonologySystem,
-    WordSegment,
+    spelling::{Spelling, SpellingSystem},
+    CherokeeOrthography, Database, Date, DocumentId, Geometry, PhonologySystem, Word, WordSegment,
 };
 use serde::{Deserialize, Serialize};
 
@@ -224,7 +224,7 @@ pub fn seg_verb_surface_forms(
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
-) -> Vec<AnnotatedForm> {
+) -> Vec<Word> {
     let mut forms = Vec::new();
     while let Some(form) = seg_verb_surface_form(
         position.clone(),
@@ -247,7 +247,7 @@ pub fn seg_verb_surface_form(
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
-) -> Option<AnnotatedForm> {
+) -> Option<Word> {
     // Skip empty cells until we find a form.
     let mut morpheme_layer = cols.next()?;
     while morpheme_layer.is_empty() {
@@ -278,18 +278,22 @@ pub fn seg_verb_surface_form(
 
     let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
-    Some(AnnotatedForm {
+    let mut spellings = Vec::new();
+    spellings.push(Spelling {
+        system: SpellingSystem::source(),
+        value: syllabary,
+    });
+    spellings.push(Spelling {
+        system: SpellingSystem::simple_phonetics(),
+        value: phonetic,
+    });
+    Some(Word {
         id: None,
         position,
-        source: syllabary,
-        normalized_source: None,
-        simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).into_dailp()),
+        spellings,
         segments: Some(segments),
         english_gloss: translations,
         commentary,
-        line_break: None,
-        page_break: None,
         ingested_audio_track: None,
         date_recorded: Some(date.clone()),
     })
@@ -306,7 +310,7 @@ pub fn root_verb_surface_forms(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Vec<AnnotatedForm> {
+) -> Vec<Word> {
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(
         position,
@@ -335,7 +339,7 @@ pub fn root_verb_surface_form(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Option<AnnotatedForm> {
+) -> Option<Word> {
     use itertools::Itertools as _;
 
     // Each form has an empty column before it.
@@ -387,18 +391,22 @@ pub fn root_verb_surface_form(
 
     let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
-    Some(AnnotatedForm {
+    let mut spellings = Vec::new();
+    spellings.push(Spelling {
+        system: SpellingSystem::source(),
+        value: syllabary,
+    });
+    spellings.push(Spelling {
+        system: SpellingSystem::simple_phonetics(),
+        value: phonetic,
+    });
+    Some(Word {
         id: None,
         position: position.clone(),
-        source: syllabary,
-        normalized_source: None,
-        simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).into_dailp()),
+        spellings,
         segments: Some(segments),
         english_gloss: translations,
         commentary,
-        line_break: None,
-        page_break: None,
         date_recorded: Some(date.clone()),
         ingested_audio_track: None,
     })
@@ -430,7 +438,7 @@ pub fn root_noun_surface_forms(
     date: &Date,
     cols: &mut impl Iterator<Item = String>,
     has_comment: bool,
-) -> Vec<AnnotatedForm> {
+) -> Vec<Word> {
     let mut result = Vec::new();
     while let Some(form) = root_noun_surface_form(position, date, cols, has_comment) {
         result.push(form);
@@ -446,13 +454,13 @@ pub fn root_noun_surface_form(
     date: &Date,
     cols: &mut impl Iterator<Item = String>,
     has_comment: bool,
-) -> Option<AnnotatedForm> {
+) -> Option<Word> {
     let mut morpheme_layer = cols.next()?;
     while morpheme_layer.is_empty() {
         morpheme_layer = cols.next()?;
     }
     let gloss_layer = cols.next()?;
-    let phonemic = cols.next()?;
+    let phonemic = cols.next()?; // Left in to maintain iterator order
     let _numeric = cols.next()?;
     let phonetic = cols.next()?;
     let syllabary = cols.next()?;
@@ -467,18 +475,22 @@ pub fn root_noun_surface_form(
     let commentary = if has_comment { cols.next() } else { None };
     let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
-    Some(AnnotatedForm {
+    let mut spellings = Vec::new();
+    spellings.push(Spelling {
+        system: SpellingSystem::source(),
+        value: syllabary,
+    });
+    spellings.push(Spelling {
+        system: SpellingSystem::simple_phonetics(),
+        value: phonetic,
+    });
+    Some(Word {
         id: None,
         position: position.clone(),
-        source: syllabary,
-        normalized_source: None,
-        simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).into_dailp()),
+        spellings,
         segments: Some(segments),
         english_gloss: translations,
         commentary,
-        line_break: None,
-        page_break: None,
         date_recorded: Some(date.clone()),
         ingested_audio_track: None,
     })

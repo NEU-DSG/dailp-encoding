@@ -44,7 +44,7 @@ import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage } from "src/segment"
+import { DocumentPage, Word } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
@@ -426,7 +426,7 @@ const DocumentContents = ({
         />
       ))}
       {docContents.forms?.map((form, i) => (
-        <AnnotatedForm
+        <Word
           key={i}
           segment={form}
           onOpenDetails={openDetails}

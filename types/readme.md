@@ -8,11 +8,11 @@ There are a few key types to understand about our handling of annotated manuscri
 
 An [`AnnotatedDoc`](src/document.rs) represents one manuscript broken down word by word (generally referred to as "forms").
 It has several fields of metadata, like its `title`, `id`, or `collection`.
-The meat of the `AnnotatedDoc` is its `segments`, which is a list of segments which may each be a `AnnotatedForm`, block (contains segments), or line break.
+The meat of the `AnnotatedDoc` is its `segments`, which is a list of segments which may each be a `Word`, block (contains segments), or line break.
 
-An [`AnnotatedForm`](src/form.rs) is a single word located in some document that has multiple layers of representation.
+An [`Word`](src/word.rs) is a single word located in some document that has multiple layers of representation.
 In DAILP's Cherokee data, those layers are typically the source text, simple phonetics, phonemic representation, morphemic segmentation, and an English gloss.
-Each `AnnotatedForm` always knows what document it came from, retaining a sense of source and concrete reference.
+Each `Word` always knows what document it came from, retaining a sense of source and concrete reference.
 
 ## Potential Resources
 

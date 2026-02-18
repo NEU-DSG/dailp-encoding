@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert audio resource if there is one for this word.\nwith inserted_audio_resource as (\n  insert into media_resource (url)\n  select $9::text\n  where $9 is not null\n  on conflict (url) do nothing\n),\n\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select media_resource.id, int8range($10, $11)\n  from media_resource\n  where media_resource.url = $9\n  returning id\n),\n\ninserted_word as (\n  insert into word (\n    english_gloss, recorded_at, commentary,\n    document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\n  select $1, $2, $3, $4, $5, $6, $7, $8, inserted_audio_slice.id\n  from (values (1)) as t\n    left join inserted_audio_slice on true\n  returning id\n),\n\nsource_insert as (\n  insert into word_spelling (word_id, spelling_system, value)\n  select id,\n    (select id from spelling_system where name = 'Source'),\n    $12::text\n  from inserted_word\n  where $12 is not null\n),\n\nphonetics_insert as (\n  insert into word_spelling (word_id, spelling_system, value)\n  select id,\n    (select id from spelling_system where name = 'Simple Phonetics'),\n    $13::text\n  from inserted_word\n  where $13 is not null\n)\n\nselect id from inserted_word\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Date",
+        "Text",
+        "Uuid",
+        "Text",
+        "Int8",
+        "Uuid",
+        "Int8Range",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3281391833db08e0235d8fc49219d519fd8b2cd6859398d80177f2e5b5a20853"
+}
