@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
-import { Card, WordpressPage } from "src/components"
 import CollectionCard from "src/components/collection-card"
 import HomepageHeader from "src/components/homepage-header"
 import StoryCard from "src/components/story-card"
@@ -17,6 +16,7 @@ import {
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
+import { DailpPageContents } from "./dailp.page"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -56,7 +56,7 @@ const IndexPage = () => {
         <article className={fullWidth}>
           <section className="section">
             <h1 id="collection-section">About Us</h1>
-            <WordpressPage slug="/" />
+            <DailpPageContents path="/" />
           </section>
 
           <section className="section">
