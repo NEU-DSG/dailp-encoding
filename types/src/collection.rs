@@ -50,8 +50,6 @@ pub struct CollectionChapter {
     #[graphql(skip)]
     /// Full path of the chapter
     pub path: Vec<String>,
-    // /// Whether the chapter is a page or a document
-    // pub contentType:
 }
 
 /// Enum to represent the sections in an edited collection
@@ -81,6 +79,7 @@ pub enum CollectionSection {
 pub enum ChapterContents {
     Document,
     Page,
+    Unknown,
 }
 
 #[async_graphql::ComplexObject]
@@ -133,6 +132,19 @@ impl CollectionChapter {
 
     async fn content_type(&self, context: &Context<'_>) -> FieldResult<ChapterContents> {
         // return data with ChapterContents type which is either a Document or Page
+        // if statement if has wordpress ids
+        // consider case where chapter does not have wordpress and no document id, then 100% a page
+        // if wordpress id but no document id, then document
+        // if neither doc or wordpr id, then what does that mean
+        // if both id, what does that mean
+        // option 1: return default (page)
+        // *option 2: make new variant to enum that represents uncertainty
+        // to run with incomplete function, use macro
+        match (self.document_id.is_some(), self.wordpress_id.is_some()) {
+            (true, false) => Ok(ChapterContents::Document),
+            (false, true) => Ok(ChapterContents::Page),
+            (false, false) => Ok(ChapterContents::Unknown),
+        }
     }
 }
 
