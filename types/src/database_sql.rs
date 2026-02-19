@@ -1641,20 +1641,6 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_edited_collection(
-        &self,
-        collection: EditedCollectionInput,
-    ) -> Result<Uuid> {
-        Ok(query_file_scalar!(
-            "queries/insert_edited_collection.sql",
-            &collection.title as _,
-            &collection.wordpress_menu_id as _,
-            &collection.slug as _
-        )
-        .fetch_one(&self.client)
-        .await?)
-    }
-
     pub async fn insert_dictionary_document(
         &self,
         document: &DocumentMetadata,
@@ -1747,32 +1733,6 @@ impl Database {
         }
 
         tx.commit().await?;
-
-        Ok(DocumentId(document_uuid))
-    }
-
-    pub async fn insert_document_new(
-        &self,
-        meta: &DocumentMetadataInput,
-        collection_id: Option<Uuid>,
-        index_in_collection: Option<i64>,
-    ) -> Result<DocumentId> {
-        let document_id = &meta.short_name;
-        let written_at: Option<Date> = meta.date.map(Date::from);
-        let audio_slice_id: Option<Uuid> = None;
-
-        let document_uuid = query_file_scalar!(
-            "queries/insert_document_in_collection.sql",
-            document_id as _,
-            meta.title as _,
-            meta.is_reference as _,
-            written_at as _,
-            audio_slice_id as _,
-            collection_id as _,
-            index_in_collection as _
-        )
-        .fetch_one(&self.client)
-        .await?;
 
         Ok(DocumentId(document_uuid))
     }
