@@ -8,8 +8,7 @@ use crate::person::{
 };
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
-    Database, Date,
-    Translation, TranslationBlock,
+    Database, Date, Translation, TranslationBlock,
 };
 
 use itertools::Itertools;

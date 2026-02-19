@@ -8,7 +8,6 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
