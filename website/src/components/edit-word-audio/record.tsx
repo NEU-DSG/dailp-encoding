@@ -7,13 +7,13 @@ import {
   MediaPermissionStatus,
   useMediaRecorder,
 } from "../../use-media-recorder"
-import { Button, IconTextButton } from "../button"
+import { CleanButton, IconTextButton } from "../button"
+import { contributeAudioOptions } from "../contribute-audio-section.css"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton } from "../subtle-button.css"
-import { ContributeAudioPanel } from "./contributor-audio-panel"
-import { contributeAudioOptions } from "./contributor.css"
+import { ContributeAudioPanel } from "./contribute-audio-panel"
 
-export function RecordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
+export function RecordWordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   return (
     <ContributeAudioPanel
       panelTitle="Record Audio"
@@ -24,7 +24,8 @@ export function RecordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   )
 }
 
-function RecordAudioContent({
+// TODO: Should this live with ContributeAudioPanel?
+export function RecordAudioContent({
   uploadAudio,
 }: {
   uploadAudio: (data: Blob) => Promise<boolean>
@@ -49,11 +50,25 @@ function RecordAudioContent({
     }
   }
 
-  if (permissionStatus !== MediaPermissionStatus.APPROVED)
+  if (permissionStatus == MediaPermissionStatus.NOT_SUPPORTED)
     return (
       <em>
-        You need to allow DAILP to use your microphone in order to record audio.
+        Your device or web browser does not support recording audio. Updating
+        your device or browser may help.
       </em>
+    )
+
+  if (permissionStatus !== MediaPermissionStatus.APPROVED)
+    return (
+      <>
+        <em>
+          You need to allow DAILP to use your microphone in order to record
+          audio.
+        </em>
+        <CleanButton onClick={() => requestMediaPermissions()}>
+          Click here to grant permission.
+        </CleanButton>
+      </>
     )
 
   return (

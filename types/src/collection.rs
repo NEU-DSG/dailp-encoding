@@ -1,3 +1,4 @@
+//! Provides types for defining and structuring edited collections.
 use uuid::Uuid;
 
 use crate::AnnotatedDoc;
@@ -18,11 +19,15 @@ pub struct EditedCollection {
     pub id: Uuid,
     /// Full title of the collection
     pub title: String,
+    /// Description of the collection (optional)
+    pub description: Option<String>,
     /// ID of WordPress menu for navigating the collection
     pub wordpress_menu_id: Option<i64>,
     #[graphql(skip)]
     /// URL slug for the collection, like "cwkw"
     pub slug: String,
+    /// Cover image URL
+    pub thumbnail_url: Option<String>,
 }
 
 /// Input object for creating a new collection
@@ -93,14 +98,14 @@ impl CollectionChapter {
     }
 
     async fn slug(&self) -> String {
-        slugify((&self.path.last()).unwrap())
+        slugify(self.path.last().unwrap())
     }
 
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
         if let Some(doc_id) = &self.document_id {
             Ok(context
                 .data::<DataLoader<Database>>()?
-                .load_one(doc_id.clone())
+                .load_one(*doc_id)
                 .await?)
         } else {
             Ok(None)
@@ -117,4 +122,15 @@ impl CollectionChapter {
             .chapter_breadcrumbs(self.path.clone())
             .await?)
     }
+}
+
+/// Input for creating an edited collection
+#[derive(async_graphql::InputObject)]
+pub struct CreateEditedCollectionInput {
+    /// The title of the collection
+    pub title: String,
+    /// Description of the collection
+    pub description: String,
+    /// URL of the thumbnail image for the collection
+    pub thumbnail_url: String,
 }

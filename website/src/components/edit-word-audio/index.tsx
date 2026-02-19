@@ -13,9 +13,10 @@ export const EditWordAudio = (p: {
   console.log("Branching based on", { role })
 
   switch (role) {
+    case UserRole.Admin:
+      return <EditorEditWordAudio word={p.word} />
     case UserRole.Editor:
       return <EditorEditWordAudio word={p.word} />
-
     case UserRole.Contributor:
       return <ContributorEditWordAudio word={p.word} />
     case UserRole.Reader:

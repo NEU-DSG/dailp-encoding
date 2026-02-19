@@ -14,7 +14,6 @@ import { cognitoAuthExchange } from "./authExchange"
 
 export const GRAPHQL_URL_READ = process.env["DAILP_API_URL"] + "/graphql"
 export const GRAPHQL_URL_WRITE = process.env["DAILP_API_URL"] + "/graphql-edit"
-export const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
 export const sharedCache = cacheExchange({
   schema: {
@@ -44,6 +43,7 @@ export const sharedCache = cacheExchange({
     PositionInDocument: () => null,
     WordSegment: () => null,
     DocumentPage: () => null,
+    MenuItem: () => null,
     AnnotatedDoc: (data) => data["slug"] as string,
     AudioSlice: (data) => data["sliceId"] as string,
     DocumentCollection: (data) => data["slug"] as string,
@@ -69,10 +69,6 @@ export const clientSsrExchange = ssrExchange({
 export const serverSideClients = {
   dailp: createClient({
     url: GRAPHQL_URL_READ,
-    exchanges: [sharedCache, fetchExchange],
-  }),
-  wordpress: createClient({
-    url: WP_GRAPHQL_URL,
     exchanges: [sharedCache, fetchExchange],
   }),
 }

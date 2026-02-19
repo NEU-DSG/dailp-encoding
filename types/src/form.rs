@@ -224,10 +224,10 @@ impl AnnotatedForm {
         if let Some(ingested_audio_track) = self.ingested_audio_track.to_owned() {
             all_audio.insert(0, ingested_audio_track);
         }
-        return Ok(all_audio
+        Ok(all_audio
             .into_iter()
             .filter(|audio| audio.include_in_edited_collection)
-            .collect_vec());
+            .collect_vec())
     }
 
     /// Audio for this word that has been recorded by community members. Will be
@@ -297,10 +297,14 @@ pub struct AnnotatedFormUpdate {
     pub id: Uuid,
     /// Possible update to source content
     pub source: MaybeUndefined<String>,
+    /// Possible update to normalized source content
+    pub romanized_source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
     /// Updated segments
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
+    /// Possible updated english gloss
+    pub english_gloss: MaybeUndefined<String>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.
@@ -312,9 +316,9 @@ pub trait MaybeUndefinedExt<T> {
 impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
     fn into_vec(self) -> Vec<Option<T>> {
         if self.is_undefined() {
-            return Vec::new();
+            Vec::new()
         } else {
             return vec![self.take()];
-        };
+        }
     }
 }

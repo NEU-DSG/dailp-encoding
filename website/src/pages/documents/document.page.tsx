@@ -18,17 +18,21 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useUser } from "src/auth"
+import { UserRole, useUser, useUserRole } from "src/auth"
+import { useUserId } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
+import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
   FormProvider as FormProviderParagraph,
   useForm as useParagraphForm,
 } from "src/edit-paragraph-form-context"
+import { EditWordCheckProvider } from "src/edit-word-check-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -45,6 +49,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { EditingProvider } from "./editing-context"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -52,15 +57,9 @@ enum Tabs {
   INFO = "info-tab",
 }
 
-export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
-
-type NullPick<T, F extends keyof NonNullable<T>> = Pick<
-  NonNullable<T>,
-  F
-> | null
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
@@ -106,7 +105,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -126,13 +125,13 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
-    variables: { slug: doc.slug! },
-  })
-  const docData = data?.document
-  if (!docData) {
-    return null
-  }
+  // const [{ data }] = Dailp.useDocumentDetailsQuery({
+  //   variables: { slug: doc.slug! },
+  // })
+  // const docData = data?.document
+  // if (!docData) {
+  //   return null
+  // }
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:
@@ -183,7 +182,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.ANNOTATION}-panel`}
         tabId={Tabs.ANNOTATION}
       >
-        <TranslationTab doc={doc} />
+        <EditWordCheckProvider>
+          <TranslationTab doc={doc} />
+        </EditWordCheckProvider>
       </TabPanel>
 
       <TabPanel
@@ -214,14 +215,20 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         {/* Document Info Component */}
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
-          <DocumentInfo doc={doc} />
+          <EditingProvider>
+            <DocumentInfo doc={doc} />
+          </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
     </>
   )
 }
 
-export const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({
+  doc,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+}) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -360,7 +367,7 @@ const DocumentContents = ({
   cherokeeRepresentation,
   wordPanelDetails,
 }: {
-  doc: Document
+  doc: Dailp.DocumentFieldsFragment
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
@@ -443,16 +450,11 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
-    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
-    audioRecording?: NullPick<
-      Dailp.AnnotatedDoc["audioRecording"],
-      "resourceUrl"
-    >
-  }
+  doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
+  const userId = useUserId()
+  const role = useUserRole()
   return (
     <header className={css.docHeader}>
       {p.breadcrumbs && (
@@ -479,7 +481,7 @@ export const DocumentTitleHeader = (p: {
         ) : (
           <></>
         )}
-        {!p.doc.audioRecording && !isMobile && (
+        {p.doc.editedAudio.length === 0 && !isMobile && (
           <div id="no-audio-message">
             <strong>No Audio Available</strong>
           </div>
@@ -490,23 +492,103 @@ export const DocumentTitleHeader = (p: {
           ) : null}
         </div>
       </div>
-      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-        <div id="document-audio-player" className={css.audioContainer}>
-          <span>Document Audio:</span>
-          <AudioPlayer
-            style={{ flex: 1 }}
-            audioUrl={p.doc.audioRecording.resourceUrl}
-            showProgress
-          />
-          {p.doc.audioRecording && !isMobile && (
-            <div>
-              <a href={p.doc.audioRecording?.resourceUrl}>
-                <Button>Download Audio</Button>
-              </a>
-            </div>
+      <div id="audio-and-recording-container">
+        <div>
+          {/* only show document audio to non-editors , editors can see which ones are shown from checkmark*/}
+          {p.doc.editedAudio.length > 0 && role !== UserRole.Editor && (
+            <>
+              <h3>Document Audio:</h3>
+              {p.doc.editedAudio.map((audio, index) => (
+                <div
+                  id={`document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
+                >
+                  <AudioPlayer
+                    contributor={audio.recordedBy?.displayName}
+                    recordedAt={
+                      audio.recordedAt?.formattedDate
+                        ? new Date(audio.recordedAt.formattedDate)
+                        : undefined
+                    }
+                    style={{ flex: 1 }}
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {role === UserRole.Contributor && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map(
+                (audio, index) =>
+                  audio.recordedBy?.id === userId && (
+                    <div key={index}>
+                      <AudioPlayer
+                        contributor={"you"}
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
+                        audioUrl={audio.resourceUrl}
+                        showProgress
+                      />
+                    </div>
+                  )
+              )}
+            </>
+          )}
+          {role === UserRole.Editor && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map((audio, index) => (
+                <div
+                  id={`user-contributed-document-audio-player-${index}`}
+                  className={css.documentAudioContainer}
+                  key={index}
+                >
+                  {role === UserRole.Editor && (
+                    <>
+                      <DocumentAudioWithCurate
+                        contributor={
+                          audio.recordedBy?.displayName ?? "Unknown Contributor"
+                        }
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
+                        documentId={p.doc.id}
+                        audio={audio}
+                      />
+                      {!isMobile && (
+                        <div>
+                          <a href={audio.resourceUrl}>
+                            <Button>Download Audio</Button>
+                          </a>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {(role === UserRole.Editor || role === UserRole.Contributor) && (
+            <RecordDocumentAudioPanel document={p.doc} />
           )}
         </div>
-      )}
+      </div>
     </header>
   )
 }

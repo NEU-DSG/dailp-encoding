@@ -1,6 +1,7 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
+import { UserRole, useUserRole } from "src/auth"
 import {
-  useAnnotatedDocumentByIdQuery,
+  DocumentFieldsFragment,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
@@ -11,10 +12,12 @@ import * as css from "./dashboard.css"
 enum Tabs {
   ACTIVITY = "activity-tab",
   BOOKMARKS = "bookmarks-tab",
+  ADMIN_TOOLS = "admin-tab",
 }
 
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
+  const curRole = useUserRole()
   return (
     <>
       <h1 className={css.dashboardHeader}>Dashboard</h1>
@@ -31,6 +34,12 @@ export const Dashboard = () => {
           <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
             Recent Activity
           </Tab>
+          {/* dennis todo: remove editor from this condition once we have a proper admin role*/}
+          {(curRole == UserRole.Admin || curRole == UserRole.Editor) && (
+            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+              Admin tools
+            </Tab>
+          )}
         </TabList>
 
         <TabPanel
@@ -48,6 +57,13 @@ export const Dashboard = () => {
         >
           <ActivityTab />
         </TabPanel>
+        <TabPanel
+          {...tabs}
+          id={Tabs.ADMIN_TOOLS}
+          className={css.dashboardTabPanel}
+        >
+          <AdminToolsTab />
+        </TabPanel>
       </div>
     </>
   )
@@ -59,15 +75,50 @@ export const ActivityTab = () => {
   return <></>
 }
 
+export const AdminToolsTab = () => {
+  return (
+    <>
+      <div>
+        <h2>Manage Edited Collections</h2>
+        <Link href="/collections/new">Create New Collection</Link>
+        <br />
+        <Link href="#">Edit Existing Collection</Link>
+      </div>
+      <br />
+
+      <div>
+        <h2>Manage Documents</h2>
+        <Link href="/documents/new">Create New Document(s)</Link>
+      </div>
+
+      <br />
+      <div>
+        <h2>Manage Users</h2>
+        <Link href="#">Update Permissions for Existing User</Link>
+        <br />
+        <Link href="#">Manage Teams</Link>
+      </div>
+      <br />
+
+      <div>
+        <h2>Content Management</h2>
+        <Link href="/admin/edit-menu">Edit Main Menu</Link>
+        <br />
+        <Link href="/edit/new-page">New Page</Link>
+      </div>
+    </>
+  )
+}
+
 export const BookmarksTab = () => {
   const [{ data }] = useBookmarkedDocumentsQuery()
   return (
     <>
       {data && data.bookmarkedDocuments.length > 0 ? (
         <ul className={css.noBullets}>
-          {data.bookmarkedDocuments?.map((doc: any) => (
+          {data.bookmarkedDocuments?.map((doc) => (
             <li key={doc.id}>
-              <BookmarksTabItem documentId={doc.id} />
+              <BookmarksTabItem doc={doc} />
             </li>
           ))}
         </ul>
@@ -94,19 +145,15 @@ export const BookmarksTab = () => {
   )
 }
 
-export const BookmarksTabItem = (props: { documentId: string }) => {
-  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
-    variables: { id: props.documentId },
-  })
-  const docData = doc?.documentByUuid
-  const docFullPath = docData?.chapters?.[0]?.path
+export const BookmarksTabItem = (props: { doc: DocumentFieldsFragment }) => {
+  const docFullPath = props.doc.chapters?.[0]?.path
   let docPath = ""
   if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
     docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
   }
   console.log(docPath)
   // Crops the thumbnail to 50% of the original size and then scales it to 500x500
-  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
+  const thumbnailUrl = (props.doc.translatedPages?.[0]?.image?.url +
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
@@ -114,10 +161,10 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
         <BookmarkCard
           thumbnail={thumbnailUrl}
           header={{
-            text: docData?.title as unknown as string,
+            text: props.doc.title as unknown as string,
             link: `/collections/${docPath}`,
           }}
-          description={docData?.date?.year as unknown as string}
+          description={props.doc.date?.year as unknown as string}
         />
       </div>
     </>

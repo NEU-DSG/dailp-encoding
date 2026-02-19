@@ -33,13 +33,13 @@ jobs:
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
-# BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
-
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -54,7 +54,7 @@ jobs:
           branch: ${{ github.event.action == 'prereleased' && 'uat' || 'release' }}
           force: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -101,44 +101,23 @@ jobs:
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
-#      - name: Validate spreadsheets
-#        env:
-#          RUST_LOG: warn
-#        run: nix run --impure -L .#validate-data
-      - name: Allow SSH access to bastion host
-        uses: sohelamin/aws-security-group-add-ip-action@master
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-security-group-id: ${{ env.ACCESS_SECURITY_GROUP }}
-          port: 22
-          to-port: 22
-          protocol: tcp
-      - name: Encode documents as TEI and database entries
+      - name: Update database schema
         env: 
           BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
           BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
-
-        # Sets up port forwarding to remote database on port 5432
         run: |
-          echo "Creating SSH key file..."
-          echo "${{secrets.AWS_SSH_KEY}}" > dailp-deployment-key.pem
-          chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
-          DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
-          echo "Configuring SSH client..."
-          mkdir -p ~/.ssh
-          echo "Still configuring SSH client..."
-          ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
-          echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
-          ssh -i ./dailp-deployment-key.pem -f -N -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
-
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          echo "Updating shell variables..."
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          echo "Migrating schema..."
           nix run --impure .#migrate-schema
-          export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
-          # nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"

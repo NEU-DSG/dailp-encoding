@@ -42,12 +42,14 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
     parse_early_vocab(
         db,
         "1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50",
-        1,
-        false,
-        false,
-        false,
-        false,
-        0,
+        EarlyVocabMetadata {
+            to_skip: 1,
+            has_norm: false,
+            has_phonetic: false,
+            has_notes: false,
+            has_segmentation: false,
+            num_links: 0,
+        },
     )
     .await?;
 
@@ -57,46 +59,73 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
 async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
     let mut links = Vec::new();
     for s in sheet_ids {
-        let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
+        let mut new_links = parse_early_vocab(
+            db,
+            s,
+            EarlyVocabMetadata {
+                to_skip: 0,
+                has_norm: true,
+                has_phonetic: false,
+                has_notes: true,
+                has_segmentation: true,
+                num_links: 3,
+            },
+        )
+        .await?;
         links.append(&mut new_links);
     }
     db.insert_morpheme_relations(links).await?;
     Ok(())
 }
-
-async fn parse_early_vocab(
-    db: &Database,
-    sheet_id: &str,
+struct EarlyVocabMetadata {
     to_skip: usize,
     has_norm: bool,
     has_phonetic: bool,
     has_notes: bool,
     has_segmentation: bool,
     num_links: usize,
+}
+async fn parse_early_vocab(
+    db: &Database,
+    sheet_id: &str,
+    meta: EarlyVocabMetadata,
 ) -> Result<Vec<dailp::LexicalConnection>> {
     use dailp::{Date, DocumentMetadata, SheetResult, WordSegment};
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
-    let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
-    let mut meta = meta.values.into_iter();
-    let doc_id = meta.next().unwrap().pop().unwrap();
-    let title = meta.next().unwrap().pop().unwrap();
-    let year = meta.next().unwrap().pop().unwrap().parse::<i32>();
+    let doc_meta_result =
+        SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
+    let mut unstructured_doc_meta = doc_meta_result.values.into_iter();
+    let doc_id = unstructured_doc_meta.next().unwrap().pop().unwrap();
+    let title = unstructured_doc_meta.next().unwrap().pop().unwrap();
+    let year = unstructured_doc_meta
+        .next()
+        .unwrap()
+        .pop()
+        .unwrap()
+        .parse::<i32>();
     let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
-    let authors = meta.next().unwrap_or_default();
-    let meta = DocumentMetadata {
+    let authors = unstructured_doc_meta.next().unwrap_or_default();
+    let doc_meta = DocumentMetadata {
         id: Default::default(),
         short_name: doc_id,
         title,
         date: date_recorded,
         sources: Vec::new(),
         collection: Some(COLLECTION_NAME.to_owned()),
-        genre: None,
-        contributors: authors
-            .into_iter()
-            .skip(1)
-            .map(Contributor::new_author)
-            .collect(),
+        genre_id: None,
+        format_id: None,
+        creators_ids: None,
+        keywords_ids: None,
+        languages_ids: None,
+        subject_headings_ids: None,
+        contributors: None, // temporary fix
+        //contributors: authors
+        //.into_iter()
+        //.skip(1)
+        //.map(Contributor::new_author)
+        //.collect(),
+        spatial_coverage_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,
@@ -105,30 +134,30 @@ async fn parse_early_vocab(
     };
 
     // Update document metadata record
-    let doc_id = db.insert_dictionary_document(&meta).await?;
+    let doc_id = db.insert_dictionary_document(&doc_meta).await?;
 
     let entries = sheet
         .values
         .into_iter()
         // The first row is just a header.
         .skip(1)
-        .filter(move |row| row.len() >= (4 + to_skip))
+        .filter(move |row| row.len() >= (4 + meta.to_skip))
         .enumerate()
         .filter_map(|(index, row)| {
             let mut row = row.into_iter();
             let page_number = row.next()?;
             let id = row.next()?;
-            for _ in 0..to_skip {
+            for _ in 0..meta.to_skip {
                 row.next()?;
             }
             let gloss = row.next()?;
             let source = row.next()?;
-            let normalized_source = if has_norm {
+            let normalized_source = if meta.has_norm {
                 row.next().filter(|s| !s.is_empty())
             } else {
                 None
             };
-            let simple_phonetics = if has_phonetic {
+            let simple_phonetics = if meta.has_phonetic {
                 row.next().filter(|s| !s.is_empty())
             } else {
                 None
@@ -137,15 +166,15 @@ async fn parse_early_vocab(
                 // Convert the normalized source to simple phonetics.
                 normalized_source
                     .as_ref()
-                    .map(|s| dailp::PhonemicString::parse_crg(&s).into_learner())
+                    .map(|s| dailp::PhonemicString::parse_crg(s).into_learner())
             });
 
-            let commentary = if has_notes {
+            let commentary = if meta.has_notes {
                 row.next().filter(|s| !s.is_empty())
             } else {
                 None
             };
-            let segments = if has_segmentation {
+            let segments = if meta.has_segmentation {
                 if let (Some(segs), Some(glosses)) = (
                     row.next().filter(|s| !s.is_empty()),
                     row.next().filter(|s| !s.is_empty()),
@@ -158,7 +187,7 @@ async fn parse_early_vocab(
                 None
             };
             let mut links = Vec::new();
-            for _ in 0..num_links {
+            for _ in 0..meta.num_links {
                 if let Some(s) = row.next() {
                     if !s.is_empty() {
                         links.push(dailp::LexicalConnection::parse(&id, &s)?);
@@ -177,12 +206,8 @@ async fn parse_early_vocab(
                     english_gloss: vec![gloss],
                     line_break: None,
                     page_break: None,
-                    position: dailp::PositionInDocument::new(
-                        doc_id.clone(),
-                        page_number,
-                        index as i64 + 1,
-                    ),
-                    date_recorded: meta.date.clone(),
+                    position: dailp::PositionInDocument::new(doc_id, page_number, index as i64 + 1),
+                    date_recorded: doc_meta.date.clone(),
                     id: None,
                     ingested_audio_track: None,
                 },
@@ -196,9 +221,4 @@ async fn parse_early_vocab(
     db.only_insert_words(doc_id, forms).await?;
 
     Ok(links.into_iter().flatten().collect())
-}
-
-struct ConnectedForm {
-    form: dailp::AnnotatedForm,
-    links: Vec<dailp::LexicalConnection>,
 }

@@ -13,7 +13,9 @@ impl Date {
     }
     /// Make a new date from year, month, and day integers.
     pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
-        Self::new(chrono::NaiveDate::from_ymd(year, month, day))
+        Self::new(
+            chrono::NaiveDate::from_ymd_opt(year, month, day).expect("Provided date is invalid."),
+        )
     }
     /// Parse a date from a string like "1999-12-31"
     pub fn parse(s: &str) -> Result<Self, chrono::ParseError> {
@@ -46,29 +48,17 @@ impl Date {
         self.0.format("%B %e, %Y").to_string()
     }
 }
-
-/// InputType for Date
-#[derive(
-    async_graphql::InputObject,
-    Serialize,
-    Deserialize,
-    Clone,
-    Copy,
-    Debug,
-    PartialOrd,
-    Ord,
-    PartialEq,
-    Eq,
-)]
+/// GraphQL input type for dates
+#[derive(async_graphql::InputObject)]
 pub struct DateInput {
     day: u32,
     month: u32,
     year: i32,
 }
 
-impl Into<Date> for &DateInput {
-    fn into(self) -> Date {
-        Date::from_ymd(self.year, self.month, self.day)
+impl From<&DateInput> for Date {
+    fn from(val: &DateInput) -> Self {
+        Date::from_ymd(val.year, val.month, val.day)
     }
 }
 
@@ -86,12 +76,12 @@ impl From<NaiveDate> for Date {
 
 use chrono::{Datelike, NaiveDate};
 impl DateInput {
-    // Creates a new DateInput from a day, month, and year.
+    /// Creates a new DateInput from a day, month, and year.
     pub fn new(day: u32, month: u32, year: i32) -> Self {
         Self { day, month, year }
     }
 
-    //Creates a new DateInput from a Date object.
+    /// Creates a new DateInput from a Date object.
     pub fn parse_date_object(d: Date) -> Self {
         let nd = d.0;
         Self::new(nd.day(), nd.month(), nd.year())
@@ -115,7 +105,7 @@ impl DateTime {
 impl DateTime {
     /// UNIX timestamp of the datetime, useful for sorting
     pub async fn timestamp(&self) -> i64 {
-        self.0.timestamp()
+        self.0.and_utc().timestamp()
     }
     /// Just the Date component of this DateTime, useful for user-facing display
     pub async fn date(&self) -> Date {

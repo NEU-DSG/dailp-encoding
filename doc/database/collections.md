@@ -10,6 +10,8 @@ A single edited collection, for example "Cherokees Writing the Keetoowah Way".
 | `title`             | `text`    | Full title of the collection                       |
 | `wordpress_menu_id` | `bigint?` | ID of WordPress menu for navigating the collection |
 | `slug`              | `text`    | URL slug for the collection, like `"cwkw"`         |
+| `description`       | `text`    | Description for the collection                     |
+| `thumbnail_url`     | `text`    | Thumbnail url for the edited collection, from S3   |
 
 ## `collection_chapter`
 
