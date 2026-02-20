@@ -647,6 +647,15 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
+    // // Deletes a user
+    // async fn delete_user(&self, context: &Context<'_>) -> FieldResult<UserId>> {
+    //     Ok(context
+    //         .data::<DataLoader<Database>>()?
+    //         .loader()
+    //         .delete()
+    //         .await?)
+    // }
+
     /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn curate_word_audio(
