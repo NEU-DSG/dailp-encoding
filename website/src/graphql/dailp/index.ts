@@ -2206,7 +2206,13 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "id" | "title" | "indexInParent" | "section" | "path" | "slug"
+              | "id"
+              | "title"
+              | "indexInParent"
+              | "section"
+              | "path"
+              | "slug"
+              | "contentType"
             >
           >
         >
@@ -2576,7 +2582,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "id" | "title" | "wordpressId" | "slug"
+      "id" | "title" | "wordpressId" | "slug" | "contentType"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -3855,6 +3861,7 @@ export const EditedCollectionDocument = gql`
         section
         path
         slug
+        contentType
       }
     }
   }
@@ -4172,6 +4179,7 @@ export const CollectionChapterDocument = gql`
       title
       wordpressId
       slug
+      contentType
       breadcrumbs {
         name
         slug

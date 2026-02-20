@@ -4,6 +4,7 @@ import Markdown from "react-markdown"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
+  ChapterContents,
   CollectionSection,
   MenuUpdate,
   useEditedCollectionQuery,
@@ -59,7 +60,10 @@ export const DailpPageContents = (props: { path: string }) => {
     pause: fetching || !collectionSlug,
   })
 
-  // const collectionPageChapters = collectionPagesData?.editedCollection?.chapters?.filter(ch => ch
+  const collectionPageChapters =
+    collectionPagesData?.editedCollection?.chapters?.filter(
+      (ch) => ch.contentType === ChapterContents.Page
+    )
   const page = data?.pageByPath
   const collectionSections = [
     CollectionSection.Intro,
@@ -104,15 +108,18 @@ export const DailpPageContents = (props: { path: string }) => {
   const handlePublishClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const action = isPublished && !isLocationSelected ? "unpublish" : "publish"
     const confirm = window.confirm(
-      `Are you sure you want to ${action} this page?`
+      `Are you sure you want to ${action} this page? (Publishing feature for collections is still in development.)`
     )
     if (!confirm) {
       e.preventDefault()
       return
     }
     if (isInCollection) {
-      // update table of contents method here
-      // publish page code not merged yet
+      // todo: add collections publishing backend
+      alert(
+        "Action failed: Publishing feature for collections is still in development."
+      )
+      return
     } else {
       const toMenuItemInput = (
         nodes: any[] | undefined
@@ -168,7 +175,10 @@ export const DailpPageContents = (props: { path: string }) => {
   }
 
   const locationList = isInCollection
-    ? collectionSections?.map((item) => (
+    ? [
+        ...(collectionSections ?? []),
+        ...(collectionPageChapters?.map((ch) => ch.title) ?? []),
+      ].map((item) => (
         <option key={item} value={item}>
           {item}
         </option>
@@ -179,27 +189,27 @@ export const DailpPageContents = (props: { path: string }) => {
         </option>
       ))
 
-  // katie todo: delete this after backend method to change collection table of contents is implemented
-  if (isInCollection) {
-    return (
-      <>
-        <header>
-          <h1>{page.title}</h1>
-          {/* dennis todo: should be admin in the future */}
-          {userRole === UserRole.Editor && (
-            <div>
-              <Link href={`/edit?path=${props.path}`}>Edit</Link>
-            </div>
-          )}
-        </header>
-        {content.charAt(0) === "<" ? (
-          <div dangerouslySetInnerHTML={{ __html: content }} />
-        ) : (
-          <Markdown>{content}</Markdown>
-        )}
-      </>
-    )
-  }
+  // // katie todo: delete this after backend method to change collection table of contents is implemented
+  // if (isInCollection) {
+  //   return (
+  //     <>
+  //       <header>
+  //         <h1>{page.title}</h1>
+  //         {/* dennis todo: should be admin in the future */}
+  //         {userRole === UserRole.Editor && (
+  //           <div>
+  //             <Link href={`/edit?path=${props.path}`}>Edit</Link>
+  //           </div>
+  //         )}
+  //       </header>
+  //       {content.charAt(0) === "<" ? (
+  //         <div dangerouslySetInnerHTML={{ __html: content }} />
+  //       ) : (
+  //         <Markdown>{content}</Markdown>
+  //       )}
+  //     </>
+  //   )
+  // }
 
   return (
     <>
