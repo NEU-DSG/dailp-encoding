@@ -6,6 +6,7 @@ import { Link } from "src/components"
 import {
   CollectionSection,
   MenuUpdate,
+  useEditedCollectionQuery,
   useEditedCollectionsQuery,
   useMenuBySlugQuery,
   usePageByPathQuery,
@@ -53,10 +54,12 @@ export const DailpPageContents = (props: { path: string }) => {
   // check if page belongs in a collection
   const collectionSlug = props.path.split("/")[1]
 
-  // todo: need way to differentiate between documents and pages in chapters
-  // const collectionChapters = collectionData?.editedCollection?.chapters?.filter((chapter) =>
-  //   (chapter.))
+  const [{ data: collectionPagesData }] = useEditedCollectionQuery({
+    variables: { slug: collectionSlug || "" },
+    pause: fetching || !collectionSlug,
+  })
 
+  // const collectionPageChapters = collectionPagesData?.editedCollection?.chapters?.filter(ch => ch
   const page = data?.pageByPath
   const collectionSections = [
     CollectionSection.Intro,
@@ -214,7 +217,7 @@ export const DailpPageContents = (props: { path: string }) => {
             <div>
               <div>
                 <label>
-                  Set Page Location:
+                  Set New Page Location:
                   <select
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}

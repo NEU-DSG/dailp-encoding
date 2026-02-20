@@ -336,6 +336,15 @@ type AudioSlice {
 
 
 """
+Enum to represent whether a chapter in a collection's table of contents is a page or a document
+"""
+enum ChapterContents {
+	DOCUMENT
+	PAGE
+	UNKNOWN
+}
+
+"""
 One representation of Cherokee phonology.
 There are several different writing systems for Cherokee phonology and we
 want to convert between them.
@@ -382,6 +391,7 @@ type CollectionChapter {
 	Breadcrumbs from the top-level archive down to where this document lives.
 	"""
 	breadcrumbs: [DocumentCollection!]!
+	contentType: ChapterContents!
 }
 
 """
@@ -1522,6 +1532,10 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
+	"""
+	Gets all dailp_user with their id, username, and role for now
+	"""
+	listUsers: [User!]!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
 }

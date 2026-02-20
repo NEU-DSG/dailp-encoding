@@ -66,15 +66,7 @@ pub enum CollectionSection {
 
 /// Enum to represent whether a chapter in a collection's table of contents is a page or a document
 #[derive(
-    async_graphql::Enum,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Debug,
-    async_graphql::Enum,
-    serde::Serialize,
-    serde::Deserialize,
+    async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, serde::Serialize, serde::Deserialize,
 )]
 pub enum ChapterContents {
     Document,
@@ -131,19 +123,12 @@ impl CollectionChapter {
     }
 
     async fn content_type(&self, context: &Context<'_>) -> FieldResult<ChapterContents> {
-        // return data with ChapterContents type which is either a Document or Page
-        // if statement if has wordpress ids
-        // consider case where chapter does not have wordpress and no document id, then 100% a page
-        // if wordpress id but no document id, then document
-        // if neither doc or wordpr id, then what does that mean
-        // if both id, what does that mean
-        // option 1: return default (page)
-        // *option 2: make new variant to enum that represents uncertainty
-        // to run with incomplete function, use macro
         match (self.document_id.is_some(), self.wordpress_id.is_some()) {
             (true, false) => Ok(ChapterContents::Document),
             (false, true) => Ok(ChapterContents::Page),
             (false, false) => Ok(ChapterContents::Unknown),
+            // having both ids is an impossible case as of 2/19/2026, but just to make sure
+            (true, true) => Ok(ChapterContents::Unknown),
         }
     }
 }

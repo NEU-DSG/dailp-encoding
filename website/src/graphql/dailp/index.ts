@@ -288,6 +288,13 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Enum to represent whether a chapter in a collection's table of contents is a page or a document */
+export enum ChapterContents {
+  Document = "DOCUMENT",
+  Page = "PAGE",
+  Unknown = "UNKNOWN",
+}
+
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -306,6 +313,7 @@ export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
   /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
+  readonly contentType: ChapterContents
   readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
   readonly id: Scalars["UUID"]
@@ -1167,6 +1175,8 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Gets all dailp_user with their id, username, and role for now */
+  readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -3573,6 +3583,10 @@ export const DocFormFieldsFragmentDoc = gql`
       role
     }
     format {
+      id
+      name
+    }
+    genre {
       id
       name
     }
