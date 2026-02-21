@@ -961,10 +961,18 @@ impl Database {
         upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
+        // TODO adopt URL type
+        let is_url = |s: &String| s.starts_with("https://");
+
+        let url = if is_url(&upload.contributor_audio_url) {
+            upload.contributor_audio_url.clone()
+        } else {
+            "https://".to_owned() + &upload.contributor_audio_url
+        };
         let media_slice_id = query_file_scalar!(
             "queries/attach_audio_to_word.sql",
             contributor_id,
-            upload.contributor_audio_url as _,
+            url as _,
             0,
             0,
             upload.word_id
