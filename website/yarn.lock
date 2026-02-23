@@ -3102,6 +3102,11 @@
   resolved "https://registry.npmjs.org/@fontsource/charis-sil/-/charis-sil-4.5.7.tgz"
   integrity sha512-tifQLx/MXct9Ir6YHxnToZlbmTFD3o37zb5ScOPjiUTD/yCGWtVGRnUmMlavPvPcfIPD7XxL0fmIb6Ob36/yDQ==
 
+"@fontsource/philosopher@^5.2.8":
+  version "5.2.8"
+  resolved "https://registry.npmjs.org/@fontsource/philosopher/-/philosopher-5.2.8.tgz"
+  integrity sha512-UphRIenKQurPms4fQs7pZaEhx1uAJliEVlmhj7+f9Vp6lAj3eqx6IUaIrNujfrpy6sWeXcrGDzk9lRN1IryRmg==
+
 "@fontsource/quattrocento-sans@^4.5.5":
   version "4.5.10"
   resolved "https://registry.npmjs.org/@fontsource/quattrocento-sans/-/quattrocento-sans-4.5.10.tgz"
