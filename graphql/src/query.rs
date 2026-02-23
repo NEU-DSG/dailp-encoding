@@ -406,8 +406,6 @@ impl Query {
             .get_menu_by_slug(slug)
             .await?)
     }
-
-    
 }
 
 pub struct Mutation;
@@ -651,17 +649,18 @@ impl Mutation {
 
     // Deletes a user
     async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId> {
-        let db = context.data::<DataLoader<Database>>()?.loader();
         let cognito = context.data::<aws_sdk_cognitoidentity::Client>()?;
         // let region = std::env::var("DAILP_AWS_REGION").map_err(|_| anyhow::format_err!("DAILP_AWS_REGION not set"))?;
-        let region = "us-east-1"
+        let region = "us-east-1";
         // formats into recognizable Cognito identity ID (ex. "us-east-1:550e8400-e29b-41d4-a716-446655440000")
-        let identity_id = format!("{}:{}", region, user_id); 
+        let identity_id = format!("{}:{}", region, user_id);
 
-        let identity_result = cognito.delete_identities().identity_ids_to_delete(identity_id).send().await
-        .map_err(|e| anyhow::format_err!("Failed to delete Cognito identity: {}", e))?;
-
-        
+        let identity_result = cognito
+            .delete_identities()
+            .identity_ids_to_delete(identity_id)
+            .send()
+            .await
+            .map_err(|e| anyhow::format_err!("Failed to delete Cognito identity: {}", e))?;
 
         // if let Some(unprocessed) = identity_result.unprocessed_identity_ids() {
         //     if !unprocessed.is_empty() {
@@ -676,10 +675,12 @@ impl Mutation {
         //     ).into());
         //     }
 
-
-        }
-
-
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_user(&user_id)
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Failed to delete user"))?)
     }
 
     /// Decide if a piece of word audio should be included in edited collection

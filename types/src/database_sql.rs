@@ -923,11 +923,11 @@ impl Database {
     }
 
     pub async fn delete_user(&self, user_id: &Uuid) -> Result<UserId> {
-        let rows = query_file!("queries/remove_user.sql", user_id)
-            .fetch_all(&self.client)
+        let row = query_file!("queries/remove_user.sql", user_id)
+            .fetch_one(&self.client)
             .await?;
 
-        Ok(users)
+        Ok(UserId(row.id.to_string()))
     }
 
     pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
