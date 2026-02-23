@@ -5,7 +5,7 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{User, UserId, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
@@ -650,7 +650,8 @@ impl Mutation {
     // Deletes a user
     async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId> {
         let cognito = context.data::<aws_sdk_cognitoidentity::Client>()?;
-        // let region = std::env::var("DAILP_AWS_REGION").map_err(|_| anyhow::format_err!("DAILP_AWS_REGION not set"))?;
+        let region = std::env::var("DAILP_AWS_REGION")
+            .map_err(|_| anyhow::format_err!("DAILP_AWS_REGION not set"))?;
         let region = "us-east-1";
         // formats into recognizable Cognito identity ID (ex. "us-east-1:550e8400-e29b-41d4-a716-446655440000")
         let identity_id = format!("{}:{}", region, user_id);
@@ -679,8 +680,7 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .delete_user(&user_id)
-            .await?
-            .ok_or_else(|| anyhow::format_err!("Failed to delete user"))?)
+            .await?)
     }
 
     /// Decide if a piece of word audio should be included in edited collection
