@@ -650,7 +650,7 @@ impl Mutation {
     }
 
     // Deletes a user
-    async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId>> {
+    async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId> {
         let db = context.data::<DataLoader<Database>>()?.loader();
         let cognito = context.data::<aws_sdk_cognitoidentity::Client>()?;
         // let region = std::env::var("DAILP_AWS_REGION").map_err(|_| anyhow::format_err!("DAILP_AWS_REGION not set"))?;
@@ -675,6 +675,8 @@ impl Mutation {
         //         ids
         //     ).into());
         //     }
+
+
         }
 
 
