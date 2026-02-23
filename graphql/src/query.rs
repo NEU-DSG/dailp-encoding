@@ -406,6 +406,8 @@ impl Query {
             .get_menu_by_slug(slug)
             .await?)
     }
+
+    
 }
 
 pub struct Mutation;
@@ -647,14 +649,36 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
-    // // Deletes a user
-    // async fn delete_user(&self, context: &Context<'_>) -> FieldResult<UserId>> {
-    //     Ok(context
-    //         .data::<DataLoader<Database>>()?
-    //         .loader()
-    //         .delete()
-    //         .await?)
-    // }
+    // Deletes a user
+    async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let cognito = context.data::<aws_sdk_cognitoidentity::Client>()?;
+        // let region = std::env::var("DAILP_AWS_REGION").map_err(|_| anyhow::format_err!("DAILP_AWS_REGION not set"))?;
+        let region = "us-east-1"
+        // formats into recognizable Cognito identity ID (ex. "us-east-1:550e8400-e29b-41d4-a716-446655440000")
+        let identity_id = format!("{}:{}", region, user_id); 
+
+        let identity_result = cognito.delete_identities().identity_ids_to_delete(identity_id).send().await
+        .map_err(|e| anyhow::format_err!("Failed to delete Cognito identity: {}", e))?;
+
+        
+
+        // if let Some(unprocessed) = identity_result.unprocessed_identity_ids() {
+        //     if !unprocessed.is_empty() {
+        //         let ids = unprocessed
+        //         .iter()
+        //         .map(|u| u.identity_id().unwrap_or_default())
+        //         .collect::<Vec<_>>()
+        //         .join(", ");
+        //     return Err(anyhow::format_err!(
+        //         "Cognito could not process some identities: {}",
+        //         ids
+        //     ).into());
+        //     }
+        }
+
+
+    }
 
     /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
