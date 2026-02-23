@@ -55,7 +55,7 @@ const IndexPage = () => {
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
           <section className="section">
-            <h1 id="collection-section">About Us</h1>
+            {/* <h1 id="collection-section">About Us</h1> */}
             <DailpPageContents path="/" />
           </section>
 
