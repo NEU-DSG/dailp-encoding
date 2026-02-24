@@ -62,6 +62,12 @@ impl From<&DateInput> for Date {
     }
 }
 
+impl From<DateInput> for Date {
+    fn from(di: DateInput) -> Self {
+        Date::from_ymd(di.year, di.month, di.day)
+    }
+}
+
 impl From<NaiveDate> for Date {
     fn from(nd: NaiveDate) -> Self {
         Date::new(nd)

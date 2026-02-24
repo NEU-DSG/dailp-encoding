@@ -6,6 +6,7 @@ use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
+use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
@@ -721,6 +722,7 @@ impl Database {
                 UserGroup::Readers => "Readers",
                 UserGroup::Editors => "Editors",
                 UserGroup::Contributors => "Contributors",
+                UserGroup::Administrators => "Administrators",
             };
             vec![role_str.to_string()]
         } else {

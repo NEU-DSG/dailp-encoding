@@ -819,6 +819,12 @@ pub struct DocumentId(pub Uuid);
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ImageSourceId(pub Uuid);
 
+/// InputObject for ImageSourceId
+#[derive(async_graphql::InputObject, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ImageSourceIdInput {
+    pub id: Uuid,
+}
+
 /// A IIIF server we use as an image source
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ImageSource {
@@ -851,6 +857,16 @@ impl IiifImages {
         self.ids.len()
     }
 }
+
+/// Input object for IiifImages
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct IiifImagesInput {
+    /// Database ID for the image source
+    pub source: ImageSourceIdInput,
+    /// Remote IIIF OIDs for the images
+    pub ids: Vec<String>,
+}
+
 #[async_graphql::Object]
 impl IiifImages {
     /// Information about the data source for this set of images
