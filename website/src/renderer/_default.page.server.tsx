@@ -121,6 +121,7 @@ const clientEnv = pick(process.env, [
   "AWS_REGION",
   "CF_URL",
   "AUTH_MODE",
+  "TURNSTILE_SITE_KEY",
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))

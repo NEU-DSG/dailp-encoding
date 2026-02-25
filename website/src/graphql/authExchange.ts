@@ -4,11 +4,7 @@ import { jwtDecode } from "jwt-decode"
 import { makeOperation } from "urql"
 import { getCurrentUser, getIdToken } from "src/auth"
 import { getAuthToken } from "src/auth"
-import {
-  GRAPHQL_URL_READ,
-  GRAPHQL_URL_WRITE,
-  WP_GRAPHQL_URL,
-} from "src/graphql"
+import { GRAPHQL_URL_READ, GRAPHQL_URL_WRITE } from "src/graphql"
 
 function isTokenExpired(token: string): boolean {
   try {
@@ -51,8 +47,8 @@ export const createAuthExchange = () => {
     },
 
     addAuthToOperation({ authState, operation }) {
-      // We don't send tokens if we don't have them or if we are talking to Wordpress
-      if (!authState || operation.context.url === WP_GRAPHQL_URL) {
+      // We don't send tokens if we don't have them
+      if (!authState) {
         return operation
       }
 

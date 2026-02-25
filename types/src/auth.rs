@@ -69,6 +69,7 @@ pub enum UserGroup {
     /// A user that can add and publicly display language data, audio, and comments.
     Editors,
     Readers,
+    Administrators,
 }
 
 impl From<String> for UserGroup {
@@ -77,9 +78,11 @@ impl From<String> for UserGroup {
             "Contributors" => UserGroup::Contributors,
             "Editors" => UserGroup::Editors,
             "Readers" => UserGroup::Readers,
+            "Administrators" => UserGroup::Administrators,
             "CONTRIBUTOR" => UserGroup::Contributors,
             "EDITOR" => UserGroup::Editors,
             "READER" => UserGroup::Readers,
+            "ADMINISTRATOR" => UserGroup::Administrators,
             _ => panic!("Unknown user group: {}", s),
         }
     }
@@ -88,6 +91,7 @@ impl From<String> for UserGroup {
 impl From<UserGroup> for String {
     fn from(group: UserGroup) -> Self {
         match group {
+            UserGroup::Administrators => "Administrators".to_string(),
             UserGroup::Contributors => "Contributors".to_string(),
             UserGroup::Editors => "Editors".to_string(),
             UserGroup::Readers => "Readers".to_string(),
@@ -110,6 +114,7 @@ impl UserGroup {
             UserGroup::Contributors => "Contributors".to_string(),
             UserGroup::Editors => "Editors".to_string(),
             UserGroup::Readers => "Readers".to_string(),
+            UserGroup::Administrators => "Administrators".to_string(),
         }
     }
 }
@@ -158,6 +163,33 @@ impl Guard for GroupGuard {
             Ok(())
         } else {
             Err(format!("Forbidden, user not in group '{:?}'", self.group).into())
+        }
+    }
+}
+
+/// Blocks access if the user is in the specified group.
+pub struct NotGroupGuard {
+    group: UserGroup,
+}
+
+impl NotGroupGuard {
+    pub fn new(group: UserGroup) -> Self {
+        Self { group }
+    }
+}
+
+#[async_trait::async_trait]
+impl Guard for NotGroupGuard {
+    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
+        let user = ctx.data_opt::<UserInfo>();
+        let is_in_forbidden_group =
+            user.map(|user| user.groups.iter().any(|group| group == &self.group));
+
+        // Deny access if the user is in the forbidden group
+        if is_in_forbidden_group == Some(true) {
+            Err(format!("Forbidden: User is in blocked group '{:?}'", self.group).into())
+        } else {
+            Ok(())
         }
     }
 }

@@ -2,22 +2,26 @@
 
 use crate::email;
 use dailp::{
+    async_graphql::InputType,
     auth::{
-        AuthGuard, AuthResponse, GroupGuard, LoginInput, MessageResponse, RefreshTokenInput,
-        RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput, SignupInput,
-        UserGroup, UserInfo,
+        AuthGuard, AuthResponse, GroupGuard, LoginInput, MessageResponse, NotGroupGuard,
+        RefreshTokenInput, RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput,
+        SignupInput, UserGroup, UserInfo,
     },
+    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{self, User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
-    UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
+    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
+    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
+    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
+    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
+use log::{debug, info};
+use reqwest::{header, Client};
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
@@ -380,6 +384,15 @@ impl Query {
             .await?)
     }
 
+    /// Gets all dailp_user with their id, username, and role for now
+    async fn list_users(&self, context: &Context<'_>) -> FieldResult<Vec<User>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_users()
+            .await?)
+    }
+
     async fn abbreviation_id_from_short_name(
         &self,
         context: &Context<'_>,
@@ -493,9 +506,7 @@ impl Mutation {
     }
 
     /// Mutation for adding/changing contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -509,9 +520,7 @@ impl Mutation {
     }
 
     ///Mutation for deleting contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn delete_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -525,7 +534,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -538,7 +547,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -553,7 +562,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -568,9 +577,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -640,7 +647,7 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
-    /// Decide if a piece audio should be included in edited collection
+    /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn curate_word_audio(
         &self,
@@ -654,7 +661,7 @@ impl Mutation {
         let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_audio_visibility(
+            .update_word_audio_visibility(
                 &input.word_id,
                 &input.audio_slice_id,
                 input.include_in_edited_collection,
@@ -666,6 +673,35 @@ impl Mutation {
             .loader()
             .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
             .await?)
+    }
+
+    /// Decide if a piece of document audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_document_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateDocumentAudioInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let document_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_document_audio_visibility(
+                &input.document_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(
+                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?,
+            ))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     /// Attach audio that has already been uploaded to S3 to a particular word
@@ -692,6 +728,31 @@ impl Mutation {
             .await?)
     }
 
+    /// Attach audio that has already been uploaded to S3 to a particular document
+    /// Assumes user requesting mutation recorded the audio
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn attach_audio_to_document(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToDocumentInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let _media_slice_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_document(&input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(input.document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
+    }
+
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_document_metadata(
         &self,
@@ -715,13 +776,20 @@ impl Mutation {
         input: CreateDocumentFromFormInput,
     ) -> FieldResult<AddDocumentPayload> {
         let title = input.document_name;
+        // Get info for the user currently signed in
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let user_profile_data = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&user.id)
+            .await?;
         let contributor = Contributor {
-            name: user.id.to_string(),
-            // defaulting to editor
-            role: Some(ContributorRole::Editor),
+            id: user.id,
+            name: user_profile_data.display_name,
+            // get users display name. TODO we should more rigorously check this value for errors
+            role: Some(ContributorRole::Transcriber), // TODO Ask Ellen, Cara, Shireen about this terminology
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
@@ -732,8 +800,8 @@ impl Mutation {
             link: input.source_url,
         };
         let mut sections = Vec::new();
-        for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
-            let translation = Some(eng_words.join(" "));
+        for (i, _raw_text_line) in input.raw_text_lines.iter().enumerate() {
+            let translation: Option<String> = Some(input.english_translation_lines[i].join(" "));
             let mut segs = Vec::new();
             for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
                 let form = AnnotatedForm {
@@ -743,7 +811,7 @@ impl Mutation {
                     simple_phonetics: None,
                     phonemic: None,
                     segments: None,
-                    english_gloss: vec![eng_words.get(j).cloned().unwrap_or_default()],
+                    english_gloss: vec![],
                     commentary: None,
                     line_break: None,
                     page_break: None,
@@ -773,8 +841,14 @@ impl Mutation {
             title: title.clone(),
             sources: vec![source],
             collection: None,
-            genre: None,
-            contributors: vec![contributor],
+            genre_id: None,
+            keywords_ids: None,
+            languages_ids: None,
+            subject_headings_ids: None,
+            creators_ids: None,
+            format_id: None,
+            contributors: Some(vec![contributor]),
+            spatial_coverage_ids: None,
             translation: None,
             page_images: None,
             date: Some(document_date),
@@ -800,11 +874,15 @@ impl Mutation {
             .insert_document_contents(updated_annotated_doc)
             .await?;
 
+        let collection_slug = database.collection_slug_by_id(input.collection_id).await?;
+
         Ok(AddDocumentPayload {
             id: document_id.0,
             title,
             slug: short_name.clone(),
-            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
+            collection_slug: collection_slug
+                .ok_or_else(|| anyhow::format_err!("Failed to load collection"))?
+                .to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
     }
@@ -1123,6 +1201,38 @@ impl Mutation {
         Ok(MessageResponse {
             message: "Password reset email resent! Please check your inbox.".to_string(),
         })
+    }
+
+    async fn validate_turnstile_token(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<bool> {
+        // POST to SiteVerify API directly unless an override is provided. Used for AWS Infra testing
+        let turnstile_api = std::env::var("TURNSTILE_API")
+            .unwrap_or("https://challenges.cloudflare.com/turnstile/v0/siteverify".to_string());
+        let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
+        let params = [("secret", secret), ("response", token)];
+        let client = reqwest::Client::new();
+
+        info!("Sending POST to SiteVerify API");
+        debug!("Payload: {:?}", params);
+
+        let response = client
+            .post(turnstile_api)
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+            .form(&params)
+            .send()
+            .await?;
+
+        info!("Response recieved from SiteVerify API");
+        debug!("Status Code: {}", response.status());
+
+        let body = response.text().await?;
+        debug!("Body Content: {}", body);
+        let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
+
+        Ok(body_json["success"].as_bool().unwrap())
     }
 }
 
