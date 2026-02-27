@@ -1,7 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
+    async_graphql::InputType,
+    auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
+    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
@@ -500,9 +502,7 @@ impl Mutation {
     }
 
     /// Mutation for adding/changing contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -516,9 +516,7 @@ impl Mutation {
     }
 
     ///Mutation for deleting contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn delete_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -532,7 +530,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -545,7 +543,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -560,7 +558,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -575,9 +573,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_word(
         &self,
         context: &Context<'_>,

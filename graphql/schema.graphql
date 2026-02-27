@@ -1522,6 +1522,10 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
+	"""
+	Gets all dailp_user with their id, username, and role for now
+	"""
+	listUsers: [User!]!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
 }
@@ -1677,6 +1681,7 @@ enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
 	READERS
+	ADMINISTRATORS
 }
 
 """
