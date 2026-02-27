@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select evt.id, evt.user_id, evt.token_hash, evt.expires_at, evt.used, u.email\nfrom email_verification_tokens evt\njoin dailp_user u on evt.user_id = u.id\nwhere evt.token_hash = $1\n  and evt.used = false\n  and evt.expires_at > now();",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "token_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "used",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "email",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "9032f9e328bb048c07cd086b14dcd401291047356dee9e7a592a68fe7a5fee5f"
+}

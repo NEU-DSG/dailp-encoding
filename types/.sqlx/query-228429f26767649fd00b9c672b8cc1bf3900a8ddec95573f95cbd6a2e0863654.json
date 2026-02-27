@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Delete old unused tokens first\ndelete from email_verification_tokens \nwhere user_id = $1 and used = false;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "228429f26767649fd00b9c672b8cc1bf3900a8ddec95573f95cbd6a2e0863654"
+}

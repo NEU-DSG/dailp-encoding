@@ -1,15 +1,20 @@
 #![allow(missing_docs)]
 
-use anyhow::Error;
+use argon2::password_hash::rand_core::RngCore;
 use async_graphql::MaybeUndefined;
 use auth::UserGroup;
+use chrono::Utc;
 use chrono::{NaiveDate, NaiveDateTime};
+use rand::Rng;
+use sha2::{Digest, Sha256};
 use sqlx::postgres::types::{PgLTree, PgRange};
+use sqlx::query;
 use std::ops::Bound;
 use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
+use crate::auth::{AuthResponse, Claims, RefreshTokenResponse};
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
@@ -19,8 +24,15 @@ use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
 use crate::person::Creator;
+use crate::user::RefreshTokenData;
 use crate::user::User;
 use crate::user::UserId;
+use crate::user::UserWithPassword;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use log::{info, warn};
 use {
     crate::*,
@@ -2712,6 +2724,436 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+        Ok(())
+    }
+
+    /// Hash and salt a password using Argon2id
+    /// This is a helper function, not a database query
+    pub fn hash_password(password: &str) -> Result<String> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2
+            .hash_password(password.as_bytes(), &salt)
+            .map_err(|e| anyhow::anyhow!("Failed to hash password: {}", e))?
+            .to_string();
+        Ok(password_hash)
+    }
+
+    /// Verify a password against a hash
+    /// This is a helper function, not a database query
+    pub fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
+        let parsed_hash = PasswordHash::new(password_hash)
+            .map_err(|e| anyhow::anyhow!("Invalid password hash format: {}", e))?;
+
+        Ok(Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok())
+    }
+
+    /// Validate email format (basic check)
+    pub fn validate_email(email: &str) -> Result<()> {
+        if !email.contains('@') || !email.contains('.') {
+            return Err(anyhow::anyhow!("Invalid email format"));
+        }
+        if email.len() < 5 {
+            return Err(anyhow::anyhow!(
+                "Email is suspiciously short. Contact support if you think this is an issue."
+            ));
+        }
+        Ok(())
+    }
+
+    /// Create a new user account
+    /// Returns the new user's ID
+    pub async fn create_user(&self, email: String, password: String) -> Result<Uuid> {
+        // Validate inputs
+        Self::validate_email(&email)?;
+
+        // Hash password
+        let password_hash = Self::hash_password(&password)?;
+
+        // Normalize email and bind to a variable
+        let normalized_email = email.to_lowercase().trim().to_string();
+        let user_id =
+            query_file_scalar!("queries/create_user.sql", &normalized_email, password_hash)
+                .fetch_one(&self.client)
+                .await?;
+
+        Ok(user_id)
+    }
+
+    /// Create a refresh token (session) for a user
+    /// token_hash should be a hashed version of the actual token sent to client
+    pub async fn create_refresh_token(
+        &self,
+        user_id: Uuid,
+        token_hash: String,
+        expires_at: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Uuid> {
+        let token_id = query_file_scalar!(
+            "queries/create_refresh_token.sql",
+            user_id,
+            token_hash,
+            expires_at
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(token_id)
+    }
+
+    /// Get user by email (includes password hash for authentication)
+    /// Returns None if user doesn't exist
+    pub async fn get_user_by_email(&self, email: &str) -> Result<Option<UserWithPassword>> {
+        // Normalize email and bind to a variable
+        let normalized_email = email.to_lowercase().trim().to_string();
+        let result = query_file!("queries/get_dailp_user_by_email.sql", &normalized_email,)
+            .fetch_optional(&self.client)
+            .await?;
+
+        let role_user_group = result.as_ref().map(|r| UserGroup::from(r.role.clone()));
+
+        Ok(result.map(|row| UserWithPassword {
+            id: row.id,
+            email: row.email.unwrap_or_default(),
+            password_hash: row.password_hash.unwrap_or_default(),
+            email_verified: row.email_verified.unwrap_or_default(),
+            role: role_user_group,
+            display_name: row.display_name,
+        }))
+    }
+
+    /// Get and validate a refresh token
+    /// Returns None if token doesn't exist, is expired, or is revoked
+    pub async fn get_refresh_token_by_hash(
+        &self,
+        token_hash: &str,
+    ) -> Result<Option<RefreshTokenData>> {
+        let result = query_file!("queries/get_refresh_token_by_hash.sql", token_hash)
+            .fetch_optional(&self.client)
+            .await?;
+
+        let role_user_group = result.as_ref().map(|r| UserGroup::from(r.role.clone()));
+
+        Ok(result.map(|row| RefreshTokenData {
+            id: row.id,
+            user_id: row.user_id,
+            token_hash: row.token_hash,
+            expires_at: row.expires_at,
+            email: row.email.unwrap(),
+            role: role_user_group,
+            display_name: row.display_name,
+        }))
+    }
+
+    /// Update the last_used_at timestamp for a refresh token
+    pub async fn update_refresh_token_last_used(&self, token_hash: &str) -> Result<()> {
+        query_file!("queries/update_refresh_token_last_used.sql", token_hash)
+            .execute(&self.client)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Revoke a refresh token (logout)
+    /// Returns the user_id if token was found and revoked
+    pub async fn revoke_refresh_token(&self, token_hash: &str) -> Result<Option<Uuid>> {
+        let result = query_file_scalar!("queries/revoke_refresh_token.sql", token_hash)
+            .fetch_optional(&self.client)
+            .await?;
+
+        Ok(result)
+    }
+
+    /// Verify user's email
+    pub async fn set_user_email_verified(&self, user_id: Uuid) -> Result<()> {
+        query_file!("queries/set_user_email_verified.sql", user_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Generate a random 6-digit verification code
+    /// Returns both the plain code (to send via email) and the hashed code (to store in DB)
+    fn generate_verification_code() -> (String, String) {
+        let mut rng = rand::rng();
+        let code: u32 = rng.random_range(100000..=999999); // 6-digit code
+        let code_string = code.to_string();
+        let code_hash = Self::hash_token(&code_string);
+        (code_string, code_hash)
+    }
+
+    /// Create an email verification token for a user
+    /// Returns the plain 6 digit verification code (to be sent via email)
+    pub async fn create_email_verification_token(&self, user_id: Uuid) -> Result<String> {
+        let (plain_code, code_hash) = Self::generate_verification_code();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+
+        query_file!(
+            "queries/delete_unused_email_verification_tokens.sql",
+            user_id
+        )
+        .execute(&self.client)
+        .await?;
+
+        let _token_id = query_file_scalar!(
+            "queries/create_email_verification_token.sql",
+            user_id,
+            code_hash,
+            expires_at
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        // Return the plain 6 digit code to send via email
+        Ok(plain_code)
+    }
+
+    /// Creates a password reset token for a user
+    /// Returns the plain 6-digit code to be sent via email
+    pub async fn create_password_reset_token(&self, user_id: Uuid) -> Result<String> {
+        let (plain_code, code_hash) = Self::generate_verification_code();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(1);
+
+        query_file!("queries/delete_unused_password_reset_tokens.sql", user_id)
+            .execute(&self.client)
+            .await?;
+
+        let _token_id = query_file_scalar!(
+            "queries/create_password_reset_token.sql",
+            user_id,
+            code_hash,
+            expires_at
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(plain_code)
+    }
+
+    /// Updates a user's password
+    pub async fn update_user_password(&self, user_id: Uuid, new_password: String) -> Result<()> {
+        let password_hash = Self::hash_password(&new_password)?;
+
+        query_file!("queries/update_user_password.sql", user_id, password_hash)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Revokes all refresh tokens for a user (used after password reset)
+    pub async fn revoke_all_user_refresh_tokens(&self, user_id: Uuid) -> Result<()> {
+        query_file!("queries/revoke_all_user_refresh_tokens.sql", user_id)
+            .execute(&self.client)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Validates a password reset token and marks it as used
+    /// Returns the user_id if token is valid
+    pub async fn validate_and_use_password_reset_token(&self, code: &str) -> Result<Uuid> {
+        // Hash the incoming code to compare with stored hash
+        let code_hash = Self::hash_token(code);
+
+        // Get token from database (must be unused and not expired)
+        let token_data = query_file!("queries/get_password_reset_token.sql", &code_hash)
+            .fetch_optional(&self.client)
+            .await?;
+
+        match token_data {
+            None => Err(anyhow::anyhow!("Invalid or expired password reset code")),
+            Some(token) => {
+                // Mark token as used
+                query_file!("queries/use_password_reset_token.sql", token.id)
+                    .fetch_one(&self.client)
+                    .await?;
+
+                Ok(token.user_id)
+            }
+        }
+    }
+
+    /// Validate and use an email verification token
+    /// Returns the user_id if successful, or error if token is invalid/expired/used
+    pub async fn validate_and_use_email_verification_token(&self, code: &str) -> Result<Uuid> {
+        // Hash the incoming code to match against stored hash
+        let code_hash = Self::hash_token(code);
+
+        // Get token from database (must be unused and not expired)
+        let token_data = query_file!("queries/get_email_verification_token.sql", &code_hash)
+            .fetch_optional(&self.client)
+            .await?;
+
+        match token_data {
+            None => Err(anyhow::anyhow!("Invalid or expired verification code")),
+            Some(token) => {
+                // Mark token as used
+                query_file!("queries/use_email_verification_token.sql", token.id)
+                    .fetch_one(&self.client)
+                    .await?;
+
+                // Mark user's email as verified
+                self.set_user_email_verified(token.user_id).await?;
+
+                Ok(token.user_id)
+            }
+        }
+    }
+
+    /// Main login function - authenticates user and returns tokens
+    pub async fn login(&self, email: String, password: String) -> Result<AuthResponse> {
+        // 1. Validate auth mode
+        if std::env::var("AUTH_MODE")? != "dailp" {
+            return Err(anyhow::anyhow!("Local user accounts are disabled"));
+        }
+
+        // 2. Get user from database
+        let user = self
+            .get_user_by_email(&email)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Invalid email or password"))?;
+
+        // 3. Check if email is verified
+        if !user.email_verified {
+            return Err(anyhow::anyhow!(
+                "Email not verified. Please check your email for verification link."
+            ));
+        }
+
+        // 4. Verify password
+        if !Self::verify_password(&password, &user.password_hash)? {
+            return Err(anyhow::anyhow!("Invalid email or password"));
+        }
+
+        // 5. Generate access token (JWT)
+        let access_token = self.generate_access_token(user.id, &user.email, &user.role.unwrap())?;
+
+        // 6. Generate refresh token (random string)
+        let refresh_token = Self::generate_refresh_token();
+        let refresh_token_hash = Self::hash_token(&refresh_token);
+
+        // 7. Store refresh token in database
+        let expires_at = Utc::now() + Duration::from_secs(60 * 60 * 24 * 7);
+        self.create_refresh_token(user.id, refresh_token_hash, expires_at)
+            .await?;
+
+        // 9. Return tokens and user info
+        Ok(AuthResponse {
+            access_token,
+            refresh_token,
+            expires_in: 3600,
+            user_id: user.id.to_string(),
+            email: user.email,
+            role: user.role,
+            display_name: Some(user.display_name),
+        })
+    }
+
+    /// Generate JWT access token
+    fn generate_access_token(
+        &self,
+        user_id: Uuid,
+        email: &str,
+        role: &UserGroup,
+    ) -> Result<String> {
+        let expiration = Utc::now()
+            .checked_add_signed(chrono::Duration::seconds(60 * 60)) // 1 hour
+            .ok_or_else(|| anyhow::anyhow!("Invalid expiration time"))?
+            .timestamp();
+
+        let claims = Claims {
+            sub: user_id.to_string(),
+            email: email.to_string(),
+            role: role.to_string(),
+            exp: expiration,
+            iat: Utc::now().timestamp(),
+        };
+
+        let secret = std::env::var("JWT_SECRET")
+            .map_err(|_| anyhow::anyhow!("JWT_SECRET not configured"))?;
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_bytes()),
+        )
+        .map_err(|e| anyhow::anyhow!("Failed to generate token: {}", e))?;
+
+        Ok(token)
+    }
+
+    /// Helper to convert bytes to hex string
+    pub fn bytes_to_hex(bytes: &[u8]) -> String {
+        bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    }
+
+    /// Generate random refresh token (32 bytes = 64 hex chars)
+    fn generate_refresh_token() -> String {
+        let mut bytes = [0u8; 32];
+        OsRng.fill_bytes(&mut bytes);
+        Self::bytes_to_hex(&bytes)
+    }
+
+    /// Hash a token
+    pub fn hash_token(token: &str) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(token.as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
+
+    /// Validate JWT access token and extract claims
+    pub fn validate_access_token(token: &str) -> Result<Claims> {
+        let secret = std::env::var("JWT_SECRET")
+            .map_err(|_| anyhow::anyhow!("JWT_SECRET not configured"))?;
+
+        let token_data = decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(secret.as_bytes()),
+            &Validation::default(),
+        )
+        .map_err(|e| anyhow::anyhow!("Invalid token: {}", e))?;
+
+        Ok(token_data.claims)
+    }
+
+    /// Refresh access token using refresh token
+    pub async fn refresh_access_token(
+        &self,
+        refresh_token: String,
+    ) -> Result<RefreshTokenResponse> {
+        // 1. Hash the refresh token
+        let token_hash = Self::hash_token(&refresh_token);
+
+        // 2. Get and validate refresh token using the database query
+        let token_data = self
+            .get_refresh_token_by_hash(&token_hash)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Invalid or expired refresh token"))?;
+
+        // 3. Update last_used_at
+        self.update_refresh_token_last_used(&token_hash).await?;
+
+        // 4. Generate new access token
+        let access_token = self.generate_access_token(
+            token_data.user_id,
+            &token_data.email,
+            &token_data.role.unwrap(),
+        )?;
+
+        // 5. Return new access token (keep same refresh token)
+        Ok(RefreshTokenResponse {
+            access_token,
+            expires_in: 3600,
+        })
+    }
+
+    /// Logout - revoke refresh token
+    pub async fn logout(&self, refresh_token: String) -> Result<()> {
+        let token_hash = Self::hash_token(&refresh_token);
+        self.revoke_refresh_token(&token_hash).await?;
         Ok(())
     }
 }

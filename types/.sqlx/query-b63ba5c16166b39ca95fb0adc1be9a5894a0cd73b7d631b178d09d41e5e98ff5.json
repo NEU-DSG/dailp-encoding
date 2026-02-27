@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Get user by email for authentication\n-- Returns user data including password_hash for verification\nselect id, email, password_hash, email_verified, role::text as role, display_name, created_at\nfrom dailp_user\nwhere email = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "password_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "display_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "b63ba5c16166b39ca95fb0adc1be9a5894a0cd73b7d631b178d09d41e5e98ff5"
+}

@@ -10,7 +10,7 @@ import { devtoolsExchange } from "@urql/devtools"
 import { cacheExchange } from "@urql/exchange-graphcache"
 import fetch from "isomorphic-unfetch"
 import { Environment, deploymentEnvironment } from "../env"
-import { cognitoAuthExchange } from "./authExchange"
+import { createAuthExchange } from "./authExchange"
 
 export const GRAPHQL_URL_READ = process.env["DAILP_API_URL"] + "/graphql"
 export const GRAPHQL_URL_WRITE = process.env["DAILP_API_URL"] + "/graphql-edit"
@@ -96,7 +96,7 @@ const customClient = (serverSide: boolean, exchanges: Exchange[]) =>
       sharedCache,
       ...exchanges,
       // only the client needs the auth link
-      ...(serverSide ? [] : [cognitoAuthExchange()]),
+      ...(serverSide ? [] : [createAuthExchange()]),
       fetchExchange,
     ],
     suspense: serverSide,
