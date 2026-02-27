@@ -94,9 +94,10 @@ export const AdminToolsTab = () => {
       <br />
       <div>
         <h2>Manage Users</h2>
-        <Link href="#">Update Permissions for Existing User</Link>
+        <Link href="/admin/manage-users">
+          Update Permissions for Existing User
+        </Link>
         <br />
-        <Link href="#">Manage Teams</Link>
       </div>
       <br />
 
