@@ -6,6 +6,7 @@ use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
+use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
@@ -721,6 +722,7 @@ impl Database {
                 UserGroup::Readers => "Readers",
                 UserGroup::Editors => "Editors",
                 UserGroup::Contributors => "Contributors",
+                UserGroup::Administrators => "Administrators",
             };
             vec![role_str.to_string()]
         } else {
@@ -961,10 +963,18 @@ impl Database {
         upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
+        // TODO adopt URL type
+        let is_url = |s: &String| s.starts_with("https://");
+
+        let url = if is_url(&upload.contributor_audio_url) {
+            upload.contributor_audio_url.clone()
+        } else {
+            "https://".to_owned() + &upload.contributor_audio_url
+        };
         let media_slice_id = query_file_scalar!(
             "queries/attach_audio_to_word.sql",
             contributor_id,
-            upload.contributor_audio_url as _,
+            url as _,
             0,
             0,
             upload.word_id
