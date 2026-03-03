@@ -26,7 +26,7 @@ export const navLinks = style({
   alignItems: "stretch",
 })
 
-globalStyle(`${navLinks} a`, {
+globalStyle(`${navLinks} > li > a`, {
   display: "flex",
   alignItems: "center",
   height: "100%",

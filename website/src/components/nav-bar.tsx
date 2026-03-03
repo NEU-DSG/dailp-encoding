@@ -1,76 +1,68 @@
+import * as Dailp from "src/graphql/dailp"
+import { useLocation } from "src/renderer/PageShell"
 import { DropdownNavItem } from "./dropdown-nav-item"
 import { navBar, navIcons, navLinks } from "./nav-bar.css"
 
 export const NavBar = () => {
+  const location = useLocation()
+
+  const [{ data, fetching, error }] = Dailp.useMenuBySlugQuery({
+    variables: { slug: "default-nav" },
+  })
+
+  if (fetching) return null
+  if (error) return null
+
+  const menuItems = data?.menuBySlug?.items
+  if (!menuItems) return null
+
+  // Handles top-level nav items
+  const isTopLevel = (a: any) =>
+    !menuItems.some((b: any) => b?.items?.some((c: any) => c?.path === a?.path))
+
   return (
     <nav className={navBar}>
       <ul className={navLinks}>
-        <li>
-          <a href="/">HOME</a>
-        </li>
+        {menuItems.filter(isTopLevel).map((item: any) => {
+          if (!item) return null
 
-        {/* Change links? */}
-        <DropdownNavItem
-          label="ABOUT"
-          links={[
-            { text: "Support", href: "/support" },
-            { text: "Goals", href: "/goals" },
-            { text: "Team", href: "/team" },
-            { text: "Former Contributors", href: "/former-contributors" },
-            { text: "Project History", href: "/project-history" },
-            { text: "Why DAILP? Why Now?", href: "/why-this-archive-why-now" },
-            { text: "References", href: "/sources" },
-          ]}
-        />
+          // Handles dropdown nav items
+          if (item.items?.length) {
+            return (
+              <DropdownNavItem
+                key={item.label}
+                label={item.label}
+                links={item.items.map((child: any) => ({
+                  text: child.label,
+                  href: child.path,
+                }))}
+              />
+            )
+          }
 
-        <DropdownNavItem
-          label="COLLECTIONS"
-          links={[
-            {
-              text: "Cherokees Writing the Keetoowah Way",
-              href: "/collections/cwkw",
-            },
-            {
-              text: "Willie Jumper Manuscripts",
-              href: "/collections/willie-jumper-stories",
-            },
-          ]}
-        />
+          // Normal link
+          let href = item.path
+          if (item.path?.startsWith("http")) {
+            href = new URL(item.path).pathname
+          }
 
-        <DropdownNavItem
-          label="TOOLS"
-          links={[
-            { text: "Glossary of Terms", href: "/tools/glossary" },
-            { text: "Word Search", href: "/tools/search?query" },
-            { text: "Further Learning", href: "/tools/further-learning" },
-          ]}
-        />
-
-        {/* Link out to separate "Stories" and "Spotlights" pages later on */}
-        <DropdownNavItem
-          label="FEATURED"
-          links={[
-            {
-              text: "Stories",
-              href: "https://dev.dailp.northeastern.edu/collections/cwkw",
-            },
-            {
-              text: "Spotlights",
-              href: "https://dev.dailp.northeastern.edu/collections/willie-jumper-stories",
-            },
-          ]}
-        />
-
-        <li>
-          <a href="/credit">CREDIT</a>
-        </li>
+          return (
+            <li key={item.path}>
+              <a
+                href={href}
+                aria-current={location.pathname === href ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          )
+        })}
 
         <li className={navIcons}>
-          <i className="fa-solid fa-user"></i>{" "}
           {/* Only show for logged in users, otherwise  "Log in" */}
+          <i className="fa-solid fa-user"></i>
           <i className="fa-solid fa-gear"></i>
-          <i className="fa-solid fa-bell"></i>{" "}
-          {/* Only show for logged in users */}
+          <i className="fa-solid fa-bell"></i>
         </li>
       </ul>
     </nav>
