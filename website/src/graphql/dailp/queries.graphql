@@ -807,6 +807,65 @@ mutation UpdateMenu($menu: MenuUpdate!) {
   }
 }
 
+mutation Signup($input: SignupInput!) {
+  signup(input: $input) {
+    message
+  }
+}
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    accessToken
+    refreshToken
+    expiresIn
+    userId
+    email
+    role
+    displayName
+  }
+}
+
+mutation RefreshToken($input: RefreshTokenInput!) {
+  refreshToken(input: $input) {
+    accessToken
+    expiresIn
+  }
+}
+
+mutation Logout($refreshToken: String!) {
+  logout(refreshToken: $refreshToken)
+}
+
+mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+  requestPasswordReset(input: $input) {
+    message
+  }
+}
+
+mutation ResetPassword($input: ResetPasswordInput!) {
+  resetPassword(input: $input) {
+    message
+  }
+}
+
+mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
+    message
+  }
+}
+
+mutation ResendVerificationEmail($email: String!) {
+  resendVerificationEmail(email: $email) {
+    message
+  }
+}
+
+mutation ResendPasswordReset($email: String!) {
+  resendPasswordReset(email: $email) {
+    message
+  }
+}
+
 mutation ValidateTurnstileToken($token: String!) {
   validateTurnstileToken(token: $token)
 }

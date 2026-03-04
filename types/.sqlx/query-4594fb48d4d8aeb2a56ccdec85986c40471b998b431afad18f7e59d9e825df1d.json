@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Update last_used_at when token is used to refresh access token\nupdate refresh_tokens\nset last_used_at = now()\nwhere token_hash = $1;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4594fb48d4d8aeb2a56ccdec85986c40471b998b431afad18f7e59d9e825df1d"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Revoke a refresh token (logout)\n-- Returns the user_id if token was found and revoked, NULL otherwise\nupdate refresh_tokens\nset revoked = true\nwhere token_hash = $1\n  and revoked = false\nreturning user_id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3728e4631f29b86157dff19d2112dcb62f2be96c2b534ad0316b91df73c72ec9"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update email_verification_tokens\nset used = true\nwhere id = $1\nreturning user_id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c8d8f742db1c9b971befd8a4d13f55eab94275fbb82777bdc48d911ca72ea69d"
+}

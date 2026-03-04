@@ -1,4 +1,4 @@
-use async_graphql::{Guard, MaybeUndefined};
+use async_graphql::Guard;
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
@@ -29,6 +29,15 @@ pub struct JWTUserInfoDef {
 /// A helper type for deserializing UserInfo from a Cognito JWT
 #[derive(Deserialize)]
 pub struct JWTUserInfo(#[serde(with = "JWTUserInfoDef")] pub UserInfo);
+
+/// serde deserialization struct for Dailp JWT UserInfo
+#[derive(Deserialize, Debug)]
+pub struct DailpJWT {
+    #[serde(rename = "sub")]
+    id: Uuid,
+    email: String,
+    role: String,
+}
 
 /// serde deserialization struct for UserInfo.
 ///
@@ -79,6 +88,17 @@ impl From<String> for UserGroup {
     }
 }
 
+impl From<UserGroup> for String {
+    fn from(group: UserGroup) -> Self {
+        match group {
+            UserGroup::Administrators => "Administrators".to_string(),
+            UserGroup::Contributors => "Contributors".to_string(),
+            UserGroup::Editors => "Editors".to_string(),
+            UserGroup::Readers => "Readers".to_string(),
+        }
+    }
+}
+
 impl From<Option<String>> for UserGroup {
     fn from(opt_s: Option<String>) -> Self {
         match opt_s {
@@ -95,6 +115,16 @@ impl UserGroup {
             UserGroup::Editors => "Editors".to_string(),
             UserGroup::Readers => "Readers".to_string(),
             UserGroup::Administrators => "Administrators".to_string(),
+        }
+    }
+}
+
+impl From<DailpJWT> for UserInfo {
+    fn from(jwt: DailpJWT) -> UserInfo {
+        UserInfo {
+            id: jwt.id,
+            email: jwt.email,
+            groups: vec![UserGroup::from(jwt.role)],
         }
     }
 }
@@ -177,6 +207,71 @@ impl Guard for AuthGuard {
             Err("Forbidden, user not authenticated".into())
         }
     }
+}
+
+/// JWT Claims structure
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub email: String,
+    pub role: String,
+    pub exp: i64, // Expiration time (as UTC timestamp)
+    pub iat: i64, // Issued at (as UTC timestamp)
+}
+
+/// Response returned after successful login
+#[derive(Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expires_in: i64,
+    pub user_id: String,
+    pub email: String,
+    pub role: Option<UserGroup>,
+    pub display_name: Option<String>,
+}
+
+/// Response returned after token refresh
+#[derive(Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshTokenResponse {
+    pub access_token: String,
+    pub expires_in: i64,
+}
+
+/// GraphQL Input Types for Authentication
+#[derive(async_graphql::InputObject)]
+pub struct SignupInput {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(async_graphql::InputObject)]
+pub struct LoginInput {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(async_graphql::InputObject)]
+pub struct RefreshTokenInput {
+    pub refresh_token: String,
+}
+
+#[derive(async_graphql::InputObject)]
+pub struct RequestPasswordResetInput {
+    pub email: String,
+}
+
+#[derive(async_graphql::InputObject)]
+pub struct ResetPasswordInput {
+    pub token: String,
+    pub new_password: String,
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct MessageResponse {
+    pub message: String,
 }
 
 #[cfg(test)]

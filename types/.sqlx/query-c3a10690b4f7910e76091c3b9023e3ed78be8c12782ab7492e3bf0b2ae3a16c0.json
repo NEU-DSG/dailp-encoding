@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Mark reset token as used and update password\n-- This should be in a transaction with the password update\nupdate password_reset_tokens\nset used = true\nwhere id = $1\nreturning user_id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c3a10690b4f7910e76091c3b9023e3ed78be8c12782ab7492e3bf0b2ae3a16c0"
+}

@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
     menu::migrate_menu(&db).await?;
 
     //println!("Migrating collections...");
-    //edited_collection::migrate_edited_collection(&db).await?;
+    edited_collection::migrate_edited_collection(&db).await?;
 
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;

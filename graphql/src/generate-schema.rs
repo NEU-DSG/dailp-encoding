@@ -1,3 +1,4 @@
+mod email;
 mod query;
 
 use dailp::async_graphql::{EmptySubscription, Schema};

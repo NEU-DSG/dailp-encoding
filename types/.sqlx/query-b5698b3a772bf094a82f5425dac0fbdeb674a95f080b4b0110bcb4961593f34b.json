@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Validate and retrieve refresh token\n-- Returns NULL if token doesn't exist, is expired, or is revoked\nselect \n    rt.id,\n    rt.user_id,\n    rt.token_hash,\n    rt.expires_at,\n    rt.created_at,\n    rt.last_used_at,\n    rt.revoked,\n    u.email,\n    u.role::text as role,\n    u.display_name\nfrom refresh_tokens rt\njoin dailp_user u on rt.user_id = u.id\nwhere rt.token_hash = $1\n  and rt.revoked = false\n  and rt.expires_at > now();",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "token_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "last_used_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "revoked",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "display_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      null,
+      false
+    ]
+  },
+  "hash": "b5698b3a772bf094a82f5425dac0fbdeb674a95f080b4b0110bcb4961593f34b"
+}
