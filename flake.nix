@@ -130,6 +130,13 @@
           exePath = "/bin/dailp-migration";
         };
 
+        apps.serve-database = mkBashApp "serve-database" ''
+            [ ! -d "$PGDATA" ] && initdb
+            postgres -D $PGDATA -c unix_socket_directories=/tmp
+        '';
+
+        apps.serve-website
+
         apps.migrate-schema = mkBashApp "migrate-schema" ''
           cd types
           ${pkgs.sqlx-cli}/bin/sqlx database create
