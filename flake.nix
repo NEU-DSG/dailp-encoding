@@ -97,18 +97,7 @@
           modules = [{imports = [./terraform/main.nix]; functions.package_path = "${dailpFunctions}";}];
           strip_nulls = true;
         };
-        # terraformConfig = pkgs.writeTextFile {
-        #   name = "terraform-config";
-        #   text = let
-        #     tf = inputs.terranix.lib.terranixConfiguration {
-        #       inherit system;
-        #       modules = [{imports = [./terraform/main.nix]; functions.package_path = "/";}];
-        #       strip_nulls = true;
-        #     };
-        #   in builtins.toJSON (tf);
-        #   executable = false;
-        #   destination = "/config.tf.json";
-        # };
+
         mkBashApp = name: script:
           inputs.utils.lib.mkApp {
             drv = pkgs.writers.writeBashBin name script;
