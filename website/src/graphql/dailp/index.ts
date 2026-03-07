@@ -3359,6 +3359,14 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type AllUsersQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllUsersQuery = { readonly __typename?: "Query" } & {
+  readonly listUsers: ReadonlyArray<
+    { readonly __typename?: "User" } & Pick<User, "id" | "displayName" | "role">
+  >
+}
+
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
@@ -4588,6 +4596,24 @@ export function useUserByIdQuery(
 ) {
   return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
     query: UserByIdDocument,
+    ...options,
+  })
+}
+export const AllUsersDocument = gql`
+  query AllUsers {
+    listUsers {
+      id
+      displayName
+      role
+    }
+  }
+`
+
+export function useAllUsersQuery(
+  options?: Omit<Urql.UseQueryArgs<AllUsersQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllUsersQuery, AllUsersQueryVariables>({
+    query: AllUsersDocument,
     ...options,
   })
 }

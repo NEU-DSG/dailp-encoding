@@ -2,6 +2,7 @@ import React from "react"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
 import { ListHeader } from "src/components/dashboard/list-header"
+import { UserList } from "src/components/user-management/user-list"
 import Layout from "src/layout"
 
 const ManageUsersPage = () => {
@@ -12,7 +13,9 @@ const ManageUsersPage = () => {
           <h1>User Management</h1>
           <ListHeader label="Current Users" />
 
-          <div></div>
+          <div>
+            <UserList />
+          </div>
         </main>
       </Layout>
     </AuthGuard>

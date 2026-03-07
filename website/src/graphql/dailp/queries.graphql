@@ -734,6 +734,14 @@ query UserById($id: UUID!) {
   }
 }
 
+query AllUsers {
+  listUsers {
+    id
+    displayName
+    role
+  }
+}
+
 query AllCollections {
   allCollections {
     name
