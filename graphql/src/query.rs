@@ -702,7 +702,9 @@ impl Mutation {
 
     /// Attach audio that has already been uploaded to S3 to a particular word
     /// Assumes user requesting mutation recoreded the audio
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
     async fn attach_audio_to_word(
         &self,
         context: &Context<'_>,
