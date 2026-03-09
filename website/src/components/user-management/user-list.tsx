@@ -7,7 +7,7 @@ const userRoles = [
   { value: UserGroup.Contributors, label: "Contributor" },
   { value: UserGroup.Editors, label: "Editor" },
   { value: UserGroup.Administrators, label: "Admin" },
-] as const
+]
 
 export const UserList = () => {
   const [{ data, fetching, error }] = useAllUsersQuery()
@@ -16,6 +16,10 @@ export const UserList = () => {
   }
 
   const handleRemoveUser = (userId: string, displayName: string) => {
+    // katie todo: connect to aws after rust update
+  }
+
+  const handleAddUser = (userId: string, displayName: string) => {
     // katie todo: connect to aws after rust update
   }
 
@@ -40,7 +44,7 @@ export const UserList = () => {
         ) : !data || !data.listUsers.length ? (
           <>No users found.</>
         ) : (
-          <div>
+          <div className={css.scrollable}>
             {data.listUsers.map((user) => (
               <div key={user.id} className={css.userRow}>
                 <div>{user.displayName || "Email not found"}</div>
