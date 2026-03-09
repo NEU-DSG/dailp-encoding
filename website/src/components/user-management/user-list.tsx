@@ -1,13 +1,20 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { UserGroup, useAllUsersQuery } from "src/graphql/dailp"
+import { Role } from "reakit"
+import {
+  AllUsersQuery,
+  User,
+  UserGroup,
+  UserInfo,
+  useAllUsersQuery,
+} from "src/graphql/dailp"
 import { boldWordRow, wordRow } from "../../pages/timeline.css"
 
 const userRoles = [
-  UserGroup.Administrators,
-  UserGroup.Editors,
-  UserGroup.Contributors,
-  UserGroup.Readers,
+  { value: UserGroup.Readers, label: "Reader" },
+  { value: UserGroup.Contributors, label: "Contributor" },
+  { value: UserGroup.Editors, label: "Editor" },
+  { value: UserGroup.Administrators, label: "Admin" },
 ] as const
 
 export const UserList = () => {
@@ -18,6 +25,17 @@ export const UserList = () => {
 
   const handleRemoveUser = (userId: string, displayName: string) => {
     // katie todo: connect to aws after rust update
+  }
+
+  // katie todo: stub, how to determine if invitation has been accepted?
+  const getPendingStatus = (
+    user: AllUsersQuery["listUsers"][number]
+  ): JSX.Element => {
+    const isPending = false
+
+    if (isPending) {
+      return <span style={{ color: "#999" }}>(Pending)</span>
+    } else return <></>
   }
 
   return (
@@ -33,7 +51,7 @@ export const UserList = () => {
           <div>
             {data.listUsers.map((user) => (
               <div key={user.id} className={wordRow}>
-                <div>{user.displayName}</div>
+                <div>{user.displayName || "Email not found"}</div>
                 <div>
                   Role:{" "}
                   <select
@@ -43,13 +61,17 @@ export const UserList = () => {
                     }
                   >
                     {userRoles.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
+                      <option key={item.value} value={item.value}>
+                        {item.label}
                       </option>
                     ))}
                   </select>
                 </div>
-                <div>{/*pending invitation function here*/}</div>
+                <div>
+                  {getPendingStatus(user) && (
+                    <span style={{ color: "#999" }}>(Pending)</span>
+                  )}
+                </div>
                 <div>
                   <button>Remove User</button>
                 </div>
