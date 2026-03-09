@@ -135,17 +135,17 @@ const IndexPage = () => {
               <div className={cardGroup}>
                 {dailp?.allEditedCollections.map((collection) => (
                   <CollectionCard
+                    key={collection.slug}
                     thumbnail={collection.thumbnailUrl ?? cwkwLogo}
                     header={{
                       text: collection.title,
                       link: collectionRoute(collection.slug),
                     }}
                     description={
-                      collection.description
-                        ? collection.description
-                        : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
+                      collection.description ||
+                      "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                     }
-                    buttonLabel="Please click to to view the collection"
+                    buttonLabel="Please click to view the collection"
                   />
                 ))}
               </div>
