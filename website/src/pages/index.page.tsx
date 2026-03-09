@@ -23,6 +23,11 @@ const IndexPage = () => {
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
   const userRole = useUserRole()
 
+  const [{ data }] = Dailp.useAllPagesQuery()
+
+  // Fetch stories
+  const stories = data?.allPages?.filter((p) => p.path?.includes("/story/"))
+
   // Show loading state while determining user role
   if (userRole === undefined) {
     return (
@@ -61,7 +66,7 @@ const IndexPage = () => {
 
           <section className="section">
             <h1 id="collection-section">Latest Stories</h1>
-            <div className={storyCardGroup}>
+            {/* <div className={storyCardGroup}>
               <StoryCard
                 thumbnail="https://wp.dailp.northeastern.edu/wp-content/uploads/2022/06/20181124-IMG-1118-PS-bw-WKG1-1.jpeg"
                 header={{
@@ -86,6 +91,19 @@ const IndexPage = () => {
                 }}
                 subheading="Megan Cassidy"
               />
+            </div> */}
+
+            <div className={storyCardGroup}>
+              {stories?.slice(0, 3).map((story) => (
+                <StoryCard
+                  key={story.path}
+                  header={{
+                    text: story.path,
+                    link: story.path,
+                  }}
+                  subheading=""
+                />
+              ))}
             </div>
           </section>
 
