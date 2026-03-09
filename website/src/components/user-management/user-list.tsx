@@ -1,14 +1,6 @@
 import React from "react"
-import { Helmet } from "react-helmet"
-import { Role } from "reakit"
-import {
-  AllUsersQuery,
-  User,
-  UserGroup,
-  UserInfo,
-  useAllUsersQuery,
-} from "src/graphql/dailp"
-import { boldWordRow, wordRow } from "../../pages/timeline.css"
+import { AllUsersQuery, UserGroup, useAllUsersQuery } from "src/graphql/dailp"
+import * as css from "./user-list.css"
 
 const userRoles = [
   { value: UserGroup.Readers, label: "Reader" },
@@ -31,7 +23,7 @@ export const UserList = () => {
   const getPendingStatus = (
     user: AllUsersQuery["listUsers"][number]
   ): JSX.Element => {
-    const isPending = false
+    const isPending = true
 
     if (isPending) {
       return <span style={{ color: "#999" }}>(Pending)</span>
@@ -44,21 +36,19 @@ export const UserList = () => {
         {fetching ? (
           <>Loading...</>
         ) : error ? (
-          <>Error loading users!</>
+          <>Error loading users</>
         ) : !data || !data.listUsers.length ? (
           <>No users found.</>
         ) : (
           <div>
             {data.listUsers.map((user) => (
-              <div key={user.id} className={wordRow}>
+              <div key={user.id} className={css.userRow}>
                 <div>{user.displayName || "Email not found"}</div>
                 <div>
                   Role:{" "}
                   <select
                     value={user.role || UserGroup.Readers}
-                    onChange={(e) =>
-                      handleRoleChange(user.id, e.target.value as UserGroup)
-                    }
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
                   >
                     {userRoles.map((item) => (
                       <option key={item.value} value={item.value}>
@@ -67,11 +57,7 @@ export const UserList = () => {
                     ))}
                   </select>
                 </div>
-                <div>
-                  {getPendingStatus(user) && (
-                    <span style={{ color: "#999" }}>(Pending)</span>
-                  )}
-                </div>
+                <div>{getPendingStatus(user)}</div>
                 <div>
                   <button>Remove User</button>
                 </div>
