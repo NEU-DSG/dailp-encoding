@@ -1,7 +1,6 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { vspace } from "src/style/constants"
 
-
 export const scrollable = style({
   maxHeight: "500px",
   overflowY: "auto",
@@ -30,6 +29,11 @@ export const addButton = style({
   right: 0,
   width: "138px",
   height: "38px",
+  backgroundColor: "#9f4d43",
+  color: "white",
+  border: "none",
+  cursor: "pointer",
+  fontFamily: "Quattrocento Sans, sans-serif",
 })
 
 globalStyle(`${userRow} > *`, {
