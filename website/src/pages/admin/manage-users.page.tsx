@@ -1,7 +1,7 @@
 import React from "react"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
-import { ListHeader } from "src/components/dashboard/list-header"
+import { ListHeader } from "src/components/user-management/list-header"
 import { UserList } from "src/components/user-management/user-list"
 import Layout from "src/layout"
 import { fullWidth } from "src/style/utils.css"
