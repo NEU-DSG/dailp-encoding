@@ -26,7 +26,7 @@ const IndexPage = () => {
   const [{ data }] = Dailp.useAllPagesQuery()
 
   // Fetch stories
-  const stories = data?.allPages?.filter((p) => p.path?.includes("/story/"))
+  const stories = data?.allPages?.filter((p) => p.path?.includes("/stories/"))
 
   // Show loading state while determining user role
   if (userRole === undefined) {
