@@ -5,7 +5,7 @@ import { ListHeader } from "src/components/user-management/list-header"
 import { UserList } from "src/components/user-management/user-list"
 import Layout from "src/layout"
 import { fullWidth } from "src/style/utils.css"
-import * as css from "../../components/user-management/user-list.css"
+import * as css from "./manage-users.css"
 
 const ManageUsersPage = () => {
   return (

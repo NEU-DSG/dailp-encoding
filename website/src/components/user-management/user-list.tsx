@@ -18,6 +18,11 @@ export const UserList = () => {
     { value: UserGroup.Editors, label: "Editor" },
     { value: UserGroup.Administrators, label: "Admin" },
   ]
+  const roleOptions = userRoles.map((item) => (
+    <option key={item.label} value={item.value}>
+      {item.label}
+    </option>
+  ))
 
   const handleRoleChange = (
     user: AllUsersQuery["listUsers"][number],
@@ -58,7 +63,7 @@ export const UserList = () => {
   const getPendingStatus = (
     user: AllUsersQuery["listUsers"][number]
   ): JSX.Element => {
-    const isPending = user
+    const isPending = false
 
     if (isPending) {
       return <span style={{ color: "#999" }}>(Pending)</span>
@@ -92,11 +97,7 @@ export const UserList = () => {
                       }
                     }}
                   >
-                    {userRoles.map((item) => (
-                      <option key={item.label} value={item.value}>
-                        {item.label}
-                      </option>
-                    ))}
+                    {roleOptions}
                   </select>
                 </div>
                 <div>{getPendingStatus(user)}</div>
