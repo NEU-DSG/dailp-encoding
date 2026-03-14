@@ -3359,6 +3359,27 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type AllUsersQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllUsersQuery = { readonly __typename?: "Query" } & {
+  readonly listUsers: ReadonlyArray<
+    { readonly __typename?: "User" } & Pick<
+      User,
+      | "id"
+      | "displayName"
+      | "avatarUrl"
+      | "bio"
+      | "organization"
+      | "location"
+      | "role"
+    > & {
+        readonly createdAt: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+      }
+  >
+}
+
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
@@ -4588,6 +4609,31 @@ export function useUserByIdQuery(
 ) {
   return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
     query: UserByIdDocument,
+    ...options,
+  })
+}
+export const AllUsersDocument = gql`
+  query AllUsers {
+    listUsers {
+      id
+      displayName
+      createdAt {
+        formattedDate
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useAllUsersQuery(
+  options?: Omit<Urql.UseQueryArgs<AllUsersQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllUsersQuery, AllUsersQueryVariables>({
+    query: AllUsersDocument,
     ...options,
   })
 }
