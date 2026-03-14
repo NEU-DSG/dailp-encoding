@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   AllUsersQuery,
   User,
@@ -7,10 +7,18 @@ import {
   useUpdateUserMutation,
 } from "src/graphql/dailp"
 import * as css from "./user-list.css"
+import { EmptyDialog } from "../empty-dialog"
+import { ConfirmationDialog } from "../confirmation-dialog"
 
 export const UserList = () => {
   const [{ data, fetching, error }] = useAllUsersQuery()
   const [updateUserResult, updateUser] = useUpdateUserMutation()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [pendingUpdate, setPendingUpdate] = useState<{
+    user: AllUsersQuery["listUsers"][number]
+    newRole: UserGroup
+  } | null>(null)
+  
 
   const userRoles = [
     { value: UserGroup.Readers, label: "Reader" },
@@ -21,27 +29,26 @@ export const UserList = () => {
   const roleOptions = userRoles.map((item) => (
     <option key={item.label} value={item.value}>
       {item.label}
-    </option>
+    </option> 
   ))
 
   const handleRoleChange = (
     user: AllUsersQuery["listUsers"][number],
     newRole: UserGroup
   ) => {
-    const confirm = window.confirm(
-      "Press confirm to change user's role to " + newRole
-    )
-
     if (!newRole) return
 
-    if (!confirm) {
-      return
-    }
+    setPendingUpdate({ user, newRole })
+    setDialogOpen(true)
+  }
+
+   const confirmRoleChange = () => {
+    if (!pendingUpdate) return
 
     const userUpdate = {
-      id: user.id,
-      displayName: user.displayName || "",
-      role: newRole,
+      id: pendingUpdate.user.id,
+      displayName: pendingUpdate.user.displayName || "",
+      role: pendingUpdate.newRole,
       avatarUrl: null,
       bio: null,
       location: null,
@@ -49,6 +56,13 @@ export const UserList = () => {
     }
 
     updateUser({ user: userUpdate })
+    setDialogOpen(false)
+    setPendingUpdate(null)
+  }
+
+  const cancelRoleChange = () => {
+    setDialogOpen(false)
+    setPendingUpdate(null)
   }
 
   const handleRemoveUser = (userId: string, displayName: string) => {
@@ -69,6 +83,12 @@ export const UserList = () => {
       return <span style={{ color: "#999" }}>(Pending)</span>
     } else return <></>
   }
+
+  const getRoleLabel = (role: UserGroup) => {
+    return userRoles.find(r => r.value === role)?.label || ""
+  }
+
+
 
   return (
     <>
@@ -109,6 +129,20 @@ export const UserList = () => {
           </div>
         )}
       </main>
+      {pendingUpdate && (
+  <ConfirmationDialog
+    isOpen={dialogOpen}
+    onClose={cancelRoleChange}
+    onConfirm={confirmRoleChange}
+    title="Change User Permissions?"
+    subtitle="Changes have been made to the user(s) below:"
+  >
+    <p>
+      {pendingUpdate.user.displayName || "Unknown user"} will be updated to{" "}
+      {getRoleLabel(pendingUpdate.newRole)}.
+    </p>
+  </ConfirmationDialog>
+)}
     </>
   )
 }
