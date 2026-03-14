@@ -740,6 +740,9 @@ query AllUsers {
     displayName
     createdAt {
       formattedDate
+      day
+      month
+      year
     }
     avatarUrl
     bio

@@ -3374,7 +3374,10 @@ export type AllUsersQuery = { readonly __typename?: "Query" } & {
       | "role"
     > & {
         readonly createdAt: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "formattedDate" | "day" | "month" | "year"
+          >
         >
       }
   >
@@ -4619,6 +4622,9 @@ export const AllUsersDocument = gql`
       displayName
       createdAt {
         formattedDate
+        day
+        month
+        year
       }
       avatarUrl
       bio
