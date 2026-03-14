@@ -3363,7 +3363,20 @@ export type AllUsersQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllUsersQuery = { readonly __typename?: "Query" } & {
   readonly listUsers: ReadonlyArray<
-    { readonly __typename?: "User" } & Pick<User, "id" | "displayName" | "role">
+    { readonly __typename?: "User" } & Pick<
+      User,
+      | "id"
+      | "displayName"
+      | "avatarUrl"
+      | "bio"
+      | "organization"
+      | "location"
+      | "role"
+    > & {
+        readonly createdAt: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+      }
   >
 }
 
@@ -4604,6 +4617,13 @@ export const AllUsersDocument = gql`
     listUsers {
       id
       displayName
+      createdAt {
+        formattedDate
+      }
+      avatarUrl
+      bio
+      organization
+      location
       role
     }
   }

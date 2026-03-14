@@ -6,19 +6,18 @@ import {
   useAllUsersQuery,
   useUpdateUserMutation,
 } from "src/graphql/dailp"
-import * as css from "./user-list.css"
-import { EmptyDialog } from "../empty-dialog"
 import { ConfirmationDialog } from "../confirmation-dialog"
+import { EmptyDialog } from "../empty-dialog"
+import * as css from "./user-list.css"
 
 export const UserList = () => {
   const [{ data, fetching, error }] = useAllUsersQuery()
   const [updateUserResult, updateUser] = useUpdateUserMutation()
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [pendingUpdate, setPendingUpdate] = useState<{
+  const [pendingUserUpdate, setPendingUserUpdate] = useState<{
     user: AllUsersQuery["listUsers"][number]
     newRole: UserGroup
   } | null>(null)
-  
 
   const userRoles = [
     { value: UserGroup.Readers, label: "Reader" },
@@ -29,7 +28,7 @@ export const UserList = () => {
   const roleOptions = userRoles.map((item) => (
     <option key={item.label} value={item.value}>
       {item.label}
-    </option> 
+    </option>
   ))
 
   const handleRoleChange = (
@@ -38,17 +37,17 @@ export const UserList = () => {
   ) => {
     if (!newRole) return
 
-    setPendingUpdate({ user, newRole })
+    setPendingUserUpdate({ user, newRole })
     setDialogOpen(true)
   }
 
-   const confirmRoleChange = () => {
-    if (!pendingUpdate) return
+  const confirmRoleChange = () => {
+    if (!pendingUserUpdate) return
 
     const userUpdate = {
-      id: pendingUpdate.user.id,
-      displayName: pendingUpdate.user.displayName || "",
-      role: pendingUpdate.newRole,
+      id: pendingUserUpdate.user.id,
+      displayName: pendingUserUpdate.user.displayName || "",
+      role: pendingUserUpdate.newRole,
       avatarUrl: null,
       bio: null,
       location: null,
@@ -57,12 +56,12 @@ export const UserList = () => {
 
     updateUser({ user: userUpdate })
     setDialogOpen(false)
-    setPendingUpdate(null)
+    setPendingUserUpdate(null)
   }
 
   const cancelRoleChange = () => {
     setDialogOpen(false)
-    setPendingUpdate(null)
+    setPendingUserUpdate(null)
   }
 
   const handleRemoveUser = (userId: string, displayName: string) => {
@@ -74,21 +73,19 @@ export const UserList = () => {
   }
 
   // katie todo: stub, how to determine if invitation has been accepted?
-  const getPendingStatus = (
+  const getPendingInviteStatus = (
     user: AllUsersQuery["listUsers"][number]
   ): JSX.Element => {
-    const isPending = false
+    const isPendingInvite = false
 
-    if (isPending) {
+    if (isPendingInvite) {
       return <span style={{ color: "#999" }}>(Pending)</span>
     } else return <></>
   }
 
   const getRoleLabel = (role: UserGroup) => {
-    return userRoles.find(r => r.value === role)?.label || ""
+    return userRoles.find((r) => r.value === role)?.label || ""
   }
-
-
 
   return (
     <>
@@ -120,7 +117,7 @@ export const UserList = () => {
                     {roleOptions}
                   </select>
                 </div>
-                <div>{getPendingStatus(user)}</div>
+                <div>{getPendingInviteStatus(user)}</div>
                 <div>
                   <button>Remove User</button>
                 </div>
@@ -129,20 +126,20 @@ export const UserList = () => {
           </div>
         )}
       </main>
-      {pendingUpdate && (
-  <ConfirmationDialog
-    isOpen={dialogOpen}
-    onClose={cancelRoleChange}
-    onConfirm={confirmRoleChange}
-    title="Change User Permissions?"
-    subtitle="Changes have been made to the user(s) below:"
-  >
-    <p>
-      {pendingUpdate.user.displayName || "Unknown user"} will be updated to{" "}
-      {getRoleLabel(pendingUpdate.newRole)}.
-    </p>
-  </ConfirmationDialog>
-)}
+      {pendingUserUpdate && (
+        <ConfirmationDialog
+          isOpen={dialogOpen}
+          onClose={cancelRoleChange}
+          onConfirm={confirmRoleChange}
+          title="Change User Permissions?"
+          subtitle="Changes have been made to the user(s) below:"
+        >
+          <p>
+            {pendingUserUpdate.user.displayName || "Unknown user"} will be
+            updated to {getRoleLabel(pendingUserUpdate.newRole)}.
+          </p>
+        </ConfirmationDialog>
+      )}
     </>
   )
 }

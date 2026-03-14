@@ -1,10 +1,6 @@
 import React, { ReactNode, useEffect } from "react"
 import { MdClose } from "react-icons/md/index"
-import {
-  Dialog,
-  DialogBackdrop,
-  useDialogState,
-} from "reakit"
+import { Dialog, DialogBackdrop, useDialogState } from "reakit"
 import { IconButton } from "src/components"
 import * as css from "./empty-dialog.css"
 
@@ -51,10 +47,8 @@ export const EmptyDialog = ({
 
         {title && <h1 className={css.title}>{title}</h1>}
         {subtitle && <h2 className={css.subtitle}>{subtitle}</h2>}
-        
-        <div className={css.body}>
-          {children}
-        </div>
+
+        <div className={css.body}>{children}</div>
       </Dialog>
     </DialogBackdrop>
   )

@@ -738,6 +738,13 @@ query AllUsers {
   listUsers {
     id
     displayName
+    createdAt {
+      formattedDate
+    }
+    avatarUrl
+    bio
+    organization
+    location
     role
   }
 }
