@@ -1,5 +1,6 @@
 import React from "react"
 import { UserRole } from "src/auth"
+import { Link } from "src/components"
 import { AuthGuard } from "src/components/auth-guard"
 import { ListHeader } from "src/components/user-management/list-header"
 import { UserList } from "src/components/user-management/user-list"
@@ -16,7 +17,9 @@ const ManageUsersPage = () => {
             <header className={fullWidth}>
               <h1>User Management</h1>
             </header>
-            <button className={css.addButton}>+ Add User</button>
+            <Link href="/admin/add-user">
+              <button className={css.addButton}>+ Add User</button>
+            </Link>
           </div>
           <ListHeader>Current Users</ListHeader>
 
