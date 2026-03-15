@@ -82,7 +82,7 @@ export const UserList = () => {
     return userRoles.find((r) => r.value === role)?.label || ""
   }
 
-  const renderUserRow = (users: ReadonlyArray<User>) =>
+  const renderUserRows = (users: ReadonlyArray<User>) =>
     users.map((user) => (
       <div key={user.id} className={css.userRow}>
         <div>{user.displayName || "Email not found"}</div>
@@ -117,7 +117,7 @@ export const UserList = () => {
         ) : !data || !data.listUsers.length ? (
           <>No users found.</>
         ) : (
-          <div className={css.scrollable}>{renderUserRow(data.listUsers)}</div>
+          <div className={css.scrollable}>{renderUserRows(data.listUsers)}</div>
         )}
       </main>
       {pendingUserUpdate && (

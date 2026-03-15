@@ -1,5 +1,4 @@
 import React, { ReactNode, useEffect } from "react"
-import { MdClose } from "react-icons/md/index"
 import { Button, Dialog, DialogBackdrop, useDialogState } from "reakit"
 import * as css from "./empty-dialog.css"
 
