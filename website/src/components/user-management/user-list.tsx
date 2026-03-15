@@ -12,7 +12,7 @@ import { EmptyDialog } from "../empty-dialog"
 import * as css from "./user-list.css"
 
 export const UserList = () => {
-  const [{ data, fetching, error }] = useAllUsersQuery()
+  const [{ data, fetching, error }, reloadUsers] = useAllUsersQuery()
   const [updateUserResult, updateUser] = useUpdateUserMutation()
   const [deleteUserResult, deleteUser] = useDeleteUserMutation()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -77,7 +77,9 @@ export const UserList = () => {
   }
   const confirmDeleteUser = () => {
     if (!pendingDeleteUser) return
-    deleteUser({ userId: pendingDeleteUser.id })
+    deleteUser({ userId: pendingDeleteUser.id }).then(() =>
+      reloadUsers({ requestPolicy: "network-only" })
+    )
     cancelDeleteUser()
   }
 
