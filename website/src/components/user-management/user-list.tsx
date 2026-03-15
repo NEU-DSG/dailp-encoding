@@ -4,6 +4,7 @@ import {
   User,
   UserGroup,
   useAllUsersQuery,
+  useDeleteUserMutation,
   useUpdateUserMutation,
 } from "src/graphql/dailp"
 import { ConfirmationDialog } from "../confirmation-dialog"
@@ -13,11 +14,14 @@ import * as css from "./user-list.css"
 export const UserList = () => {
   const [{ data, fetching, error }] = useAllUsersQuery()
   const [updateUserResult, updateUser] = useUpdateUserMutation()
+  const [deleteUserResult, deleteUser] = useDeleteUserMutation()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pendingUserUpdate, setPendingUserUpdate] = useState<{
     user: User
     newRole: UserGroup
   } | null>(null)
+  const [deleteUserDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [pendingDeleteUser, setPendingDeleteUser] = useState<User | null>(null)
 
   const userRoles = [
     { value: UserGroup.Readers, label: "Reader" },
@@ -61,12 +65,20 @@ export const UserList = () => {
     setPendingUserUpdate(null)
   }
 
-  const handleRemoveUser = (userId: string, displayName: string) => {
+  const handleRemoveUser = (user: User) => {
     // katie todo: connect to aws after rust update
+    setPendingDeleteUser(user)
+    setDeleteDialogOpen(true)
   }
 
-  const handleAddUser = (userId: string, displayName: string) => {
-    // katie todo: connect to aws after rust update
+  const cancelDeleteUser = () => {
+    setDeleteDialogOpen(false)
+    setPendingDeleteUser(null)
+  }
+  const confirmDeleteUser = () => {
+    if (!pendingDeleteUser) return
+    deleteUser({ userId: pendingDeleteUser.id })
+    cancelDeleteUser()
   }
 
   // katie todo: stub, how to determine if invitation has been accepted?
@@ -102,7 +114,7 @@ export const UserList = () => {
         </div>
         <div>{getPendingInviteStatus(user)}</div>
         <div>
-          <button>Remove User</button>
+          <button onClick={() => handleRemoveUser(user)}>Remove User</button>
         </div>
       </div>
     ))
@@ -132,6 +144,17 @@ export const UserList = () => {
             {pendingUserUpdate.user.displayName || "Unknown user"} will be
             updated to {getRoleLabel(pendingUserUpdate.newRole)}.
           </p>
+        </ConfirmationDialog>
+      )}
+      {pendingDeleteUser && (
+        <ConfirmationDialog
+          isOpen={deleteUserDialogOpen}
+          onClose={cancelDeleteUser}
+          onConfirm={confirmDeleteUser}
+          title="Remove This User?"
+          subtitle="You are about to remove the following user:"
+        >
+          <p>{pendingDeleteUser.displayName || "Unknown user"}</p>
         </ConfirmationDialog>
       )}
     </>
