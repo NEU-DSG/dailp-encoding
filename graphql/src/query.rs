@@ -643,6 +643,22 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
+    // Adds a user
+    #[graphql(guard = "AuthGuard")]
+    async fn add_user(
+        &self,
+        context: &Context<'_>,
+        user_id: Uuid,
+        display_name: String,
+        role: UserGroup,
+    ) -> FieldResult<UserId> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_user(user_id, display_name, role)
+            .await?)
+    }
+
     // Deletes a user
     #[graphql(guard = "AuthGuard")]
     async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId> {

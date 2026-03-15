@@ -766,6 +766,27 @@ impl Database {
         })
     }
 
+    // Adds user to dailp_user table
+    // TODO: connect to aws cognito
+    pub async fn add_user(
+        &self,
+        user_id: Uuid,
+        display_name: String,
+        role: UserGroup,
+    ) -> Result<UserId> {
+        let role_str = match role {
+            UserGroup::Readers => "Readers",
+            UserGroup::Editors => "Editors",
+            UserGroup::Contributors => "Contributors",
+            UserGroup::Administrators => "Administrators",
+        };
+        let row = query_file!("queries/add_user.sql", user_id, display_name, role_str)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(UserId(row.id.to_string()))
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }

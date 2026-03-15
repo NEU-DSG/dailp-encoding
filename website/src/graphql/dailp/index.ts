@@ -914,6 +914,7 @@ export type Mutation = {
   readonly addBookmark: AnnotatedDoc
   /** Minimal mutation to add a document with only essential fields */
   readonly addDocument: AddDocumentPayload
+  readonly addUser: Scalars["String"]
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -971,6 +972,12 @@ export type MutationAddBookmarkArgs = {
 
 export type MutationAddDocumentArgs = {
   input: CreateDocumentFromFormInput
+}
+
+export type MutationAddUserArgs = {
+  displayName: Scalars["String"]
+  role: UserGroup
+  userId: Scalars["UUID"]
 }
 
 export type MutationAttachAudioToDocumentArgs = {
