@@ -1287,6 +1287,7 @@ type Mutation {
 	Removes a bookmark from a user's list of bookmarks
 	"""
 	removeBookmark(documentId: UUID!): AnnotatedDoc!
+	deleteUser(userId: UUID!): String!
 	"""
 	Decide if a piece of word audio should be included in edited collection
 	"""

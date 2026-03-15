@@ -942,6 +942,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly deleteUser: Scalars["String"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
@@ -998,6 +999,10 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationDeleteUserArgs = {
+  userId: Scalars["UUID"]
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
