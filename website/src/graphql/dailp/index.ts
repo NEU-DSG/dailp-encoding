@@ -3350,6 +3350,26 @@ export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
   >
 }
 
+export type AddUserMutationVariables = Exact<{
+  userId: Scalars["UUID"]
+  displayName: Scalars["String"]
+  role: UserGroup
+}>
+
+export type AddUserMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "addUser"
+>
+
+export type DeleteUserMutationVariables = Exact<{
+  userId: Scalars["UUID"]
+}>
+
+export type DeleteUserMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "deleteUser"
+>
+
 export type UserByIdQueryVariables = Exact<{
   id: Scalars["UUID"]
 }>
@@ -4598,6 +4618,28 @@ export const UpdateUserDocument = gql`
 export function useUpdateUserMutation() {
   return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
     UpdateUserDocument
+  )
+}
+export const AddUserDocument = gql`
+  mutation addUser($userId: UUID!, $displayName: String!, $role: UserGroup!) {
+    addUser(userId: $userId, displayName: $displayName, role: $role)
+  }
+`
+
+export function useAddUserMutation() {
+  return Urql.useMutation<AddUserMutation, AddUserMutationVariables>(
+    AddUserDocument
+  )
+}
+export const DeleteUserDocument = gql`
+  mutation deleteUser($userId: UUID!) {
+    deleteUser(userId: $userId)
+  }
+`
+
+export function useDeleteUserMutation() {
+  return Urql.useMutation<DeleteUserMutation, DeleteUserMutationVariables>(
+    DeleteUserDocument
   )
 }
 export const UserByIdDocument = gql`
