@@ -98,7 +98,7 @@ export const AdminToolsTab = () => {
           Update Permissions for Existing User
         </Link>
         <br />
-        <Link href="/admin/add-user">Invite new user</Link>
+        <Link href="/admin/add-user">Invite New User</Link>
         <br />
       </div>
       <br />

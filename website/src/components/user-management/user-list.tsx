@@ -9,6 +9,7 @@ import {
 } from "src/graphql/dailp"
 import { ConfirmationDialog } from "../confirmation-dialog"
 import { EmptyDialog } from "../empty-dialog"
+import { RoleDropdown } from "./role-dropdown"
 import * as css from "./user-list.css"
 
 export const UserList = () => {
@@ -20,8 +21,15 @@ export const UserList = () => {
     user: User
     newRole: UserGroup
   } | null>(null)
+  const [roleUpdateSuccessOpen, setRoleUpdateSuccessOpen] = useState(false)
+  const [completedUserUpdate, setCompletedUserUpdate] = useState<{
+    displayName: string
+    newRoleLabel: string
+  } | null>(null)
   const [deleteUserDialogOpen, setDeleteDialogOpen] = useState(false)
   const [pendingDeleteUser, setPendingDeleteUser] = useState<User | null>(null)
+  const [removeSuccessOpen, setRemoveSuccessOpen] = useState(false)
+  const [removedUserName, setRemovedUserName] = useState<string | null>(null)
 
   const userRoles = [
     { value: UserGroup.Readers, label: "Reader" },
@@ -29,11 +37,9 @@ export const UserList = () => {
     { value: UserGroup.Editors, label: "Editor" },
     { value: UserGroup.Administrators, label: "Admin" },
   ]
-  const roleOptions = userRoles.map((item) => (
-    <option key={item.label} value={item.value}>
-      {item.label}
-    </option>
-  ))
+  const getRoleLabel = (role: UserGroup) => {
+    return userRoles.find((r) => r.value === role)?.label || ""
+  }
 
   const handleRoleChange = (user: User, newRole: UserGroup) => {
     if (!newRole) return
@@ -56,8 +62,13 @@ export const UserList = () => {
     }
 
     updateUser({ user: userUpdate })
+    setCompletedUserUpdate({
+      displayName: pendingUserUpdate.user.displayName || "Unknown user",
+      newRoleLabel: getRoleLabel(pendingUserUpdate.newRole),
+    })
     setDialogOpen(false)
     setPendingUserUpdate(null)
+    setRoleUpdateSuccessOpen(true)
   }
 
   const cancelRoleChange = () => {
@@ -77,45 +88,39 @@ export const UserList = () => {
   }
   const confirmDeleteUser = () => {
     if (!pendingDeleteUser) return
+    const displayName = pendingDeleteUser.displayName || "Unknown user"
     deleteUser({ userId: pendingDeleteUser.id }).then(() =>
       reloadUsers({ requestPolicy: "network-only" })
     )
     cancelDeleteUser()
+    setRemovedUserName(displayName)
+    setRemoveSuccessOpen(true)
   }
 
   // katie todo: stub, how to determine if invitation has been accepted?
   const getPendingInviteStatus = (user: User): JSX.Element => {
-    const isPendingInvite = false
+    const isPendingInvite = true
 
     if (isPendingInvite) {
       return <span style={{ color: "#999" }}>(Pending)</span>
     } else return <></>
   }
 
-  const getRoleLabel = (role: UserGroup) => {
-    return userRoles.find((r) => r.value === role)?.label || ""
-  }
-
   const renderUserRows = (users: ReadonlyArray<User>) =>
     users.map((user) => (
       <div key={user.id} className={css.userRow}>
-        <div>{user.displayName || "Email not found"}</div>
-        <div>
-          Role:{" "}
-          <select
-            value={user.role || UserGroup.Readers}
-            onChange={(e) => {
-              const role = userRoles.find(
-                (r) => r.value === e.target.value
-              )?.value
-              if (role) handleRoleChange(user, role)
-            }}
-          >
-            {roleOptions}
-          </select>
+        <div className={css.usernameCell}>
+          {user.displayName || "Error: Email not found"}
         </div>
-        <div>{getPendingInviteStatus(user)}</div>
-        <div>
+        <div className={css.roleCell}>
+          Role:{" "}
+          <RoleDropdown
+            value={user.role || UserGroup.Readers}
+            onChange={(role) => handleRoleChange(user, role)}
+          />
+        </div>
+        <div className={css.pendingCell}>{getPendingInviteStatus(user)}</div>
+        <div className={css.removeCell}>
           <button onClick={() => handleRemoveUser(user)}>Remove User</button>
         </div>
       </div>
@@ -158,6 +163,35 @@ export const UserList = () => {
         >
           <p>{pendingDeleteUser.displayName || "Unknown user"}</p>
         </ConfirmationDialog>
+      )}
+      {completedUserUpdate && (
+        <EmptyDialog
+          isOpen={roleUpdateSuccessOpen}
+          onClose={() => {
+            setRoleUpdateSuccessOpen(false)
+            setCompletedUserUpdate(null)
+          }}
+          title="User Roles Updated"
+          subtitle="An email confirmation has been sent to the user(s) below:"
+        >
+          <p>
+            {completedUserUpdate.displayName} has been updated to a{" "}
+            {completedUserUpdate.newRoleLabel}.
+          </p>
+        </EmptyDialog>
+      )}
+      {removedUserName && (
+        <EmptyDialog
+          isOpen={removeSuccessOpen}
+          onClose={() => {
+            setRemoveSuccessOpen(false)
+            setRemovedUserName(null)
+          }}
+          title="User Removed"
+          subtitle="An email confirmation has been sent to:"
+        >
+          <p>{removedUserName}</p>
+        </EmptyDialog>
       )}
     </>
   )
