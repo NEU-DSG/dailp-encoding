@@ -26,7 +26,9 @@ const IndexPage = () => {
   const [{ data }] = Dailp.useAllPagesQuery()
 
   // Fetch stories
-  const stories = data?.allPages?.filter((p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/"))
+  const stories = data?.allPages?.filter(
+    (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
+  )
 
   // Show loading state while determining user role
   if (userRole === undefined) {
@@ -114,24 +116,22 @@ const IndexPage = () => {
                 </button>
               </div>
             )}
-            <ul>
-              <div className={cardGroup}>
-                {dailp?.allEditedCollections.map((collection) => (
-                  <CollectionCard
-                    key={collection.slug}
-                    thumbnail={collection.thumbnailUrl ?? cwkwLogo}
-                    header={{
-                      text: collection.title,
-                      link: collectionRoute(collection.slug),
-                    }}
-                    description={
-                      collection.description ||
-                      "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
-                    }
-                    buttonLabel="Please click to view the collection"
-                  />
-                ))}
-              </div>
+            <ul className={cardGroup}>
+              {dailp?.allEditedCollections.map((collection) => (
+                <CollectionCard
+                  key={collection.slug}
+                  thumbnail={collection.thumbnailUrl ?? cwkwLogo}
+                  header={{
+                    text: collection.title,
+                    link: collectionRoute(collection.slug),
+                  }}
+                  description={
+                    collection.description ||
+                    "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
+                  }
+                  buttonLabel="Please click to view the collection"
+                />
+              ))}
             </ul>
           </section>
         </article>

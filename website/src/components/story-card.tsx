@@ -1,8 +1,10 @@
+import { MdArrowRightAlt } from "react-icons/md"
 import { Group } from "reakit"
 import DefaultImage from "../assets/DollieDuncan.jpg"
 import {
   cardContent,
   storyCard,
+  storyCardArrow,
   storyCardHeader,
   storyCardImage,
   storyCardSubheading,
@@ -26,7 +28,10 @@ export const StoryCard = (props: {
             props.header.text
           )}
         </h2>
-        <h4 className={storyCardSubheading}>{props.subheading}</h4>
+        {/* <h4 className={storyCardSubheading}>{props.subheading}</h4> */}
+        <a className={storyCardArrow} href={props.header.link}>
+          <MdArrowRightAlt size={32} />
+        </a>
       </div>
     </Group>
   )

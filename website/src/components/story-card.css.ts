@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts, radii } from "src/style/constants"
+import { colors, fonts, radii } from "src/style/constants"
 
 export const storyCard = style({
   display: "flex",
@@ -58,5 +58,11 @@ globalStyle(`${storyCardHeader} a:hover`, {
 
 export const storyCardSubheading = style({
   fontWeight: "bold",
+  marginTop: "10px",
+})
+
+export const storyCardArrow = style({
+  textAlign: "right",
+  color: colors.link,
   marginTop: "10px",
 })

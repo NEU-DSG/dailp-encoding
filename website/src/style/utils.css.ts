@@ -161,7 +161,7 @@ export const cardGroup = style({
   alignItems: "stretch",
   width: "100%",
   maxWidth: "1400px",
-  gridTemplateColumns: "repeat(2, 1fr)",
+  // gridTemplateColumns: "repeat(2, 1fr)",
 
   "@media": {
     // Mobile (stack vertically: 1 per row)
