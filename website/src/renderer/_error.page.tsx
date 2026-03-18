@@ -1,6 +1,6 @@
 import React from "react"
 import { useHasMounted } from "src/cms/routes"
-import Link from "src/components/link"
+import Link from "src/components/link/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { DailpPageContents } from "src/pages/dailp.page"

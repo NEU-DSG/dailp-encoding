@@ -20,36 +20,44 @@ import {
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUser, useUserRole } from "src/auth"
 import { useUserId } from "src/auth"
-import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { IconTextButton } from "src/components/button"
-import { CommentValueProvider } from "src/components/edit-comment-feature"
-import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
-import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
-import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
-import {
-  FormProvider as FormProviderParagraph,
-  useForm as useParagraphForm,
-} from "src/edit-paragraph-form-context"
-import { EditWordCheckProvider } from "src/edit-word-check-context"
-import { FormProvider, useForm } from "src/edit-word-form-context"
+import { IconTextButton } from "src/components/button/button"
 import * as Dailp from "src/graphql/dailp"
+import { useMediaQuery } from "src/hooks/use-media-query"
+import { useScrollableTabState } from "src/hooks/use-scrollable-tabs"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
-import { MorphemeDetails } from "src/morpheme"
-import { DocumentInfo } from "src/pages/documents/document-info"
-import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
-import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import PageImages from "../../page-image"
+import { BookmarkButton } from "./components/bookmark-button/bookmark-button"
+import { CommentStateProvider } from "./components/comment-panel/comment-state-context"
+import { CommentValueProvider } from "./components/comment-section/edit-comment-feature"
+import { DocumentInfo } from "./components/document-info/document-info"
+import { FormProvider as FormProviderDoc } from "./components/edit-doc-data-panel/edit-doc-data-form-context"
+import { EditingProvider } from "./components/edit-doc-data-panel/editing-context"
+import {
+  FormProvider as FormProviderParagraph,
+  useForm as useParagraphForm,
+} from "./components/edit-paragraph-feature/edit-paragraph-form-context"
+import { DocumentAudioWithCurate } from "./components/edit-word-audio/editor"
+import { EditWordCheckProvider } from "./components/edit-word-feature/edit-word-check-context"
+import {
+  FormProvider,
+  useForm,
+} from "./components/edit-word-feature/edit-word-form-context"
+import { MorphemeDetails } from "./components/morpheme/morpheme"
+import PageImages from "./components/page-image/page-image"
+import {
+  PanelDetails,
+  PanelLayout,
+  PanelSegment,
+} from "./components/panel-layout/panel-layout"
+import { RecordDocumentAudioPanel } from "./components/record-document-audio-panel/record-document-audio-panel"
+import { AnnotatedForm, DocumentPage } from "./components/segment/segment"
 import * as css from "./document.css"
-import { EditingProvider } from "./editing-context"
+import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -590,45 +598,5 @@ export const DocumentTitleHeader = (p: {
         </div>
       </div>
     </header>
-  )
-}
-
-/** Button that allows users to bookmark a document */
-export const BookmarkButton = (props: {
-  documentId: String
-  isBookmarked: boolean
-}) => {
-  const [addBookmarkMutationResult, addBookmarkMutation] =
-    Dailp.useAddBookmarkMutation()
-  const [removeBookmarkMutationResult, removeBookmarkMutation] =
-    Dailp.useRemoveBookmarkMutation()
-
-  return (
-    <>
-      {props.isBookmarked ? (
-        // Displays a "Cancel" button and "Save" button in editing mode.
-        <>
-          <IconTextButton
-            icon={<MdOutlineBookmarkRemove />}
-            className={css.BookmarkButton}
-            onClick={() => {
-              removeBookmarkMutation({ documentId: props.documentId })
-            }}
-          >
-            Un-Bookmark
-          </IconTextButton>
-        </>
-      ) : (
-        <IconTextButton
-          icon={<MdOutlineBookmarkAdd />}
-          className={css.BookmarkButton}
-          onClick={() => {
-            addBookmarkMutation({ documentId: props.documentId })
-          }}
-        >
-          Bookmark
-        </IconTextButton>
-      )}
-    </>
   )
 }

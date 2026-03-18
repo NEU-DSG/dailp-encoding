@@ -12,7 +12,7 @@ import {
 } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
-import { Alert } from "../components/alert"
+import { Alert } from "../components/alert/alert"
 import Layout from "../layout"
 import chapterPageRoute from "./edited-collections/chapter.page.route"
 

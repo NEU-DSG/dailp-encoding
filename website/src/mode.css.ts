@@ -9,8 +9,11 @@ import {
 import { marginY, paddingX } from "src/style/utils"
 import { fullWidth, hideOnPrint, paddingAround } from "src/style/utils.css"
 import { drawerBg } from "./menu.css"
+import {
+  collPanelButton,
+  wordPanelButton,
+} from "./pages/documents/components/panel-layout/panel-layout.css"
 import { morphemeDialog } from "./pages/documents/document.css"
-import { collPanelButton, wordPanelButton } from "./panel-layout.css"
 
 export const highlightedLabel = style({
   outlineStyle: "dashed",

@@ -1,6 +1,6 @@
 import React from "react"
 import { UserRole } from "src/auth"
-import { AuthGuard } from "src/components/auth-guard"
+import { AuthGuard } from "src/components/auth-guard/auth-guard"
 import { EditableNavMenu } from "src/components/editable/EditNavMenu"
 import Layout from "src/layout"
 

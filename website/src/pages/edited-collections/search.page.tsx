@@ -1,7 +1,7 @@
 import { useDebounce } from "@react-hook/debounce"
 import QueryString from "query-string"
 import React, { useEffect } from "react"
-import { LexicalSearch } from "src/components/lexical-search"
+import { LexicalSearch } from "src/components/lexical-search/lexical-search"
 import { useLocation } from "src/renderer/PageShell"
 import CWKWLayout from "../cwkw/cwkw-layout"
 

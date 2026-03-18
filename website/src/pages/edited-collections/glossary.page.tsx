@@ -1,5 +1,5 @@
 import React from "react"
-import { Glossary } from "src/components/glossary"
+import { Glossary } from "src/components/glossary/glossary"
 import CWKWLayout from "../cwkw/cwkw-layout"
 
 // not sure how to use collectionslug yet

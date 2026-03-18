@@ -4,8 +4,8 @@ import {
   DocumentFieldsFragment,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
-import { useScrollableTabState } from "src/scrollable-tabs"
-import Link from "../link"
+import { useScrollableTabState } from "src/hooks/use-scrollable-tabs"
+import Link from "../link/link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 
