@@ -66,39 +66,13 @@ const IndexPage = () => {
 
           <section className="section">
             <h1 id="collection-section">Latest Stories</h1>
-            {/* <div className={storyCardGroup}>
-              <StoryCard
-                thumbnail="https://wp.dailp.northeastern.edu/wp-content/uploads/2022/06/20181124-IMG-1118-PS-bw-WKG1-1.jpeg"
-                header={{
-                  text: "Dollie Duncan Letter Inspires Opera",
-                  link: "https://dev.dailp.northeastern.edu/dollie-duncan-letter-inspires-opera",
-                }}
-                subheading="Victor Mendevil"
-              />
-
-              <StoryCard
-                header={{
-                  text: "About the Editors of CWKW",
-                  link: "https://dev.dailp.northeastern.edu/editors",
-                }}
-                subheading="Megan Cassidy"
-              />
-
-              <StoryCard
-                header={{
-                  text: "The Importance of Language Persistence",
-                  link: "https://dev.dailp.northeastern.edu/dailp-language-preservation-narrative",
-                }}
-                subheading="Megan Cassidy"
-              />
-            </div> */}
-
             <div className={storyCardGroup}>
               {stories?.slice(0, 3).map((story) => (
                 <StoryCard
                   key={story.path}
                   header={{
-                    text: story.path,
+                    // TODO make this data
+                    text: story.path.substring(8).replace("-", " "),
                     link: story.path,
                   }}
                   subheading=""
