@@ -1,6 +1,8 @@
 import React from "react"
+import { CancelButton } from "./cancel-button"
 import * as css from "./confirmation-dialog.css"
 import { EmptyDialog } from "./empty-dialog"
+import { SubmitButton } from "./submit-button"
 
 interface ConfirmationDialogProps {
   isOpen: boolean
@@ -31,12 +33,8 @@ export const ConfirmationDialog = ({
       {children}
 
       <div className={css.buttons}>
-        <button onClick={onClose} className={css.cancelButton}>
-          Cancel
-        </button>
-        <button onClick={onConfirm} className={css.confirmButton}>
-          Submit
-        </button>
+        <CancelButton onClick={onClose} />
+        <SubmitButton onClick={onConfirm} />
       </div>
     </EmptyDialog>
   )
