@@ -1,4 +1,4 @@
-import { MdArrowRightAlt } from "react-icons/md"
+import { MdArrowRightAlt } from "react-icons/md/index"
 import { Group } from "reakit"
 import DefaultImage from "../assets/DollieDuncan.jpg"
 import {
