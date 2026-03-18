@@ -26,7 +26,7 @@ const IndexPage = () => {
   const [{ data }] = Dailp.useAllPagesQuery()
 
   // Fetch stories
-  const stories = data?.allPages?.filter((p) => p.path?.includes("/stories/"))
+  const stories = data?.allPages?.filter((p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/"))
 
   // Show loading state while determining user role
   if (userRole === undefined) {
@@ -71,11 +71,20 @@ const IndexPage = () => {
                 <StoryCard
                   key={story.path}
                   header={{
-                    // TODO make this data
-                    text: story.path.substring(8).replace("-", " "),
+                    // FIXME replace this nasty string manipulation with the actual title by adding the title to GQL
+                    // This string manipulation converts from paths (/(stories|spotlights)/[title]
+                    text:
+                      story.path
+                        .split("/")
+                        .pop()
+                        ?.split("-")
+                        .map(
+                          (word) => word[0]?.toUpperCase() + word.substring(1)
+                        )
+                        .join(" ") || "", // story.title
                     link: story.path,
                   }}
-                  subheading=""
+                  subheading="" // story.description
                 />
               ))}
             </div>
