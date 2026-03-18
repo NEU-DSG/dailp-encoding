@@ -977,7 +977,6 @@ export type MutationAddDocumentArgs = {
 export type MutationAddUserArgs = {
   displayName: Scalars["String"]
   role: UserGroup
-  userId: Scalars["UUID"]
 }
 
 export type MutationAttachAudioToDocumentArgs = {
@@ -4622,7 +4621,7 @@ export function useUpdateUserMutation() {
 }
 export const AddUserDocument = gql`
   mutation addUser($userId: UUID!, $displayName: String!, $role: UserGroup!) {
-    addUser(userId: $userId, displayName: $displayName, role: $role)
+    addUser(displayName: $displayName, role: $role)
   }
 `
 

@@ -648,14 +648,13 @@ impl Mutation {
     async fn add_user(
         &self,
         context: &Context<'_>,
-        user_id: Uuid,
         display_name: String,
         role: UserGroup,
     ) -> FieldResult<UserId> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .add_user(user_id, display_name, role)
+            .add_user(display_name, role)
             .await?)
     }
 

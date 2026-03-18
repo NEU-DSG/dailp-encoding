@@ -110,7 +110,7 @@ export const UserList = () => {
     users.map((user) => (
       <div key={user.id} className={css.userRow}>
         <div className={css.usernameCell}>
-          {user.displayName || "Error: Email not found"}
+          {user.displayName || "Email not found"}
         </div>
         <div className={css.roleCell}>
           Role:{" "}

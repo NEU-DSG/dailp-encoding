@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import { Label, Link } from "src/components"
 import { UserGroup } from "src/graphql/dailp"
-import { RoleDropdown } from "./role-dropdown"
 import * as css from "./invite-form.css"
+import { RoleDropdown } from "./role-dropdown"
 
 export interface UserEntry {
   email: string
@@ -10,7 +10,11 @@ export interface UserEntry {
   personalMessage: string
 }
 
-const initialEntry: UserEntry = { email: "", role: UserGroup.Readers, personalMessage: "" }
+const initialEntry: UserEntry = {
+  email: "",
+  role: UserGroup.Readers,
+  personalMessage: "",
+}
 const requiredMark = <span style={{ color: "#9f4d43" }}>*</span>
 
 export const InviteForm = () => {
@@ -20,11 +24,7 @@ export const InviteForm = () => {
     setUsers((prev) => [...prev, { ...initialEntry }])
   }
 
-  const updateUser = (
-    index: number,
-    field: keyof UserEntry,
-    value: string
-  ) => {
+  const updateUser = (index: number, field: keyof UserEntry, value: string) => {
     setUsers((prev) =>
       prev.map((user, i) => (i === index ? { ...user, [field]: value } : user))
     )
