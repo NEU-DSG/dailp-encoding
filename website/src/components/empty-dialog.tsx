@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect } from "react"
-import { Button, Dialog, DialogBackdrop, useDialogState } from "reakit"
+import { Dialog, DialogBackdrop, useDialogState } from "reakit"
+import { CloseButton } from "./close-button"
 import * as css from "./empty-dialog.css"
 
 interface EmptyDialogProps {
@@ -40,13 +41,9 @@ export const EmptyDialog = ({
         aria-label={title || "Dialog"}
         hideOnClickOutside={false}
       >
-        <Button
-          className={css.closeButton}
-          onClick={handleClose}
-          aria-label="Close dialog"
-        >
-          X
-        </Button>
+        <div className={css.closeButtonContainer}>
+          <CloseButton onClick={handleClose} />
+        </div>
 
         {title && <h1 className={css.title}>{title}</h1>}
         {subtitle && <h2 className={css.subtitle}>{subtitle}</h2>}

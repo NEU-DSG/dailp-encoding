@@ -1,5 +1,8 @@
 import React, { useState } from "react"
-import { Label, Link } from "src/components"
+import { Label } from "src/components"
+import { CancelButton } from "src/components/cancel-button"
+import { CloseButton } from "src/components/close-button"
+import { SubmitButton } from "src/components/submit-button"
 import { UserGroup } from "src/graphql/dailp"
 import * as css from "./invite-form.css"
 import { RoleDropdown } from "./role-dropdown"
@@ -7,18 +10,17 @@ import { RoleDropdown } from "./role-dropdown"
 export interface UserEntry {
   email: string
   role: UserGroup
-  personalMessage: string
 }
 
 const initialEntry: UserEntry = {
   email: "",
   role: UserGroup.Readers,
-  personalMessage: "",
 }
 const requiredMark = <span style={{ color: "#9f4d43" }}>*</span>
 
 export const InviteForm = () => {
   const [users, setUsers] = useState<UserEntry[]>([initialEntry])
+  const [personalMessage, setPersonalMessage] = useState("")
 
   const addAnotherUser = () => {
     setUsers((prev) => [...prev, { ...initialEntry }])
@@ -28,6 +30,10 @@ export const InviteForm = () => {
     setUsers((prev) =>
       prev.map((user, i) => (i === index ? { ...user, [field]: value } : user))
     )
+  }
+
+  const removeUser = (index: number) => {
+    setUsers((prev) => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -59,26 +65,27 @@ export const InviteForm = () => {
                 onChange={(role) => updateUser(index, "role", role)}
               />
             </div>
-          </div>
 
-          <div className={css.messageContainer}>
-            <Label
-              className={css.fieldLabel}
-              htmlFor={`personal-message-${index}`}
-            >
-              Personal Message
-            </Label>
-            <textarea
-              id={`personal-message-${index}`}
-              className={css.messageTextarea}
-              value={user.personalMessage}
-              onChange={(e) =>
-                updateUser(index, "personalMessage", e.target.value)
-              }
-            />
+            {index > 0 && (
+              <div className={css.rowCloseButton}>
+                <CloseButton onClick={() => removeUser(index)} />
+              </div>
+            )}
           </div>
         </div>
       ))}
+
+      <div className={css.messageContainer}>
+        <Label className={css.fieldLabel} htmlFor="personal-message">
+          Personal Message
+        </Label>
+        <textarea
+          id="personal-message"
+          className={css.messageTextarea}
+          value={personalMessage}
+          onChange={(e) => setPersonalMessage(e.target.value)}
+        />
+      </div>
 
       <div className={css.addAnotherContainer}>
         <button
@@ -91,14 +98,8 @@ export const InviteForm = () => {
       </div>
 
       <div className={css.actionButtons}>
-        <Link href="/admin/manage-users">
-          <button type="button" className={css.cancelButton}>
-            Cancel
-          </button>
-        </Link>
-        <button type="submit" className={css.submitButton}>
-          Submit
-        </button>
+        <CancelButton href="/admin/manage-users" />
+        <SubmitButton type="submit" />
       </div>
     </>
   )

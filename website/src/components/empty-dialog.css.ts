@@ -1,6 +1,5 @@
 import { style } from "@vanilla-extract/css"
 import {
-  hsize,
   hspace,
   layers,
   mediaQueries,
@@ -39,20 +38,10 @@ export const dialog = style({
   },
 })
 
-export const closeButton = style({
+export const closeButtonContainer = style({
   position: "absolute",
   top: space.large,
   right: space.large,
-  width: "2rem",
-  height: "1.5rem",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  backgroundColor: "#965f5a",
-  border: `${thickness.thin} solid #5c3b37`,
-  font: `normal 400 1rem/1.2 'Charis SIL'`,
-  color: "white",
 })
 
 export const title = style({

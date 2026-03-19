@@ -63,28 +63,12 @@ export const addAnotherButton = style({
   padding: `${space.small} ${space.large}`,
 })
 
+export const rowCloseButton = style({
+  marginTop: "0.5rem",
+  alignSelf: "flex-start",
+})
+
 export const actionButtons = style({
   display: "flex",
   gap: space.medium,
-})
-
-export const cancelButton = style({
-  width: "8.625rem",
-  height: "1.9375rem",
-  cursor: "pointer",
-  border: `${thickness.thin} solid #5c3b37`,
-  borderRadius: radii.large,
-  backgroundColor: "#ffffff",
-  font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
-})
-
-export const submitButton = style({
-  width: "8.625rem",
-  height: "1.9375rem",
-  cursor: "pointer",
-  border: `${thickness.thin} solid #5c3b37`,
-  borderRadius: radii.large,
-  backgroundColor: "#415373",
-  color: "white",
-  font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
 })
