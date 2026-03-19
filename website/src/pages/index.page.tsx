@@ -52,7 +52,7 @@ const IndexPage = () => {
       <HomepageHeader
         button_left={{
           text: "Our Team",
-          link: "/home/credits/",
+          link: "/about/team/", // TODO make this link dynamic
         }}
         button_right={{
           text: "Our Collections",
@@ -67,7 +67,7 @@ const IndexPage = () => {
           </section>
 
           <section className="section">
-            <h1 id="collection-section">Latest Stories</h1>
+            <h1 id="stories-section">Latest Stories</h1>
             <div className={storyCardGroup}>
               {stories?.slice(0, 3).map((story) => (
                 <StoryCard
