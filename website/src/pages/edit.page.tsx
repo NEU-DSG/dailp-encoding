@@ -33,10 +33,10 @@ const NewPage = () => {
   const formatPath = (path: string) => {
     return path.startsWith("/")
       ? path
-      : `/${path}`
+      : `/${path
           .toLowerCase()
           .replace(/ /g, "-")
-          .replace(/[^a-z0-9-]/g, "")
+          .replace(/[^a-z0-9-]/g, "")}`
   }
 
   const [{ data }, reexec] = usePageByPathQuery({
