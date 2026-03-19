@@ -105,7 +105,9 @@ const NewPage = () => {
   const validatePath = (path: string): string | null => {
     const formatted = formatPath(path)
     const pathSegments = formatted.split("/").filter(Boolean) // Remove empty strings
-
+    if (path.trim().length == 0 || path == "/new-page") {
+      return `Please provide a meaningful path.`
+    }
     // Check if any segment contains a disallowed word
     for (const segment of pathSegments) {
       for (const disallowed of DISALLOWED_WORDS) {
