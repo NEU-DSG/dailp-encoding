@@ -52,7 +52,7 @@ const IndexPage = () => {
       <HomepageHeader
         button_left={{
           text: "Our Team",
-          link: "/home/credits/",
+          link: "/about/team/",
         }}
         button_right={{
           text: "Our Collections",
