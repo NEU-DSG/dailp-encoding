@@ -8,6 +8,7 @@ import Link from "src/components/link"
 import "src/style/global.css"
 import { themeClass } from "src/theme.css"
 import { LayoutClient } from "./client/layout"
+import NavBar from "./components/nav-bar"
 import { Environment, deploymentEnvironment } from "./env"
 import Footer from "./footer"
 import * as css from "./layout.css"
@@ -46,7 +47,8 @@ const Layout: React.FC = ({ children }) => {
             <LoginHeaderButton />
             <HeaderPrefDrawer />
           </div>
-          <NavMenu menuID={2} />
+          {/* <NavMenu menuID={2} /> */}
+          <NavBar />
         </header>
         {children}
         <Footer />
