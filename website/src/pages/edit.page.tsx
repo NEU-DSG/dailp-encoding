@@ -31,12 +31,13 @@ const NewPage = () => {
   const [isNew, setIsNew] = useState(true)
 
   const formatPath = (path: string) => {
-    return path.startsWith("/")
-      ? path
-      : `/${path
-          .toLowerCase()
-          .replace(/ /g, "-")
-          .replace(/[^a-z0-9-]/g, "")}`
+    let regularizedPath = path
+      .toLowerCase()
+      .replace(/ /g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+    return regularizedPath.startsWith("/")
+      ? regularizedPath
+      : `/${regularizedPath}`
   }
 
   const [{ data }, reexec] = usePageByPathQuery({
