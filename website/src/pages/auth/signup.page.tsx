@@ -39,7 +39,7 @@ const SignupPage = () => {
       //   token: turnstileToken,
       // }).then((result) => {
       //   if (result.data?.validateTurnstileToken) {
-      //     createUser(values.email, values.password)
+      createUser(values.email, values.password)
       //   } else {
       //     throw { turnstileToken: "Invalid turnstile token" }
       //   }

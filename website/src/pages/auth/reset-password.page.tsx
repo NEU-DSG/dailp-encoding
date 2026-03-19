@@ -68,7 +68,7 @@ const ResetPasswordPage = () => {
       //   token: turnstileToken,
       // }).then((result) => {
       //   if (result.data?.validateTurnstileToken) {
-      //     changePassword(values.verificationCode, values.newPassword)
+      changePassword(values.verificationCode, values.newPassword)
       //   } else {
       //     throw { turnstileToken: "Invalid turnstile token" }
       //   }
