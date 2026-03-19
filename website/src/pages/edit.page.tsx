@@ -83,13 +83,14 @@ const NewPage = () => {
 
     if (error !== null) {
       alert("error: " + error)
+      setError(null)
       return
     }
     upsertPage({
       pageInput: {
         title,
         body: [content],
-        path: path,
+        path: formatPath(path),
       },
     }).then((res) => {
       if (res.error) {
