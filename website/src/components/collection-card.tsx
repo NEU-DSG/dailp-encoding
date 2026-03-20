@@ -27,7 +27,9 @@ export const CollectionCard = (props: {
           )}
         </h2>
         <p className={collectionCardText}>{props.description}</p>
-        <Button className={actionButton}>{props.buttonLabel}</Button>
+        <a href={props.header.link} className={actionButton}>
+          {props.buttonLabel}
+        </a>
       </div>
     </Group>
   )
