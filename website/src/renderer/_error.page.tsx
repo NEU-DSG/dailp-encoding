@@ -19,11 +19,13 @@ export const Page = () => {
 
 const ClientPage = () => {
   const location = useLocation()
+  const path = location.pathname.endsWith("/")
+    ? location.pathname.slice(0, -1)
+    : location.pathname
+
   const [{ data, fetching }] = Dailp.usePageByPathQuery({
     variables: {
-      path: location.pathname.endsWith("/")
-        ? location.pathname.slice(0, -1)
-        : location.pathname,
+      path: path,
     },
     requestPolicy: "network-only",
   })
@@ -31,7 +33,7 @@ const ClientPage = () => {
   if (fetching) {
     return null
   } else if (data && data.pageByPath) {
-    return <DailpPageContents path={location.pathname} />
+    return <DailpPageContents path={path} />
   } else {
     return <NotFound />
   }
