@@ -22,8 +22,8 @@ const ClientPage = () => {
   const [{ data, fetching }] = Dailp.usePageByPathQuery({
     variables: {
       path: location.pathname.endsWith("/")
-        ? location.pathname
-        : location.pathname.slice(0, -1),
+        ? location.pathname.slice(0, -1)
+        : location.pathname,
     },
     requestPolicy: "network-only",
   })
