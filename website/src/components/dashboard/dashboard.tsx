@@ -102,9 +102,11 @@ export const AdminToolsTab = () => {
 
       <div>
         <h2>Content Management</h2>
+        {/* TODO move to /edit/menu */}
         <Link href="/admin/edit-menu">Edit Main Menu</Link>
         <br />
-        <Link href="/edit/new-page">New Page</Link>
+        {/* TODO allow creation of pages at /edit/new-page */}
+        <Link href="/edit/?path=/new-page">New Page</Link>
       </div>
     </>
   )
