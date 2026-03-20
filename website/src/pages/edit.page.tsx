@@ -34,7 +34,7 @@ const NewPage = () => {
     let regularizedPath = path
       .toLowerCase()
       .replace(/ /g, "-")
-      .replace(/[^a-z0-9-]/g, "")
+      .replace(/[^a-z0-9-/]/g, "")
     return regularizedPath.startsWith("/")
       ? regularizedPath
       : `/${regularizedPath}`
@@ -59,20 +59,20 @@ const NewPage = () => {
   const [_, upsertPage] = useUpsertPageMutation()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
+    let error: string | null = null
     if (content.length === 0 || title.length === 0 || path.length === 0) {
-      setError("Please fill in all fields")
-      return
+      error = "Please fill in all fields"
+    } else {
+      error = validatePath(path)
     }
-    // check if path is poorly formatted
-    const pathError = validatePath(path)
-    if (pathError) {
-      setError(pathError)
-      return
-    }
-
-    //setPath(formatPath(isNew ? "/pages" + path : path))
 
     reexec({ variables: { path } })
+    if (error !== null) {
+      alert("error: " + error)
+      setError(error)
+      return
+    }
     if (!isNew) {
       const confirm = window.confirm(
         "Page already exists. Would you like to overwrite it?"
@@ -82,11 +82,6 @@ const NewPage = () => {
       }
     }
 
-    if (error !== null) {
-      alert("error: " + error)
-      setError(null)
-      return
-    }
     upsertPage({
       pageInput: {
         title,
