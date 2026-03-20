@@ -82,7 +82,7 @@ export const AdminToolsTab = () => {
         <h2>Manage Edited Collections</h2>
         <Link href="/collections/new">Create New Collection</Link>
         <br />
-        <Link href="#">Edit Existing Collection</Link>
+        {/* <Link href="#">Edit Existing Collection</Link> */}
       </div>
       <br />
 
@@ -91,14 +91,14 @@ export const AdminToolsTab = () => {
         <Link href="/documents/new">Create New Document(s)</Link>
       </div>
 
-      <br />
+      {/* <br />
       <div>
         <h2>Manage Users</h2>
         <Link href="#">Update Permissions for Existing User</Link>
         <br />
         <Link href="#">Manage Teams</Link>
       </div>
-      <br />
+      <br /> */}
 
       <div>
         <h2>Content Management</h2>
