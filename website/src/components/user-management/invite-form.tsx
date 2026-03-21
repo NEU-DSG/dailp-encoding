@@ -2,8 +2,9 @@ import React, { useState } from "react"
 import { Label } from "src/components"
 import { CancelButton } from "src/components/cancel-button"
 import { CloseButton } from "src/components/close-button"
+import { EmptyDialog } from "src/components/empty-dialog"
 import { SubmitButton } from "src/components/submit-button"
-import { UserGroup } from "src/graphql/dailp"
+import { UserGroup, useAddUserMutation } from "src/graphql/dailp"
 import * as css from "./invite-form.css"
 import { RoleDropdown } from "./role-dropdown"
 
@@ -21,6 +22,25 @@ const requiredMark = <span style={{ color: "#9f4d43" }}>*</span>
 export const InviteForm = () => {
   const [users, setUsers] = useState<UserEntry[]>([initialEntry])
   const [personalMessage, setPersonalMessage] = useState("")
+  const [, addUser] = useAddUserMutation()
+  const [successOpen, setSuccessOpen] = useState(false)
+  const [submittedUsers, setSubmittedUsers] = useState<UserEntry[]>([])
+
+  const roleLabel = (role: UserGroup) => {
+    const labels: Record<UserGroup, string> = {
+      [UserGroup.Readers]: "Reader",
+      [UserGroup.Contributors]: "Contributor",
+      [UserGroup.Editors]: "Editor",
+      [UserGroup.Administrators]: "Admin",
+    }
+    return labels[role] ?? role
+  }
+
+  const handleSubmit = (entries: UserEntry[]) => {
+    entries.map((user) => addUser({ displayName: user.email, role: user.role }))
+    setSubmittedUsers(entries)
+    setSuccessOpen(true)
+  }
 
   const addAnotherUser = () => {
     setUsers((prev) => [...prev, { ...initialEntry }])
@@ -68,7 +88,10 @@ export const InviteForm = () => {
 
             {index > 0 && (
               <div className={css.rowCloseButton}>
-                <CloseButton onClick={() => removeUser(index)} />
+                <CloseButton
+                  onClick={() => removeUser(index)}
+                  className={css.rowCloseButtonOffset}
+                />
               </div>
             )}
           </div>
@@ -99,8 +122,21 @@ export const InviteForm = () => {
 
       <div className={css.actionButtons}>
         <CancelButton href="/admin/manage-users" />
-        <SubmitButton type="submit" />
+        <SubmitButton type="submit" onClick={() => handleSubmit(users)} />
       </div>
+
+      <EmptyDialog
+        isOpen={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        title="User Successfully Added"
+        subtitle="An email invitation has been sent to the user(s) below:"
+      >
+        {submittedUsers.map((user, index) => (
+          <p key={index}>
+            {user.email} has been added to the site as a {roleLabel(user.role)}.
+          </p>
+        ))}
+      </EmptyDialog>
     </>
   )
 }

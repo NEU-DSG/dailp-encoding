@@ -717,7 +717,7 @@ mutation updateUser($user: UserUpdate!) {
   }
 }
 
-mutation addUser($userId: UUID!, $displayName: String!, $role: UserGroup!) {
+mutation addUser($displayName: String!, $role: UserGroup!) {
   addUser(displayName: $displayName, role: $role)
 }
 

@@ -3350,7 +3350,6 @@ export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
 }
 
 export type AddUserMutationVariables = Exact<{
-  userId: Scalars["UUID"]
   displayName: Scalars["String"]
   role: UserGroup
 }>
@@ -4620,7 +4619,7 @@ export function useUpdateUserMutation() {
   )
 }
 export const AddUserDocument = gql`
-  mutation addUser($userId: UUID!, $displayName: String!, $role: UserGroup!) {
+  mutation addUser($displayName: String!, $role: UserGroup!) {
     addUser(displayName: $displayName, role: $role)
   }
 `

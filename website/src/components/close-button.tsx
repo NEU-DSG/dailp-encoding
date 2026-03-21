@@ -4,11 +4,16 @@ import * as css from "./close-button.css"
 
 interface CloseButtonProps {
   onClick: () => void
+  className?: string
 }
 
-export const CloseButton = ({ onClick }: CloseButtonProps) => {
+export const CloseButton = ({ onClick, className }: CloseButtonProps) => {
   return (
-    <Button className={css.closeButton} onClick={onClick} aria-label="Close">
+    <Button
+      className={`${css.closeButton}${className ? ` ${className}` : ""}`}
+      onClick={onClick}
+      aria-label="Close"
+    >
       X
     </Button>
   )

@@ -64,8 +64,15 @@ export const addAnotherButton = style({
 })
 
 export const rowCloseButton = style({
-  marginTop: "0.5rem",
+  marginTop: "1rem",
+  marginLeft: "-2.9rem",
   alignSelf: "flex-start",
+})
+
+export const rowCloseButtonOffset = style({
+  position: "relative",
+  top: "0.5rem",
+  left: "2.5rem",
 })
 
 export const actionButtons = style({
