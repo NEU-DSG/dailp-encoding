@@ -148,8 +148,14 @@ export const UserList = () => {
           subtitle="Changes have been made to the user(s) below:"
         >
           <p>
-            {pendingUserUpdate.user.displayName || "Unknown user"} will be
-            updated to {getRoleLabel(pendingUserUpdate.newRole)}.
+            <span className={css.dialogUsername}>
+              {pendingUserUpdate.user.displayName || "Unknown user"}
+            </span>{" "}
+            will be updated to{" "}
+            <span className={css.dialogRole}>
+              {getRoleLabel(pendingUserUpdate.newRole)}
+            </span>
+            .
           </p>
         </ConfirmationDialog>
       )}
@@ -161,7 +167,11 @@ export const UserList = () => {
           title="Remove This User?"
           subtitle="You are about to remove the following user:"
         >
-          <p>{pendingDeleteUser.displayName || "Unknown user"}</p>
+          <p>
+            <span className={css.dialogUsername}>
+              {pendingDeleteUser.displayName || "Unknown user"}
+            </span>
+          </p>
         </ConfirmationDialog>
       )}
       {completedUserUpdate && (
@@ -175,8 +185,14 @@ export const UserList = () => {
           subtitle="An email confirmation has been sent to the user(s) below:"
         >
           <p>
-            {completedUserUpdate.displayName} has been updated to a{" "}
-            {completedUserUpdate.newRoleLabel}.
+            <span className={css.dialogUsername}>
+              {completedUserUpdate.displayName}
+            </span>{" "}
+            has been updated to a{" "}
+            <span className={css.dialogRole}>
+              {completedUserUpdate.newRoleLabel}
+            </span>
+            .
           </p>
         </EmptyDialog>
       )}
@@ -190,7 +206,9 @@ export const UserList = () => {
           title="User Removed"
           subtitle="An email confirmation has been sent to:"
         >
-          <p>{removedUserName}</p>
+          <p>
+            <span className={css.dialogUsername}>{removedUserName}</span>
+          </p>
         </EmptyDialog>
       )}
     </>

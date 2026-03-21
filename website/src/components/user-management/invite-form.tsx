@@ -133,7 +133,9 @@ export const InviteForm = () => {
       >
         {submittedUsers.map((user, index) => (
           <p key={index}>
-            {user.email} has been added to the site as a {roleLabel(user.role)}.
+            <span className={css.dialogUsername}>{user.email}</span> has been
+            added to the site as a{" "}
+            <span className={css.dialogRole}>{roleLabel(user.role)}</span>.
           </p>
         ))}
       </EmptyDialog>

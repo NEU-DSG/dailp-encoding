@@ -79,3 +79,11 @@ export const actionButtons = style({
   display: "flex",
   gap: space.medium,
 })
+
+export const dialogUsername = style({
+  color: "#415373",
+})
+
+export const dialogRole = style({
+  color: "#9f4d43",
+})

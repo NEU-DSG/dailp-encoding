@@ -65,3 +65,11 @@ export const pendingCell = style({
 export const removeCell = style({
   marginRight: 0,
 })
+
+export const dialogUsername = style({
+  color: "#415373",
+})
+
+export const dialogRole = style({
+  color: "#9f4d43",
+})
