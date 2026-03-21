@@ -13,6 +13,23 @@ interface NewEditedCollectionForm {
   thumbnail: File | null
 }
 
+interface MenuItemLike {
+  label: string
+  path: string
+  items?: ReadonlyArray<MenuItemLike> | null
+}
+
+const toMenuItemInput = (
+  nodes: ReadonlyArray<MenuItemLike> | null | undefined
+): ReadonlyArray<Dailp.MenuItemInput> | null => {
+  if (!nodes?.length) return null
+  return nodes.map((n) => ({
+    label: n.label,
+    path: n.path,
+    items: toMenuItemInput(n.items),
+  }))
+}
+
 const NewEditedCollectionPage = () => {
   const { user } = useUser()
   const [formData, setFormData] = useState<NewEditedCollectionForm>({
@@ -23,6 +40,10 @@ const NewEditedCollectionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [, addEditedCollection] = Dailp.useAddEditedCollectionMutation()
+  const [, updateMenu] = Dailp.useUpdateMenuMutation()
+  const [{ data: menuData }] = Dailp.useMenuBySlugQuery({
+    variables: { slug: "default-nav" },
+  })
 
   const handleEditedCollectionSubmit = async (
     e: React.FormEvent<HTMLFormElement>
@@ -60,8 +81,41 @@ const NewEditedCollectionPage = () => {
           "Successfully created collection with ID:",
           result.data.createEditedCollection
         )
+
+        const newSlug = result.data.createEditedCollection
+        const menu = menuData?.menuBySlug
+        if (menu) {
+          const updatedItems: MenuItemLike[] = (menu.items ?? []).map(
+            (item) => {
+              if (item.label.toLowerCase() === "collections") {
+                return {
+                  label: item.label,
+                  path: item.path,
+                  items: [
+                    ...(item.items ?? []),
+                    {
+                      label: formData.title,
+                      path: `/collections/${newSlug}`,
+                      items: [],
+                    },
+                  ],
+                }
+              }
+              return item
+            }
+          )
+
+          updateMenu({
+            menu: {
+              id: menu.id,
+              name: menu.name,
+              items: toMenuItemInput(updatedItems),
+            },
+          })
+        }
+
         // Navigate to the new collection or show success message
-        navigate(`/collections/${result.data.createEditedCollection}`)
+        navigate(`/collections/${newSlug}`)
       } else {
         console.log("No data returned from mutation")
         setError("No data returned from mutation")
