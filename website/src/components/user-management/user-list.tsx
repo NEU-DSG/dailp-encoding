@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { Input } from "reakit"
 import {
   AllUsersQuery,
   User,
@@ -12,24 +13,20 @@ import { EmptyDialog } from "../empty-dialog"
 import { RoleDropdown } from "./role-dropdown"
 import * as css from "./user-list.css"
 
+type ActiveDialog =
+  | { kind: "confirmRoleChange"; user: User; newRole: UserGroup }
+  | { kind: "confirmDelete"; user: User }
+  | { kind: "roleChangeSuccess"; displayName: string; newRoleLabel: string }
+  | { kind: "deleteSuccess"; displayName: string }
+  | { kind: "bulkEdit"; role: UserGroup }
+
 export const UserList = () => {
   const [{ data, fetching, error }, reloadUsers] = useAllUsersQuery()
   const [updateUserResult, updateUser] = useUpdateUserMutation()
   const [deleteUserResult, deleteUser] = useDeleteUserMutation()
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [pendingUserUpdate, setPendingUserUpdate] = useState<{
-    user: User
-    newRole: UserGroup
-  } | null>(null)
-  const [roleUpdateSuccessOpen, setRoleUpdateSuccessOpen] = useState(false)
-  const [completedUserUpdate, setCompletedUserUpdate] = useState<{
-    displayName: string
-    newRoleLabel: string
-  } | null>(null)
-  const [deleteUserDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [pendingDeleteUser, setPendingDeleteUser] = useState<User | null>(null)
-  const [removeSuccessOpen, setRemoveSuccessOpen] = useState(false)
-  const [removedUserName, setRemovedUserName] = useState<string | null>(null)
+  const [query, setQuery] = useState("")
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
+  const [activeDialog, setActiveDialog] = useState<ActiveDialog | null>(null)
 
   const userRoles = [
     { value: UserGroup.Readers, label: "Reader" },
@@ -43,58 +40,41 @@ export const UserList = () => {
 
   const handleRoleChange = (user: User, newRole: UserGroup) => {
     if (!newRole) return
-
-    setPendingUserUpdate({ user, newRole })
-    setDialogOpen(true)
+    setActiveDialog({ kind: "confirmRoleChange", user, newRole })
   }
 
-  const confirmRoleChange = () => {
-    if (!pendingUserUpdate) return
-
-    const userUpdate = {
-      id: pendingUserUpdate.user.id,
-      displayName: pendingUserUpdate.user.displayName || "",
-      role: pendingUserUpdate.newRole,
-      avatarUrl: pendingUserUpdate.user.avatarUrl,
-      bio: pendingUserUpdate.user.bio,
-      location: pendingUserUpdate.user.location,
-      organization: pendingUserUpdate.user.organization,
-    }
-
-    updateUser({ user: userUpdate })
-    setCompletedUserUpdate({
-      displayName: pendingUserUpdate.user.displayName || "Unknown user",
-      newRoleLabel: getRoleLabel(pendingUserUpdate.newRole),
+  const confirmRoleChange = (user: User, newRole: UserGroup) => {
+    updateUser({
+      user: {
+        id: user.id,
+        displayName: user.displayName || "",
+        role: newRole,
+        avatarUrl: user.avatarUrl,
+        bio: user.bio,
+        location: user.location,
+        organization: user.organization,
+      },
     })
-    setDialogOpen(false)
-    setPendingUserUpdate(null)
-    setRoleUpdateSuccessOpen(true)
-  }
-
-  const cancelRoleChange = () => {
-    setDialogOpen(false)
-    setPendingUserUpdate(null)
+    setActiveDialog({
+      kind: "roleChangeSuccess",
+      displayName: user.displayName || "Unknown user",
+      newRoleLabel: getRoleLabel(newRole),
+    })
   }
 
   const handleRemoveUser = (user: User) => {
     // katie todo: connect to aws after rust update
-    setPendingDeleteUser(user)
-    setDeleteDialogOpen(true)
+    setActiveDialog({ kind: "confirmDelete", user })
   }
 
-  const cancelDeleteUser = () => {
-    setDeleteDialogOpen(false)
-    setPendingDeleteUser(null)
-  }
-  const confirmDeleteUser = () => {
-    if (!pendingDeleteUser) return
-    const displayName = pendingDeleteUser.displayName || "Unknown user"
-    deleteUser({ userId: pendingDeleteUser.id }).then(() =>
+  const confirmDeleteUser = (user: User) => {
+    deleteUser({ userId: user.id }).then(() =>
       reloadUsers({ requestPolicy: "network-only" })
     )
-    cancelDeleteUser()
-    setRemovedUserName(displayName)
-    setRemoveSuccessOpen(true)
+    setActiveDialog({
+      kind: "deleteSuccess",
+      displayName: user.displayName || "Unknown user",
+    })
   }
 
   // katie todo: stub, how to determine if invitation has been accepted?
@@ -106,9 +86,27 @@ export const UserList = () => {
     } else return <></>
   }
 
+  const toggleUserSelected = (userId: string) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(userId)) {
+        next.delete(userId)
+      } else {
+        next.add(userId)
+      }
+      return next
+    })
+  }
+
   const renderUserRows = (users: ReadonlyArray<User>) =>
     users.map((user) => (
       <div key={user.id} className={css.userRow}>
+        <input
+          type="checkbox"
+          className={css.checkboxCell}
+          checked={selectedUserIds.has(user.id)}
+          onChange={() => toggleUserSelected(user.id)}
+        />
         <div className={css.usernameCell}>
           {user.displayName || "Email not found"}
         </div>
@@ -129,6 +127,23 @@ export const UserList = () => {
   return (
     <>
       <main>
+        <div className={css.queryContainer}>
+          <button
+            className={css.updateButton}
+            onClick={() =>
+              selectedUserIds.size > 0 &&
+              setActiveDialog({ kind: "bulkEdit", role: UserGroup.Readers })
+            }
+          >
+            Edit Selected Users
+          </button>
+          <Input
+            className={css.queryInput}
+            value={query}
+            placeholder="Search users..."
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
         {fetching ? (
           <>Loading...</>
         ) : error ? (
@@ -136,80 +151,99 @@ export const UserList = () => {
         ) : !data || !data.listUsers.length ? (
           <>No users found.</>
         ) : (
-          <div className={css.scrollable}>{renderUserRows(data.listUsers)}</div>
+          <div className={css.scrollable}>
+            {renderUserRows(
+              data.listUsers.filter((u) =>
+                (u.displayName ?? "")
+                  .toLowerCase()
+                  .includes(query.toLowerCase())
+              )
+            )}
+          </div>
         )}
       </main>
-      {pendingUserUpdate && (
+      {activeDialog?.kind === "confirmRoleChange" && (
         <ConfirmationDialog
-          isOpen={dialogOpen}
-          onClose={cancelRoleChange}
-          onConfirm={confirmRoleChange}
+          isOpen
+          onClose={() => setActiveDialog(null)}
+          onConfirm={() =>
+            confirmRoleChange(activeDialog.user, activeDialog.newRole)
+          }
           title="Change User Permissions?"
           subtitle="Changes have been made to the user(s) below:"
         >
           <p>
             <span className={css.dialogUsername}>
-              {pendingUserUpdate.user.displayName || "Unknown user"}
+              {activeDialog.user.displayName || "Unknown user"}
             </span>{" "}
             will be updated to{" "}
             <span className={css.dialogRole}>
-              {getRoleLabel(pendingUserUpdate.newRole)}
+              {getRoleLabel(activeDialog.newRole)}
             </span>
             .
           </p>
         </ConfirmationDialog>
       )}
-      {pendingDeleteUser && (
+      {activeDialog?.kind === "confirmDelete" && (
         <ConfirmationDialog
-          isOpen={deleteUserDialogOpen}
-          onClose={cancelDeleteUser}
-          onConfirm={confirmDeleteUser}
+          isOpen
+          onClose={() => setActiveDialog(null)}
+          onConfirm={() => confirmDeleteUser(activeDialog.user)}
           title="Remove This User?"
           subtitle="You are about to remove the following user:"
         >
-          <p>
-            <span className={css.dialogUsername}>
-              {pendingDeleteUser.displayName || "Unknown user"}
-            </span>
+          <p className={css.dialogUsername}>
+            {activeDialog.user.displayName || "Unknown user"}
           </p>
         </ConfirmationDialog>
       )}
-      {completedUserUpdate && (
+      {activeDialog?.kind === "roleChangeSuccess" && (
         <EmptyDialog
-          isOpen={roleUpdateSuccessOpen}
-          onClose={() => {
-            setRoleUpdateSuccessOpen(false)
-            setCompletedUserUpdate(null)
-          }}
+          isOpen
+          onClose={() => setActiveDialog(null)}
           title="User Roles Updated"
           subtitle="An email confirmation has been sent to the user(s) below:"
         >
           <p>
             <span className={css.dialogUsername}>
-              {completedUserUpdate.displayName}
+              {activeDialog.displayName}
             </span>{" "}
             has been updated to a{" "}
-            <span className={css.dialogRole}>
-              {completedUserUpdate.newRoleLabel}
-            </span>
-            .
+            <span className={css.dialogRole}>{activeDialog.newRoleLabel}</span>.
           </p>
         </EmptyDialog>
       )}
-      {removedUserName && (
+      {activeDialog?.kind === "deleteSuccess" && (
         <EmptyDialog
-          isOpen={removeSuccessOpen}
-          onClose={() => {
-            setRemoveSuccessOpen(false)
-            setRemovedUserName(null)
-          }}
+          isOpen
+          onClose={() => setActiveDialog(null)}
           title="User Removed"
           subtitle="An email confirmation has been sent to:"
         >
-          <p>
-            <span className={css.dialogUsername}>{removedUserName}</span>
-          </p>
+          <p className={css.dialogUsername}>{activeDialog.displayName}</p>
         </EmptyDialog>
+      )}
+      {activeDialog?.kind === "bulkEdit" && (
+        <ConfirmationDialog
+          isOpen
+          onClose={() => setActiveDialog(null)}
+          onConfirm={() => setActiveDialog(null)}
+          title="Make Changes?"
+          subtitle={`The following users are affected: ${
+            data?.listUsers
+              .filter((u) => selectedUserIds.has(u.id))
+              .map((u) => u.displayName || "Unknown user")
+              .join(", ") ?? ""
+          }`}
+        >
+          <p>
+            Role:{" "}
+            <RoleDropdown
+              value={activeDialog.role}
+              onChange={(role) => setActiveDialog({ kind: "bulkEdit", role })}
+            />
+          </p>
+        </ConfirmationDialog>
       )}
     </>
   )
