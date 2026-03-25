@@ -80,6 +80,15 @@ export const actionButtons = style({
   gap: space.medium,
 })
 
+export const errorMessage = style({
+  color: "red",
+  background: "#ffe6e6",
+  padding: "10px",
+  border: `${thickness.thin} solid #ff9999`,
+  borderRadius: radii.small,
+  marginBottom: vspace.one,
+})
+
 export const dialogUsername = style({
   color: "#415373",
 })

@@ -4,7 +4,11 @@ import { CancelButton } from "src/components/cancel-button"
 import { CloseButton } from "src/components/close-button"
 import { EmptyDialog } from "src/components/empty-dialog"
 import { SubmitButton } from "src/components/submit-button"
-import { UserGroup, useAddUserMutation } from "src/graphql/dailp"
+import {
+  UserGroup,
+  useAddUserMutation,
+  useAllUsersQuery,
+} from "src/graphql/dailp"
 import * as css from "./invite-form.css"
 import { RoleDropdown } from "./role-dropdown"
 
@@ -23,8 +27,10 @@ export const InviteForm = () => {
   const [users, setUsers] = useState<UserEntry[]>([initialEntry])
   const [personalMessage, setPersonalMessage] = useState("")
   const [, addUser] = useAddUserMutation()
+  const [{ data: existingUsersData }] = useAllUsersQuery()
   const [successOpen, setSuccessOpen] = useState(false)
   const [submittedUsers, setSubmittedUsers] = useState<UserEntry[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const roleLabel = (role: UserGroup) => {
     const labels: Record<UserGroup, string> = {
@@ -37,6 +43,13 @@ export const InviteForm = () => {
   }
 
   const handleSubmit = (entries: UserEntry[]) => {
+    const emails = entries.map((u) => u.email)
+    const hasDuplicates = emails.some((e, i) => emails.indexOf(e) !== i)
+    if (hasDuplicates) {
+      setError("Each user must have a unique email address.")
+      return
+    }
+    setError(null)
     entries.map((user) => addUser({ displayName: user.email, role: user.role }))
     setSubmittedUsers(entries)
     setSuccessOpen(true)
@@ -65,6 +78,7 @@ export const InviteForm = () => {
 
   return (
     <>
+      {error && <div className={css.errorMessage}>{error}</div>}
       {users.map((user, index) => (
         <div key={index} className={css.userFieldsContainer}>
           <div className={css.userFieldsRow}>
