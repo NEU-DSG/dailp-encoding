@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import { Label } from "src/components"
-import { CancelButton } from "src/components/cancel-button"
-import { CloseButton } from "src/components/close-button"
-import { EmptyDialog } from "src/components/empty-dialog"
-import { SubmitButton } from "src/components/submit-button"
+import { CancelButton } from "src/components/dialog/cancel-button"
+import { CloseButton } from "src/components/dialog/close-button"
+import { EmptyDialog } from "src/components/dialog/empty-dialog"
+import { SubmitButton } from "src/components/dialog/submit-button"
 import {
   UserGroup,
   useAddUserMutation,
@@ -75,6 +75,7 @@ export const InviteForm = () => {
     )
     setUsers(updatedUsers)
 
+    // katie todo: replace with checking existing emails from aws instead of database
     const existingEmails = (existingUsersData?.listUsers ?? []).map((u) =>
       (u.displayName ?? "").toLowerCase()
     )

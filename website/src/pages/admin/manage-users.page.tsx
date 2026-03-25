@@ -2,7 +2,6 @@ import React from "react"
 import { UserRole } from "src/auth"
 import { Link } from "src/components"
 import { AuthGuard } from "src/components/auth-guard"
-import { ListHeader } from "src/components/user-management/list-header"
 import { UserList } from "src/components/user-management/user-list"
 import Layout from "src/layout"
 import { fullWidth } from "src/style/utils.css"
@@ -21,7 +20,9 @@ const ManageUsersPage = () => {
               <button className={css.addButton}>+ Add User</button>
             </Link>
           </div>
-          <ListHeader>Current Users</ListHeader>
+          <div className={css.listHeaderContainer}>
+            <span className={css.listHeaderTab}>Current Users</span>
+          </div>
 
           <div>
             <UserList />
