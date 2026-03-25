@@ -48,7 +48,14 @@ export const InviteForm = () => {
 
   const updateUser = (index: number, field: keyof UserEntry, value: string) => {
     setUsers((prev) =>
-      prev.map((user, i) => (i === index ? { ...user, [field]: value } : user))
+      prev.map((user, i) =>
+        i === index
+          ? {
+              ...user,
+              [field]: field === "email" ? value.toLowerCase() : value,
+            }
+          : user
+      )
     )
   }
 
