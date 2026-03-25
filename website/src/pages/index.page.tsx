@@ -129,7 +129,7 @@ const IndexPage = () => {
                     collection.description ||
                     "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                   }
-                  buttonLabel="Please click to view the collection"
+                  buttonLabel="View the collection"
                 />
               ))}
             </ul>
