@@ -95,7 +95,7 @@ export const queryContainer = style({
 
 export const queryInput = style({
   flex: 1,
-  maxWidth: "calc(100% - 3rem)",
+  maxWidth: "calc(100% - 5rem)",
   height: "1.9375rem",
   border: `${thickness.thin} solid #5c3b37`,
   borderRadius: radii.large,
@@ -112,6 +112,12 @@ export const updateButton = style({
   border: thickness.none,
   cursor: "pointer",
   fontFamily: "Quattrocento Sans, sans-serif",
+})
+
+export const dialogColumns = style({
+  display: "flex",
+  flexDirection: "row",
+  gap: space.large,
 })
 
 export const dialogUsername = style({

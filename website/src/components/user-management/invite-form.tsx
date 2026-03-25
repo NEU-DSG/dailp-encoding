@@ -42,11 +42,20 @@ export const InviteForm = () => {
     return labels[role] ?? role
   }
 
+  const MAX_USERS = 5
+
   const handleSubmit = (entries: UserEntry[]) => {
     const emails = entries.map((u) => u.email)
     const hasDuplicates = emails.some((e, i) => emails.indexOf(e) !== i)
     if (hasDuplicates) {
       setError("Each user must have a unique email address.")
+      return
+    }
+    const existingEmails = (existingUsersData?.listUsers ?? []).map((u) =>
+      (u.displayName ?? "").toLowerCase()
+    )
+    const alreadyExists = emails.filter((e) => existingEmails.includes(e))
+    if (alreadyExists.length > 0) {
       return
     }
     setError(null)
@@ -60,25 +69,38 @@ export const InviteForm = () => {
   }
 
   const updateUser = (index: number, field: keyof UserEntry, value: string) => {
-    setUsers((prev) =>
-      prev.map((user, i) =>
-        i === index
-          ? {
-              ...user,
-              [field]: field === "email" ? value.toLowerCase() : value,
-            }
-          : user
-      )
+    const normalised = field === "email" ? value.toLowerCase() : value
+    const updatedUsers = users.map((user, i) =>
+      i === index ? { ...user, [field]: normalised } : user
     )
+    setUsers(updatedUsers)
+
+    const existingEmails = (existingUsersData?.listUsers ?? []).map((u) =>
+      (u.displayName ?? "").toLowerCase()
+    )
+    const invalidEmail = updatedUsers.find(
+      (u) => u.email && !(u.email.includes("@") && u.email.includes("."))
+    )
+    const alreadyExists = updatedUsers.find((u) =>
+      existingEmails.includes(u.email)
+    )
+    if (invalidEmail) {
+      setError(`${invalidEmail.email} is not a valid email address.`)
+    } else if (alreadyExists) {
+      setError(`${alreadyExists.email} already exists.`)
+    } else {
+      setError(null)
+    }
   }
 
   const removeUser = (index: number) => {
+    setError(null)
     setUsers((prev) => prev.filter((_, i) => i !== index))
   }
 
   return (
     <>
-      {error && <div className={css.errorMessage}>{error}</div>}
+      {error && <div className={css.errorMessage}>Error: {error}</div>}
       {users.map((user, index) => (
         <div key={index} className={css.userFieldsContainer}>
           <div className={css.userFieldsRow}>
@@ -131,24 +153,30 @@ export const InviteForm = () => {
         />
       </div>
 
-      <div className={css.addAnotherContainer}>
-        <button
-          type="button"
-          className={css.addAnotherButton}
-          onClick={addAnotherUser}
-        >
-          + Add Another User
-        </button>
-      </div>
+      {users.length < MAX_USERS && (
+        <div className={css.addAnotherContainer}>
+          <button
+            type="button"
+            className={css.addAnotherButton}
+            onClick={addAnotherUser}
+          >
+            + Add Another User
+          </button>
+        </div>
+      )}
 
       <div className={css.actionButtons}>
         <CancelButton href="/admin/manage-users" />
-        <SubmitButton type="submit" onClick={() => handleSubmit(users)} />
+        <SubmitButton
+          type="submit"
+          onClick={() => handleSubmit(users)}
+          disabled={error !== null}
+        />
       </div>
 
       <EmptyDialog
         isOpen={successOpen}
-        onClose={() => setSuccessOpen(false)}
+        onClose={() => window.location.reload()}
         title="User Successfully Added"
         subtitle="An email invitation has been sent to the user(s) below:"
       >

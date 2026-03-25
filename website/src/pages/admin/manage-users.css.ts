@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { space, thickness, vspace } from "src/style/constants"
+import { space, thickness } from "src/style/constants"
 
 export const headerContainer = style({
   display: "flex",

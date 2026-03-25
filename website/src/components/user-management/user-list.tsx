@@ -129,6 +129,8 @@ export const UserList = () => {
     })
   }
 
+  const COLUMN_THRESHOLD = 6
+
   const renderRoleChangeSuccess = (
     displayNames: string[],
     newRoleLabel: string
@@ -139,12 +141,32 @@ export const UserList = () => {
       title="User Roles Updated"
       subtitle="An email confirmation has been sent to the user(s) below:"
     >
-      {displayNames.map((name) => (
-        <p key={name}>
-          <span className={css.dialogUsername}>{name}</span> has been updated to
-          a <span className={css.dialogRole}>{newRoleLabel}</span>.
-        </p>
-      ))}
+      <div
+        className={
+          displayNames.length > COLUMN_THRESHOLD ? css.dialogColumns : undefined
+        }
+      >
+        <div>
+          {displayNames.slice(0, COLUMN_THRESHOLD).map((name) => (
+            <p key={name}>
+              <span className={css.dialogUsername}>{name}</span> has been
+              updated to a{" "}
+              <span className={css.dialogRole}>{newRoleLabel}</span>.
+            </p>
+          ))}
+        </div>
+        {displayNames.length > COLUMN_THRESHOLD && (
+          <div>
+            {displayNames.slice(COLUMN_THRESHOLD).map((name) => (
+              <p key={name}>
+                <span className={css.dialogUsername}>{name}</span> has been
+                updated to a{" "}
+                <span className={css.dialogRole}>{newRoleLabel}</span>.
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
     </EmptyDialog>
   )
 
@@ -155,11 +177,28 @@ export const UserList = () => {
       title="User Removed"
       subtitle="An email confirmation has been sent to:"
     >
-      {displayNames.map((name) => (
-        <p key={name} className={css.dialogUsername}>
-          {name}
-        </p>
-      ))}
+      <div
+        className={
+          displayNames.length > COLUMN_THRESHOLD ? css.dialogColumns : undefined
+        }
+      >
+        <div>
+          {displayNames.slice(0, COLUMN_THRESHOLD).map((name) => (
+            <p key={name} className={css.dialogUsername}>
+              {name}
+            </p>
+          ))}
+        </div>
+        {displayNames.length > COLUMN_THRESHOLD && (
+          <div>
+            {displayNames.slice(COLUMN_THRESHOLD).map((name) => (
+              <p key={name} className={css.dialogUsername}>
+                {name}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
     </EmptyDialog>
   )
 
@@ -175,15 +214,36 @@ export const UserList = () => {
       title="Change User Permissions?"
       subtitle="Changes have been made to the user(s) below:"
     >
-      {users.map((u) => (
-        <p key={u.id}>
-          <span className={css.dialogUsername}>
-            {u.displayName || "Unknown user"}
-          </span>{" "}
-          will be updated to{" "}
-          <span className={css.dialogRole}>{getRoleLabel(newRole)}</span>.
-        </p>
-      ))}
+      <div
+        className={
+          users.length > COLUMN_THRESHOLD ? css.dialogColumns : undefined
+        }
+      >
+        <div>
+          {users.slice(0, COLUMN_THRESHOLD).map((u) => (
+            <p key={u.id}>
+              <span className={css.dialogUsername}>
+                {u.displayName || "Unknown user"}
+              </span>{" "}
+              will be updated to{" "}
+              <span className={css.dialogRole}>{getRoleLabel(newRole)}</span>.
+            </p>
+          ))}
+        </div>
+        {users.length > COLUMN_THRESHOLD && (
+          <div>
+            {users.slice(COLUMN_THRESHOLD).map((u) => (
+              <p key={u.id}>
+                <span className={css.dialogUsername}>
+                  {u.displayName || "Unknown user"}
+                </span>{" "}
+                will be updated to{" "}
+                <span className={css.dialogRole}>{getRoleLabel(newRole)}</span>.
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
     </ConfirmationDialog>
   )
 
@@ -195,11 +255,28 @@ export const UserList = () => {
       title="Remove User(s)?"
       subtitle="You are about to remove the following user(s):"
     >
-      {users.map((u) => (
-        <p key={u.id} className={css.dialogUsername}>
-          {u.displayName || "Unknown user"}
-        </p>
-      ))}
+      <div
+        className={
+          users.length > COLUMN_THRESHOLD ? css.dialogColumns : undefined
+        }
+      >
+        <div>
+          {users.slice(0, COLUMN_THRESHOLD).map((u) => (
+            <p key={u.id} className={css.dialogUsername}>
+              {u.displayName || "Unknown user"}
+            </p>
+          ))}
+        </div>
+        {users.length > COLUMN_THRESHOLD && (
+          <div>
+            {users.slice(COLUMN_THRESHOLD).map((u) => (
+              <p key={u.id} className={css.dialogUsername}>
+                {u.displayName || "Unknown user"}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
     </ConfirmationDialog>
   )
 
