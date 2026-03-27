@@ -16,7 +16,7 @@ export function PageShell({
   pageContext: PageContext
   client: GraphQLClient
 }) {
-  const { Page, routeParams } = pageContext
+  const { Page, routeParams, pageProps } = pageContext
   return (
     <React.StrictMode>
       <PageContextProvider pageContext={pageContext}>
@@ -24,7 +24,7 @@ export function PageShell({
           <ReakitProvider>
             <UserProvider>
               <CollectionProvider>
-                <Page {...routeParams} />
+                <Page {...routeParams} {...pageProps} />
               </CollectionProvider>
             </UserProvider>
           </ReakitProvider>
@@ -51,12 +51,14 @@ function PageContextProvider({
 
 const usePageContext = () => React.useContext(Context)
 export type Location = PageContext["urlParsed"]
-export const useLocation = () => usePageContext().urlParsed
-export const useRouteParams = () => usePageContext().routeParams
+export const useLocation = () =>
+  usePageContext().urlParsed ?? { pathname: "", search: {}, hash: "" }
+export const useRouteParams = () => usePageContext().routeParams ?? {}
 
 // The `pageContext` that are available in both on the server-side and browser-side
 export interface PageContextServer extends PageContextBuiltIn {
   Page: (pageProps: PageProps) => React.ReactElement
+  pageProps: PageProps
   pageHtml: string
   pageHead: HelmetData
   urqlState: { [key: string]: any }
@@ -72,6 +74,7 @@ export type PageContext = Pick<
   | "urlParsed"
   | "urlPathname"
   | "Page"
+  | "pageProps"
 > &
   Omit<PageContextBuiltInClient, "isBackwardNavigation">
 
