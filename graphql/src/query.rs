@@ -7,7 +7,7 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{User, UserId, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
@@ -641,6 +641,44 @@ impl Mutation {
             .load_one(dailp::DocumentId(document_id))
             .await?
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
+    }
+
+    // Adds a user
+    #[graphql(guard = "AuthGuard")]
+    async fn add_user(
+        &self,
+        context: &Context<'_>,
+        display_name: String,
+        role: UserGroup,
+    ) -> FieldResult<UserId> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_user(display_name, role)
+            .await?)
+    }
+
+    // Deletes a user
+    #[graphql(guard = "AuthGuard")]
+    async fn delete_user(&self, context: &Context<'_>, user_id: Uuid) -> FieldResult<UserId> {
+        // let cognito = context.data::<aws_sdk_cognitoidentityprovider::Client>()?;
+        // let user_pool_id = std::env::var("DAILP_USER_POOL")
+        //     .map_err(|_| anyhow::format_err!("DAILP_USER_POOL not set"))?;
+
+        // let identity_result = cognito
+        //     .admin_delete_user()
+        //     .user_pool_id(std::env::var("DAILP_USER_POOL"))
+        //     .username(user_id.to_string())
+        //     .send()
+        //     .await
+        //     .map_err(|e| anyhow::format_err!("Failed to delete user: {}", e))?;
+
+        // log::info!("admin_delete_user result: {:?}", identity_result);
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_user(&user_id)
+            .await?)
     }
 
     /// Decide if a piece of word audio should be included in edited collection
