@@ -1,9 +1,9 @@
 import React, { useState } from "react"
 import { Label } from "src/components"
-import { CancelButton } from "src/components/dialog/cancel-button"
-import { CloseButton } from "src/components/dialog/close-button"
-import { EmptyDialog } from "src/components/dialog/empty-dialog"
-import { SubmitButton } from "src/components/dialog/submit-button"
+import { CancelButton } from "./cancel-button"
+import { CloseButton } from "./close-button"
+import { EmptyDialog } from "./empty-dialog"
+import { SubmitButton } from "./submit-button"
 import {
   UserGroup,
   useAddUserMutation,

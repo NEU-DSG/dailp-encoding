@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Input } from "reakit"
-import { ConfirmationDialog } from "src/components/dialog/confirmation-dialog"
-import { EmptyDialog } from "src/components/dialog/empty-dialog"
+import { ConfirmationDialog } from "./confirmation-dialog"
+import { EmptyDialog } from "./empty-dialog"
 import {
   AllUsersQuery,
   User,
