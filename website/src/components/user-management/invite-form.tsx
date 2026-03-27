@@ -1,16 +1,16 @@
 import React, { useState } from "react"
 import { Label } from "src/components"
-import { CancelButton } from "./cancel-button"
-import { CloseButton } from "./close-button"
-import { EmptyDialog } from "./empty-dialog"
-import { SubmitButton } from "./submit-button"
 import {
   UserGroup,
   useAddUserMutation,
   useAllUsersQuery,
 } from "src/graphql/dailp"
+import { CancelButton } from "./cancel-button"
+import { CloseButton } from "./close-button"
+import { EmptyDialog } from "./empty-dialog"
 import * as css from "./invite-form.css"
 import { RoleDropdown } from "./role-dropdown"
+import { SubmitButton } from "./submit-button"
 
 export interface UserEntry {
   email: string

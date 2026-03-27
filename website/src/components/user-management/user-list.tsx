@@ -1,7 +1,5 @@
 import React, { useState } from "react"
 import { Input } from "reakit"
-import { ConfirmationDialog } from "./confirmation-dialog"
-import { EmptyDialog } from "./empty-dialog"
 import {
   AllUsersQuery,
   User,
@@ -10,6 +8,8 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation,
 } from "src/graphql/dailp"
+import { ConfirmationDialog } from "./confirmation-dialog"
+import { EmptyDialog } from "./empty-dialog"
 import { RoleDropdown } from "./role-dropdown"
 import * as css from "./user-list.css"
 
