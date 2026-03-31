@@ -89,6 +89,11 @@ export const errorMessage = style({
   marginBottom: vspace.one,
 })
 
+export const dialogScrollable = style({
+  maxHeight: "20rem",
+  overflowY: "auto",
+})
+
 export const dialogUsername = style({
   color: "#415373",
 })

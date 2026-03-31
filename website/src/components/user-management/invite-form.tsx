@@ -7,6 +7,7 @@ import {
 } from "src/graphql/dailp"
 import { CancelButton } from "./cancel-button"
 import { CloseButton } from "./close-button"
+import { ConfirmationDialog } from "./confirmation-dialog"
 import { EmptyDialog } from "./empty-dialog"
 import * as css from "./invite-form.css"
 import { RoleDropdown } from "./role-dropdown"
@@ -28,6 +29,7 @@ export const InviteForm = () => {
   const [personalMessage, setPersonalMessage] = useState("")
   const [, addUser] = useAddUserMutation()
   const [{ data: existingUsersData }] = useAllUsersQuery()
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
   const [submittedUsers, setSubmittedUsers] = useState<UserEntry[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -41,8 +43,6 @@ export const InviteForm = () => {
     }
     return labels[role] ?? role
   }
-
-  const MAX_USERS = 5
 
   const handleSubmit = (entries: UserEntry[]) => {
     const emails = entries.map((u) => u.email)
@@ -59,8 +59,13 @@ export const InviteForm = () => {
       return
     }
     setError(null)
-    entries.map((user) => addUser({ displayName: user.email, role: user.role }))
-    setSubmittedUsers(entries)
+    setConfirmOpen(true)
+  }
+
+  const confirmSubmit = () => {
+    users.map((user) => addUser({ displayName: user.email, role: user.role }))
+    setSubmittedUsers(users)
+    setConfirmOpen(false)
     setSuccessOpen(true)
   }
 
@@ -154,17 +159,15 @@ export const InviteForm = () => {
         />
       </div>
 
-      {users.length < MAX_USERS && (
-        <div className={css.addAnotherContainer}>
-          <button
-            type="button"
-            className={css.addAnotherButton}
-            onClick={addAnotherUser}
-          >
-            + Add Another User
-          </button>
-        </div>
-      )}
+      <div className={css.addAnotherContainer}>
+        <button
+          type="button"
+          className={css.addAnotherButton}
+          onClick={addAnotherUser}
+        >
+          + Add Another User
+        </button>
+      </div>
 
       <div className={css.actionButtons}>
         <CancelButton href="/admin/manage-users" />
@@ -175,19 +178,42 @@ export const InviteForm = () => {
         />
       </div>
 
+      <ConfirmationDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmSubmit}
+        title="Invite User(s)?"
+        subtitle="You are about to send invitations to the following user(s):"
+      >
+        <div className={users.length > 5 ? css.dialogScrollable : undefined}>
+          {users.map((user, index) => (
+            <p key={index}>
+              <span className={css.dialogUsername}>{user.email}</span> as a{" "}
+              <span className={css.dialogRole}>{roleLabel(user.role)}</span>.
+            </p>
+          ))}
+        </div>
+      </ConfirmationDialog>
+
       <EmptyDialog
         isOpen={successOpen}
         onClose={() => window.location.reload()}
         title="User Successfully Added"
         subtitle="An email invitation has been sent to the user(s) below:"
       >
-        {submittedUsers.map((user, index) => (
-          <p key={index}>
-            <span className={css.dialogUsername}>{user.email}</span> has been
-            added to the site as a{" "}
-            <span className={css.dialogRole}>{roleLabel(user.role)}</span>.
-          </p>
-        ))}
+        <div
+          className={
+            submittedUsers.length > 5 ? css.dialogScrollable : undefined
+          }
+        >
+          {submittedUsers.map((user, index) => (
+            <p key={index}>
+              <span className={css.dialogUsername}>{user.email}</span> has been
+              added to the site as a{" "}
+              <span className={css.dialogRole}>{roleLabel(user.role)}</span>.
+            </p>
+          ))}
+        </div>
       </EmptyDialog>
     </>
   )
