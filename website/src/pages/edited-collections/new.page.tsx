@@ -82,7 +82,6 @@ const NewEditedCollectionPage = () => {
           result.data.createEditedCollection
         )
 
-        const newSlug = result.data.createEditedCollection
         const menu = menuData?.menuBySlug
         if (menu) {
           const updatedItems: MenuItemLike[] = (menu.items ?? []).map(
@@ -95,7 +94,7 @@ const NewEditedCollectionPage = () => {
                     ...(item.items ?? []),
                     {
                       label: formData.title,
-                      path: `/collections/${newSlug}`,
+                      path: `/collections/${result.data?.createEditedCollection}`,
                       items: [],
                     },
                   ],
@@ -115,7 +114,7 @@ const NewEditedCollectionPage = () => {
         }
 
         // Navigate to the new collection or show success message
-        navigate(`/collections/${newSlug}`)
+        navigate(`/collections/${result.data.createEditedCollection}`)
       } else {
         console.log("No data returned from mutation")
         setError("No data returned from mutation")
