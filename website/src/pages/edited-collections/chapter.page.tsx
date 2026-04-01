@@ -8,6 +8,7 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
+import { PrintDocument } from "../documents/print-document"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
@@ -97,6 +98,11 @@ const ChapterPage = (props: {
                 doc={document}
               />
               <TabSet doc={document} />
+              <PrintDocument
+                doc={document}
+                breadcrumbs={chapter.breadcrumbs}
+                rootPath={collectionRoute(props.collectionSlug)}
+              />
             </>
           ) : null}
 

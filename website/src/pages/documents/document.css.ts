@@ -119,6 +119,7 @@ export const docTabPanel = style([
   {
     "@media": {
       [mediaQueries.medium]: paddingX(0),
+      [mediaQueries.print]: { display: "none" },
     },
     selectors: {
       "&:focus": {
@@ -128,7 +129,15 @@ export const docTabPanel = style([
   },
 ])
 
-export const imageTabPanel = style([std.fullWidth, { outline: "none" }])
+export const imageTabPanel = style([
+  std.fullWidth,
+  {
+    outline: "none",
+    "@media": {
+      [mediaQueries.print]: { display: "none" },
+    },
+  },
+])
 
 export const docHeader = style([
   std.fullWidth,
@@ -136,7 +145,7 @@ export const docHeader = style([
   paddingX(hspace.edge),
   {
     "@media": {
-      [mediaQueries.print]: paddingX(0),
+      [mediaQueries.print]: { display: "none" },
     },
   },
 ])
@@ -176,6 +185,7 @@ export const annotatedDocument = style({
   alignItems: "center",
   "@media": {
     [mediaQueries.medium]: paddingX(hspace.edge),
+    [mediaQueries.print]: { paddingBottom: vspace.double },
   },
 })
 

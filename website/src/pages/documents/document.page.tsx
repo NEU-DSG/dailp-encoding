@@ -50,6 +50,7 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
+import { PrintDocument, printDocument } from "./print-document"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -99,6 +100,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       <main className={css.annotatedDocument}>
         <DocumentTitleHeader doc={doc} />
         <TabSet doc={doc} />
+        <PrintDocument doc={doc} />
       </main>
     </Layout>
   )
@@ -360,7 +362,7 @@ export const TranslationTab = ({
   )
 }
 
-const DocumentContents = ({
+export const DocumentContents = ({
   levelOfDetail,
   doc,
   openDetails,
@@ -487,9 +489,10 @@ export const DocumentTitleHeader = (p: {
           </div>
         )}
         <div className={css.alignRight}>
-          {!isMobile ? (
-            <Button onClick={() => window.print()}>Print</Button>
-          ) : null}
+          {
+            // for printing, turns special stylized print layout visible and hides the current webpage
+            !isMobile ? <Button onClick={printDocument}>Print</Button> : null
+          }
         </div>
       </div>
       <div id="audio-and-recording-container">
