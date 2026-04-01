@@ -16,6 +16,7 @@ const printFonts = {
 const printFontSizes = {
   medium: "0.95rem",
   large: "1.1rem",
+  breadcrumb: "1rem",
 }
 
 export const printHeading = style({
@@ -31,12 +32,23 @@ export const printHeading = style({
   },
 })
 
+export const printBreadcrumbs = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: printFonts.quattrocento,
+      fontSize: printFontSizes.breadcrumb,
+      fontWeight: 400,
+      lineHeight: 1,
+    },
+  },
+})
+
 export const printLegendSyllabary = style({
   "@media": {
     [mediaQueries.print]: {
       fontFamily: fonts.body,
       fontSize: printFontSizes.medium,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
       fontWeight: 400,
     },
   },
@@ -47,7 +59,7 @@ export const printLegendTranslation = style({
     [mediaQueries.print]: {
       fontFamily: fonts.header,
       fontSize: fontSize.small,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
       fontWeight: 400,
     },
   },
@@ -58,7 +70,7 @@ export const printLegendParagraph = style({
     [mediaQueries.print]: {
       fontFamily: printFonts.quattrocento,
       fontSize: printFontSizes.medium,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
       fontWeight: 400,
     },
   },
@@ -111,7 +123,7 @@ export const printFooterDetails = style({
       display: "inline",
       fontSize: fontSize.small,
       fontWeight: 400,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
     },
   },
 })
@@ -123,7 +135,7 @@ export const printFooterTitle = style({
       display: "inline",
       fontSize: fontSize.small,
       fontWeight: 400,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
     },
   },
 })
@@ -135,7 +147,7 @@ export const printFooterTitleBold = style({
       display: "inline",
       fontSize: fontSize.small,
       fontWeight: 700,
-      lineHeight: 1.2,
+      lineHeight: 0.7,
     },
   },
 })

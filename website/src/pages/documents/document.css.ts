@@ -310,6 +310,9 @@ export const scrollTop = style({
   color: colors.secondaryContrast,
   outlineColor: colors.secondaryContrast,
   backgroundColor: colors.secondary,
+  "@media": {
+    [mediaQueries.print]: { display: "none" },
+  },
 })
 
 export const BookmarkButton = style([

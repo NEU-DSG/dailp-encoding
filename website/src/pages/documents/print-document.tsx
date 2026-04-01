@@ -64,15 +64,19 @@ export const PrintDocument = (p: {
     "name" | "slug"
   >[]
   rootPath?: string
+  collectionTitle?: string
 }) => {
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
   return (
     <div className={css.printDocument}>
       <PrintBranding />
-      {p.breadcrumbs && (
-        <Breadcrumbs aria-label="Breadcrumbs">
-          {p.breadcrumbs.map((crumb) => (
+      {(p.collectionTitle || p.breadcrumbs) && (
+        <Breadcrumbs aria-label="Breadcrumbs" className={css.printBreadcrumbs}>
+          {p.collectionTitle && (
+            <Link href={p.rootPath ?? ""}>{p.collectionTitle}</Link>
+          )}
+          {p.breadcrumbs?.map((crumb) => (
             <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
               {crumb.name}
             </Link>

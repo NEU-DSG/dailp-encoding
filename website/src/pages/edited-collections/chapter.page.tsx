@@ -27,6 +27,10 @@ const ChapterPage = (props: {
 
   const subchapters = useSubchapters(props.chapterSlug)
 
+  const [{ data: collectionData }] = Dailp.useEditedCollectionQuery({
+    variables: { slug: props.collectionSlug },
+  })
+
   const chapter = data?.chapter
 
   if (fetching) {
@@ -102,6 +106,7 @@ const ChapterPage = (props: {
                 doc={document}
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}
+                collectionTitle={collectionData?.editedCollection?.title}
               />
             </>
           ) : null}
