@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { FiLoader } from "react-icons/fi/index"
+import { isMobile } from "react-device-detect"
+import { FiDownload, FiLoader, FiTrash2 } from "react-icons/fi/index"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md/index"
+import * as Dailp from "src/graphql/dailp"
+import { UserRole, useUser, useUserId, useUserRole } from "../auth"
+import { S3Uploader } from "../utils/s3"
 import * as css from "./audio-player.css"
+import { Button } from "./button"
 
 /**
  * Get our default load status for the audio player.
@@ -23,11 +28,15 @@ function getDefaultLoadStatus() {
 }
 
 interface Props {
+  sliceId?: string | null | undefined
+  parentId?: string | null | undefined
+  sliceType?: "word" | "document" | null
   audioUrl: string
   showProgress?: boolean
   slices?: { start: number; end: number }
   style?: any
   contributor?: string
+  contributorId?: string
   recordedAt?: Date
 }
 
@@ -43,11 +52,23 @@ export const AudioPlayer = (props: Props) => {
 }
 
 const AudioPlayerImpl = (props: Props) => {
+  const { user } = useUser()
+
+  const role = useUserRole()
+  const userId = useUserId()
   const audio = useMemo(() => new Audio(props.audioUrl), [props.audioUrl])
 
   const [progress, setProgress] = useState(0)
   const [loadStatus, setLoadStatus] = useState(getDefaultLoadStatus())
   const [isPlaying, setIsPlaying] = useState(false)
+
+  const canDelete =
+    role === UserRole.Admin ||
+    role === UserRole.Editor ||
+    (role === UserRole.Contributor && props.contributorId === userId)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [, deleteWordAudio] = Dailp.useDeleteWordAudioMutation()
+  const [, deleteDocAudio] = Dailp.useDeleteDocumentAudioMutation()
 
   //　FIXME Issue: Word audio drifts forward and backward for no apparent reason
   // Steps (Todo)
@@ -96,8 +117,97 @@ const AudioPlayerImpl = (props: Props) => {
     setLoadStatus(true)
   }
 
+  useEffect(() => {
+    if (isConfirmingDelete) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isConfirmingDelete])
+
+  const handleDelete = async () => {
+    if (!props.sliceId || !props.parentId) {
+      return
+    }
+    setIsConfirmingDelete(false)
+    try {
+      if (props.sliceType === "word" && props.parentId && props.sliceId) {
+        await deleteWordAudio({
+          input: {
+            wordId: props.parentId,
+            audioSliceId: props.sliceId,
+          },
+        })
+      } else if (
+        props.sliceType === "document" &&
+        props.parentId &&
+        props.sliceId
+      ) {
+        await deleteDocAudio({
+          input: {
+            documentId: props.parentId,
+            audioSliceId: props.sliceId,
+          },
+        })
+      }
+      console.log("deleted from database")
+      if (user) {
+        const s3 = new S3Uploader(user)
+
+        const url = new URL(props.audioUrl)
+        let key = url.pathname
+
+        if (key.startsWith("/")) {
+          key = key.substring(1)
+        }
+
+        console.log("Deleting S3 Key:", key)
+
+        await s3.deleteContributorAudio(key)
+        console.log("S3 Deletion Successful")
+      }
+    } catch (err) {
+      console.error("Deletion sequence failed:", err)
+    }
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        paddingBottom: "10px",
+      }}
+    >
+      {isConfirmingDelete && (
+        <div className={css.overlay}>
+          <div className={css.confirmationBox}>
+            <p className={css.confirmationText}>
+              Are you sure you want to delete this audio clip?
+            </p>
+
+            <div className={css.modalButtonGroup}>
+              <Button onClick={() => setIsConfirmingDelete(false)}>
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleDelete}
+                style={{
+                  backgroundColor: "#b72d3b",
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {props.contributor && props.recordedAt && (
         <div>
           <span>
@@ -127,9 +237,39 @@ const AudioPlayerImpl = (props: Props) => {
         ) : (
           <FiLoader size={buttonSize} />
         )}
+
         {props.showProgress ? (
           <ProgressBar progress={progress} bounds={{ start, end }} />
         ) : null}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            alignItems: "center",
+            width: props.sliceType === "word" ? "40px" : "120px",
+          }}
+        >
+          {canDelete && props.sliceType && (
+            <Button
+              className={css.buttonStyle}
+              onClick={() => setIsConfirmingDelete(true)}
+            >
+              <FiTrash2 size={22} />
+              {props.sliceType !== "word" ? "Delete" : ""}
+            </Button>
+          )}
+
+          {!isMobile && props.sliceType && (
+            <Button
+              onClick={() => (window.location.href = props.audioUrl)}
+              className={css.buttonStyle}
+            >
+              <FiDownload size={22} />
+              {props.sliceType !== "word" ? "Download" : ""}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

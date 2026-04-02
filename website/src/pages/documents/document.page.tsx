@@ -505,7 +505,15 @@ export const DocumentTitleHeader = (p: {
                   key={index}
                 >
                   <AudioPlayer
-                    contributor={audio.recordedBy?.displayName}
+                    sliceId={audio.sliceId}
+                    sliceType={"document"}
+                    parentId={p.doc.id}
+                    contributor={
+                      audio.recordedBy?.displayName ?? "Unknown Contributor"
+                    }
+                    contributorId={
+                      audio.recordedBy?.id ?? "Unknown Contributor"
+                    }
                     recordedAt={
                       audio.recordedAt?.formattedDate
                         ? new Date(audio.recordedAt.formattedDate)
@@ -515,13 +523,6 @@ export const DocumentTitleHeader = (p: {
                     audioUrl={audio.resourceUrl}
                     showProgress
                   />
-                  {!isMobile && (
-                    <div>
-                      <a href={audio.resourceUrl}>
-                        <Button>Download Audio</Button>
-                      </a>
-                    </div>
-                  )}
                 </div>
               ))}
             </>
@@ -534,7 +535,13 @@ export const DocumentTitleHeader = (p: {
                   audio.recordedBy?.id === userId && (
                     <div key={index}>
                       <AudioPlayer
+                        sliceId={audio.sliceId}
+                        sliceType={"document"}
+                        parentId={p.doc.id}
                         contributor={"you"}
+                        contributorId={
+                          audio.recordedBy?.id ?? "Unknown Contributor"
+                        }
                         recordedAt={
                           audio.recordedAt?.formattedDate
                             ? new Date(audio.recordedAt.formattedDate)
@@ -561,7 +568,7 @@ export const DocumentTitleHeader = (p: {
                     <>
                       <DocumentAudioWithCurate
                         contributor={
-                          audio.recordedBy?.displayName ?? "Unknown Contributor"
+                          audio.recordedBy?.id ?? "Unknown Contributor"
                         }
                         recordedAt={
                           audio.recordedAt?.formattedDate
@@ -571,13 +578,6 @@ export const DocumentTitleHeader = (p: {
                         documentId={p.doc.id}
                         audio={audio}
                       />
-                      {!isMobile && (
-                        <div>
-                          <a href={audio.resourceUrl}>
-                            <Button>Download Audio</Button>
-                          </a>
-                        </div>
-                      )}
                     </>
                   )}
                 </div>

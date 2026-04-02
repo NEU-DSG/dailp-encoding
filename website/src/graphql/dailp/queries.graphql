@@ -590,6 +590,43 @@ mutation AttachAudioToDocument($input: AttachAudioToDocumentInput!) {
   }
 }
 
+mutation DeleteDocumentAudio($input: DeleteDocumentAudioInput!) {
+  deleteDocumentAudio(input: $input) {
+    id
+    title
+    slug
+    editedAudio {
+      ...AudioSliceFields
+    }
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedAt {
+        formattedDate
+      }
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation DeleteWordAudio($input: DeleteWordAudioInput!) {
+  deleteWordAudio(input: $input) {
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+    editedAudio {
+      ...AudioSliceFields
+    }
+  }
+}
+
 fragment BookmarkedDocument on AnnotatedDoc {
   id
   title

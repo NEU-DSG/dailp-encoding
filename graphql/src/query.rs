@@ -11,8 +11,9 @@ use dailp::{
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    DeleteDocumentAudioInput, DeleteWordAudioInput, DocumentId, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -1000,6 +1001,34 @@ impl Mutation {
         let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
         Ok(body_json["success"].as_bool().unwrap())
+    }
+
+    async fn delete_document_audio(
+        &self,
+        context: &Context<'_>,
+        input: DeleteDocumentAudioInput,
+    ) -> FieldResult<AnnotatedDoc> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        db.delete_audio_slice(input.audio_slice_id).await?;
+
+        // Return the updated document to sync the UI
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(DocumentId(input.document_id))
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Document not found"))?)
+    }
+
+    async fn delete_word_audio(
+        &self,
+        context: &Context<'_>,
+        input: DeleteWordAudioInput,
+    ) -> FieldResult<AnnotatedForm> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        db.delete_audio_slice(input.audio_slice_id).await?;
+
+        // Return the updated word to sync the UI
+        Ok(db.word_by_id(&input.word_id).await?)
     }
 }
 

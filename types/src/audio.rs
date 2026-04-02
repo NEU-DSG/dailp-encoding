@@ -89,3 +89,17 @@ pub struct CurateDocumentAudioInput {
     /// New value
     pub include_in_edited_collection: bool,
 }
+
+/// Request to delete an audio slice from a document
+#[derive(async_graphql::InputObject)]
+pub struct DeleteDocumentAudioInput {
+    pub document_id: Uuid,
+    pub audio_slice_id: Uuid,
+}
+
+/// Request to delete an audio slice from a word
+#[derive(async_graphql::InputObject)]
+pub struct DeleteWordAudioInput {
+    pub word_id: Uuid,
+    pub audio_slice_id: Uuid,
+}

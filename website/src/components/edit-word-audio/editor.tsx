@@ -54,12 +54,19 @@ export function WordAudioWithCurate({
       },
     })
   }
+
+  const recordedById = (audio.recordedBy as any)?.id
+
   return (
     <div style={{ display: "flex" }}>
       <div style={{ flex: 1 }}>
         <AudioPlayer
+          sliceId={audio.sliceId}
+          sliceType={"word"}
+          parentId={wordId}
           audioUrl={audio.resourceUrl}
           contributor={contributor}
+          contributorId={recordedById ?? "Unknown Contributor"}
           recordedAt={recordedAt}
           slices={
             audio.startTime && audio.endTime
@@ -72,7 +79,7 @@ export function WordAudioWithCurate({
           showProgress
         />
       </div>
-      <div style={{ flex: 0, width: "max-content" }}>
+      <div style={{ flex: 0, width: "max-content", paddingLeft: "10px" }}>
         <label>
           Show to readers?
           <input
@@ -111,11 +118,18 @@ export function DocumentAudioWithCurate({
       },
     })
   }
+
+  const recordedById = (audio.recordedBy as any)?.id
+
   return (
     <div style={{ display: "flex", flex: 1 }}>
       <div style={{ flex: 1 }}>
         <AudioPlayer
+          sliceId={audio.sliceId}
+          sliceType={"document"}
+          parentId={documentId}
           contributor={contributor}
+          contributorId={recordedById ?? "Unknown Contributor"}
           recordedAt={recordedAt}
           audioUrl={audio.resourceUrl}
           slices={
@@ -130,7 +144,14 @@ export function DocumentAudioWithCurate({
           style={{ width: "100%" }}
         />
       </div>
-      <div style={{ flex: 0, width: "max-content" }}>
+      <div
+        style={{
+          flex: 0,
+          width: "max-content",
+          paddingLeft: "20px",
+          paddingTop: "25px",
+        }}
+      >
         <label>
           Show to readers?
           <input type="checkbox" checked={checked} onChange={onChange} />

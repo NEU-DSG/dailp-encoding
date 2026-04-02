@@ -546,6 +546,18 @@ export type DeleteContributorAttribution = {
   readonly documentId: Scalars["UUID"]
 }
 
+/** Request to delete an audio slice from a document */
+export type DeleteDocumentAudioInput = {
+  readonly audioSliceId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
+}
+
+/** Request to delete an audio slice from a word */
+export type DeleteWordAudioInput = {
+  readonly audioSliceId: Scalars["UUID"]
+  readonly wordId: Scalars["UUID"]
+}
+
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
   /**
@@ -942,6 +954,8 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly deleteDocumentAudio: AnnotatedDoc
+  readonly deleteWordAudio: AnnotatedForm
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
@@ -998,6 +1012,14 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationDeleteDocumentAudioArgs = {
+  input: DeleteDocumentAudioInput
+}
+
+export type MutationDeleteWordAudioArgs = {
+  input: DeleteWordAudioInput
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
@@ -3065,6 +3087,110 @@ export type AttachAudioToDocumentMutation = {
     }
 }
 
+export type DeleteDocumentAudioMutationVariables = Exact<{
+  input: DeleteDocumentAudioInput
+}>
+
+export type DeleteDocumentAudioMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly deleteDocumentAudio: { readonly __typename?: "AnnotatedDoc" } & Pick<
+    AnnotatedDoc,
+    "id" | "title" | "slug"
+  > & {
+      readonly editedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          | "sliceId"
+          | "index"
+          | "resourceUrl"
+          | "startTime"
+          | "endTime"
+          | "includeInEditedCollection"
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<User, "displayName">
+            >
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+            >
+          }
+      >
+      readonly userContributedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          | "sliceId"
+          | "index"
+          | "resourceUrl"
+          | "startTime"
+          | "endTime"
+          | "includeInEditedCollection"
+        > & {
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+            >
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
+            >
+          }
+      >
+    }
+}
+
+export type DeleteWordAudioMutationVariables = Exact<{
+  input: DeleteWordAudioInput
+}>
+
+export type DeleteWordAudioMutation = { readonly __typename?: "Mutation" } & {
+  readonly deleteWordAudio: { readonly __typename?: "AnnotatedForm" } & Pick<
+    AnnotatedForm,
+    "id"
+  > & {
+      readonly userContributedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          | "sliceId"
+          | "index"
+          | "resourceUrl"
+          | "startTime"
+          | "endTime"
+          | "includeInEditedCollection"
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
+            >
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+            >
+          }
+      >
+      readonly editedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          | "sliceId"
+          | "index"
+          | "resourceUrl"
+          | "startTime"
+          | "endTime"
+          | "includeInEditedCollection"
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<User, "displayName">
+            >
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+            >
+          }
+      >
+    }
+}
+
 export type BookmarkedDocumentFragment = {
   readonly __typename?: "AnnotatedDoc"
 } & Pick<AnnotatedDoc, "id" | "title" | "slug"> & {
@@ -4348,6 +4474,61 @@ export function useAttachAudioToDocumentMutation() {
     AttachAudioToDocumentMutation,
     AttachAudioToDocumentMutationVariables
   >(AttachAudioToDocumentDocument)
+}
+export const DeleteDocumentAudioDocument = gql`
+  mutation DeleteDocumentAudio($input: DeleteDocumentAudioInput!) {
+    deleteDocumentAudio(input: $input) {
+      id
+      title
+      slug
+      editedAudio {
+        ...AudioSliceFields
+      }
+      userContributedAudio {
+        ...AudioSliceFields
+        recordedAt {
+          formattedDate
+        }
+        recordedBy {
+          id
+          displayName
+        }
+      }
+    }
+  }
+  ${AudioSliceFieldsFragmentDoc}
+`
+
+export function useDeleteDocumentAudioMutation() {
+  return Urql.useMutation<
+    DeleteDocumentAudioMutation,
+    DeleteDocumentAudioMutationVariables
+  >(DeleteDocumentAudioDocument)
+}
+export const DeleteWordAudioDocument = gql`
+  mutation DeleteWordAudio($input: DeleteWordAudioInput!) {
+    deleteWordAudio(input: $input) {
+      id
+      userContributedAudio {
+        ...AudioSliceFields
+        recordedBy {
+          id
+          displayName
+        }
+      }
+      editedAudio {
+        ...AudioSliceFields
+      }
+    }
+  }
+  ${AudioSliceFieldsFragmentDoc}
+`
+
+export function useDeleteWordAudioMutation() {
+  return Urql.useMutation<
+    DeleteWordAudioMutation,
+    DeleteWordAudioMutationVariables
+  >(DeleteWordAudioDocument)
 }
 export const AddBookmarkDocument = gql`
   mutation AddBookmark($documentId: UUID!) {

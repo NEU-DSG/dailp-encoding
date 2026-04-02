@@ -2713,6 +2713,26 @@ impl Database {
         .await?;
         Ok(())
     }
+
+    /// Deletes a media slice and its associated resource if no longer needed.
+    /// This handles cleanup for both word and document audio.
+    pub async fn delete_audio_slice(&self, slice_id: Uuid) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+
+        let resource_id: Option<Uuid> = sqlx::query_scalar!(
+            "SELECT resource_id FROM media_slice WHERE id = $1",
+            slice_id
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        sqlx::query!("DELETE FROM media_slice WHERE id = $1", slice_id)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
 }
 
 #[async_trait]

@@ -33,6 +33,11 @@ function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
       {audioByUser.map((audio) => (
         <AudioPlayer
           audioUrl={audio.resourceUrl}
+          sliceId={audio.sliceId}
+          sliceType={"word"}
+          parentId={p.word.id}
+          contributor={audio.recordedBy?.displayName ?? "Unknown Contributor"}
+          contributorId={audio.recordedBy?.id ?? "Unknown Contributor"}
           slices={
             audio.startTime && audio.endTime
               ? {
@@ -53,6 +58,11 @@ function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
       {audioByOthers.map((audio) => (
         <AudioPlayer
           audioUrl={audio.resourceUrl}
+          sliceId={audio.sliceId}
+          sliceType={"word"}
+          parentId={p.word.id}
+          contributor={audio.recordedBy?.displayName ?? "Unknown Contributor"}
+          contributorId={audio.recordedBy?.id ?? "Unknown Contributor"}
           slices={
             audio.startTime && audio.endTime
               ? {

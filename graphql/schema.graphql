@@ -698,6 +698,22 @@ input DeleteContributorAttribution {
 	contributorId: UUID!
 }
 
+"""
+Request to delete an audio slice from a document
+"""
+input DeleteDocumentAudioInput {
+	documentId: UUID!
+	audioSliceId: UUID!
+}
+
+"""
+Request to delete an audio slice from a word
+"""
+input DeleteWordAudioInput {
+	wordId: UUID!
+	audioSliceId: UUID!
+}
+
 type DocumentCollection {
 	"""
 	Full name of this collection
@@ -1315,6 +1331,8 @@ type Mutation {
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 	validateTurnstileToken(token: String!): Boolean!
+	deleteDocumentAudio(input: DeleteDocumentAudioInput!): AnnotatedDoc!
+	deleteWordAudio(input: DeleteWordAudioInput!): AnnotatedForm!
 }
 
 """
