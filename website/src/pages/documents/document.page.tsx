@@ -71,7 +71,6 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   const wordIndex = useLocation().hash
   const index = wordIndex?.replace("w", "")
   const doc = data?.document
-
   if (!doc) {
     return null
   }
@@ -453,6 +452,7 @@ export const DocumentTitleHeader = (p: {
     "name" | "slug"
   >[]
   doc: Dailp.DocumentFieldsFragment
+  onPrint?: () => void
 }) => {
   const { user } = useUser()
   const userId = useUserId()
@@ -491,7 +491,9 @@ export const DocumentTitleHeader = (p: {
         <div className={css.alignRight}>
           {
             // for printing, turns special stylized print layout visible and hides the current webpage
-            !isMobile ? <Button onClick={printDocument}>Print</Button> : null
+            !isMobile ? (
+              <Button onClick={p.onPrint ?? printDocument}>Print</Button>
+            ) : null
           }
         </div>
       </div>

@@ -1,28 +1,39 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
+import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import { FormProvider as FormProviderParagraph } from "src/edit-paragraph-form-context"
 import { EditWordCheckProvider } from "src/edit-word-check-context"
-import { FormProvider, useForm } from "src/edit-word-form-context"
+import { FormProvider } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
+import { LevelOfDetail } from "src/types"
 import { DocumentContents } from "./document.page"
 import * as css from "./print-document.css"
 
 export const printDocument = () => window.print()
 
-export const PrintBranding = () => (
-  <div className={css.printHeading}>
-    The Digital Archive of Indigenous Language Persistence (DAILP)
-  </div>
-)
-
-export const PrintLegend = () => (
-  <div className={css.printOnly}>
+export const PrintLegend = ({
+  levelOfDetail,
+}: {
+  levelOfDetail: LevelOfDetail
+}) => (
+  <div className={css.printLegendBox}>
     <h2 className={css.printHeading}>How To Read This Document</h2>
     <p className={css.printLegendSyllabary}>
       <strong>Syllabary Line:</strong> Text from the original source
     </p>
+    {levelOfDetail >= LevelOfDetail.Pronunciation && (
+      <p className={css.printLegendPhonetics}>
+        <strong>Phonetics Line:</strong> Pronunciation of a word
+      </p>
+    )}
+    {levelOfDetail >= LevelOfDetail.Segmentation && (
+      <p className={css.printLegendWordParts}>
+        <strong>Word Parts Line:</strong> Separates out meaningful parts of a
+        word
+      </p>
+    )}
     <p className={css.printLegendTranslation}>
       <strong>Translation Line:</strong> An English translation for a word
     </p>
@@ -33,28 +44,15 @@ export const PrintLegend = () => (
   </div>
 )
 
-export const PrintFooter = () => {
+export const usePrintFooterContent = () => {
   const location = useLocation()
-  return (
-    <footer className={css.printFooter}>
-      <span className={css.printFooterDetails}>
-        Printed: {new Date().toLocaleDateString()}, from: {location.pathname}
-      </span>
-      <span>
-        <span className={css.printFooterTitle}>The </span>
-        <span className={css.printFooterTitleBold}>D</span>
-        <span className={css.printFooterTitle}>igital </span>
-        <span className={css.printFooterTitleBold}>A</span>
-        <span className={css.printFooterTitle}>rchive of </span>
-        <span className={css.printFooterTitleBold}>I</span>
-        <span className={css.printFooterTitle}>ndigenous </span>
-        <span className={css.printFooterTitleBold}>L</span>
-        <span className={css.printFooterTitle}>anguage </span>
-        <span className={css.printFooterTitleBold}>P</span>
-        <span className={css.printFooterTitle}>ersistence</span>
-      </span>
-    </footer>
-  )
+  const [origin, setOrigin] = useState("")
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
+  const date = new Date().toLocaleDateString()
+  const url = `${origin}${location.pathname}`
+  return { date, url }
 }
 
 export const PrintDocument = (p: {
@@ -67,27 +65,70 @@ export const PrintDocument = (p: {
   collectionTitle?: string
 }) => {
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
+  const slug = p.doc.slug ?? ""
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug } })
+  const contributorNames =
+    data?.document?.contributors.map((c) => c.name).join(", ") ||
+    "Contributors not yet available"
+  const { date, url } = usePrintFooterContent()
 
   return (
     <div className={css.printDocument}>
-      <PrintBranding />
-      {(p.collectionTitle || p.breadcrumbs) && (
-        <Breadcrumbs aria-label="Breadcrumbs" className={css.printBreadcrumbs}>
-          {p.collectionTitle && (
-            <Link href={p.rootPath ?? ""}>{p.collectionTitle}</Link>
-          )}
-          {p.breadcrumbs?.map((crumb) => (
-            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-              {crumb.name}
-            </Link>
-          ))}
-        </Breadcrumbs>
-      )}
-      <h1>
-        {p.doc.title}
-        {p.doc.date && ` (${p.doc.date.year})`}
-      </h1>
-      <PrintLegend />
+      <Helmet>
+        <style>{`
+          @page {
+            margin-top: 1.5cm;
+            margin-bottom: 1.5cm;
+            @bottom-center {
+              content: "Printed: ${date}, from: ${url}\\A ${contributorNames}";
+              white-space: pre;
+              font-family: serif;
+              font-size: 9pt;
+              text-align: center;
+            }
+            @bottom-right {
+              content: counter(page);
+              font-family: serif;
+            }
+          }
+        `}</style>
+      </Helmet>
+      <div className={css.printRunningTitle}>{p.doc.title}</div>
+      <div className={css.printHeader}>
+        <div className={css.printHeading}>
+          The Digital Archive of Indigenous Language Persistence (DAILP)
+        </div>
+        {(p.collectionTitle || p.breadcrumbs) && (
+          <Breadcrumbs aria-label="Breadcrumbs">
+            {p.collectionTitle && (
+              <Link
+                href={p.rootPath ?? ""}
+                className={css.printBreadcrumbFirst}
+              >
+                {p.collectionTitle}
+              </Link>
+            )}
+            {p.breadcrumbs?.map((crumb) => (
+              <Link
+                href={`${p.rootPath}/${crumb.slug}`}
+                key={crumb.slug}
+                className={css.printBreadcrumbs}
+              >
+                {crumb.name}
+              </Link>
+            ))}
+          </Breadcrumbs>
+        )}
+        <h1>
+          {p.doc.title}
+          {p.doc.date && ` (${p.doc.date.year})`}
+        </h1>
+        <PrintLegend levelOfDetail={levelOfDetail} />
+      </div>
+      <h2 className={css.printSectionHeading}>
+        Translation
+        <span className={css.printSectionHeadingRule} />
+      </h2>
       <EditWordCheckProvider>
         <FormProvider>
           <FormProviderParagraph>
@@ -104,7 +145,6 @@ export const PrintDocument = (p: {
           </FormProviderParagraph>
         </FormProvider>
       </EditWordCheckProvider>
-      <PrintFooter />
     </div>
   )
 }

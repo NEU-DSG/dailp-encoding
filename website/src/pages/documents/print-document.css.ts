@@ -3,8 +3,8 @@ import {
   colors,
   fontSize,
   fonts,
+  hspace,
   mediaQueries,
-  thickness,
   vspace,
 } from "src/style/constants"
 
@@ -17,6 +17,8 @@ const printFontSizes = {
   medium: "0.95rem",
   large: "1.1rem",
   breadcrumb: "1rem",
+  legend: "0.842rem",
+  legendItem: "1rem",
 }
 
 export const printHeading = style({
@@ -28,6 +30,7 @@ export const printHeading = style({
       fontSize: printFontSizes.large,
       fontWeight: 700,
       lineHeight: 1,
+      marginBottom: 0,
     },
   },
 })
@@ -36,9 +39,40 @@ export const printBreadcrumbs = style({
   "@media": {
     [mediaQueries.print]: {
       fontFamily: printFonts.quattrocento,
-      fontSize: printFontSizes.breadcrumb,
+      fontSize: "1.105rem",
       fontWeight: 400,
       lineHeight: 1,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+  },
+})
+
+export const printBreadcrumbFirst = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: printFonts.quattrocento,
+      fontSize: "1.105rem",
+      fontWeight: 400,
+      lineHeight: 1,
+    },
+  },
+})
+
+export const printLegendBox = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      textAlign: "left",
+      marginTop: vspace.one,
+      paddingTop: "0.794rem",
+      paddingBottom: vspace.half,
+      borderRadius: "15px",
+      backgroundColor: "#f0f0f0d1",
+      border: "1px solid #000",
+      WebkitPrintColorAdjust: "exact",
+      printColorAdjust: "exact",
     },
   },
 })
@@ -46,9 +80,11 @@ export const printBreadcrumbs = style({
 export const printLegendSyllabary = style({
   "@media": {
     [mediaQueries.print]: {
-      fontFamily: fonts.body,
-      fontSize: printFontSizes.medium,
-      lineHeight: 0.7,
+      fontFamily: fonts.header,
+      fontSize: printFontSizes.legendItem,
+      lineHeight: 1.2,
+      marginTop: vspace.one,
+      marginBottom: 0,
       fontWeight: 400,
     },
   },
@@ -58,8 +94,9 @@ export const printLegendTranslation = style({
   "@media": {
     [mediaQueries.print]: {
       fontFamily: fonts.header,
-      fontSize: fontSize.small,
-      lineHeight: 0.7,
+      fontSize: printFontSizes.legendItem,
+      lineHeight: 1.2,
+      marginBottom: 0,
       fontWeight: 400,
     },
   },
@@ -68,10 +105,94 @@ export const printLegendTranslation = style({
 export const printLegendParagraph = style({
   "@media": {
     [mediaQueries.print]: {
-      fontFamily: printFonts.quattrocento,
-      fontSize: printFontSizes.medium,
-      lineHeight: 0.7,
+      fontFamily: fonts.header,
+      fontSize: printFontSizes.legendItem,
+      lineHeight: 1.2,
+      marginBottom: 0,
       fontWeight: 400,
+    },
+  },
+})
+
+export const printLegendPhonetics = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: fonts.header,
+      fontSize: printFontSizes.legendItem,
+      lineHeight: 1.2,
+      marginBottom: 0,
+      fontWeight: 400,
+    },
+  },
+})
+
+export const printLegendWordParts = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: fonts.header,
+      fontSize: printFontSizes.legendItem,
+      lineHeight: 1.2,
+      marginBottom: 0,
+      fontWeight: 400,
+    },
+  },
+})
+
+export const printSectionHeading = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      fontFamily: printFonts.quattrocento,
+      fontSize: "1.158rem",
+      fontWeight: 700,
+      lineHeight: 1.2,
+      marginTop: vspace.one,
+      marginBottom: vspace.quarter,
+    },
+  },
+})
+
+export const printSectionHeadingRule = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "418px",
+      borderTop: `1px solid ${colors.text}`,
+      marginTop: vspace.quarter,
+    },
+  },
+})
+
+export const printRunningTitle = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      textAlign: "center",
+      fontFamily: fonts.header,
+      fontSize: "0.947rem",
+      fontWeight: 700,
+      lineHeight: 1.2,
+      backgroundColor: colors.body,
+      zIndex: -1,
+    },
+  },
+})
+
+export const printHeader = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      textAlign: "center",
     },
   },
 })
@@ -81,6 +202,7 @@ export const printDocument = style({
   "@media": {
     [mediaQueries.print]: {
       display: "block",
+      paddingTop: vspace.one,
       paddingBottom: vspace.double,
     },
   },
@@ -88,6 +210,48 @@ export const printDocument = style({
 
 globalStyle(`${printDocument} button`, {
   display: "none",
+})
+
+globalStyle(`${printDocument} h1`, {
+  "@media": {
+    [mediaQueries.print]: {
+      marginBottom: 0,
+    },
+  },
+})
+
+globalStyle(`${printDocument} h1 + ul`, {
+  "@media": {
+    [mediaQueries.print]: {
+      marginTop: 0,
+      marginBottom: 0,
+    },
+  },
+})
+
+globalStyle(`${printDocument} ul li:last-child::after`, {
+  "@media": {
+    [mediaQueries.print]: {
+      content: `""`,
+      padding: 0,
+    },
+  },
+})
+
+globalStyle(`${printLegendBox} h2`, {
+  "@media": {
+    [mediaQueries.print]: {
+      textAlign: "center",
+    },
+  },
+})
+
+globalStyle(`${printLegendBox} p`, {
+  "@media": {
+    [mediaQueries.print]: {
+      paddingLeft: hspace.edge,
+    },
+  },
 })
 
 export const printOnly = style({
@@ -105,12 +269,11 @@ export const printFooter = style({
       flexDirection: "column",
       alignItems: "center",
       position: "fixed",
-      bottom: vspace.small,
+      bottom: 0,
       left: 0,
       right: 0,
+      zIndex: -1,
       fontFamily: printFonts.spectral,
-      borderTop: `${thickness.thin} solid ${colors.text}`,
-      paddingTop: vspace.small,
       backgroundColor: colors.body,
     },
   },
@@ -148,6 +311,18 @@ export const printFooterTitleBold = style({
       fontSize: fontSize.small,
       fontWeight: 700,
       lineHeight: 0.7,
+    },
+  },
+})
+
+export const printFooterContributors = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: fonts.header,
+      fontSize: "11px",
+      fontWeight: 400,
     },
   },
 })
