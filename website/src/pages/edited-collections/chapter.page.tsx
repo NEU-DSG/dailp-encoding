@@ -51,6 +51,13 @@ const ChapterPage = (props: {
 
   const { document, wordpressId } = chapter
 
+  const breadcrumbString = [
+    collectionData?.editedCollection?.title,
+    ...chapter.breadcrumbs.map((c) => c.name),
+  ]
+    .filter(Boolean)
+    .join(" / ")
+
   return (
     <CWKWLayout>
       <Helmet title={chapter.title} />
@@ -100,7 +107,7 @@ const ChapterPage = (props: {
                 rootPath={collectionRoute(props.collectionSlug)}
                 doc={document}
               />
-              <TabSet doc={document} />
+              <TabSet doc={document} breadcrumbString={breadcrumbString} />
             </>
           ) : null}
 

@@ -108,7 +108,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
+export const TabSet = ({
+  doc,
+  breadcrumbString,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+  breadcrumbString?: string
+}) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -224,9 +230,15 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         </FormProviderDoc>
       </TabPanel>
 
-      {tabs.selectedId === Tabs.ANNOTATION && <PrintTranslation doc={doc} />}
-      {tabs.selectedId === Tabs.IMAGES && <PrintOriginalText doc={doc} />}
-      {tabs.selectedId === Tabs.INFO && <PrintMetadata doc={doc} />}
+      {tabs.selectedId === Tabs.ANNOTATION && (
+        <PrintTranslation doc={doc} breadcrumbString={breadcrumbString} />
+      )}
+      {tabs.selectedId === Tabs.IMAGES && (
+        <PrintOriginalText doc={doc} breadcrumbString={breadcrumbString} />
+      )}
+      {tabs.selectedId === Tabs.INFO && (
+        <PrintMetadata doc={doc} breadcrumbString={breadcrumbString} />
+      )}
     </>
   )
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
-import { Breadcrumbs, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"
@@ -21,12 +20,7 @@ export const usePrintFooterContent = () => {
 
 export const PrintLayout = (p: {
   doc: Dailp.DocumentFieldsFragment
-  breadcrumbs?: readonly Pick<
-    Dailp.CollectionChapter["breadcrumbs"][0],
-    "name" | "slug"
-  >[]
-  rootPath?: string
-  collectionTitle?: string
+  breadcrumbString?: string
   children?: React.ReactNode
 }) => {
   const slug = p.doc.slug ?? ""
@@ -35,12 +29,6 @@ export const PrintLayout = (p: {
     data?.document?.contributors.map((c) => c.name).join(", ") ||
     "Contributor(s) of this artifact are unknown."
   const { date, url } = usePrintFooterContent()
-  const breadcrumbString = [
-    p.collectionTitle,
-    ...(p.breadcrumbs?.map((c) => c.name) ?? []),
-  ]
-    .filter(Boolean)
-    .join(" / ")
 
   return (
     <div className={css.printDocument}>
@@ -54,7 +42,7 @@ export const PrintLayout = (p: {
             margin-bottom: 1.5cm;
             @top-center {
               content: "The Digital Archive of Indigenous Language Persistence${
-                breadcrumbString ? "\\A " + breadcrumbString : ""
+                p.breadcrumbString ? "\\A " + p.breadcrumbString : ""
               }";
               white-space: pre;
               font-family: ${fonts.header};
@@ -80,27 +68,10 @@ export const PrintLayout = (p: {
         <div className={css.printHeading}>
           The Digital Archive of Indigenous Language Persistence (DAILP)
         </div>
-        {(p.collectionTitle || p.breadcrumbs) && (
-          <Breadcrumbs aria-label="Breadcrumbs">
-            {p.collectionTitle && (
-              <Link
-                href={p.rootPath ?? ""}
-                className={css.printBreadcrumbFirst}
-              >
-                {p.collectionTitle}
-              </Link>
-            )}
-            {p.breadcrumbs?.map((crumb) => (
-              <Link
-                href={`${p.rootPath}/${crumb.slug}`}
-                key={crumb.slug}
-                className={css.printBreadcrumbs}
-              >
-                {crumb.name}
-              </Link>
-            ))}
-          </Breadcrumbs>
+        {p.breadcrumbString && (
+          <p className={css.printBreadcrumbs}>{p.breadcrumbString}</p>
         )}
+        <br />
         <h1>
           {p.doc.title}
           {p.doc.date && ` (${p.doc.date.year})`}

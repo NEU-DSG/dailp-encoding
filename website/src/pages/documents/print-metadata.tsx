@@ -4,20 +4,10 @@ import { PrintLayout } from "./print-layout"
 
 export const PrintMetadata = (p: {
   doc: Dailp.DocumentFieldsFragment
-  breadcrumbs?: readonly Pick<
-    Dailp.CollectionChapter["breadcrumbs"][0],
-    "name" | "slug"
-  >[]
-  rootPath?: string
-  collectionTitle?: string
+  breadcrumbString?: string
 }) => {
   return (
-    <PrintLayout
-      doc={p.doc}
-      breadcrumbs={p.breadcrumbs}
-      rootPath={p.rootPath}
-      collectionTitle={p.collectionTitle}
-    >
+    <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
       <h2>Document Info</h2>
     </PrintLayout>
   )

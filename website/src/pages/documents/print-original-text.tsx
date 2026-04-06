@@ -6,20 +6,10 @@ import * as css from "./print-translation.css"
 
 export const PrintOriginalText = (p: {
   doc: Dailp.DocumentFieldsFragment
-  breadcrumbs?: readonly Pick<
-    Dailp.CollectionChapter["breadcrumbs"][0],
-    "name" | "slug"
-  >[]
-  rootPath?: string
-  collectionTitle?: string
+  breadcrumbString?: string
 }) => {
   return (
-    <PrintLayout
-      doc={p.doc}
-      breadcrumbs={p.breadcrumbs}
-      rootPath={p.rootPath}
-      collectionTitle={p.collectionTitle}
-    >
+    <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
       <h2 className={css.printSectionHeading}>
         Original Document
         <span className={css.printSectionHeadingRule} />
