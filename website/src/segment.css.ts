@@ -150,7 +150,7 @@ const bordered = style({
   },
   "@media": {
     [mediaQueries.print]: {
-      borderBottom: `${thickness.thin} solid ${colors.text}`,
+      borderBottom: "none",
     },
   },
 })

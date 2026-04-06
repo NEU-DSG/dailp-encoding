@@ -8,7 +8,6 @@ import {
 } from "src/segment.css"
 import {
   colors,
-  fontSize,
   fonts,
   hspace,
   mediaQueries,
@@ -17,14 +16,10 @@ import {
 
 const printFonts = {
   quattrocento: `"Quattrocento", serif`,
-  spectral: `"Spectral", serif`,
 }
 
 const printFontSizes = {
-  medium: "0.95rem",
   large: "1.1rem",
-  breadcrumb: "1rem",
-  legend: "0.842rem",
   legendItem: "1rem",
 }
 
@@ -97,7 +92,7 @@ export const printLegendSyllabary = style({
   },
 })
 
-export const printLegendTranslation = style({
+export const printLegendItem = style({
   "@media": {
     [mediaQueries.print]: {
       fontFamily: fonts.header,
@@ -109,41 +104,6 @@ export const printLegendTranslation = style({
   },
 })
 
-export const printLegendParagraph = style({
-  "@media": {
-    [mediaQueries.print]: {
-      fontFamily: fonts.header,
-      fontSize: printFontSizes.legendItem,
-      lineHeight: 1.2,
-      marginBottom: 0,
-      fontWeight: 400,
-    },
-  },
-})
-
-export const printLegendPhonetics = style({
-  "@media": {
-    [mediaQueries.print]: {
-      fontFamily: fonts.header,
-      fontSize: printFontSizes.legendItem,
-      lineHeight: 1.2,
-      marginBottom: 0,
-      fontWeight: 400,
-    },
-  },
-})
-
-export const printLegendWordParts = style({
-  "@media": {
-    [mediaQueries.print]: {
-      fontFamily: fonts.header,
-      fontSize: printFontSizes.legendItem,
-      lineHeight: 1.2,
-      marginBottom: 0,
-      fontWeight: 400,
-    },
-  },
-})
 
 export const printSectionHeading = style({
   display: "none",
@@ -158,6 +118,8 @@ export const printSectionHeading = style({
       lineHeight: 1.2,
       marginTop: vspace.one,
       marginBottom: 0,
+      breakBefore: "avoid",
+      breakAfter: "avoid",
     },
   },
 })
@@ -180,6 +142,7 @@ export const printHeader = style({
     [mediaQueries.print]: {
       display: "block",
       textAlign: "center",
+      breakAfter: "avoid",
     },
   },
 })
@@ -190,7 +153,7 @@ export const printDocument = style({
     [mediaQueries.print]: {
       display: "block",
       paddingTop: vspace.one,
-      paddingBottom: vspace.double,
+      paddingBottom: 0,
       fontSize: "10pt",
       width: "100%",
     },
@@ -204,6 +167,7 @@ export const printBodyContent = style({
       display: "block",
       width: "100%",
       marginTop: 0,
+      breakBefore: "avoid",
     },
   },
 })
@@ -254,6 +218,17 @@ globalStyle(`${printLegendBox} p`, {
   },
 })
 
+export const printParagraphPageBreak = globalStyle(
+  `.${printBodyContent} .${wordGroup}:nth-child(3n+1):last-child, .${printBodyContent} .${wordGroupInline}:nth-child(3n+1):last-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        breakAfter: "page",
+      },
+    },
+  }
+)
+
 export const printWordSpacing = globalStyle(
   `.${printBodyContent} .${wordGroup}, .${printBodyContent} .${wordGroupInline}`,
   {
@@ -278,7 +253,35 @@ export const printDocumentBlockSpacing = globalStyle(
         marginTop: vspace.quarter,
         marginBottom: vspace.quarter,
         paddingBottom: 0,
-        breakAfter: "auto",
+        breakAfter: "avoid",
+        breakBefore: "avoid",
+      },
+    },
+  }
+)
+
+export const printBlankPage = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      breakBefore: "page",
+      height: "100vh",
+      fontStyle: "italic",
+      fontFamily: "serif",
+      fontSize: "1rem",
+    },
+  },
+})
+
+export const printFirstDocumentBlockBorder = globalStyle(
+  `.${printBodyContent} .${documentBlock.story}:first-child, .${printBodyContent} .${documentBlock.wordByWord}:first-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        borderBottom: `1px solid ${colors.text}`,
       },
     },
   }
@@ -392,76 +395,3 @@ export const printTranslationLine = globalStyle(
     },
   }
 )
-
-export const printOnly = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: { display: "block" },
-  },
-})
-
-export const printFooter = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      zIndex: -1,
-      fontFamily: printFonts.spectral,
-      backgroundColor: colors.body,
-    },
-  },
-})
-
-export const printFooterDetails = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "inline",
-      fontSize: fontSize.small,
-      fontWeight: 400,
-      lineHeight: 0.7,
-    },
-  },
-})
-
-export const printFooterTitle = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "inline",
-      fontSize: fontSize.small,
-      fontWeight: 400,
-      lineHeight: 0.7,
-    },
-  },
-})
-
-export const printFooterTitleBold = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "inline",
-      fontSize: fontSize.small,
-      fontWeight: 700,
-      lineHeight: 0.7,
-    },
-  },
-})
-
-export const printFooterContributors = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "block",
-      fontFamily: fonts.header,
-      fontSize: "11px",
-      fontWeight: 400,
-    },
-  },
-})

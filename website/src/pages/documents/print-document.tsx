@@ -25,20 +25,26 @@ export const PrintLegend = ({
       <strong>Syllabary Line:</strong> Text from the original source
     </p>
     {levelOfDetail >= LevelOfDetail.Pronunciation && (
-      <p className={css.printLegendPhonetics}>
+      <p className={css.printLegendItem}>
         <strong>Phonetics Line:</strong> Pronunciation of a word
       </p>
     )}
     {levelOfDetail >= LevelOfDetail.Segmentation && (
-      <p className={css.printLegendWordParts}>
+      <p className={css.printLegendItem}>
         <strong>Word Parts Line:</strong> Separates out meaningful parts of a
         word
       </p>
     )}
-    <p className={css.printLegendTranslation}>
+    {levelOfDetail >= LevelOfDetail.Segmentation && (
+      <p className={css.printLegendItem}>
+        <strong>Gloss Line:</strong> Provides the meaning of separated word
+        parts
+      </p>
+    )}
+    <p className={css.printLegendItem}>
       <strong>Translation Line:</strong> An English translation for a word
     </p>
-    <p className={css.printLegendParagraph}>
+    <p className={css.printLegendItem}>
       <strong>Paragraph Translation:</strong> Provides a free translation of a
       section of text
     </p>
@@ -171,6 +177,9 @@ export const PrintDocument = (p: {
             </FormProviderParagraph>
           </FormProvider>
         </EditWordCheckProvider>
+      </div>
+      <div className={css.printBlankPage}>
+        This page was left intentionally blank.
       </div>
     </div>
   )
