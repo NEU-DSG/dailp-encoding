@@ -349,3 +349,34 @@ export const noScrollTop = style({
   visibility: "hidden",
   opacity: 0,
 })
+
+export const printSectionHeading = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      fontFamily: `"Quattrocento", serif`,
+      fontSize: "1.158rem",
+      fontWeight: 700,
+      lineHeight: 1.2,
+      marginTop: vspace.one,
+      marginBottom: 0,
+      breakBefore: "avoid",
+      breakAfter: "avoid",
+    },
+  },
+})
+
+export const printSectionHeadingRule = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "418px",
+      borderTop: `1px solid ${colors.text}`,
+      marginTop: vspace.quarter,
+    },
+  },
+})

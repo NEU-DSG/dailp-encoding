@@ -30,6 +30,12 @@ export const pageImage = style({
   width: "100%",
   height: "auto",
   marginBottom: vspace.small,
+  "@media": {
+    [mediaQueries.print]: {
+      WebkitPrintColorAdjust: "exact",
+      printColorAdjust: "exact",
+    },
+  },
 })
 
 export const caption = style({

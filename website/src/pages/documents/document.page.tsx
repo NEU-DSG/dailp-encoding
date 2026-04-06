@@ -50,7 +50,10 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
-import { PrintDocument, printDocument } from "./print-layout"
+import { printDocument } from "./print-layout"
+import { PrintMetadata } from "./print-metadata"
+import { PrintOriginalText } from "./print-original-text"
+import { PrintTranslation } from "./print-translation"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -99,7 +102,6 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       <main className={css.annotatedDocument}>
         <DocumentTitleHeader doc={doc} />
         <TabSet doc={doc} />
-        <PrintDocument doc={doc} />
       </main>
     </Layout>
   )
@@ -221,6 +223,10 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
           </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
+
+      {tabs.selectedId === Tabs.ANNOTATION && <PrintTranslation doc={doc} />}
+      {tabs.selectedId === Tabs.IMAGES && <PrintOriginalText doc={doc} />}
+      {tabs.selectedId === Tabs.INFO && <PrintMetadata doc={doc} />}
     </>
   )
 }
