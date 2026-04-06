@@ -104,7 +104,6 @@ export const printLegendItem = style({
   },
 })
 
-
 export const printSectionHeading = style({
   display: "none",
   "@media": {
