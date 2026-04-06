@@ -10,7 +10,7 @@ import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
 import { DocumentContents } from "./document.page"
-import * as css from "./print-document.css"
+import * as css from "./print-layout.css"
 
 export const printDocument = () => window.print()
 

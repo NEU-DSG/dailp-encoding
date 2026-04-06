@@ -8,7 +8,7 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
-import { PrintDocument } from "../documents/print-document"
+import { PrintDocument } from "../documents/print-layout"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
