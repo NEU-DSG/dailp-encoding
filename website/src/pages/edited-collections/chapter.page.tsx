@@ -102,7 +102,7 @@ const ChapterPage = (props: {
                 doc={document}
               />
               <TabSet doc={document} />
-              <PrintDocument
+              <PrintDocument /* invisible component that only shows up in printing */
                 doc={document}
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}

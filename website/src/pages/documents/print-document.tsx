@@ -7,6 +7,7 @@ import { FormProvider } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
+import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
 import { DocumentContents } from "./document.page"
 import * as css from "./print-document.css"
@@ -69,7 +70,7 @@ export const PrintDocument = (p: {
   const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug } })
   const contributorNames =
     data?.document?.contributors.map((c) => c.name).join(", ") ||
-    "Contributors not yet available"
+    "Contributor(s) of this artifact are unknown."
   const { date, url } = usePrintFooterContent()
   const breadcrumbString = [
     p.collectionTitle,
@@ -93,7 +94,7 @@ export const PrintDocument = (p: {
                 breadcrumbString ? "\\A " + breadcrumbString : ""
               }";
               white-space: pre;
-              font-family: "Quattrocento Sans", sans-serif;
+              font-family: ${fonts.header};
               font-size: 11pt;
               font-weight: 700;
               text-align: center;
@@ -147,22 +148,30 @@ export const PrintDocument = (p: {
         Translation
         <span className={css.printSectionHeadingRule} />
       </h2>
-      <EditWordCheckProvider>
-        <FormProvider>
-          <FormProviderParagraph>
-            <DocumentContents
-              doc={p.doc}
-              levelOfDetail={levelOfDetail}
-              cherokeeRepresentation={cherokeeRepresentation}
-              openDetails={() => {}}
-              wordPanelDetails={{
-                currContents: null,
-                setCurrContents: () => {},
-              }}
-            />
-          </FormProviderParagraph>
-        </FormProvider>
-      </EditWordCheckProvider>
+      <div
+        className={
+          levelOfDetail >= LevelOfDetail.Segmentation
+            ? `${css.printBodyContent} ${css.printHideParagraphTranslation}`
+            : css.printBodyContent
+        }
+      >
+        <EditWordCheckProvider>
+          <FormProvider>
+            <FormProviderParagraph>
+              <DocumentContents
+                doc={p.doc}
+                levelOfDetail={levelOfDetail}
+                cherokeeRepresentation={cherokeeRepresentation}
+                openDetails={() => {}}
+                wordPanelDetails={{
+                  currContents: null,
+                  setCurrContents: () => {},
+                }}
+              />
+            </FormProviderParagraph>
+          </FormProvider>
+        </EditWordCheckProvider>
+      </div>
     </div>
   )
 }

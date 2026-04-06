@@ -1,5 +1,12 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import {
+  annotationSection,
+  documentBlock,
+  inlineBlock,
+  wordGroup,
+  wordGroupInline,
+} from "src/segment.css"
+import {
   colors,
   fontSize,
   fonts,
@@ -150,7 +157,7 @@ export const printSectionHeading = style({
       fontWeight: 700,
       lineHeight: 1.2,
       marginTop: vspace.one,
-      marginBottom: vspace.quarter,
+      marginBottom: 0,
     },
   },
 })
@@ -184,6 +191,19 @@ export const printDocument = style({
       display: "block",
       paddingTop: vspace.one,
       paddingBottom: vspace.double,
+      fontSize: "10pt",
+      width: "100%",
+    },
+  },
+})
+
+export const printBodyContent = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "100%",
+      marginTop: 0,
     },
   },
 })
@@ -233,6 +253,145 @@ globalStyle(`${printLegendBox} p`, {
     },
   },
 })
+
+export const printWordSpacing = globalStyle(
+  `.${printBodyContent} .${wordGroup}, .${printBodyContent} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
+        paddingTop: 0,
+        paddingBottom: 0,
+        breakInside: "avoid",
+      },
+    },
+  }
+)
+
+export const printDocumentBlockSpacing = globalStyle(
+  `.${printBodyContent} .${documentBlock.story}, .${printBodyContent} .${documentBlock.wordByWord}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        marginTop: vspace.quarter,
+        marginBottom: vspace.quarter,
+        paddingBottom: 0,
+        breakAfter: "auto",
+      },
+    },
+  }
+)
+
+export const printAnnotationSectionSpacing = globalStyle(
+  `.${printBodyContent} .${annotationSection.story}, .${printBodyContent} .${annotationSection.wordParts}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 212px)",
+        columnGap: vspace.one,
+        rowGap: vspace.one,
+        marginBottom: 0,
+      },
+    },
+  }
+)
+
+export const printSyllabaryLine = globalStyle(
+  `.${wordGroup} div[lang="chr"], .${wordGroupInline} div[lang="chr"]`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        fontFamily: `"Charis SIL", serif`,
+        fontSize: "18pt",
+        fontWeight: 700,
+        lineHeight: 1.2,
+        width: "212px",
+        height: "40px",
+      },
+    },
+  }
+)
+
+export const printPhoneticsLine = globalStyle(
+  `.${wordGroup} div:nth-child(2), .${wordGroupInline} div:nth-child(2)`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        fontFamily: fonts.header,
+        fontSize: "16pt",
+        fontWeight: 400,
+        lineHeight: 1.2,
+        width: "212px",
+        height: "40px",
+      },
+    },
+  }
+)
+
+export const printWordPartsLine = globalStyle(
+  `.${wordGroup} i, .${wordGroupInline} i`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        fontFamily: fonts.header,
+        fontSize: "16pt",
+        fontStyle: "italic",
+        fontWeight: 400,
+        lineHeight: 1.2,
+        width: "212px",
+        height: "40px",
+      },
+    },
+  }
+)
+
+export const printGlossLine = globalStyle(
+  `.${wordGroup} i + div, .${wordGroupInline} i + div`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        fontFamily: fonts.header,
+        fontSize: "15pt",
+        fontWeight: 400,
+        textTransform: "lowercase",
+        lineHeight: 1.2,
+        width: "212px",
+        height: "40px",
+      },
+    },
+  }
+)
+
+export const printHideParagraphTranslation = style({
+  "@media": {
+    [mediaQueries.print]: { display: "block" },
+  },
+})
+
+globalStyle(`.${printHideParagraphTranslation} .${inlineBlock}`, {
+  "@media": {
+    [mediaQueries.print]: { display: "none" },
+  },
+})
+
+export const printTranslationLine = globalStyle(
+  `.${wordGroup} div:last-child, .${wordGroupInline} div:last-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        fontFamily: fonts.header,
+        fontSize: "16pt",
+        fontWeight: 400,
+        lineHeight: 1.2,
+        width: "212px",
+        height: "40px",
+      },
+    },
+  }
+)
 
 export const printOnly = style({
   display: "none",
