@@ -167,26 +167,6 @@ export const printSectionHeadingRule = style({
   },
 })
 
-export const printRunningTitle = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "block",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      textAlign: "center",
-      fontFamily: fonts.header,
-      fontSize: "0.947rem",
-      fontWeight: 700,
-      lineHeight: 1.2,
-      backgroundColor: colors.body,
-      zIndex: -1,
-    },
-  },
-})
-
 export const printHeader = style({
   display: "none",
   "@media": {

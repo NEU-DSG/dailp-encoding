@@ -71,14 +71,33 @@ export const PrintDocument = (p: {
     data?.document?.contributors.map((c) => c.name).join(", ") ||
     "Contributors not yet available"
   const { date, url } = usePrintFooterContent()
+  const breadcrumbString = [
+    p.collectionTitle,
+    ...(p.breadcrumbs?.map((c) => c.name) ?? []),
+  ]
+    .filter(Boolean)
+    .join(" / ")
 
   return (
     <div className={css.printDocument}>
       <Helmet>
         <style>{`
+          @page :first {
+            @top-center { content: none; }
+          }
           @page {
             margin-top: 1.5cm;
             margin-bottom: 1.5cm;
+            @top-center {
+              content: "The Digital Archive of Indigenous Language Persistence${
+                breadcrumbString ? "\\A " + breadcrumbString : ""
+              }";
+              white-space: pre;
+              font-family: "Quattrocento Sans", sans-serif;
+              font-size: 11pt;
+              font-weight: 700;
+              text-align: center;
+            }
             @bottom-center {
               content: "Printed: ${date}, from: ${url}\\A ${contributorNames}";
               white-space: pre;
@@ -93,7 +112,6 @@ export const PrintDocument = (p: {
           }
         `}</style>
       </Helmet>
-      <div className={css.printRunningTitle}>{p.doc.title}</div>
       <div className={css.printHeader}>
         <div className={css.printHeading}>
           The Digital Archive of Indigenous Language Persistence (DAILP)
