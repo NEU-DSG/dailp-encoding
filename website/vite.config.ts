@@ -26,7 +26,7 @@ export default defineConfig({
     }
   }) : undefined],
   ssr: {
-    noExternal: ["lodash", "react-markdown"]
+    noExternal: ["lodash", "react-markdown", "react-icons"]
   },
   css: {
     postcss: {

@@ -136,8 +136,7 @@
     }
   },
   "resolutions": {
-    "graphql": "16.8.1",
-    "react-docgen": "7.1.0"
+    "graphql": "16.8.1"
   },
   "eslintConfig": {
     "extends": [
