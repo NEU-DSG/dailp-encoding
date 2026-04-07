@@ -2713,6 +2713,36 @@ impl Database {
         .await?;
         Ok(())
     }
+
+    pub async fn get_all_subject_headings(&self) -> Result<Vec<SubjectHeading>> {
+        let results = sqlx::query_as::<_, SubjectHeading>(
+            r#"
+            SELECT id, name, status 
+            FROM subject_heading 
+            ORDER BY name ASC
+            "#,
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(results)
+    }
+
+    pub async fn insert_subject_heading(&self, heading: &SubjectHeading) -> Result<()> {
+        sqlx::query(
+            r#"
+            INSERT INTO subject_heading (id, name, status)
+            VALUES ($1, $2, $3)
+            "#,
+        )
+        .bind(heading.id)
+        .bind(&heading.name)
+        .bind(heading.status)
+        .execute(&self.client)
+        .await?;
+
+        Ok(())
+    }
 }
 
 #[async_trait]

@@ -45,3 +45,18 @@ export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
 
   return citation
 }
+
+/**
+ * Merges global metadata options with current document selections.
+ * Ensuring unique IDs and alphabetical sorting.
+ */
+export function mergeMetadataOptions<T extends { id: string; name: string }>(
+  globalList: T[],
+  currentSelections: T[]
+): T[] {
+  const map = new Map<string, T>()
+  ;[...globalList, ...currentSelections].forEach((item) => {
+    if (item.id) map.set(item.id, item)
+  })
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+}

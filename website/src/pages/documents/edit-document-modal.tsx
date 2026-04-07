@@ -8,8 +8,11 @@ import { form } from "src/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import { buildCitationMetadata } from "../../utils/build-citation-metadata"
 import Cite from "../../utils/citation-config"
+import {
+  buildCitationMetadata,
+  mergeMetadataOptions,
+} from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { EditingProvider, useEditing } from "./editing-context"
@@ -175,6 +178,73 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     documentMetadata.subjectHeadings ?? []
   )
 
+  //
+  //
+  //
+  //
+  //
+  //
+
+  const [subjectQueryResult, refetchSubjects] =
+    Dailp.useAllSubjectHeadingsQuery()
+  const [, createSubjectMutation] = Dailp.useCreateSubjectHeadingMutation()
+
+  const [selectedSubjects, setSelectedSubjects] = useState<
+    Dailp.SubjectHeadingUpdate[]
+  >(
+    documentMetadata.subjectHeadings?.map((s) => ({
+      id: s.id,
+      name: s.name,
+    })) ?? []
+  )
+  const [newSubjectName, setNewSubjectName] = useState("")
+
+  const availableSubjects = useMemo(() => {
+    const remoteData = (subjectQueryResult.data?.allSubjectHeadings ??
+      []) as unknown as Dailp.SubjectHeadingUpdate[]
+    return mergeMetadataOptions(remoteData, selectedSubjects)
+  }, [subjectQueryResult.data, selectedSubjects])
+
+  const handleAddNewGlobalSubject = async () => {
+    if (!newSubjectName.trim()) return
+
+    console.log("adding new entered")
+
+    const result = await createSubjectMutation({
+      name: newSubjectName,
+      status: Dailp.ApprovalStatus.Approved,
+    })
+
+    if (result.error) {
+      console.error("Mutation failed:", result.error.message)
+      return
+    }
+
+    console.log("got result")
+
+    if (result.data?.createSubjectHeading) {
+      const newHeading = result.data.createSubjectHeading
+
+      setSelectedSubjects((prev) => [
+        ...prev,
+        { id: newHeading.id, name: newHeading.name },
+      ])
+
+      // Refresh the available dropdown list
+      refetchSubjects({ requestPolicy: "network-only" })
+
+      // NOW the keyword goes away
+      setNewSubjectName("")
+    }
+  }
+
+  //
+  //
+  //
+  //
+  //
+  //
+
   const [contributors, setContributors] = useState<FormContributor[]>(() =>
     (documentMetadata.contributors ?? []).map((c) => ({
       ...c,
@@ -229,6 +299,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         format: "text",
         template: citeFormat || "apa",
         lang: "en-US",
+        type: "document",
       })
       console.log("Using citeFormat:", citeFormat)
       console.log("Generated citation:", docCitation)
@@ -428,7 +499,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   }
 
   const creatorStrings = useMemo(
-    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
+    () => (creator ?? []).map((cr) => cr.name),
     [documentMetadata.creators]
   )
 
@@ -797,13 +868,62 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
           <TagSelector
             label="Subject Headings"
-            selectedTags={selectedSubjectHeadings}
-            approvedTags={approvedSubjectHeadings}
-            newTags={newHeadings}
-            onAdd={isEditing ? addHeading : undefined}
-            onRemove={isEditing ? removeHeading : undefined}
-            addButtonLabel="Add Subject Heading"
+            selectedTags={selectedSubjects.map((s) => s.name)}
+            approvedTags={availableSubjects.map((s) => s.name)}
+            onAdd={(name) => {
+              const match = availableSubjects.find((s) => s.name === name)
+              if (match) setSelectedSubjects((prev) => [...prev, match])
+            }}
+            onRemove={(index) => {
+              setSelectedSubjects((prev) => prev.filter((_, i) => i !== index))
+            }}
+            addButtonLabel="Select Subject Heading"
           />
+
+          {/* Separate Creation Box */}
+          {isEditing && (
+            <div
+              className={styles.fieldGroup}
+              style={{
+                marginTop: "20px",
+                borderTop: "1px solid #eee",
+                paddingTop: "10px",
+              }}
+            >
+              <label
+                className={styles.label}
+                style={{ fontSize: "14px", color: "#555" }}
+              >
+                Add New Global Heading
+              </label>
+              <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
+                <input
+                  type="text"
+                  placeholder="Type new subject here..."
+                  value={newSubjectName}
+                  onChange={(e) => setNewSubjectName(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddNewGlobalSubject}
+                  className={styles.addButton}
+                  style={{
+                    padding: "0 20px",
+                    minWidth: "fit-content",
+                    height: "42px",
+                  }}
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          )}
 
           <TagSelector
             label="Languages"

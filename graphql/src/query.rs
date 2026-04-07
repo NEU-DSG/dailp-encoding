@@ -8,11 +8,12 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -407,6 +408,16 @@ impl Query {
             .loader()
             .get_menu_by_slug(slug)
             .await?)
+    }
+
+    /// Fetch all available subject headings.
+    async fn all_subject_headings(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        Ok(db.get_all_subject_headings().await?)
     }
 }
 
@@ -1000,6 +1011,26 @@ impl Mutation {
         let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
         Ok(body_json["success"].as_bool().unwrap())
+    }
+
+    /// Adds a new subject heading to the global list.
+    async fn create_subject_heading(
+        &self,
+        context: &Context<'_>,
+        name: String,
+        status: ApprovalStatus,
+    ) -> FieldResult<SubjectHeading> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let new_heading = SubjectHeading {
+            id: Uuid::new_v4(),
+            name,
+            status,
+        };
+
+        db.insert_subject_heading(&new_heading).await?;
+
+        Ok(new_heading)
     }
 }
 
