@@ -10,12 +10,30 @@ const meta: Meta<typeof CreativeCommonsBy> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
+export const OneAuthor: Story = {
   args: {
     title: "Example Work",
+    authors: [{ name: "Author One", link: "https://example.com/author-one" }],
+  },
+}
+
+export const TwoAuthors: Story = {
+  args: {
+    title: "Example Work 1",
     authors: [
       { name: "Author One", link: "https://example.com/author-one" },
       { name: "Author Two" },
+    ],
+  },
+}
+
+export const ThreeAuthors: Story = {
+  args: {
+    title: "Example Work 2",
+    authors: [
+      { name: "Author One", link: "https://example.com/author-one" },
+      { name: "Author Two" },
+      { name: "Author Three" },
     ],
   },
 }

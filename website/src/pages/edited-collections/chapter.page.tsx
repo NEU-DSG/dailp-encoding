@@ -7,7 +7,7 @@ import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
-import { DocumentTitleHeader, TabSet } from "../documents/document.page"
+import { DocumentTitleHeader, TabSet } from "src/pages/documents/document.page"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 

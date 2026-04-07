@@ -12,7 +12,7 @@ import { drawerBg } from "./menu.css"
 import {
   collPanelButton,
   wordPanelButton,
-} from "./pages/documents/components/panel-layout/panel-layout.css"
+} from "./components/panel-layout/panel-layout.css"
 import { morphemeDialog } from "./pages/documents/document.css"
 
 export const highlightedLabel = style({

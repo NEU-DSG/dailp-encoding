@@ -56,7 +56,7 @@ export const LexicalSearch = () => {
   )
 }
 
-const Timeline = (p: { gloss: string }) => {
+export const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useWordSearchQuery({
     variables: { query: p.gloss },
   })

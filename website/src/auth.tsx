@@ -24,7 +24,7 @@ type UserContextType = {
   }
 }
 
-const UserContext = createContext<UserContextType>({} as UserContextType)
+export const UserContext = createContext<UserContextType>({} as UserContextType)
 
 const userPool = new CognitoUserPool({
   UserPoolId: process.env["DAILP_USER_POOL"] ?? "",

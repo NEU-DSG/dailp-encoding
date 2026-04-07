@@ -18,7 +18,7 @@ type CollectionContext = {
   setSelected: (chapters: Chapter[]) => void
 }
 
-const CollectionContext = createContext<CollectionContext>(
+export const CollectionContext = createContext<CollectionContext>(
   {} as CollectionContext
 )
 

@@ -10,8 +10,14 @@ const meta: Meta<typeof Alert> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
+export const Example1: Story = {
   args: {
     children: "This is an alert message.",
+  },
+}
+
+export const Example2: Story = {
+  args: {
+    children: "This is another alert message.",
   },
 }

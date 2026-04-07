@@ -31,31 +31,31 @@ import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
 import { mediaQueries } from "src/style/constants"
-import { BookmarkButton } from "./components/bookmark-button/bookmark-button"
-import { CommentStateProvider } from "./components/comment-panel/comment-state-context"
-import { CommentValueProvider } from "./components/comment-section/edit-comment-feature"
-import { DocumentInfo } from "./components/document-info/document-info"
-import { FormProvider as FormProviderDoc } from "./components/edit-doc-data-panel/edit-doc-data-form-context"
-import { EditingProvider } from "./components/edit-doc-data-panel/editing-context"
+import { BookmarkButton } from "src/components/bookmark-button/bookmark-button"
+import { CommentStateProvider } from "src/components/comment-panel/comment-state-context"
+import { CommentValueProvider } from "src/components/comment-section/edit-comment-feature"
+import { DocumentInfo } from "src/components/document-info/document-info"
+import { FormProvider as FormProviderDoc } from "src/components/edit-doc-data-panel/edit-doc-data-form-context"
+import { EditingProvider } from "src/components/edit-doc-data-panel/editing-context"
 import {
   FormProvider as FormProviderParagraph,
   useForm as useParagraphForm,
-} from "./components/edit-paragraph-feature/edit-paragraph-form-context"
-import { DocumentAudioWithCurate } from "./components/edit-word-audio/editor"
-import { EditWordCheckProvider } from "./components/edit-word-feature/edit-word-check-context"
+} from "src/components/edit-paragraph-feature/edit-paragraph-form-context"
+import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
+import { EditWordCheckProvider } from "src/components/edit-word-feature/edit-word-check-context"
 import {
   FormProvider,
   useForm,
-} from "./components/edit-word-feature/edit-word-form-context"
-import { MorphemeDetails } from "./components/morpheme/morpheme"
-import PageImages from "./components/page-image/page-image"
+} from "src/components/edit-word-feature/edit-word-form-context"
+import { MorphemeDetails } from "src/components/morpheme/morpheme"
+import PageImages from "src/components/page-image/page-image"
 import {
   PanelDetails,
   PanelLayout,
   PanelSegment,
-} from "./components/panel-layout/panel-layout"
-import { RecordDocumentAudioPanel } from "./components/record-document-audio-panel/record-document-audio-panel"
-import { AnnotatedForm, DocumentPage } from "./components/segment/segment"
+} from "src/components/panel-layout/panel-layout"
+import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel/record-document-audio-panel"
+import { AnnotatedForm, DocumentPage } from "src/components/segment/segment"
 import * as css from "./document.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import * as styles from "./dropdown.css"
+import * as styles from "../tag-selector/tag-selector.css"
 
 interface DropdownProps {
   label?: string
@@ -7,6 +7,7 @@ interface DropdownProps {
   selected: string | null
   setSelected: (value: string) => void // Accepts display name
   addButtonLabel: string
+  disabled?: boolean
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -15,6 +16,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   selected,
   setSelected,
   addButtonLabel,
+  disabled = false, // Default
 }) => {
   const [showDropdown, setShowDropdown] = useState(false)
 
@@ -25,29 +27,36 @@ export const Dropdown: React.FC<DropdownProps> = ({
       <div className={styles.tagDropdownContainer}>
         <button
           type="button"
-          onClick={() => setShowDropdown(!showDropdown)}
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return // Prevent dropdown from opening
+            setShowDropdown(!showDropdown)
+          }}
           className={styles.addTagButton}
         >
           {addButtonLabel}
         </button>
 
-        {showDropdown && (
-          <div className={styles.tagDropdown}>
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => {
-                  setSelected(opt) // Returns the display name
-                  setShowDropdown(false)
-                }}
-                className={styles.tagOption}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        )}
+        {showDropdown &&
+          !disabled && ( // Don't show list if disabled
+            <div className={styles.tagDropdown}>
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => {
+                    if (disabled) return
+                    setSelected(opt) // Returns the display name
+                    setShowDropdown(false)
+                  }}
+                  className={styles.tagOption}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   )
