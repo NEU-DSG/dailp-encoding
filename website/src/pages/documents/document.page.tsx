@@ -230,6 +230,7 @@ export const TabSet = ({
         </FormProviderDoc>
       </TabPanel>
 
+      {/* Hidden Print Design Components */}
       {tabs.selectedId === Tabs.ANNOTATION && (
         <PrintTranslation doc={doc} breadcrumbString={breadcrumbString} />
       )}

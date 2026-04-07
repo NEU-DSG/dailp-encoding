@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts, hspace, mediaQueries, vspace } from "src/style/constants"
+import { mediaQueries, vspace } from "src/style/constants"
 
 const printFonts = {
   quattrocento: `"Quattrocento", serif`,
@@ -44,49 +44,6 @@ export const printBreadcrumbFirst = style({
       fontSize: "1.105rem",
       fontWeight: 400,
       lineHeight: 1,
-    },
-  },
-})
-
-export const printLegendBox = style({
-  display: "none",
-  "@media": {
-    [mediaQueries.print]: {
-      display: "block",
-      textAlign: "left",
-      marginTop: vspace.one,
-      paddingTop: "0.794rem",
-      paddingBottom: vspace.half,
-      borderRadius: "15px",
-      backgroundColor: "#f0f0f0d1",
-      border: "1px solid #000",
-      WebkitPrintColorAdjust: "exact",
-      printColorAdjust: "exact",
-    },
-  },
-})
-
-export const printLegendSyllabary = style({
-  "@media": {
-    [mediaQueries.print]: {
-      fontFamily: fonts.header,
-      fontSize: printFontSizes.legendItem,
-      lineHeight: 1.2,
-      marginTop: vspace.one,
-      marginBottom: 0,
-      fontWeight: 400,
-    },
-  },
-})
-
-export const printLegendItem = style({
-  "@media": {
-    [mediaQueries.print]: {
-      fontFamily: fonts.header,
-      fontSize: printFontSizes.legendItem,
-      lineHeight: 1.2,
-      marginBottom: 0,
-      fontWeight: 400,
     },
   },
 })
@@ -157,22 +114,6 @@ globalStyle(`${printDocument} ul li:last-child::after`, {
     [mediaQueries.print]: {
       content: `""`,
       padding: 0,
-    },
-  },
-})
-
-globalStyle(`${printLegendBox} h2`, {
-  "@media": {
-    [mediaQueries.print]: {
-      textAlign: "center",
-    },
-  },
-})
-
-globalStyle(`${printLegendBox} p`, {
-  "@media": {
-    [mediaQueries.print]: {
-      paddingLeft: hspace.edge,
     },
   },
 })

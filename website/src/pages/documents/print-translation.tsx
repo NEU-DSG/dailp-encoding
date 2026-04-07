@@ -7,36 +7,35 @@ import { usePreferences } from "src/preferences-context"
 import { LevelOfDetail } from "src/types"
 import { DocumentContents } from "./document.page"
 import { PrintLayout } from "./print-layout"
-import * as layoutCss from "./print-layout.css"
 import * as css from "./print-translation.css"
 
 const PrintLegend = ({ levelOfDetail }: { levelOfDetail: LevelOfDetail }) => (
-  <div className={layoutCss.printLegendBox}>
-    <h2 className={layoutCss.printHeading}>How To Read This Document</h2>
-    <p className={layoutCss.printLegendSyllabary}>
+  <div className={css.printLegendBox}>
+    <h2 className={css.printHeading}>How To Read This Document</h2>
+    <p className={css.printLegendSyllabary}>
       <strong>Syllabary Line:</strong> Text from the original source
     </p>
     {levelOfDetail >= LevelOfDetail.Pronunciation && (
-      <p className={layoutCss.printLegendItem}>
+      <p className={css.printLegendItem}>
         <strong>Phonetics Line:</strong> Pronunciation of a word
       </p>
     )}
     {levelOfDetail >= LevelOfDetail.Segmentation && (
-      <p className={layoutCss.printLegendItem}>
+      <p className={css.printLegendItem}>
         <strong>Word Parts Line:</strong> Separates out meaningful parts of a
         word
       </p>
     )}
     {levelOfDetail >= LevelOfDetail.Segmentation && (
-      <p className={layoutCss.printLegendItem}>
+      <p className={css.printLegendItem}>
         <strong>Gloss Line:</strong> Provides the meaning of separated word
         parts
       </p>
     )}
-    <p className={layoutCss.printLegendItem}>
+    <p className={css.printLegendItem}>
       <strong>Translation Line:</strong> An English translation for a word
     </p>
-    <p className={layoutCss.printLegendItem}>
+    <p className={css.printLegendItem}>
       <strong>Paragraph Translation:</strong> Provides a free translation of a
       section of text
     </p>

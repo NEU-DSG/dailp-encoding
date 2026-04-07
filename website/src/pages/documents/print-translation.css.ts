@@ -6,7 +6,74 @@ import {
   wordGroup,
   wordGroupInline,
 } from "src/segment.css"
-import { colors, fonts, mediaQueries, vspace } from "src/style/constants"
+import {
+  colors,
+  fonts,
+  hspace,
+  mediaQueries,
+  vspace,
+} from "src/style/constants"
+
+export { printHeading } from "./print-layout.css"
+
+export const printLegendBox = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      textAlign: "left",
+      marginTop: vspace.one,
+      paddingTop: "0.794rem",
+      paddingBottom: vspace.half,
+      borderRadius: "15px",
+      backgroundColor: "#f0f0f0d1",
+      border: "1px solid #000",
+      WebkitPrintColorAdjust: "exact",
+      printColorAdjust: "exact",
+    },
+  },
+})
+
+export const printLegendSyllabary = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: fonts.header,
+      fontSize: "1rem",
+      lineHeight: 1.2,
+      marginTop: vspace.one,
+      marginBottom: 0,
+      fontWeight: 400,
+    },
+  },
+})
+
+export const printLegendItem = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: fonts.header,
+      fontSize: "1rem",
+      lineHeight: 1.2,
+      marginBottom: 0,
+      fontWeight: 400,
+    },
+  },
+})
+
+globalStyle(`${printLegendBox} h2`, {
+  "@media": {
+    [mediaQueries.print]: {
+      textAlign: "center",
+    },
+  },
+})
+
+globalStyle(`${printLegendBox} p`, {
+  "@media": {
+    [mediaQueries.print]: {
+      paddingLeft: hspace.edge,
+    },
+  },
+})
 
 export const printSectionHeading = style({
   display: "none",
