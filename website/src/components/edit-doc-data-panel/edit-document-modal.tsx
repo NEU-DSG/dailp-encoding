@@ -5,15 +5,15 @@ import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
 import { UserRole, useUserRole } from "src/auth"
+import { form } from "src/components/edit-word-feature/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
 import { useTagSelector } from "src/hooks/use-tag-selector"
-import { form } from "src/components/edit-word-feature/edit-word-feature.css"
 import { buildCitationMetadata } from "src/utils/build-citation-metadata"
 import Cite from "src/utils/citation-config"
 import { Dropdown } from "../dropdown/dropdown"
+import { TagSelector } from "../tag-selector/tag-selector"
 import * as styles from "./edit-document-modal.css"
 import { EditingProvider, useEditing } from "./editing-context"
-import { TagSelector } from "../tag-selector/tag-selector"
 
 export type EditDocumentModalProps = {
   isOpen: boolean

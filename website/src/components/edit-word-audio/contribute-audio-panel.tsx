@@ -1,7 +1,7 @@
 import { IconType } from "react-icons"
-import * as Dailp from "src/graphql/dailp"
 import * as css from "src/components/panel-layout/panel-layout.css"
 import { CollapsiblePanel } from "src/components/word-panel/word-panel"
+import * as Dailp from "src/graphql/dailp"
 import {
   ContributeAudioComponent,
   ContributeAudioSection,

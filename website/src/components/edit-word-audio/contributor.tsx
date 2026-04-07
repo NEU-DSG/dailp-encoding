@@ -1,8 +1,8 @@
 import { Fragment } from "react"
 import { useUserId } from "src/auth"
 import { AudioPlayer } from "src/components"
-import * as Dailp from "src/graphql/dailp"
 import { WordAudio } from "src/components/word-panel/word-panel"
+import * as Dailp from "src/graphql/dailp"
 
 function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
   const userId = useUserId()

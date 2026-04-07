@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { MdEdit, MdDelete, MdOutlineBookmarkAdd } from "react-icons/md"
+import { MdDelete, MdEdit, MdOutlineBookmarkAdd } from "react-icons/md"
 import { Button, CleanButton, IconButton, IconTextButton } from "./button"
 
 // Use a generic meta since the file exports multiple components
@@ -37,8 +37,6 @@ export const IconSquare: Story = {
 
 export const IconWithText: Story = {
   render: () => (
-    <IconTextButton icon={<MdOutlineBookmarkAdd />}>
-      Bookmark
-    </IconTextButton>
+    <IconTextButton icon={<MdOutlineBookmarkAdd />}>Bookmark</IconTextButton>
   ),
 }

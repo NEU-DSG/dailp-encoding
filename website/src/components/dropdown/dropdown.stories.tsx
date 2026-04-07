@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { Dropdown } from "./dropdown"
 import { label } from "aws-amplify"
+import { Dropdown } from "./dropdown"
 
 const meta: Meta<typeof Dropdown> = {
   title: "Components/Dropdown",

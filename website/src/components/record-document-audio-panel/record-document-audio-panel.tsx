@@ -2,9 +2,9 @@ import cx from "classnames"
 import { ReactElement, ReactNode } from "react"
 import { IconType } from "react-icons"
 import { FaMicrophone } from "react-icons/fa/index"
-import * as Dailp from "src/graphql/dailp"
 import * as css from "src/components/panel-layout/panel-layout.css"
 import { CollapsiblePanel } from "src/components/word-panel/word-panel"
+import * as Dailp from "src/graphql/dailp"
 import {
   ContributeAudioComponent,
   ContributeAudioSection,

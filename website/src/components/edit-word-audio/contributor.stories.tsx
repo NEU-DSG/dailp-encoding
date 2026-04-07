@@ -24,13 +24,19 @@ const mockAudioSlice = (id: string, url: string) => ({
   startTime: null,
   endTime: null,
   includeInEditedCollection: false,
-  recordedBy: { __typename: "User" as const, id: "user-001", displayName: "User1" },
+  recordedBy: {
+    __typename: "User" as const,
+    id: "user-001",
+    displayName: "User1",
+  },
   recordedAt: { __typename: "Date" as const, formattedDate: "March 15, 2024" },
 })
 
 const mockWordWithAudio = {
   ...mockWordNoAudio,
-  editedAudio: [mockAudioSlice("slice-001", "https://www.w3schools.com/html/horse.mp3")],
+  editedAudio: [
+    mockAudioSlice("slice-001", "https://www.w3schools.com/html/horse.mp3"),
+  ],
   userContributedAudio: [
     mockAudioSlice("slice-002", "https://www.w3schools.com/html/horse.mp3"),
     mockAudioSlice("slice-003", "https://www.w3schools.com/html/horse.mp3"),

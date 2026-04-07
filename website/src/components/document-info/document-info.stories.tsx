@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { fromValue, never } from "wonka"
-import { EditingProvider } from "../edit-doc-data-panel/editing-context"
 import { FormProvider } from "../edit-doc-data-panel/edit-doc-data-form-context"
-import { DocumentInfo, Document } from "./document-info"
+import { EditingProvider } from "../edit-doc-data-panel/editing-context"
+import { Document, DocumentInfo } from "./document-info"
 
 function mockDoc(overrides: Partial<Document> = {}): Document {
   return {
@@ -43,7 +43,10 @@ function mockDocDetails(overrides: Record<string, any> = {}) {
 }
 
 function createMockProvider(details: ReturnType<typeof mockDocDetails>) {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = () =>
     fromValue({
       stale: false,
@@ -67,32 +70,97 @@ type Story = StoryObj<typeof meta>
 const fullDetails = mockDocDetails({
   id: "doc-001",
   slug: "dollie-duncan-02-11-1951",
-  title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
-  format: { __typename: "Format" as const, id: "f1", name: "Format placeholder", status: "APPROVED" },
-  genre: { __typename: "Genre" as const, id: "g1", name: "Document type placeholder", status: "APPROVED" },
+  title:
+    "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
+  format: {
+    __typename: "Format" as const,
+    id: "f1",
+    name: "Format placeholder",
+    status: "APPROVED",
+  },
+  genre: {
+    __typename: "Genre" as const,
+    id: "g1",
+    name: "Document type placeholder",
+    status: "APPROVED",
+  },
   date: { __typename: "Date" as const, day: 11, month: 2, year: 1951 },
   contributors: [
-    { __typename: "Contributor" as const, id: "c1", name: "Clara Proctor", role: "TRANSLATOR" },
-    { __typename: "Contributor" as const, id: "c2", name: "Ernestine Berry", role: "TRANSLATOR" },
-    { __typename: "Contributor" as const, id: "c3", name: "Jeffrey Bourns", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c4", name: "Ellen Cushman", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c5", name: "Melissa Torres", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c6", name: "Eva Garroutte", role: "ANNOTATOR" },
+    {
+      __typename: "Contributor" as const,
+      id: "c1",
+      name: "Clara Proctor",
+      role: "TRANSLATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c2",
+      name: "Ernestine Berry",
+      role: "TRANSLATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c3",
+      name: "Jeffrey Bourns",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c4",
+      name: "Ellen Cushman",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c5",
+      name: "Melissa Torres",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c6",
+      name: "Eva Garroutte",
+      role: "ANNOTATOR",
+    },
   ],
   sources: [
-    { __typename: "SourceAttribution" as const, name: "Source placeholder", link: "https://www.placeholder.org/" },
+    {
+      __typename: "SourceAttribution" as const,
+      name: "Source placeholder",
+      link: "https://www.placeholder.org/",
+    },
   ],
   keywords: [
-    { __typename: "Keyword" as const, id: "k1", name: "Keywords placeholder", status: "APPROVED" },
+    {
+      __typename: "Keyword" as const,
+      id: "k1",
+      name: "Keywords placeholder",
+      status: "APPROVED",
+    },
   ],
   languages: [
-    { __typename: "Language" as const, id: "l1", name: "Languages placeholder", status: "APPROVED" },
+    {
+      __typename: "Language" as const,
+      id: "l1",
+      name: "Languages placeholder",
+      status: "APPROVED",
+    },
   ],
   subjectHeadings: [
-    { __typename: "SubjectHeading" as const, id: "sh1", name: "Subject headings placeholder", status: "APPROVED" },
+    {
+      __typename: "SubjectHeading" as const,
+      id: "sh1",
+      name: "Subject headings placeholder",
+      status: "APPROVED",
+    },
   ],
   spatialCoverage: [
-    { __typename: "SpatialCoverage" as const, id: "sc1", name: "Spatial coverage placeholder", status: "APPROVED" },
+    {
+      __typename: "SpatialCoverage" as const,
+      id: "sc1",
+      name: "Spatial coverage placeholder",
+      status: "APPROVED",
+    },
   ],
   creators: [
     { __typename: "Creator" as const, id: "cr1", name: "Creator placeholder" },
@@ -104,10 +172,15 @@ export const Default: Story = {
     doc: mockDoc({
       id: "doc-001",
       slug: "dollie-duncan-02-11-1951",
-      title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
+      title:
+        "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
       date: { __typename: "Date" as const, year: 1951 },
       sources: [
-        { __typename: "SourceAttribution" as const, name: "The Newberry Library", link: "https://www.newberry.org/" },
+        {
+          __typename: "SourceAttribution" as const,
+          name: "The Newberry Library",
+          link: "https://www.newberry.org/",
+        },
       ],
     }),
   },
@@ -128,15 +201,46 @@ export const Default: Story = {
 const sparseDetails = mockDocDetails({
   id: "doc-002",
   slug: "dollie-duncan-02-11-1951",
-  title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
+  title:
+    "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
   date: { __typename: "Date" as const, day: 11, month: 2, year: 1951 },
   contributors: [
-    { __typename: "Contributor" as const, id: "c1", name: "Clara Proctor", role: "TRANSLATOR" },
-    { __typename: "Contributor" as const, id: "c2", name: "Ernestine Berry", role: "TRANSLATOR" },
-    { __typename: "Contributor" as const, id: "c3", name: "Jeffrey Bourns", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c4", name: "Ellen Cushman", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c5", name: "Melissa Torres", role: "ANNOTATOR" },
-    { __typename: "Contributor" as const, id: "c6", name: "Eva Garroutte", role: "ANNOTATOR" },
+    {
+      __typename: "Contributor" as const,
+      id: "c1",
+      name: "Clara Proctor",
+      role: "TRANSLATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c2",
+      name: "Ernestine Berry",
+      role: "TRANSLATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c3",
+      name: "Jeffrey Bourns",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c4",
+      name: "Ellen Cushman",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c5",
+      name: "Melissa Torres",
+      role: "ANNOTATOR",
+    },
+    {
+      __typename: "Contributor" as const,
+      id: "c6",
+      name: "Eva Garroutte",
+      role: "ANNOTATOR",
+    },
   ],
 })
 
@@ -145,7 +249,8 @@ export const Sparse: Story = {
     doc: mockDoc({
       id: "doc-002",
       slug: "dollie-duncan-02-11-1951",
-      title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
+      title:
+        "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
       date: { __typename: "Date" as const, year: 1951 },
     }),
   },
@@ -164,7 +269,10 @@ export const Sparse: Story = {
 
 // No data — query returns null document (shows loading state)
 function createEmptyMockProvider() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = () =>
     fromValue({
       stale: false,

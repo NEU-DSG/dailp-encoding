@@ -47,7 +47,8 @@ export const StoryTag: Story = {
     comment: {
       ...mockComment,
       id: "comment-2",
-      textContent: "This passage reminds me of a traditional story about the river.",
+      textContent:
+        "This passage reminds me of a traditional story about the river.",
       commentType: Dailp.CommentType.Story,
     },
   },

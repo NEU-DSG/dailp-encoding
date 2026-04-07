@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { fromValue, never } from "wonka"
 import * as Dailp from "src/graphql/dailp"
 import { CommentStateProvider } from "../comment-panel/comment-state-context"
+import { WordCommentSection } from "./comment-section"
 import { CommentValueProvider } from "./edit-comment-feature"
 import { FormProvider as FormProviderComment } from "./edit-comment-form-context"
-import { WordCommentSection } from "./comment-section"
 
 const mockWord = {
   __typename: "AnnotatedForm" as const,
@@ -59,7 +59,8 @@ function mockComment(overrides: {
 const mockComments = [
   mockComment({
     id: "comment-001",
-    textContent: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sit amet ultricies lorem.",
+    textContent:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sit amet ultricies lorem.",
     commentType: Dailp.CommentType.Story,
     edited: false,
     postedBy: { id: "user-001", displayName: "User1" },
@@ -67,7 +68,8 @@ const mockComments = [
   }),
   mockComment({
     id: "comment-002",
-    textContent: "Phasellus faucibus magna id dui scelerisque, at consectetur sapien pulvinar.",
+    textContent:
+      "Phasellus faucibus magna id dui scelerisque, at consectetur sapien pulvinar.",
     commentType: Dailp.CommentType.Suggestion,
     edited: true,
     postedBy: { id: "user-002", displayName: "User2" },
@@ -75,7 +77,8 @@ const mockComments = [
   }),
   mockComment({
     id: "comment-003",
-    textContent: "Proin vehicula mauris et turpis rhoncus pulvinar id interdum odio?",
+    textContent:
+      "Proin vehicula mauris et turpis rhoncus pulvinar id interdum odio?",
     commentType: Dailp.CommentType.Question,
     edited: false,
     postedBy: { id: "user-003", displayName: "User3" },
@@ -84,7 +87,10 @@ const mockComments = [
 ]
 
 function createMockClient(comments: Dailp.CommentFieldsFragment[]) {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = () =>
     fromValue({
       stale: false,
@@ -102,14 +108,18 @@ function createMockClient(comments: Dailp.CommentFieldsFragment[]) {
   return client
 }
 
-function Providers({ children, comments }: { children: React.ReactNode; comments: Dailp.CommentFieldsFragment[] }) {
+function Providers({
+  children,
+  comments,
+}: {
+  children: React.ReactNode
+  comments: Dailp.CommentFieldsFragment[]
+}) {
   return (
     <Provider value={createMockClient(comments)}>
       <CommentStateProvider>
         <CommentValueProvider>
-          <FormProviderComment>
-            {children}
-          </FormProviderComment>
+          <FormProviderComment>{children}</FormProviderComment>
         </CommentValueProvider>
       </CommentStateProvider>
     </Provider>

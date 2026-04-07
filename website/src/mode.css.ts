@@ -8,11 +8,11 @@ import {
 } from "src/style/constants"
 import { marginY, paddingX } from "src/style/utils"
 import { fullWidth, hideOnPrint, paddingAround } from "src/style/utils.css"
-import { drawerBg } from "./menu.css"
 import {
   collPanelButton,
   wordPanelButton,
 } from "./components/panel-layout/panel-layout.css"
+import { drawerBg } from "./menu.css"
 import { morphemeDialog } from "./pages/documents/document.css"
 
 export const highlightedLabel = style({

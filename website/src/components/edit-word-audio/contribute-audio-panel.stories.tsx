@@ -1,17 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
 import { RiMicFill } from "react-icons/ri/index"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { never } from "wonka"
 import { AudioPlayer } from "src/components"
 import { IconTextButton } from "src/components/button/button"
+import { contributeAudioOptions } from "src/components/contribute-audio-section/contribute-audio-section.css"
 import { SubtleButton } from "src/components/subtle-button/subtle-button"
 import { subtleButton } from "src/components/subtle-button/subtle-button.css"
-import { contributeAudioOptions } from "src/components/contribute-audio-section/contribute-audio-section.css"
 import { ContributeAudioPanel } from "./contribute-audio-panel"
 
 function createMockUrqlClient() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = (() => never) as any
   client.executeMutation = (() => never) as any
   client.executeSubscription = (() => never) as any

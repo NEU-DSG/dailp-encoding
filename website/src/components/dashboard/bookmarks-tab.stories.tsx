@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { fromValue, never } from "wonka"
 import { BookmarksTab } from "./dashboard"
 
@@ -24,7 +24,10 @@ function mockBookmarkDoc(overrides: {
     translatedPages: [
       {
         __typename: "DocumentPage" as const,
-        image: { __typename: "PageImage" as const, url: "https://placehold.co/300x200?text=PageImage#" },
+        image: {
+          __typename: "PageImage" as const,
+          url: "https://placehold.co/300x200?text=PageImage#",
+        },
       },
     ],
     chapters: [
@@ -37,8 +40,13 @@ function mockBookmarkDoc(overrides: {
   }
 }
 
-function createMockProvider(bookmarkedDocuments: ReturnType<typeof mockBookmarkDoc>[]) {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+function createMockProvider(
+  bookmarkedDocuments: ReturnType<typeof mockBookmarkDoc>[]
+) {
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = () =>
     fromValue({
       stale: false,
@@ -71,14 +79,17 @@ export const Empty: Story = {
 export const OneEntry: Story = {
   decorators: [
     (Story: React.FC) => (
-      <Provider value={createMockProvider([
-        mockBookmarkDoc({
-          id: "1",
-          title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)",
-          year: "1951",
-          path: ["cwkw", "dollie-duncan-02-11-1951"],
-        }),
-      ])}>
+      <Provider
+        value={createMockProvider([
+          mockBookmarkDoc({
+            id: "1",
+            title:
+              "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)",
+            year: "1951",
+            path: ["cwkw", "dollie-duncan-02-11-1951"],
+          }),
+        ])}
+      >
         <Story />
       </Provider>
     ),
@@ -88,20 +99,23 @@ export const OneEntry: Story = {
 export const TwoEntries: Story = {
   decorators: [
     (Story: React.FC) => (
-      <Provider value={createMockProvider([
-        mockBookmarkDoc({
-          id: "1",
-          title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)",
-          year: "1951",
-          path: ["cwkw", "dollie-duncan-02-11-1951"],
-        }),
-        mockBookmarkDoc({
-          id: "2",
-          title: "Ned Crawford Letter (1929)",
-          year: "1929",
-          path: ["cwkw", "ned-crawford-1929"],
-        }),
-      ])}>
+      <Provider
+        value={createMockProvider([
+          mockBookmarkDoc({
+            id: "1",
+            title:
+              "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)",
+            year: "1951",
+            path: ["cwkw", "dollie-duncan-02-11-1951"],
+          }),
+          mockBookmarkDoc({
+            id: "2",
+            title: "Ned Crawford Letter (1929)",
+            year: "1929",
+            path: ["cwkw", "ned-crawford-1929"],
+          }),
+        ])}
+      >
         <Story />
       </Provider>
     ),

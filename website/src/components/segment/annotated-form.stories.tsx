@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { never } from "wonka"
 import * as Dailp from "src/graphql/dailp"
 import { LevelOfDetail } from "src/pages/documents/types"
@@ -38,7 +38,10 @@ const mockPanelDetails = {
 }
 
 function createMockClient() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = (() => never) as any
   client.executeMutation = (() => never) as any
   client.executeSubscription = (() => never) as any

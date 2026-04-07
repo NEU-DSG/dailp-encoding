@@ -1,14 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { never } from "wonka"
 import { UserContext } from "src/auth"
-import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { EditWordCheckProvider } from "./edit-word-check-context"
+import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { FormProvider } from "./edit-word-form-context"
 
 function createMockUrqlClient() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = (() => never) as any
   client.executeMutation = (() => never) as any
   client.executeSubscription = (() => never) as any
@@ -35,7 +38,13 @@ const readerDecorator = (Story: React.FC) => (
 
 const editorDecorator = (Story: React.FC) => (
   <Provider value={createMockUrqlClient()}>
-    <UserContext.Provider value={{ user: mockEditorUser, isAuthLoading: false, operations: {} as any }}>
+    <UserContext.Provider
+      value={{
+        user: mockEditorUser,
+        isAuthLoading: false,
+        operations: {} as any,
+      }}
+    >
       <EditWordCheckProvider>
         <FormProvider>
           <Story />

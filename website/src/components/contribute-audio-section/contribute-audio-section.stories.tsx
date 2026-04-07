@@ -5,8 +5,8 @@ import { AudioPlayer } from "src/components"
 import { IconTextButton } from "src/components/button/button"
 import { SubtleButton } from "src/components/subtle-button/subtle-button"
 import { subtleButton } from "src/components/subtle-button/subtle-button.css"
-import { contributeAudioOptions } from "./contribute-audio-section.css"
 import { ContributeAudioSection } from "./contribute-audio-section"
+import { contributeAudioOptions } from "./contribute-audio-section.css"
 
 const MockIdleRecorder = ({
   uploadAudio,
@@ -34,9 +34,7 @@ const MockRecordedRecorder = ({
       >
         Save audio
       </SubtleButton>
-      <SubtleButton onClick={() => {}}>
-        Delete recording
-      </SubtleButton>
+      <SubtleButton onClick={() => {}}>Delete recording</SubtleButton>
     </div>
     <AudioPlayer audioUrl="" showProgress />
   </div>

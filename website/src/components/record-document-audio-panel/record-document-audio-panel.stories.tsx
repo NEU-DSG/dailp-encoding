@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { never } from "wonka"
 import { RecordDocumentAudioPanel } from "./record-document-audio-panel"
 
@@ -27,7 +27,10 @@ const dollieDoc = {
 }
 
 function createMockClient() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = (() => never) as any
   client.executeMutation = (() => never) as any
   client.executeSubscription = (() => never) as any

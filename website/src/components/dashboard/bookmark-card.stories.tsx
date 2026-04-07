@@ -12,7 +12,10 @@ type Story = StoryObj<typeof meta>
 export const WithLink: Story = {
   args: {
     thumbnail: "https://placehold.co/300x200?text=WithLink",
-    header: { text: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)", link: "/collections/cwkw/dollie-duncan-02-11-1951" },
+    header: {
+      text: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11 (1951)",
+      link: "/collections/cwkw/dollie-duncan-02-11-1951",
+    },
     description: "1951",
   },
 }

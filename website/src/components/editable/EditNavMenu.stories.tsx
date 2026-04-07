@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { fromValue, never } from "wonka"
 import { EditableNavMenu } from "./EditNavMenu"
 
@@ -22,7 +22,10 @@ const mockMenu = {
     mockMenuItem("Home", "/"),
     mockMenuItem("Collections", "/collections", [
       mockMenuItem("CWKW", "/collections/cwkw"),
-      mockMenuItem("Willie Jumper Manuscripts", "/collections/willie-jumper-stories"),
+      mockMenuItem(
+        "Willie Jumper Manuscripts",
+        "/collections/willie-jumper-stories"
+      ),
     ]),
     mockMenuItem("Glossary of Terms", "/tools/glossary"),
     mockMenuItem("Support", "/about/support"),
@@ -36,7 +39,10 @@ const emptyMenu = {
 }
 
 function createMockClient(menu: typeof mockMenu | typeof emptyMenu | null) {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = () =>
     fromValue({
       stale: false,

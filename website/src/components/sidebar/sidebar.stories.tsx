@@ -7,7 +7,7 @@ import {
   CollectionContext,
 } from "src/pages/edited-collections/edited-collection-context"
 import { PageContextProvider } from "src/renderer/PageShell"
-import { Sidebar, MobileSidebar } from "./sidebar"
+import { MobileSidebar, Sidebar } from "./sidebar"
 
 const mockChapters: Chapter[] = [
   {
@@ -86,7 +86,12 @@ const WithCollectionContext = (Story: React.FC) => {
   return (
     <PageContextProvider pageContext={mockPageContext}>
       <CollectionContext.Provider
-        value={{ dialog, chapters: mockChapters, selected: [], setSelected: () => {} }}
+        value={{
+          dialog,
+          chapters: mockChapters,
+          selected: [],
+          setSelected: () => {},
+        }}
       >
         <Story />
       </CollectionContext.Provider>

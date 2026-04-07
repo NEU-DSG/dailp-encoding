@@ -5,7 +5,8 @@ import PageImages from "./page-image"
 const dollieDoc = {
   __typename: "AnnotatedDoc" as const,
   id: "doc-001",
-  title: "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
+  title:
+    "Letter to Dollie Duncan on Oklahoma State Penitentiary stationery 1951-02-11",
   slug: "dollie-duncan-02-11-1951",
   isReference: false,
   date: { __typename: "Date" as const, year: "1951" },

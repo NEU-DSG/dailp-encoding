@@ -1,22 +1,28 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
-import { createClient, Provider } from "urql"
+import { Provider, createClient } from "urql"
 import { never } from "wonka"
 import { EditorEditWordAudio } from "./editor"
 
 function createMockUrqlClient() {
-  const client = createClient({ url: "http://localhost/graphql", exchanges: [] })
+  const client = createClient({
+    url: "http://localhost/graphql",
+    exchanges: [],
+  })
   client.executeQuery = (() => never) as any
   client.executeMutation = (() => never) as any
   client.executeSubscription = (() => never) as any
   return client
 }
 
-const mockAudioSlice = (id: string, opts: {
-  contributor: { id: string; displayName: string } | null
-  formattedDate: string | null
-  includeInEditedCollection: boolean
-}) => ({
+const mockAudioSlice = (
+  id: string,
+  opts: {
+    contributor: { id: string; displayName: string } | null
+    formattedDate: string | null
+    includeInEditedCollection: boolean
+  }
+) => ({
   __typename: "AudioSlice" as const,
   sliceId: id,
   index: 0,
@@ -25,7 +31,11 @@ const mockAudioSlice = (id: string, opts: {
   endTime: null,
   includeInEditedCollection: opts.includeInEditedCollection,
   recordedBy: opts.contributor
-    ? { __typename: "User" as const, id: opts.contributor.id, displayName: opts.contributor.displayName }
+    ? {
+        __typename: "User" as const,
+        id: opts.contributor.id,
+        displayName: opts.contributor.displayName,
+      }
     : null,
   recordedAt: opts.formattedDate
     ? { __typename: "Date" as const, formattedDate: opts.formattedDate }

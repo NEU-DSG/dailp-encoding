@@ -12,12 +12,12 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    citation: "Citation 1 (2026)"
+    citation: "Citation 1 (2026)",
   },
 }
 
 export const Empty: Story = {
   args: {
-    citation: null
+    citation: null,
   },
 }

@@ -14,7 +14,7 @@ export const Example1: Story = {
   args: {
     audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     showProgress: true,
-    slices: { start: 0},
+    slices: { start: 0 },
     contributor: "John Doe",
     recordedAt: new Date("2023-01-01T12:00:00Z"),
   },
