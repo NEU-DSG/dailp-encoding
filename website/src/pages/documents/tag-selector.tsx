@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { InfoTooltip } from "src/components/info-tooltip"
 import * as styles from "./tag-selector.css"
 
 interface TagSelectorProps {
@@ -10,6 +11,7 @@ interface TagSelectorProps {
   onRemove?: (index: number) => void
   addButtonLabel: string
   customForm?: React.ReactNode
+  tooltipInfo?: string
 }
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
@@ -21,12 +23,15 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   onRemove,
   addButtonLabel,
   customForm,
+  tooltipInfo,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false)
 
   return (
     <div className={styles.fullWidthGroup}>
-      <label className={styles.label}>{label}</label>
+      <label className={styles.label}>
+        {label} {tooltipInfo && <InfoTooltip content={tooltipInfo} />}
+      </label>
 
       <div className={styles.tagsContainer}>
         {selectedTags.map((tag, index) => (
