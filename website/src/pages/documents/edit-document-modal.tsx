@@ -9,10 +9,7 @@ import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
 import Cite from "../../utils/citation-config"
-import {
-  buildCitationMetadata,
-  mergeMetadataOptions,
-} from "../../utils/document-metadata"
+import { buildCitationMetadata } from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { EditingProvider, useEditing } from "./editing-context"
@@ -69,16 +66,6 @@ const approvedKeywords = [
   "Land Rights",
   "Self-Determination",
   "Tribal Governance",
-]
-
-const approvedSubjectHeadings = [
-  "Cherokee Political Structure",
-  "Sacred Relationships to Land",
-  "Indigenous Self-Determination",
-  "Ecological Stewardship",
-  "Colonial Disruption and Resilience",
-  "Ceremony and Sacred Practice",
-  "Indigenous Governance Models",
 ]
 
 const approvedLanguages = [
@@ -178,14 +165,17 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     documentMetadata.subjectHeadings ?? []
   )
 
-  //
-  //
-  //
-  //
-  //
-  //
+  const [contributors, setContributors] = useState<FormContributor[]>(() =>
+    (documentMetadata.contributors ?? []).map((c) => ({
+      ...c,
+      isNew: false,
+      isVisible: c.details?.isVisible ?? false,
+      details: c.details ? { ...c.details } : null,
+    }))
+  )
 
-  const [subjectQueryResult, refetchSubjects] =
+  // Changes for pulling and creating new subject headings
+  const [{ data: allSubjectsData }, refetchSubjects] =
     Dailp.useAllSubjectHeadingsQuery()
   const [, createSubjectMutation] = Dailp.useCreateSubjectHeadingMutation()
 
@@ -199,60 +189,46 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   )
   const [newSubjectName, setNewSubjectName] = useState("")
 
-  const availableSubjects = useMemo(() => {
-    const remoteData = (subjectQueryResult.data?.allSubjectHeadings ??
-      []) as unknown as Dailp.SubjectHeadingUpdate[]
-    return mergeMetadataOptions(remoteData, selectedSubjects)
-  }, [subjectQueryResult.data, selectedSubjects])
+  // Grab just strings from the db
+  const approvedSubjectNames = useMemo(() => {
+    return allSubjectsData?.allSubjectHeadings?.map((h) => h.name) ?? []
+  }, [allSubjectsData])
 
-  const handleAddNewGlobalSubject = async () => {
-    if (!newSubjectName.trim()) return
+  // Mutation call to add new subjects
+  const handleCreateSubject = async () => {
+    const nameToAdd = newSubjectName.trim()
+    if (!nameToAdd) return
 
-    console.log("adding new entered")
+    const subjectSelected = selectedSubjects.some(
+      (s) => s.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
+    const subjectInDatabase = allSubjectsData?.allSubjectHeadings?.find(
+      (h) => h.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
 
-    const result = await createSubjectMutation({
-      name: newSubjectName,
-      status: Dailp.ApprovalStatus.Approved,
-    })
+    if (!subjectSelected) {
+      if (subjectInDatabase) {
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: subjectInDatabase.id, name: subjectInDatabase.name },
+        ])
+      } else {
+        const tempId = uuidv4()
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: tempId, name: nameToAdd },
+        ])
 
-    if (result.error) {
-      console.error("Mutation failed:", result.error.message)
-      return
+        await createSubjectMutation({
+          name: nameToAdd,
+          status: Dailp.ApprovalStatus.Approved,
+        })
+
+        refetchSubjects({ requestPolicy: "network-only" })
+      }
     }
-
-    console.log("got result")
-
-    if (result.data?.createSubjectHeading) {
-      const newHeading = result.data.createSubjectHeading
-
-      setSelectedSubjects((prev) => [
-        ...prev,
-        { id: newHeading.id, name: newHeading.name },
-      ])
-
-      // Refresh the available dropdown list
-      refetchSubjects({ requestPolicy: "network-only" })
-
-      // NOW the keyword goes away
-      setNewSubjectName("")
-    }
+    setNewSubjectName("")
   }
-
-  //
-  //
-  //
-  //
-  //
-  //
-
-  const [contributors, setContributors] = useState<FormContributor[]>(() =>
-    (documentMetadata.contributors ?? []).map((c) => ({
-      ...c,
-      isNew: false,
-      isVisible: c.details?.isVisible ?? false,
-      details: c.details ? { ...c.details } : null,
-    }))
-  )
 
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
@@ -345,7 +321,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     newTags: newHeadings,
     addTag: addHeading,
     removeTag: removeHeading,
-  } = useTagSelector(subjectHeadingStrings, approvedSubjectHeadings)
+  } = useTagSelector(subjectHeadingStrings)
 
   const {
     tags: selectedLanguages,
@@ -591,15 +567,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
 
     // Subject Headings to be submitted
-    const subjectHeadingsToSubmit = selectedSubjectHeadings.map((name) => {
-      // Find existing subject headings by name to get id, otherwise generate new UUID
-      const existing = subjectHeadings.find((sh) => sh.name === name)
-      return {
-        id: existing?.id ?? uuidv4(),
-        name,
-        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
-      }
-    })
+    const subjectHeadingsToSubmit = selectedSubjects.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }))
 
     // Languages to be submitted
     const languagesToSubmit = selectedLanguages.map((name) => {
@@ -869,61 +840,78 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           <TagSelector
             label="Subject Headings"
             selectedTags={selectedSubjects.map((s) => s.name)}
-            approvedTags={availableSubjects.map((s) => s.name)}
-            onAdd={(name) => {
-              const match = availableSubjects.find((s) => s.name === name)
-              if (match) setSelectedSubjects((prev) => [...prev, match])
+            approvedTags={approvedSubjectNames}
+            onAdd={(tagName) => {
+              const existing = allSubjectsData?.allSubjectHeadings?.find(
+                (h) => h.name === tagName
+              )
+              if (existing) {
+                setSelectedSubjects((prev) => [
+                  ...prev,
+                  { id: existing.id, name: existing.name },
+                ])
+              }
             }}
             onRemove={(index) => {
               setSelectedSubjects((prev) => prev.filter((_, i) => i !== index))
             }}
-            addButtonLabel="Select Subject Heading"
-          />
-
-          {/* Separate Creation Box */}
-          {isEditing && (
-            <div
-              className={styles.fieldGroup}
-              style={{
-                marginTop: "20px",
-                borderTop: "1px solid #eee",
-                paddingTop: "10px",
-              }}
-            >
-              <label
-                className={styles.label}
-                style={{ fontSize: "14px", color: "#555" }}
-              >
-                Add New Global Heading
-              </label>
-              <div style={{ display: "flex", gap: "10px", marginTop: "5px" }}>
-                <input
-                  type="text"
-                  placeholder="Type new subject here..."
-                  value={newSubjectName}
-                  onChange={(e) => setNewSubjectName(e.target.value)}
+            addButtonLabel="Add Existing Subjects"
+            customForm={
+              approvedSubjectNames.length === 0 && (
+                <div
+                  style={{ color: "#666", fontStyle: "italic", padding: "8px" }}
+                >
+                  No subject headings found in database.
+                </div>
+              )
+            }
+            additionalForm={
+              isEditing && (
+                <div
                   style={{
-                    flex: 1,
-                    padding: "10px",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddNewGlobalSubject}
-                  className={styles.addButton}
-                  style={{
-                    padding: "0 20px",
-                    minWidth: "fit-content",
-                    height: "42px",
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    width: "100%",
+                    marginTop: "4px",
                   }}
                 >
-                  Create
-                </button>
-              </div>
-            </div>
-          )}
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Create or add new heading..."
+                    value={newSubjectName}
+                    onChange={(e) => setNewSubjectName(e.target.value)}
+                    style={{
+                      flex: 1,
+                      height: "42px",
+                      marginBottom: 0,
+                      boxSizing: "border-box",
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleCreateSubject()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateSubject}
+                    className={styles.addTagButton}
+                    style={{
+                      height: "42px",
+                      marginTop: 0,
+                      whiteSpace: "nowrap",
+                      padding: "0 20px",
+                    }}
+                  >
+                    Add New Subject
+                  </button>
+                </div>
+              )
+            }
+          />
 
           <TagSelector
             label="Languages"
