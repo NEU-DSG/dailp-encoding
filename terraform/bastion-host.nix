@@ -21,6 +21,7 @@
     #   name = [ "amzn2-ami-*-hvm-*-arm64-gp2" ]
     # };
 
+
     # ID will be constructed from these namespace, stage, and name for some reason.
     namespace = "dailp";
     stage = config.setup.stage;
