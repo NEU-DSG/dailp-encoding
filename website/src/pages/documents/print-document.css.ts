@@ -14,7 +14,122 @@ import {
   vspace,
 } from "src/style/constants"
 
-export { printHeading } from "./print-layout.css"
+const printFonts = {
+  quattrocento: `"Quattrocento", serif`,
+}
+
+const printFontSizes = {
+  large: "1.1rem",
+  legendItem: "1rem",
+}
+
+export const printHeading = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: printFonts.quattrocento,
+      fontSize: printFontSizes.large,
+      fontWeight: 700,
+      lineHeight: 1,
+      marginBottom: 0,
+    },
+  },
+})
+
+export const printBreadcrumbs = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: printFonts.quattrocento,
+      fontSize: "1.105rem",
+      fontWeight: 400,
+      lineHeight: 1,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+  },
+})
+
+export const printBreadcrumbFirst = style({
+  "@media": {
+    [mediaQueries.print]: {
+      fontFamily: printFonts.quattrocento,
+      fontSize: "1.105rem",
+      fontWeight: 400,
+      lineHeight: 1,
+    },
+  },
+})
+
+export const printHeader = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      textAlign: "center",
+      breakAfter: "avoid",
+    },
+  },
+})
+
+export const printDocument = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      paddingTop: vspace.one,
+      paddingBottom: 0,
+      fontSize: "10pt",
+      width: "100%",
+    },
+  },
+})
+
+export const printBlankPage = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      breakBefore: "page",
+      height: "99vh",
+      fontStyle: "italic",
+      fontFamily: "serif",
+      fontSize: "1rem",
+    },
+  },
+})
+
+globalStyle(`${printDocument} button`, {
+  display: "none",
+})
+
+globalStyle(`${printDocument} h1`, {
+  "@media": {
+    [mediaQueries.print]: {
+      marginBottom: 0,
+    },
+  },
+})
+
+globalStyle(`${printDocument} h1 + ul`, {
+  "@media": {
+    [mediaQueries.print]: {
+      marginTop: 0,
+      marginBottom: 0,
+    },
+  },
+})
+
+globalStyle(`${printDocument} ul li:last-child::after`, {
+  "@media": {
+    [mediaQueries.print]: {
+      content: `""`,
+      padding: 0,
+    },
+  },
+})
 
 export const printLegendBox = style({
   display: "none",
@@ -204,11 +319,11 @@ export const printSyllabaryLine = globalStyle(
     "@media": {
       [mediaQueries.print]: {
         fontFamily: `"Charis SIL", serif`,
-        fontSize: "18pt",
+        fontSize: "12pt",
         fontWeight: 700,
         lineHeight: 1.2,
         width: "212px",
-        height: "40px",
+        height: "28px",
       },
     },
   }
@@ -220,11 +335,11 @@ export const printPhoneticsLine = globalStyle(
     "@media": {
       [mediaQueries.print]: {
         fontFamily: fonts.header,
-        fontSize: "16pt",
+        fontSize: "10.67pt",
         fontWeight: 400,
         lineHeight: 1.2,
         width: "212px",
-        height: "40px",
+        height: "28px",
       },
     },
   }
@@ -236,12 +351,12 @@ export const printWordPartsLine = globalStyle(
     "@media": {
       [mediaQueries.print]: {
         fontFamily: fonts.header,
-        fontSize: "16pt",
+        fontSize: "10.67pt",
         fontStyle: "italic",
         fontWeight: 400,
         lineHeight: 1.2,
         width: "212px",
-        height: "40px",
+        height: "28px",
       },
     },
   }
@@ -253,12 +368,12 @@ export const printGlossLine = globalStyle(
     "@media": {
       [mediaQueries.print]: {
         fontFamily: fonts.header,
-        fontSize: "15pt",
+        fontSize: "10pt",
         fontWeight: 400,
         textTransform: "lowercase",
         lineHeight: 1.2,
         width: "212px",
-        height: "40px",
+        height: "28px",
       },
     },
   }
@@ -270,11 +385,11 @@ export const printTranslationLine = globalStyle(
     "@media": {
       [mediaQueries.print]: {
         fontFamily: fonts.header,
-        fontSize: "16pt",
+        fontSize: "10.67pt",
         fontWeight: 400,
         lineHeight: 1.2,
         width: "212px",
-        height: "40px",
+        height: "28px",
       },
     },
   }

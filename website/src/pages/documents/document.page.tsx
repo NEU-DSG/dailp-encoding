@@ -50,10 +50,12 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
-import { printDocument } from "./print-layout"
-import { PrintMetadata } from "./print-metadata"
-import { PrintOriginalText } from "./print-original-text"
-import { PrintTranslation } from "./print-translation"
+import {
+  PrintMetadata,
+  PrintOriginalText,
+  PrintTranslation,
+  printDocument,
+} from "./print-document"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
