@@ -48,14 +48,10 @@ import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
+import * as pageImageCss from "../../page-image.css"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
-import {
-  PrintMetadata,
-  PrintOriginalText,
-  PrintTranslation,
-  printDocument,
-} from "./print-document"
+import { PrintLayout, PrintLegend, printDocument } from "./print-document"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -136,6 +132,7 @@ export const TabSet = ({
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
   // const [{ data }] = Dailp.useDocumentDetailsQuery({
   //   variables: { slug: doc.slug! },
   // })
@@ -143,6 +140,18 @@ export const TabSet = ({
   // if (!docData) {
   //   return null
   // }
+  const pageImagesContent = doc.translatedPages ? (
+    <PageImages
+      pageImages={{
+        urls:
+          doc.translatedPages
+            ?.filter((p) => !!p.image)
+            .map((p) => p.image!.url) ?? [],
+      }}
+      document={doc}
+    />
+  ) : null
+
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:
@@ -204,17 +213,7 @@ export const TabSet = ({
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.translatedPages ? (
-          <PageImages
-            pageImages={{
-              urls:
-                doc.translatedPages
-                  ?.filter((p) => !!p.image)
-                  .map((p) => p.image!.url) ?? [],
-            }}
-            document={doc}
-          />
-        ) : null}
+        {pageImagesContent}
       </TabPanel>
 
       <TabPanel
@@ -234,13 +233,70 @@ export const TabSet = ({
 
       {/* Hidden Print Design Components */}
       {tabs.selectedId === Tabs.ANNOTATION && (
-        <PrintTranslation doc={doc} breadcrumbString={breadcrumbString} />
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          <PrintLegend levelOfDetail={levelOfDetail} />
+          <h2 className={css.printSectionHeading}>
+            Translation
+            <span className={css.printSectionHeadingRule} />
+          </h2>
+          <div
+            className={
+              levelOfDetail >= LevelOfDetail.Segmentation
+                ? `${css.printBodyContent} ${css.printHideParagraphTranslation}`
+                : css.printBodyContent
+            }
+          >
+            <EditWordCheckProvider>
+              <FormProvider>
+                <FormProviderParagraph>
+                  <DocumentContents
+                    doc={doc}
+                    levelOfDetail={levelOfDetail}
+                    cherokeeRepresentation={cherokeeRepresentation}
+                    openDetails={() => {}}
+                    wordPanelDetails={{
+                      currContents: null,
+                      setCurrContents: () => {},
+                    }}
+                  />
+                </FormProviderParagraph>
+              </FormProvider>
+            </EditWordCheckProvider>
+          </div>
+        </PrintLayout>
       )}
       {tabs.selectedId === Tabs.IMAGES && (
-        <PrintOriginalText doc={doc} breadcrumbString={breadcrumbString} />
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          {doc.translatedPages
+            ?.filter((page) => !!page.image)
+            .map((page, i) => (
+              <React.Fragment key={i}>
+                <h2 className={css.printSectionHeading}>
+                  Original Document
+                  <span className={css.printSectionHeadingRule} />
+                </h2>
+                <div className={css.printImageSource}>
+                  Image Source: {doc.sources[0]?.name ?? "Source unknown"}
+                </div>
+                <img
+                  className={pageImageCss.pageImage}
+                  src={`${page.image!.url}/full/max/0/default.jpg`}
+                  alt={`Manuscript Page ${i + 1}`}
+                />
+              </React.Fragment>
+            ))}
+        </PrintLayout>
       )}
       {tabs.selectedId === Tabs.INFO && (
-        <PrintMetadata doc={doc} breadcrumbString={breadcrumbString} />
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          <h2 className={css.printSectionHeading}>
+            Document Information
+            <span className={css.printSectionHeadingRule} />
+          </h2>
+          <EditingProvider>
+            <DocumentInfo doc={doc} />
+          </EditingProvider>
+        </PrintLayout>
       )}
     </>
   )

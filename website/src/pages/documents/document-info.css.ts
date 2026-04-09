@@ -1,5 +1,6 @@
 // New document info styles
 import { style } from "@vanilla-extract/css"
+import { fonts } from "src/style/constants"
 
 export const container = style({
   backgroundColor: "#ffffff",
@@ -9,7 +10,7 @@ export const container = style({
   "@media": {
     print: {
       padding: "16px",
-      margin: "0 auto",
+      margin: "24px auto 0 auto",
     },
   },
 })
@@ -82,7 +83,7 @@ export const infoSection = style({
   gap: "24px",
   "@media": {
     print: {
-      gap: "12px",
+      gap: "8px",
     },
   },
 })
@@ -95,8 +96,11 @@ export const field = style({
   borderBottom: "1px solid #ADADAD",
   "@media": {
     print: {
-      gap: "4px",
-      paddingBottom: "8px",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: "8px",
+      paddingBottom: "16px",
+      paddingTop: "8px",
     },
   },
 })
@@ -109,7 +113,14 @@ export const label = style({
   letterSpacing: "0.5px",
   "@media": {
     print: {
-      fontSize: "10px",
+      width: "212px",
+      height: "25px",
+      flexShrink: 0,
+      fontFamily: `"Quattrocento", serif`,
+      fontStyle: "normal",
+      fontWeight: 700,
+      fontSize: "20px",
+      lineHeight: 1.2,
     },
   },
 })
@@ -120,7 +131,13 @@ export const value = style({
   lineHeight: 1.5,
   "@media": {
     print: {
-      fontSize: "8px",
+      width: "424px",
+      height: "20px",
+      fontFamily: fonts.header,
+      fontStyle: "normal",
+      fontWeight: 400,
+      fontSize: "18px",
+      lineHeight: 1.2,
     },
   },
 })

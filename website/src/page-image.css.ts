@@ -38,10 +38,20 @@ export const pageImage = style({
       WebkitPrintColorAdjust: "exact",
       printColorAdjust: "exact",
       width: "482px",
-      height: "732px",
-      position: "relative",
-      left: "167px",
-      top: "232px",
+      height: "auto",
+      maxHeight: "600px",
+      objectFit: "contain",
+      display: "block",
+      margin: "0 auto",
+      breakAfter: "page",
+    },
+  },
+})
+
+globalStyle(`.${pageImage}:last-of-type`, {
+  "@media": {
+    [mediaQueries.print]: {
+      breakAfter: "auto",
     },
   },
 })

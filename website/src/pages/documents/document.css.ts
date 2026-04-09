@@ -1,8 +1,15 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { flowRight } from "lodash-es"
 import { important, position } from "polished"
 import { button } from "src/components/button.css"
 import { rightButton } from "src/components/carousel.css"
+import {
+  annotationSection,
+  documentBlock,
+  inlineBlock,
+  wordGroup,
+  wordGroupInline,
+} from "src/segment.css"
 import {
   colors,
   fonts,
@@ -380,3 +387,137 @@ export const printSectionHeadingRule = style({
     },
   },
 })
+
+export const printImageSource = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: "serif",
+      fontStyle: "normal",
+      fontWeight: 400,
+      fontSize: "14px",
+      lineHeight: 1.2,
+      width: "636px",
+      height: "17px",
+      textAlign: "center",
+      marginBottom: "16px",
+    },
+  },
+})
+
+export const printBodyContent = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "100%",
+      marginTop: 0,
+      breakBefore: "avoid",
+    },
+  },
+})
+
+export const printHideParagraphTranslation = style({
+  "@media": {
+    [mediaQueries.print]: { display: "block" },
+  },
+})
+
+globalStyle(`.${printHideParagraphTranslation} .${inlineBlock}`, {
+  "@media": {
+    [mediaQueries.print]: { display: "none" },
+  },
+})
+
+globalStyle(
+  `.${printBodyContent} .${wordGroup}, .${printBodyContent} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
+        paddingTop: 0,
+        paddingBottom: 0,
+        breakInside: "avoid",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${annotationSection.story} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${documentBlock.story}, .${printBodyContent} .${documentBlock.wordByWord}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        marginTop: vspace.quarter,
+        marginBottom: vspace.quarter,
+        paddingBottom: 0,
+        breakAfter: "avoid",
+        breakBefore: "avoid",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${annotationSection.story}, .${printBodyContent} .${annotationSection.wordParts}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 212px)",
+        columnGap: vspace.one,
+        rowGap: vspace.one,
+        marginBottom: 0,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${documentBlock.story}:first-child, .${printBodyContent} .${documentBlock.wordByWord}:first-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        borderBottom: `1px solid ${colors.text}`,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${wordGroup}:nth-child(3n+1):last-child, .${printBodyContent} .${wordGroupInline}:nth-child(3n+1):last-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        breakAfter: "page",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${wordGroup}:last-child, .${printBodyContent} .${wordGroupInline}:last-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        breakAfter: "auto",
+      },
+    },
+  }
+)

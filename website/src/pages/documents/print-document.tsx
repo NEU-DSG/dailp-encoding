@@ -1,17 +1,9 @@
 import React, { useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
-import { FormProvider as FormProviderParagraph } from "src/edit-paragraph-form-context"
-import { EditWordCheckProvider } from "src/edit-word-check-context"
-import { FormProvider } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
-import PageImages from "../../page-image"
-import { DocumentInfo } from "./document-info"
-import { DocumentContents } from "./document.page"
-import { EditingProvider } from "./editing-context"
 import * as css from "./print-document.css"
 
 export const printDocument = () => window.print()
@@ -42,24 +34,11 @@ export const metaDataList = [
   "Citation",
 ] as const
 
-export const PrintMetadata = (p: {
-  doc: Dailp.DocumentFieldsFragment
-  breadcrumbString?: string
-}) => {
-  return (
-    <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
-      <h2 className={css.printSectionHeading}>
-        Document Information
-        <span className={css.printSectionHeadingRule} />
-      </h2>
-      <EditingProvider>
-        <DocumentInfo doc={p.doc} />
-      </EditingProvider>
-    </PrintLayout>
-  )
-}
-
-const PrintLegend = ({ levelOfDetail }: { levelOfDetail: LevelOfDetail }) => (
+export const PrintLegend = ({
+  levelOfDetail,
+}: {
+  levelOfDetail: LevelOfDetail
+}) => (
   <div className={css.printLegendBox}>
     <h2 className={css.printHeading}>How To Read This Document</h2>
     <p className={css.printLegendSyllabary}>
@@ -91,73 +70,6 @@ const PrintLegend = ({ levelOfDetail }: { levelOfDetail: LevelOfDetail }) => (
     </p>
   </div>
 )
-
-export const PrintTranslation = (p: {
-  doc: Dailp.DocumentFieldsFragment
-  breadcrumbString?: string
-}) => {
-  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
-
-  return (
-    <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
-      <PrintLegend levelOfDetail={levelOfDetail} />
-      <h2 className={css.printSectionHeading}>
-        Translation
-        <span className={css.printSectionHeadingRule} />
-      </h2>
-      <div
-        className={
-          levelOfDetail >= LevelOfDetail.Segmentation
-            ? `${css.printBodyContent} ${css.printHideParagraphTranslation}`
-            : css.printBodyContent
-        }
-      >
-        <EditWordCheckProvider>
-          <FormProvider>
-            <FormProviderParagraph>
-              <DocumentContents
-                doc={p.doc}
-                levelOfDetail={levelOfDetail}
-                cherokeeRepresentation={cherokeeRepresentation}
-                openDetails={() => {}}
-                wordPanelDetails={{
-                  currContents: null,
-                  setCurrContents: () => {},
-                }}
-              />
-            </FormProviderParagraph>
-          </FormProvider>
-        </EditWordCheckProvider>
-      </div>
-    </PrintLayout>
-  )
-}
-
-export const PrintOriginalText = (p: {
-  doc: Dailp.DocumentFieldsFragment
-  breadcrumbString?: string
-}) => {
-  return (
-    <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
-      <h2 className={css.printSectionHeading}>
-        Original Document
-        <span className={css.printSectionHeadingRule} />
-      </h2>
-      <div className={css.printImageSource}>Image Source: (source)</div>
-      {p.doc.translatedPages ? (
-        <PageImages
-          pageImages={{
-            urls:
-              p.doc.translatedPages
-                ?.filter((page) => !!page.image)
-                .map((page) => page.image!.url) ?? [],
-          }}
-          document={p.doc}
-        />
-      ) : null}
-    </PrintLayout>
-  )
-}
 
 export const PrintLayout = (p: {
   doc: Dailp.DocumentFieldsFragment
@@ -206,9 +118,7 @@ export const PrintLayout = (p: {
           }
         `}
         </style>
-        <style>{`
-          div { border: 1px solid black; }
-        `}</style>
+        <style>{`div { border: 1px solid black; }`}</style>
       </Helmet>
       <div className={css.printHeader}>
         <div className={css.printHeading}>
