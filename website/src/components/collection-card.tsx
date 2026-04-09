@@ -1,38 +1,25 @@
 import React from "react"
-import { Button, Group } from "reakit"
-import {
-  actionButton,
-  cardContent,
-  collectionCard,
-  collectionCardHeader,
-  collectionCardImage,
-  collectionCardText,
-} from "./collection-card.css"
+import { Group } from "reakit"
+import { Link } from "src/components"
+import { fullWidth } from "src/style/utils.css"
+import { card, cardHeader, cardImage, cardText } from "./card.css"
 
-export const CollectionCard = (props: {
+export const Card = (props: {
   thumbnail: string
   header: { text: string; link: string | undefined }
   description: string
-  buttonLabel: string
 }) => {
   return (
-    <Group className={collectionCard}>
-      <img src={props.thumbnail} className={collectionCardImage} />
-      <div className={cardContent}>
-        <h2 className={collectionCardHeader}>
-          {props.header.link ? (
-            <a href={props.header.link}>{props.header.text}</a>
-          ) : (
-            props.header.text
-          )}
-        </h2>
-        <p className={collectionCardText}>{props.description}</p>
-        <a href={props.header.link} className={actionButton}>
-          {props.buttonLabel}
-        </a>
-      </div>
+    <Group className={card}>
+      <img src={props.thumbnail} className={cardImage} />
+      <h2 className={cardHeader}>
+        {props.header.link ? (
+          <Link href={props.header.link}>{props.header.text}</Link>
+        ) : (
+          props.header.text
+        )}
+      </h2>
+      <p className={cardText}>{props.description}</p>
     </Group>
   )
 }
-
-export default CollectionCard

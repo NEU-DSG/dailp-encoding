@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
-import CollectionCard from "src/components/collection-card"
+import { Card } from "src/components"
 import HomepageHeader from "src/components/homepage-header"
 import StoryCard from "src/components/story-card"
 import {
@@ -116,20 +116,19 @@ const IndexPage = () => {
                 </button>
               </div>
             )}
-            <ul className={cardGroup}>
+            <ul>
               {dailp?.allEditedCollections.map((collection) => (
-                <CollectionCard
-                  key={collection.slug}
+                <Card
                   thumbnail={collection.thumbnailUrl ?? cwkwLogo}
                   header={{
                     text: collection.title,
                     link: collectionRoute(collection.slug),
                   }}
                   description={
-                    collection.description ||
-                    "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
+                    collection.description
+                      ? collection.description
+                      : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                   }
-                  buttonLabel="View the collection"
                 />
               ))}
             </ul>
