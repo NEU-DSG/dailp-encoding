@@ -22,6 +22,7 @@
     "@citation-js/core": "^0.7.21",
     "@citation-js/plugin-csl": "^0.7.21",
     "@fontsource/charis-sil": "^4.5.7",
+    "@fontsource/philosopher": "^5.2.8",
     "@fontsource/quattrocento-sans": "^4.5.5",
     "@marsidev/react-turnstile": "^1.3.1",
     "@reach/dialog": "^0.16.2",

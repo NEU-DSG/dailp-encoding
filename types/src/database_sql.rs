@@ -6,6 +6,7 @@ use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
+use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
@@ -721,6 +722,7 @@ impl Database {
                 UserGroup::Readers => "Readers",
                 UserGroup::Editors => "Editors",
                 UserGroup::Contributors => "Contributors",
+                UserGroup::Administrators => "Administrators",
             };
             vec![role_str.to_string()]
         } else {
@@ -895,6 +897,33 @@ impl Database {
         Ok(format!("document: {}, user: {}", document_id, user_id))
     }
 
+    pub async fn all_users(&self) -> Result<Vec<User>> {
+        let rows = query_file!("queries/all_user.sql")
+            .fetch_all(&self.client)
+            .await?;
+
+        let users = rows
+            .into_iter()
+            .map(|row| {
+                let created_at = Date::from(row.created_at);
+                let role = UserGroup::from(row.role);
+
+                User {
+                    id: UserId(row.id.to_string()),
+                    display_name: row.display_name,
+                    created_at: Some(created_at),
+                    avatar_url: row.avatar_url,
+                    bio: row.bio,
+                    organization: row.organization,
+                    location: row.location,
+                    role: Some(role),
+                }
+            })
+            .collect();
+
+        Ok(users) // come back to see if list conversions are needed
+    }
+
     pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
         let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
             .fetch_all(&self.client)
@@ -934,10 +963,18 @@ impl Database {
         upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
+        // TODO adopt URL type
+        let is_url = |s: &String| s.starts_with("https://");
+
+        let url = if is_url(&upload.contributor_audio_url) {
+            upload.contributor_audio_url.clone()
+        } else {
+            "https://".to_owned() + &upload.contributor_audio_url
+        };
         let media_slice_id = query_file_scalar!(
             "queries/attach_audio_to_word.sql",
             contributor_id,
-            upload.contributor_audio_url as _,
+            url as _,
             0,
             0,
             upload.word_id

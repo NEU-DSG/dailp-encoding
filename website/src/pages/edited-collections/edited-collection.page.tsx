@@ -93,8 +93,7 @@ const EditedCollectionPage = () => {
           </header>
 
           <h3>
-            A digital collection presented by{" "}
-            <Link href="https://dailp.northeastern.edu/">DAILP</Link>
+            A digital collection presented by <Link href="/">DAILP</Link>
           </h3>
 
           <DailpPageContents path={`/${collectionSlug}`} />

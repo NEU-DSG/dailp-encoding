@@ -1167,6 +1167,8 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Gets all dailp_user with their id, username, and role for now */
+  readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -1373,6 +1375,7 @@ export type User = {
 
 /** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
+  Administrators = "ADMINISTRATORS",
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
   Readers = "READERS",
@@ -3573,6 +3576,10 @@ export const DocFormFieldsFragmentDoc = gql`
       role
     }
     format {
+      id
+      name
+    }
+    genre {
       id
       name
     }

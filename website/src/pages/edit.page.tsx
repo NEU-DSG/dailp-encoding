@@ -31,12 +31,13 @@ const NewPage = () => {
   const [isNew, setIsNew] = useState(true)
 
   const formatPath = (path: string) => {
-    return path.startsWith("/")
-      ? path
-      : `/${path}`
-          .toLowerCase()
-          .replace(/ /g, "-")
-          .replace(/[^a-z0-9-]/g, "")
+    let regularizedPath = path
+      .toLowerCase()
+      .replace(/ /g, "-")
+      .replace(/[^a-z0-9-/]/g, "")
+    return regularizedPath.startsWith("/")
+      ? regularizedPath
+      : `/${regularizedPath}`
   }
 
   const [{ data }, reexec] = usePageByPathQuery({
@@ -58,20 +59,20 @@ const NewPage = () => {
   const [_, upsertPage] = useUpsertPageMutation()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
+    let error: string | null = null
     if (content.length === 0 || title.length === 0 || path.length === 0) {
-      setError("Please fill in all fields")
-      return
+      error = "Please fill in all fields"
+    } else {
+      error = validatePath(path)
     }
-    // check if path is poorly formatted
-    const pathError = validatePath(path)
-    if (pathError) {
-      setError(pathError)
-      return
-    }
-
-    //setPath(formatPath(isNew ? "/pages" + path : path))
 
     reexec({ variables: { path } })
+    if (error !== null) {
+      alert("error: " + error)
+      setError(error)
+      return
+    }
     if (!isNew) {
       const confirm = window.confirm(
         "Page already exists. Would you like to overwrite it?"
@@ -81,15 +82,11 @@ const NewPage = () => {
       }
     }
 
-    if (error !== null) {
-      alert("error: " + error)
-      return
-    }
     upsertPage({
       pageInput: {
         title,
         body: [content],
-        path: path,
+        path: formatPath(path),
       },
     }).then((res) => {
       if (res.error) {
@@ -104,7 +101,9 @@ const NewPage = () => {
   const validatePath = (path: string): string | null => {
     const formatted = formatPath(path)
     const pathSegments = formatted.split("/").filter(Boolean) // Remove empty strings
-
+    if (path.trim().length == 0 || path == "/new-page") {
+      return `Please provide a meaningful path.`
+    }
     // Check if any segment contains a disallowed word
     for (const segment of pathSegments) {
       for (const disallowed of DISALLOWED_WORDS) {
