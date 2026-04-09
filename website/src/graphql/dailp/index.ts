@@ -1383,6 +1383,7 @@ export type User = {
 
 /** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
+  Administrators = "ADMINISTRATORS",
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
   Readers = "READERS",

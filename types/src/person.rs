@@ -26,6 +26,15 @@ pub struct Contributor {
     pub role: Option<ContributorRole>,
 }
 
+/// Input Object for Contributor
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct ContributorInput {
+    /// Full name of the contributor
+    pub name: String,
+    /// The role that defines most of their contributions to the associated item
+    pub role: String,
+}
+
 #[async_graphql::ComplexObject]
 impl Contributor {
     async fn details(
@@ -162,14 +171,4 @@ pub struct SourceAttribution {
     pub name: String,
     /// URL of this source's homepage, i.e. "https://www.newberry.org/"
     pub link: String,
-}
-
-/// May not need this
-/// A user belongs to any number of user groups, which give them various permissions.
-#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
-pub enum UserGroup {
-    Admin,
-    Contributors,
-    Editors,
-    Readers,
 }
