@@ -9,7 +9,9 @@ import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
+import { DocumentInfo } from "./document-info"
 import { DocumentContents } from "./document.page"
+import { EditingProvider } from "./editing-context"
 import * as css from "./print-document.css"
 
 export const printDocument = () => window.print()
@@ -25,13 +27,34 @@ export const usePrintFooterContent = () => {
   return { date, url }
 }
 
+export const metaDataList = [
+  "Title",
+  "Date Created",
+  "Genre",
+  "Format",
+  "Creator",
+  "Contributors",
+  "Source",
+  "Keywords",
+  "Subject Headings",
+  "Languages",
+  "Spatial Coverage",
+  "Citation",
+] as const
+
 export const PrintMetadata = (p: {
   doc: Dailp.DocumentFieldsFragment
   breadcrumbString?: string
 }) => {
   return (
     <PrintLayout doc={p.doc} breadcrumbString={p.breadcrumbString}>
-      <h2>Document Info</h2>
+      <h2 className={css.printSectionHeading}>
+        Document Information
+        <span className={css.printSectionHeadingRule} />
+      </h2>
+      <EditingProvider>
+        <DocumentInfo doc={p.doc} />
+      </EditingProvider>
     </PrintLayout>
   )
 }
@@ -120,6 +143,7 @@ export const PrintOriginalText = (p: {
         Original Document
         <span className={css.printSectionHeadingRule} />
       </h2>
+      <div className={css.printImageSource}>Image Source: (source)</div>
       {p.doc.translatedPages ? (
         <PageImages
           pageImages={{

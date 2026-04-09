@@ -23,6 +23,9 @@ export const pageNav = style([
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    "@media": {
+      print: { display: "none" },
+    },
   },
 ])
 
@@ -34,6 +37,11 @@ export const pageImage = style({
     [mediaQueries.print]: {
       WebkitPrintColorAdjust: "exact",
       printColorAdjust: "exact",
+      width: "482px",
+      height: "732px",
+      position: "relative",
+      left: "167px",
+      top: "232px",
     },
   },
 })

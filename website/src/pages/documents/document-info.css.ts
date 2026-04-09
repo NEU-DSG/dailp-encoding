@@ -6,12 +6,23 @@ export const container = style({
   padding: "32px",
   maxWidth: "900px",
   margin: "40px auto 50px auto",
+  "@media": {
+    print: {
+      padding: "16px",
+      margin: "0 auto",
+    },
+  },
 })
 
 export const header = style({
   position: "relative",
   textAlign: "center",
   marginBottom: "32px",
+  "@media": {
+    print: {
+      display: "none",
+    },
+  },
 })
 
 export const editButton = style({
@@ -45,18 +56,35 @@ export const title = style({
   fontWeight: "600",
   color: "#333333",
   margin: "-5rem 0 8px 0",
+  "@media": {
+    print: {
+      fontSize: "14px",
+      margin: "0 0 4px 0",
+    },
+  },
 })
 
 export const subtitle = style({
   fontSize: "16px",
   color: "#666666",
   margin: "10px 0 50px 0",
+  "@media": {
+    print: {
+      fontSize: "8px",
+      margin: "4px 0 24px 0",
+    },
+  },
 })
 
 export const infoSection = style({
   display: "flex",
   flexDirection: "column",
   gap: "24px",
+  "@media": {
+    print: {
+      gap: "12px",
+    },
+  },
 })
 
 export const field = style({
@@ -65,6 +93,12 @@ export const field = style({
   gap: "8px",
   paddingBottom: "16px",
   borderBottom: "1px solid #ADADAD",
+  "@media": {
+    print: {
+      gap: "4px",
+      paddingBottom: "8px",
+    },
+  },
 })
 
 export const label = style({
@@ -73,12 +107,22 @@ export const label = style({
   color: "#8D6660",
   textTransform: "uppercase",
   letterSpacing: "0.5px",
+  "@media": {
+    print: {
+      fontSize: "10px",
+    },
+  },
 })
 
 export const value = style({
   fontSize: "16px",
   color: "#333333",
   lineHeight: 1.5,
+  "@media": {
+    print: {
+      fontSize: "8px",
+    },
+  },
 })
 
 export const link = style({

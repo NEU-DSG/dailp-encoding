@@ -101,6 +101,77 @@ export const printBlankPage = style({
   },
 })
 
+export const printMetaSection = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      flexDirection: "column",
+      width: "100%",
+      marginTop: vspace.one,
+    },
+  },
+})
+
+export const printMetaField = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      flexDirection: "row",
+      paddingTop: vspace.quarter,
+      paddingBottom: vspace.quarter,
+      borderBottom: `1px solid #ADADAD`,
+    },
+  },
+})
+
+export const printMetaLabel = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "160px",
+      flexShrink: 0,
+      fontFamily: fonts.header,
+      fontSize: "10pt",
+      fontWeight: 600,
+      color: "#333333",
+    },
+  },
+})
+
+export const printMetaValue = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: "serif",
+      fontSize: "10pt",
+      fontWeight: 400,
+      color: "#333333",
+      lineHeight: 1.4,
+    },
+  },
+})
+
+export const printImageSource = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: "serif",
+      fontStyle: "normal",
+      fontWeight: 400,
+      fontSize: "14px",
+      lineHeight: 1.2,
+      width: "636px",
+      height: "17px",
+      textAlign: "center",
+    },
+  },
+})
+
 globalStyle(`${printDocument} button`, {
   display: "none",
 })
@@ -256,6 +327,19 @@ export const printWordSpacing = globalStyle(
         paddingTop: 0,
         paddingBottom: 0,
         breakInside: "avoid",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${annotationSection.story} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
       },
     },
   }
