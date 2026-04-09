@@ -931,6 +931,8 @@ export type Mutation = {
    */
   readonly attachAudioToWord: AnnotatedForm
   readonly createEditedCollection: Scalars["String"]
+  /** Adds a new subject heading to the global list. */
+  readonly createSubjectHeading: SubjectHeading
   /** Decide if a piece of document audio should be included in edited collection */
   readonly curateDocumentAudio: AnnotatedDoc
   /** Decide if a piece of word audio should be included in edited collection */
@@ -982,6 +984,11 @@ export type MutationAttachAudioToWordArgs = {
 
 export type MutationCreateEditedCollectionArgs = {
   input: CreateEditedCollectionInput
+}
+
+export type MutationCreateSubjectHeadingArgs = {
+  name: Scalars["String"]
+  status: ApprovalStatus
 }
 
 export type MutationCurateDocumentAudioArgs = {
@@ -1153,6 +1160,8 @@ export type Query = {
   readonly allEditedCollections: ReadonlyArray<EditedCollection>
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
+  /** Fetch all available subject headings. */
+  readonly allSubjectHeadings: ReadonlyArray<SubjectHeading>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
   /** Retrieves all documents that are bookmarked by the current user. */
@@ -1940,6 +1949,30 @@ export type DocFormFieldsFragment = {
       { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
   }
+
+export type AllSubjectHeadingsQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllSubjectHeadingsQuery = { readonly __typename?: "Query" } & {
+  readonly allSubjectHeadings: ReadonlyArray<
+    { readonly __typename?: "SubjectHeading" } & Pick<
+      SubjectHeading,
+      "id" | "name" | "status"
+    >
+  >
+}
+
+export type CreateSubjectHeadingMutationVariables = Exact<{
+  name: Scalars["String"]
+  status: ApprovalStatus
+}>
+
+export type CreateSubjectHeadingMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly createSubjectHeading: {
+    readonly __typename?: "SubjectHeading"
+  } & Pick<SubjectHeading, "id" | "name" | "status">
+}
 
 export type ParagraphFormFieldsFragment = {
   readonly __typename: "DocumentParagraph"
@@ -3786,6 +3819,40 @@ export function useDocumentContentsQuery(
     query: DocumentContentsDocument,
     ...options,
   })
+}
+export const AllSubjectHeadingsDocument = gql`
+  query AllSubjectHeadings {
+    allSubjectHeadings {
+      id
+      name
+      status
+    }
+  }
+`
+
+export function useAllSubjectHeadingsQuery(
+  options?: Omit<Urql.UseQueryArgs<AllSubjectHeadingsQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    AllSubjectHeadingsQuery,
+    AllSubjectHeadingsQueryVariables
+  >({ query: AllSubjectHeadingsDocument, ...options })
+}
+export const CreateSubjectHeadingDocument = gql`
+  mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+    createSubjectHeading(name: $name, status: $status) {
+      id
+      name
+      status
+    }
+  }
+`
+
+export function useCreateSubjectHeadingMutation() {
+  return Urql.useMutation<
+    CreateSubjectHeadingMutation,
+    CreateSubjectHeadingMutationVariables
+  >(CreateSubjectHeadingDocument)
 }
 export const CollectionDocument = gql`
   query Collection($slug: String!) {

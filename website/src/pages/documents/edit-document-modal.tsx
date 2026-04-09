@@ -8,8 +8,8 @@ import { form } from "src/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import { buildCitationMetadata } from "../../utils/build-citation-metadata"
 import Cite from "../../utils/citation-config"
+import { buildCitationMetadata } from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { EditingProvider, useEditing } from "./editing-context"
@@ -66,16 +66,6 @@ const approvedKeywords = [
   "Land Rights",
   "Self-Determination",
   "Tribal Governance",
-]
-
-const approvedSubjectHeadings = [
-  "Cherokee Political Structure",
-  "Sacred Relationships to Land",
-  "Indigenous Self-Determination",
-  "Ecological Stewardship",
-  "Colonial Disruption and Resilience",
-  "Ceremony and Sacred Practice",
-  "Indigenous Governance Models",
 ]
 
 const approvedLanguages = [
@@ -184,6 +174,62 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }))
   )
 
+  // Changes for pulling and creating new subject headings
+  const [{ data: allSubjectsData }, refetchSubjects] =
+    Dailp.useAllSubjectHeadingsQuery()
+  const [, createSubjectMutation] = Dailp.useCreateSubjectHeadingMutation()
+
+  const [selectedSubjects, setSelectedSubjects] = useState<
+    Dailp.SubjectHeadingUpdate[]
+  >(
+    documentMetadata.subjectHeadings?.map((s) => ({
+      id: s.id,
+      name: s.name,
+    })) ?? []
+  )
+  const [newSubjectName, setNewSubjectName] = useState("")
+
+  // Grab just strings from the db
+  const approvedSubjectNames = useMemo(() => {
+    return allSubjectsData?.allSubjectHeadings?.map((h) => h.name) ?? []
+  }, [allSubjectsData])
+
+  // Mutation call to add new subjects
+  const handleCreateSubject = async () => {
+    const nameToAdd = newSubjectName.trim()
+    if (!nameToAdd) return
+
+    const subjectSelected = selectedSubjects.some(
+      (s) => s.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
+    const subjectInDatabase = allSubjectsData?.allSubjectHeadings?.find(
+      (h) => h.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
+
+    if (!subjectSelected) {
+      if (subjectInDatabase) {
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: subjectInDatabase.id, name: subjectInDatabase.name },
+        ])
+      } else {
+        const tempId = uuidv4()
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: tempId, name: nameToAdd },
+        ])
+
+        await createSubjectMutation({
+          name: nameToAdd,
+          status: Dailp.ApprovalStatus.Approved,
+        })
+
+        refetchSubjects({ requestPolicy: "network-only" })
+      }
+    }
+    setNewSubjectName("")
+  }
+
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
   const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
@@ -229,6 +275,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         format: "text",
         template: citeFormat || "apa",
         lang: "en-US",
+        type: "document",
       })
       console.log("Using citeFormat:", citeFormat)
       console.log("Generated citation:", docCitation)
@@ -274,7 +321,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     newTags: newHeadings,
     addTag: addHeading,
     removeTag: removeHeading,
-  } = useTagSelector(subjectHeadingStrings, approvedSubjectHeadings)
+  } = useTagSelector(subjectHeadingStrings)
 
   const {
     tags: selectedLanguages,
@@ -428,7 +475,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   }
 
   const creatorStrings = useMemo(
-    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
+    () => (creator ?? []).map((cr) => cr.name),
     [documentMetadata.creators]
   )
 
@@ -520,15 +567,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
 
     // Subject Headings to be submitted
-    const subjectHeadingsToSubmit = selectedSubjectHeadings.map((name) => {
-      // Find existing subject headings by name to get id, otherwise generate new UUID
-      const existing = subjectHeadings.find((sh) => sh.name === name)
-      return {
-        id: existing?.id ?? uuidv4(),
-        name,
-        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
-      }
-    })
+    const subjectHeadingsToSubmit = selectedSubjects.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }))
 
     // Languages to be submitted
     const languagesToSubmit = selectedLanguages.map((name) => {
@@ -797,12 +839,78 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
           <TagSelector
             label="Subject Headings"
-            selectedTags={selectedSubjectHeadings}
-            approvedTags={approvedSubjectHeadings}
-            newTags={newHeadings}
-            onAdd={isEditing ? addHeading : undefined}
-            onRemove={isEditing ? removeHeading : undefined}
-            addButtonLabel="Add Subject Heading"
+            selectedTags={selectedSubjects.map((s) => s.name)}
+            approvedTags={approvedSubjectNames}
+            onAdd={(tagName) => {
+              const existing = allSubjectsData?.allSubjectHeadings?.find(
+                (h) => h.name === tagName
+              )
+              if (existing) {
+                setSelectedSubjects((prev) => [
+                  ...prev,
+                  { id: existing.id, name: existing.name },
+                ])
+              }
+            }}
+            onRemove={(index) => {
+              setSelectedSubjects((prev) => prev.filter((_, i) => i !== index))
+            }}
+            addButtonLabel="Add Existing Subjects"
+            customForm={
+              approvedSubjectNames.length === 0 && (
+                <div
+                  style={{ color: "#666", fontStyle: "italic", padding: "8px" }}
+                >
+                  No subject headings found in database.
+                </div>
+              )
+            }
+            additionalForm={
+              isEditing && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    width: "100%",
+                    marginTop: "4px",
+                  }}
+                >
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Create or add new heading..."
+                    value={newSubjectName}
+                    onChange={(e) => setNewSubjectName(e.target.value)}
+                    style={{
+                      flex: 1,
+                      height: "42px",
+                      marginBottom: 0,
+                      boxSizing: "border-box",
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleCreateSubject()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateSubject}
+                    className={styles.addTagButton}
+                    style={{
+                      height: "42px",
+                      marginTop: 0,
+                      whiteSpace: "nowrap",
+                      padding: "0 20px",
+                    }}
+                  >
+                    Add New Subject
+                  </button>
+                </div>
+              )
+            }
           />
 
           <TagSelector
