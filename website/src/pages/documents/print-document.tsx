@@ -118,7 +118,6 @@ export const PrintLayout = (p: {
           }
         `}
         </style>
-        <style>{`div { border: 1px solid black; }`}</style>
       </Helmet>
       <div className={css.printHeader}>
         <div className={css.printHeading}>

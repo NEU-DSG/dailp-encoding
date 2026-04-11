@@ -124,9 +124,9 @@ export const printLegendBox = style({
     [mediaQueries.print]: {
       display: "block",
       textAlign: "left",
-      marginTop: vspace.one,
-      paddingTop: "0.794rem",
-      paddingBottom: vspace.half,
+      marginTop: vspace.quarter,
+      paddingTop: vspace.quarter,
+      paddingBottom: vspace.quarter,
       borderRadius: "15px",
       backgroundColor: "#f0f0f0d1",
       border: "1px solid #000",

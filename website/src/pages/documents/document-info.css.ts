@@ -119,7 +119,7 @@ export const label = style({
       fontFamily: `"Quattrocento", serif`,
       fontStyle: "normal",
       fontWeight: 700,
-      fontSize: "20px",
+      fontSize: "19px",
       lineHeight: 1.2,
     },
   },

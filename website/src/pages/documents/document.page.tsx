@@ -240,11 +240,15 @@ export const TabSet = ({
             <span className={css.printSectionHeadingRule} />
           </h2>
           <div
-            className={
-              levelOfDetail >= LevelOfDetail.Segmentation
-                ? `${css.printBodyContent} ${css.printHideParagraphTranslation}`
-                : css.printBodyContent
-            }
+            className={[
+              css.printBodyContent,
+              levelOfDetail >= LevelOfDetail.Pronunciation &&
+                css.printHideParagraphTranslation,
+              levelOfDetail === LevelOfDetail.Pronunciation &&
+                css.printPronunciationMode,
+            ]
+              .filter(Boolean)
+              .join(" ")}
           >
             <EditWordCheckProvider>
               <FormProvider>
@@ -276,7 +280,7 @@ export const TabSet = ({
                   <span className={css.printSectionHeadingRule} />
                 </h2>
                 <div className={css.printImageSource}>
-                  Image Source: {doc.sources[0]?.name ?? "Source unknown"}
+                  Image Source: {page.image!.url}
                 </div>
                 <img
                   className={pageImageCss.pageImage}

@@ -418,6 +418,31 @@ export const printBodyContent = style({
   },
 })
 
+export const printPronunciationMode = style({})
+
+globalStyle(
+  `.${printBodyContent}.${printPronunciationMode} .${annotationSection.story}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        gridTemplateColumns: "repeat(3, 188px)",
+        columnGap: vspace.half,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent}.${printPronunciationMode} .${wordGroupInline} div`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        width: "188px",
+      },
+    },
+  }
+)
+
 export const printHideParagraphTranslation = style({
   "@media": {
     [mediaQueries.print]: { display: "block" },
@@ -506,17 +531,6 @@ globalStyle(
     "@media": {
       [mediaQueries.print]: {
         breakAfter: "page",
-      },
-    },
-  }
-)
-
-globalStyle(
-  `.${printBodyContent} .${wordGroup}:last-child, .${printBodyContent} .${wordGroupInline}:last-child`,
-  {
-    "@media": {
-      [mediaQueries.print]: {
-        breakAfter: "auto",
       },
     },
   }
