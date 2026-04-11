@@ -48,8 +48,10 @@ import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
+import * as pageImageCss from "../../page-image.css"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
+import { PrintLayout, PrintLegend, printDocument } from "./print-document"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -70,7 +72,6 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   const wordIndex = useLocation().hash
   const index = wordIndex?.replace("w", "")
   const doc = data?.document
-
   if (!doc) {
     return null
   }
@@ -105,7 +106,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
+export const TabSet = ({
+  doc,
+  breadcrumbString,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+  breadcrumbString?: string
+}) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -125,6 +132,7 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
   // const [{ data }] = Dailp.useDocumentDetailsQuery({
   //   variables: { slug: doc.slug! },
   // })
@@ -132,6 +140,18 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   // if (!docData) {
   //   return null
   // }
+  const pageImagesContent = doc.translatedPages ? (
+    <PageImages
+      pageImages={{
+        urls:
+          doc.translatedPages
+            ?.filter((p) => !!p.image)
+            .map((p) => p.image!.url) ?? [],
+      }}
+      document={doc}
+    />
+  ) : null
+
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:
@@ -193,17 +213,7 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.translatedPages ? (
-          <PageImages
-            pageImages={{
-              urls:
-                doc.translatedPages
-                  ?.filter((p) => !!p.image)
-                  .map((p) => p.image!.url) ?? [],
-            }}
-            document={doc}
-          />
-        ) : null}
+        {pageImagesContent}
       </TabPanel>
 
       <TabPanel
@@ -220,6 +230,78 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
           </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
+
+      {/* Hidden Print Design Components */}
+      {tabs.selectedId === Tabs.ANNOTATION && (
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          <PrintLegend levelOfDetail={levelOfDetail} />
+          <h2 className={css.printSectionHeading}>
+            Translation
+            <span className={css.printSectionHeadingRule} />
+          </h2>
+          <div
+            className={[
+              css.printBodyContent,
+              levelOfDetail >= LevelOfDetail.Pronunciation &&
+                css.printHideParagraphTranslation,
+              levelOfDetail === LevelOfDetail.Pronunciation &&
+                css.printPronunciationMode,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <EditWordCheckProvider>
+              <FormProvider>
+                <FormProviderParagraph>
+                  <DocumentContents
+                    doc={doc}
+                    levelOfDetail={levelOfDetail}
+                    cherokeeRepresentation={cherokeeRepresentation}
+                    openDetails={() => {}}
+                    wordPanelDetails={{
+                      currContents: null,
+                      setCurrContents: () => {},
+                    }}
+                  />
+                </FormProviderParagraph>
+              </FormProvider>
+            </EditWordCheckProvider>
+          </div>
+        </PrintLayout>
+      )}
+      {tabs.selectedId === Tabs.IMAGES && (
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          {doc.translatedPages
+            ?.filter((page) => !!page.image)
+            .map((page, i) => (
+              <React.Fragment key={i}>
+                <h2 className={css.printSectionHeading}>
+                  Original Document
+                  <span className={css.printSectionHeadingRule} />
+                </h2>
+                <div className={css.printImageSource}>
+                  Image Source: {page.image!.url}
+                </div>
+                <img
+                  className={pageImageCss.pageImage}
+                  src={`${page.image!.url}/full/max/0/default.jpg`}
+                  alt={`Manuscript Page ${i + 1}`}
+                />
+              </React.Fragment>
+            ))}
+        </PrintLayout>
+      )}
+      {tabs.selectedId === Tabs.INFO && (
+        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+          <h2 className={css.printSectionHeading}>
+            Document Information
+            <span className={css.printSectionHeadingRule} />
+          </h2>
+          <EditingProvider>
+            <DocumentInfo doc={doc} />
+          </EditingProvider>
+        </PrintLayout>
+      )}
     </>
   )
 }
@@ -360,7 +442,7 @@ export const TranslationTab = ({
   )
 }
 
-const DocumentContents = ({
+export const DocumentContents = ({
   levelOfDetail,
   doc,
   openDetails,
@@ -451,6 +533,7 @@ export const DocumentTitleHeader = (p: {
     "name" | "slug"
   >[]
   doc: Dailp.DocumentFieldsFragment
+  onPrint?: () => void
 }) => {
   const { user } = useUser()
   const userId = useUserId()
@@ -487,9 +570,12 @@ export const DocumentTitleHeader = (p: {
           </div>
         )}
         <div className={css.alignRight}>
-          {!isMobile ? (
-            <Button onClick={() => window.print()}>Print</Button>
-          ) : null}
+          {
+            // for printing, turns special stylized print layout visible and hides the current webpage
+            !isMobile ? (
+              <Button onClick={p.onPrint ?? printDocument}>Print</Button>
+            ) : null
+          }
         </div>
       </div>
       <div id="audio-and-recording-container">
