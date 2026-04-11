@@ -6,7 +6,9 @@ import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
 import * as css from "./print-document.css"
 
-export const printDocument = () => window.print()
+export const printDocument = () => {
+  document.fonts.ready.then(() => window.print())
+}
 
 export const usePrintFooterContent = () => {
   const location = useLocation()
