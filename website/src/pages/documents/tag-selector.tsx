@@ -10,6 +10,7 @@ interface TagSelectorProps {
   onRemove?: (index: number) => void
   addButtonLabel: string
   customForm?: React.ReactNode
+  children?: React.ReactNode
 }
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
@@ -21,6 +22,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   onRemove,
   addButtonLabel,
   customForm,
+  children,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false)
 
@@ -50,6 +52,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
       </div>
 
       <div className={styles.tagDropdownContainer}>
+        {children}
         <button
           type="button"
           onClick={() => setShowDropdown(!showDropdown)}
