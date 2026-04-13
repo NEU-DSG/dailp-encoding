@@ -5,13 +5,15 @@ import {
   useAddUserMutation,
   useAllUsersQuery,
 } from "src/graphql/dailp"
-import { CancelButton } from "./cancel-button"
-import { CloseButton } from "./close-button"
-import { ConfirmationDialog } from "./confirmation-dialog"
-import { EmptyDialog } from "./empty-dialog"
+import {
+  CancelButton,
+  CloseButton,
+  ConfirmationDialog,
+  EmptyDialog,
+  RoleDropdown,
+  SubmitButton,
+} from "./change-dialog"
 import * as css from "./invite-form.css"
-import { RoleDropdown } from "./role-dropdown"
-import { SubmitButton } from "./submit-button"
 
 export interface UserEntry {
   email: string

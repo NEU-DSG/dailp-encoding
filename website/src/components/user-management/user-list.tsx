@@ -8,9 +8,7 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation,
 } from "src/graphql/dailp"
-import { ConfirmationDialog } from "./confirmation-dialog"
-import { EmptyDialog } from "./empty-dialog"
-import { RoleDropdown } from "./role-dropdown"
+import { ConfirmationDialog, EmptyDialog, RoleDropdown } from "./change-dialog"
 import * as css from "./user-list.css"
 
 type ActiveDialog =
