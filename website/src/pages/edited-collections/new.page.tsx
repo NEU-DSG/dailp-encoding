@@ -77,10 +77,10 @@ const NewEditedCollectionPage = () => {
       }
 
       if (result.data?.createEditedCollection) {
-        console.log(
-          "Successfully created collection with ID:",
-          result.data.createEditedCollection
-        )
+        // console.log(
+        //   "Successfully created collection with ID:",
+        //   result.data.createEditedCollection
+        // )
 
         const menu = menuData?.menuBySlug
         if (menu) {
