@@ -7,12 +7,17 @@ import * as css from "./change-dialog.css"
 interface CancelButtonProps {
   onClick?: () => void
   href?: string
+  children?: React.ReactNode
 }
 
-export const CancelButton = ({ onClick, href }: CancelButtonProps) => {
+export const CancelButton = ({
+  onClick,
+  href,
+  children = "Cancel",
+}: CancelButtonProps) => {
   const button = (
     <button type="button" onClick={onClick} className={css.cancelButton}>
-      Cancel
+      {children}
     </button>
   )
 

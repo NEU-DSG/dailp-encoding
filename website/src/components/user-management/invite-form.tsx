@@ -172,7 +172,7 @@ export const InviteForm = () => {
       </div>
 
       <div className={css.actionButtons}>
-        <CancelButton href="/admin/manage-users" />
+        <CancelButton href="/admin/manage-users">Go Back</CancelButton>
         <SubmitButton
           type="submit"
           onClick={() => handleSubmit(users)}
