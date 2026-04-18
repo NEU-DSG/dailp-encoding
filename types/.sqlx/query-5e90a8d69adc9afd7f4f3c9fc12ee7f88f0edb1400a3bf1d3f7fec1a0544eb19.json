@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into dailp_user (display_name, created_at, role)\nvalues ($1, now(), $2::text::user_role)\nreturning id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5e90a8d69adc9afd7f4f3c9fc12ee7f88f0edb1400a3bf1d3f7fec1a0544eb19"
+}
