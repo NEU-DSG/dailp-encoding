@@ -774,7 +774,6 @@ query pageByPath($path: String!) {
     }
   }
 }
-
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
