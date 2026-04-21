@@ -63,18 +63,11 @@ impl Word {
     }
 
     async fn source(&self) -> Option<&str> {
-        self.spellings
-            .iter()
-            .find(|s| s.system.0 == "Source")
-            .map(|s| s.value.as_str())
+        self.spelling_for_system("Source")
     }
 
     async fn romanized_source(&self, system: CherokeeOrthography) -> Option<Cow<'_, str>> {
-        self.spellings
-            .iter()
-            .find(|s| s.system.0 == "Simple Phonetics")
-            .map(|s| s.value.clone())
-            .as_ref()
+        self.spelling_for_system("Simple Phonetics")
             .map(|phonetic| Cow::Owned(system.romanize(phonetic)))
     }
 
@@ -275,6 +268,15 @@ impl Word {
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
     }
 
+    /// Returns the spelling value for the given spelling system name,
+    /// or `None` if no spelling exists for that system.
+    pub fn spelling_for_system(&self, system_name: &str) -> Option<&str> {
+        self.spellings
+            .iter()
+            .find(|s| s.system.0 == system_name)
+            .map(|s| s.value.as_str())
+    }
+
     /// Are there any unidentified segments within this word? Just checks if
     /// there are morphemes or glosses consisting of a question mark "?"
     pub fn is_unresolved(&self) -> bool {
@@ -283,10 +285,8 @@ impl Word {
                 .iter()
                 .any(|segment| segment.morpheme.contains('?') || segment.gloss.contains('?'))
         } else {
-            self.spellings
-                .iter()
-                .find(|s| s.system.0 == "Source")
-                .map(|s| s.value.contains('?'))
+            self.spelling_for_system("Source")
+                .map(|value| value.contains('?'))
                 .unwrap_or(false)
         }
     }

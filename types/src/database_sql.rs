@@ -1360,10 +1360,7 @@ impl Database {
                         .iter()
                         .map(|e| {
                             if let AnnotatedSeg::Word(word) = e {
-                                word.spellings
-                                    .iter()
-                                    .find(|s| s.system.0 == "Source")
-                                    .map(|s| s.value.clone())
+                                word.spelling_for_system("Source")
                                     .unwrap_or_default()
                                     .chars()
                                     .count()
@@ -1386,19 +1383,10 @@ impl Database {
                     for element in paragraph.source {
                         match element {
                             AnnotatedSeg::Word(word) => {
-                                let source_value = word
-                                    .spellings
-                                    .iter()
-                                    .find(|s| s.system.0 == "Source")
-                                    .map(|s| s.value.clone())
-                                    .unwrap_or_default();
+                                let source_value =
+                                    word.spelling_for_system("Source").unwrap_or_default();
                                 let len = source_value.chars().count() as i64;
-                                let (char_index, character): (Vec<_>, Vec<_>) = word
-                                    .spellings
-                                    .iter()
-                                    .find(|s| s.system.0 == "Source")
-                                    .map(|s| s.value.clone())
-                                    .unwrap_or_default()
+                                let (char_index, character): (Vec<_>, Vec<_>) = source_value
                                     .chars()
                                     .enumerate()
                                     .map(|(idx, c)| {
@@ -2174,13 +2162,10 @@ impl Database {
                         .iter()
                         .map(|e| {
                             if let AnnotatedSeg::Word(word) = e {
-                                let source_value = word
-                                    .spellings
-                                    .iter()
-                                    .find(|s| s.system.0 == "Source")
-                                    .map(|s| s.value.clone())
-                                    .unwrap_or_default();
-                                source_value.chars().count()
+                                word.spelling_for_system("Source")
+                                    .unwrap_or_default()
+                                    .chars()
+                                    .count()
                             } else {
                                 0
                             }
@@ -2204,13 +2189,12 @@ impl Database {
                     for word_seg in section.source {
                         match word_seg {
                             AnnotatedSeg::Word(word) => {
-                                let source_value = word
-                                    .spellings
-                                    .iter()
-                                    .find(|s| s.system.0 == "Source")
-                                    .map(|s| s.value.clone())
-                                    .unwrap_or_default();
-                                let word_len = source_value.chars().count() as i64;
+                                let word_len = word
+                                    .spelling_for_system("Source")
+                                    .unwrap_or_default()
+                                    .chars()
+                                    .count()
+                                    as i64;
                                 let word_char_range: PgRange<i64> =
                                     (word_char_index..word_char_index + word_len).into();
 

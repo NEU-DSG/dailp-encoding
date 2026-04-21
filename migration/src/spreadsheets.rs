@@ -1399,10 +1399,8 @@ impl AnnotatedLine {
                 word_idx += 1;
 
                 let mut source = word
-                    .spellings
-                    .iter()
-                    .find(|s| s.system.0 == "Source")
-                    .map(|s| s.value.clone())
+                    .spelling_for_system("Source")
+                    .map(str::to_owned)
                     .unwrap_or_default();
                 let original_source = source.to_string(); // Keep for logging
 
