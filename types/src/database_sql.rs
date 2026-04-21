@@ -2193,8 +2193,7 @@ impl Database {
                                     .spelling_for_system("Source")
                                     .unwrap_or_default()
                                     .chars()
-                                    .count()
-                                    as i64;
+                                    .count() as i64;
                                 let word_char_range: PgRange<i64> =
                                     (word_char_index..word_char_index + word_len).into();
 
