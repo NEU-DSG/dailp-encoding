@@ -1,6 +1,6 @@
 //! Types that power our features for reading / leaving comments on words and
 //! paragraphs
-use crate::{user::User, AnnotatedForm};
+use crate::{user::User, Word};
 use crate::{Database, DateTime, DocumentParagraph};
 use async_graphql::Context;
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
@@ -97,7 +97,7 @@ impl sqlx::postgres::PgHasArrayType for CommentType {
 #[derive(async_graphql::Union)]
 pub enum CommentParent {
     /// The word that the given comment is attached to
-    WordParent(AnnotatedForm),
+    WordParent(Word),
     /// The paragraph that the given comment is attached to
     ParagraphParent(DocumentParagraph),
 }

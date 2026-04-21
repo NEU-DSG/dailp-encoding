@@ -72,7 +72,7 @@ impl Database {
             .await
     }
 
-    pub async fn lexical_entry(&self, id: &str) -> Result<Option<AnnotatedForm>> {
+    pub async fn lexical_entry(&self, id: &str) -> Result<Option<Word>> {
         Ok(self
             .client
             .collection(Self::WORDS)
@@ -81,7 +81,7 @@ impl Database {
             .and_then(|doc| bson::from_document(doc).ok()))
     }
 
-    pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
+    pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<Word>> {
         let morpheme_match = if let Some(doc_id) = &morpheme.document_id {
             let doc_id = bson::to_bson(doc_id)?;
             bson::doc! { "position.documentId": doc_id, "segments.gloss": &morpheme.gloss }
@@ -106,7 +106,7 @@ impl Database {
             .await)
     }
 
-    pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
+    pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<Word>> {
         let col = self
             .client
             .collection::<LexicalConnection>(Self::CONNECTIONS);
@@ -223,7 +223,7 @@ impl Database {
             .collect())
     }
 
-    async fn doc_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
+    async fn doc_search(&self, query: bson::Document) -> Result<Vec<Word>> {
         let steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -239,7 +239,7 @@ impl Database {
             .await
     }
 
-    async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
+    async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<Word>> {
         let mut steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -263,7 +263,7 @@ impl Database {
 
     /// Forms that contain the given morpheme gloss, from both lexical resources
     /// and corpus data
-    pub async fn connected_surface_forms(&self, id: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
+    pub async fn connected_surface_forms(&self, id: &MorphemeId) -> Result<Vec<Word>> {
         let ids = self.graph_connections(id).await?;
         let lexical = join_all(ids.iter().map(|id| self.surface_forms(id)));
         let corpus = join_all(ids.iter().map(|id| self.doc_matches(&id)));
@@ -319,7 +319,7 @@ impl Database {
 
         let document_words = document_words?
             .filter_map(|doc| {
-                let word: AnnotatedForm = bson::from_document(doc.ok()?).ok()?;
+                let word: Word = bson::from_document(doc.ok()?).ok()?;
                 let m = {
                     // Find the index of the relevant morpheme gloss.
                     let segment = word.find_morpheme(&morpheme.gloss)?;

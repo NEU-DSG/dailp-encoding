@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with recursive relations as (\n  -- Base case: all relations involving the input morpheme.\n  select\n    rl.left_gloss_id,\n    rl.right_gloss_id\n  from morpheme_gloss_relation as rl\n    inner join\n      morpheme_gloss on\n        rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id\n  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2\n\n  -- Recursive case: saturate the graph (no duplicates)\n  union\n  select\n    rlr.left_gloss_id,\n    rlr.right_gloss_id\n  from morpheme_gloss_relation as rlr\n    -- Retrieve all relations that involve any previous sources or destinations\n    inner join\n      relations on\n        rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id\n)\n\nselect\n  word.id,\n  src.value as source_text,\n  sp.value as simple_phonetics,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom relations\n  inner join\n    morpheme_gloss on\n      morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id\n  inner join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  inner join word on word.id = word_segment.word_id\n  left join word_spelling src on src.word_id = word.id\n    and src.spelling_system = (select id from spelling_system where name = 'Source')\n  left join word_spelling sp on sp.word_id = word.id\n    and sp.spelling_system = (select id from spelling_system where name = 'Simple Phonetics')\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = word.audio_edited_by\norder by word.document_id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "source_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "simple_phonetics",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "english_gloss",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "commentary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "index_in_document",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "page_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "audio_recorded_at?",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 9,
+        "name": "audio_url?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "audio_slice?",
+        "type_info": "Int8Range"
+      },
+      {
+        "ordinal": 11,
+        "name": "audio_slice_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 12,
+        "name": "audio_recorded_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 13,
+        "name": "audio_recorded_by_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "include_audio_in_edited_collection",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "audio_edited_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 16,
+        "name": "audio_edited_by_name?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "30e8ebffda5388f1b891873842ef0abf5d4c3fa6dd145bfc0f66879fee06c402"
+}

@@ -16,7 +16,7 @@ import { usePreferences } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { collectionWordPath, documentWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm } from "src/segment"
+import { Word } from "src/segment"
 import { annotationSection } from "src/segment.css"
 import { devUrl, prodUrl, wordpressUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
@@ -241,7 +241,7 @@ const PullWords = (props: {
     <>
       <div className={annotationStyle}>
         {docContents.forms.map((form, i) => (
-          <AnnotatedForm
+          <Word
             key={i}
             segment={form as any}
             onOpenDetails={() => {}}

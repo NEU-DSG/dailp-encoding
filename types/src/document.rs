@@ -4,8 +4,8 @@ use crate::doc_metadata::{
 };
 use crate::person::{Contributor, ContributorRole, Creator, CreatorUpdate, SourceAttribution};
 use crate::{
-    auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
-    Database, Date, Translation, TranslationBlock,
+    auth::UserInfo, comment::Comment, date::DateInput, slugify, AudioSlice, Database, Date,
+    Translation, TranslationBlock, Word,
 };
 
 use itertools::Itertools;
@@ -184,7 +184,7 @@ impl AnnotatedDoc {
         context: &async_graphql::Context<'_>,
         start: Option<i64>,
         end: Option<i64>,
-    ) -> FieldResult<Vec<AnnotatedForm>> {
+    ) -> FieldResult<Vec<Word>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -206,13 +206,13 @@ impl AnnotatedDoc {
     async fn unresolved_forms(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<AnnotatedForm>> {
+    ) -> FieldResult<Vec<Word>> {
         let forms = context
             .data::<DataLoader<Database>>()?
             .loader()
             .words_in_document(self.meta.id, None, None)
             .await?;
-        Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
+        Ok(forms.filter(Word::is_unresolved).collect())
     }
 
     /// Collection chapters that contain this document.
@@ -513,14 +513,14 @@ pub struct TranslatedSection {
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
     /// A single annotated word
-    Word(AnnotatedForm),
+    Word(Word),
     /// The beginning of a new line
     LineBreak(LineBreak),
     // PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
-    /// If this segment is a word, return the inner [`AnnotatedForm`] otherwise `None`.
-    pub fn form(&self) -> Option<&AnnotatedForm> {
+    /// If this segment is a word, return the inner [`Word`] otherwise `None`.
+    pub fn form(&self) -> Option<&Word> {
         use AnnotatedSeg::*;
         match self {
             Word(w) => Some(w),

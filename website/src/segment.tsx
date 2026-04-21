@@ -125,14 +125,14 @@ export const DocumentParagraph = (
 export const Segment = (p: Props) => {
   const segment = p.segment
 
-  if (segment.__typename === "AnnotatedForm") {
-    return <AnnotatedForm {...p} segment={segment} />
+  if (segment.__typename === "Word") {
+    return <Word {...p} segment={segment} />
   } else {
     return null
   }
 }
 
-export const AnnotatedForm = (
+export const Word = (
   p: Props & {
     segment: Dailp.FormFieldsFragment
   }
@@ -183,8 +183,7 @@ export const AnnotatedForm = (
           <>
             <div>{p.segment.romanizedSource}</div>
             <div>
-              {p.segment.phonemic &&
-                p.levelOfDetail >= LevelOfDetail.Pronunciation && <div />}
+              {p.levelOfDetail >= LevelOfDetail.Pronunciation && <div />}
             </div>
           </>
         ) : (

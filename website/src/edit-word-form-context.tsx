@@ -36,7 +36,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
 
   /** Calls the backend GraphQL mutation to update a word. */
   const runUpdate = async (variables: {
-    word: Dailp.AnnotatedFormUpdate
+    word: Dailp.WordUpdate
     morphemeSystem: Dailp.CherokeeOrthography
   }) => {
     return await updateWord(variables)
@@ -84,7 +84,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
         setIsEditing(false)
 
         // Create a completely new word state
-        const wordUpdate: Dailp.AnnotatedFormUpdate = {
+        const wordUpdate: Dailp.WordUpdate = {
           id: values.word["id"],
           source: values.word["source"],
           commentary: values.word["commentary"],

@@ -23,9 +23,8 @@ with recursive relations as (
 
 select
   word.id,
-  word.source_text,
-  word.simple_phonetics,
-  word.phonemic,
+  src.value as source_text,
+  sp.value as simple_phonetics,
   word.english_gloss,
   word.commentary,
   word.document_id,
@@ -46,6 +45,10 @@ from relations
       morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id
   inner join word_segment on word_segment.gloss_id = morpheme_gloss.id
   inner join word on word.id = word_segment.word_id
+  left join word_spelling src on src.word_id = word.id
+    and src.spelling_system = (select id from spelling_system where name = 'Source')
+  left join word_spelling sp on sp.word_id = word.id
+    and sp.spelling_system = (select id from spelling_system where name = 'Simple Phonetics')
   left join media_slice on media_slice.id = word.audio_slice_id
   left join media_resource on media_resource.id = media_slice.resource_id
   left join dailp_user contributor on contributor.id = media_resource.recorded_by

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n",
+  "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  src.value as source_text,\n  sp.value as simple_phonetics,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\n  left join word_spelling src on src.word_id = word.id\n    and src.spelling_system = (select id from spelling_system where name = 'Source')\n  left join word_spelling sp on sp.word_id = word.id\n    and sp.spelling_system = (select id from spelling_system where name = 'Simple Phonetics')\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n",
   "describe": {
     "columns": [
       {
@@ -25,31 +25,26 @@
       },
       {
         "ordinal": 4,
-        "name": "phonemic",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 5,
         "name": "english_gloss",
         "type_info": "Text"
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "commentary",
         "type_info": "Text"
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "document_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "index_in_document",
         "type_info": "Int8"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "page_number",
         "type_info": "Text"
       }
@@ -64,8 +59,7 @@
       false,
       false,
       false,
-      true,
-      true,
+      false,
       true,
       true,
       false,
@@ -73,5 +67,5 @@
       true
     ]
   },
-  "hash": "32052923a631af8b0a51564e9d08578fc30b5d0e58b1593e8651f53343c91156"
+  "hash": "5b68c3b00589c6c28b7415876f254edb23c0a3897100fab1ef1fc914b15f6e87"
 }

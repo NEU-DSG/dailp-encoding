@@ -1,7 +1,7 @@
 use crate::{
-    comment::Comment, AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId,
-    MorphemeSegmentUpdate, Orthography, OrthographySystem, PartsOfWord, PositionInDocument, TagId,
-    WordSegment, WordSegmentRole,
+    comment::Comment, spelling::Spelling, AnnotatedDoc, AudioSlice, CherokeeOrthography, Database,
+    Date, DocumentId, MorphemeSegmentUpdate, Orthography, OrthographySystem, PartsOfWord,
+    PositionInDocument, TagId, WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -20,20 +20,15 @@ pub struct FormId(pub String);
 #[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
 #[graphql(complex)]
-pub struct AnnotatedForm {
+pub struct Word {
     /// Unique identifier of this form
     #[serde(skip)]
     #[graphql(skip)]
     pub id: Option<Uuid>,
-    /// Original source text
-    pub source: String,
-    /// A normalized version of the word
-    pub normalized_source: Option<String>,
     #[graphql(skip)]
-    /// Romanized version of the word for simple phonetic pronunciation
-    pub simple_phonetics: Option<String>,
-    /// Underlying phonemic representation of this word
-    pub phonemic: Option<String>,
+    /// Ways of writing the word in different orthographies or writing systems
+    /// Includes legacy "source" and "simple_phonetics" types
+    pub spellings: Vec<Spelling>,
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each
     #[graphql(skip)]
@@ -43,10 +38,6 @@ pub struct AnnotatedForm {
     pub english_gloss: Vec<String>,
     /// Further details about the annotation layers, including uncertainty
     pub commentary: Option<String>,
-    /// The character index of a mid-word line break, if there is one
-    pub line_break: Option<i32>,
-    /// The character index of a mid-word page break, if there is one
-    pub page_break: Option<i32>,
     /// Position of the form within the context of its parent document
     pub position: PositionInDocument,
     /// The date and time this form was recorded
@@ -57,7 +48,7 @@ pub struct AnnotatedForm {
 }
 
 #[async_graphql::ComplexObject]
-impl AnnotatedForm {
+impl Word {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
@@ -71,9 +62,12 @@ impl AnnotatedForm {
         Ok(None)
     }
 
+    async fn source(&self) -> Option<&str> {
+        self.spelling_for_system("Source")
+    }
+
     async fn romanized_source(&self, system: CherokeeOrthography) -> Option<Cow<'_, str>> {
-        self.simple_phonetics
-            .as_ref()
+        self.spelling_for_system("Simple Phonetics")
             .map(|phonetic| Cow::Owned(system.romanize(phonetic)))
     }
 
@@ -172,10 +166,7 @@ impl AnnotatedForm {
     }
 
     /// All other observed words with the same root morpheme as this word.
-    async fn similar_forms(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<AnnotatedForm>> {
+    async fn similar_forms(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Word>> {
         if let Some(root) = self.root(context).await? {
             let db = context.data::<DataLoader<Database>>()?.loader();
             // Find the forms with the exact same root.
@@ -218,8 +209,7 @@ impl AnnotatedForm {
 
     /// Unique identifier of this form
     async fn id(&self) -> anyhow::Result<Uuid> {
-        self.id
-            .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
+        self.id.ok_or_else(|| anyhow::format_err!("No Word ID"))
     }
 
     /// A slices of audio associated with this word in the context of a document.
@@ -263,7 +253,7 @@ impl AnnotatedForm {
     }
 }
 
-impl AnnotatedForm {
+impl Word {
     /// Look for a root morpheme in the word using crude case checks.
     pub fn find_root(&self) -> Option<&WordSegment> {
         self.segments
@@ -278,6 +268,15 @@ impl AnnotatedForm {
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
     }
 
+    /// Returns the spelling value for the given spelling system name,
+    /// or `None` if no spelling exists for that system.
+    pub fn spelling_for_system(&self, system_name: &str) -> Option<&str> {
+        self.spellings
+            .iter()
+            .find(|s| s.system.0 == system_name)
+            .map(|s| s.value.as_str())
+    }
+
     /// Are there any unidentified segments within this word? Just checks if
     /// there are morphemes or glosses consisting of a question mark "?"
     pub fn is_unresolved(&self) -> bool {
@@ -286,7 +285,9 @@ impl AnnotatedForm {
                 .iter()
                 .any(|segment| segment.morpheme.contains('?') || segment.gloss.contains('?'))
         } else {
-            self.source.contains('?')
+            self.spelling_for_system("Source")
+                .map(|value| value.contains('?'))
+                .unwrap_or(false)
         }
     }
 }
@@ -302,7 +303,7 @@ pub fn is_root_morpheme(s: &str) -> bool {
 /// A single word in an annotated document that can be edited.
 /// All fields except id are optional.
 #[derive(async_graphql::InputObject)]
-pub struct AnnotatedFormUpdate {
+pub struct WordUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
     /// Possible update to source content

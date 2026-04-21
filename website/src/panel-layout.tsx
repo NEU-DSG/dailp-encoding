@@ -109,7 +109,7 @@ export const PanelLayout = (p: {
 
   let panel = null
 
-  // Display the paragraph panel if the segment type is a word (AnnotatedForm).
+  // Display the paragraph panel if the segment type is a word (Word).
   if (isCommenting === true) {
     if (p.segment != null) {
       panel = (
@@ -120,7 +120,7 @@ export const PanelLayout = (p: {
         />
       )
     }
-  } else if (p.segment.__typename === "AnnotatedForm") {
+  } else if (p.segment.__typename === "Word") {
     panel = (
       <>
         {/* If the user belongs to any groups, then display an edit button on the word
@@ -234,7 +234,7 @@ export const PanelLayout = (p: {
   }
 
   const handleAddEnglishGloss = () => {
-    if (p.segment && p.segment.__typename === "AnnotatedForm") {
+    if (p.segment && p.segment.__typename === "Word") {
       // Store original segment count when entering edit mode
       form.update("word", p.segment)
 
@@ -256,7 +256,7 @@ export const PanelLayout = (p: {
   }
 
   const handleAddWordPart = () => {
-    if (p.segment && p.segment.__typename === "AnnotatedForm") {
+    if (p.segment && p.segment.__typename === "Word") {
       // Store original segment count when entering edit mode
       form.update("word", p.segment)
 

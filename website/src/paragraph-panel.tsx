@@ -23,7 +23,7 @@ function ParagraphFeature(p: {
   if (p.feature === "source") {
     returnFeature = p.paragraph.source.reduce(
       (paragraph, word) =>
-        `${paragraph} ${word.__typename === "AnnotatedForm" && word.source}`,
+        `${paragraph} ${word.__typename === "Word" && word.source}`,
       ""
     )
   } else if (p.feature === "translation") {

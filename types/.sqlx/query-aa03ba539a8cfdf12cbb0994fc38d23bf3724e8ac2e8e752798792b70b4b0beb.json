@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  paragraph.id as paragraph_id,\n  word.id,\n  src.value as source_text,\n  sp.value as simple_phonetics,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  word.audio_slice_id,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join word_spelling src on src.word_id = word.id\n    and src.spelling_system = (select id from spelling_system where name = 'Source')\n  left join word_spelling sp on sp.word_id = word.id\n    and sp.spelling_system = (select id from spelling_system where name = 'Simple Phonetics')\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\n-- Why? ^^\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id,\n  contributor.id,\n  editor.id,\n  src.value,\n  sp.value\norder by word.character_range\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "paragraph_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "source_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "simple_phonetics",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "english_gloss",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "commentary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "index_in_document",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "page_number",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "audio_url?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "audio_slice?",
+        "type_info": "Int8Range"
+      },
+      {
+        "ordinal": 11,
+        "name": "audio_slice_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 12,
+        "name": "audio_recorded_at?",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 13,
+        "name": "audio_recorded_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 14,
+        "name": "audio_recorded_by_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "include_audio_in_edited_collection",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "audio_edited_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 17,
+        "name": "audio_edited_by_name?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aa03ba539a8cfdf12cbb0994fc38d23bf3724e8ac2e8e752798792b70b4b0beb"
+}
