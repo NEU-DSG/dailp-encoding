@@ -19,7 +19,7 @@ export function RecordWordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
       panelTitle="Record Audio"
       Icon={FaMicrophone}
       Component={RecordAudioContent}
-      word={p.word}
+      parent={p.word}
     />
   )
 }
