@@ -3,7 +3,7 @@ import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
 import { MdClose } from "react-icons/md"
 import { unstable_Form as Form } from "reakit"
-import { useCredentials } from "src/auth"
+import { UserRole, useCredentials, useUserRole } from "src/auth"
 import { IconButton, Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
@@ -33,6 +33,10 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const { form } = useForm()
   const { isEditing, setIsEditing } = useEditing()
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
+
+  // Define which roles have metadata editing permissions
+  const userRole = useUserRole()
+  const canEdit = userRole === UserRole.Editor || userRole === UserRole.Admin
 
   const [citation, setCitation] = React.useState<string>("")
 
@@ -236,7 +240,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           {/* {docData.uploadedAt && `Uploaded ${new Date(docData.uploadedAt).toLocaleDateString()}`}
           {docData.editedAt && ` • Last Edited ${new Date(docData.editedAt).toLocaleDateString()}`} */}
 
-          {token && !isEditing && <EditButton />}
+          {canEdit && token && !isEditing && <EditButton />}
         </p>
       </div>
 
