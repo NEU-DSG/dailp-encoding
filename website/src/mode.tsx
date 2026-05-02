@@ -1,10 +1,6 @@
 import React, { useEffect } from "react"
 import { IconBaseProps } from "react-icons/lib"
-import {
-  MdClose,
-  MdSettings,
-  MdStayPrimaryLandscape,
-} from "react-icons/md/index"
+import { MdClose, MdSettings, MdStayPrimaryLandscape } from "react-icons/md"
 import {
   Dialog,
   DialogBackdrop,

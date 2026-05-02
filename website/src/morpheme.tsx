@@ -1,7 +1,7 @@
 import { groupBy } from "lodash-es"
 import React from "react"
 import { ReactNode } from "react"
-import { MdClose } from "react-icons/md/index"
+import { MdClose } from "react-icons/md"
 import { IconButton, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
