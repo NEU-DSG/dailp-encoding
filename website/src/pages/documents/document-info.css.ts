@@ -11,7 +11,10 @@ export const container = style({
 export const header = style({
   position: "relative",
   textAlign: "center",
-  marginBottom: "32px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "4px",
 })
 
 export const editButton = style({
@@ -84,4 +87,54 @@ export const value = style({
 export const link = style({
   color: "#4A90E2",
   textDecoration: "underline",
+})
+
+export const message = style({
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  position: "fixed",
+  borderRadius: "8px",
+  zIndex: 9999,
+  fontSize: "16px",
+  background: "white",
+  color: "#black",
+  boxShadow: "0 6px 14px rgba(0,0,0,0.3)",
+})
+
+export const messageCloseButton = style({
+  marginLeft: "auto",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+})
+
+export const globalMessageOverlay = style({
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0, 0, 0, 0.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+})
+
+export const globalMessageBox = style({
+  background: "white",
+  padding: "20px 24px",
+  borderRadius: "10px",
+  minWidth: "320px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+})
+
+export const success = style({
+  borderLeft: "6px solid #2ecc71",
+})
+
+export const error = style({
+  borderLeft: "6px solid #e74c3c",
 })

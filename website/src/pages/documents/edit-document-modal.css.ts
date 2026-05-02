@@ -15,6 +15,7 @@ export const overlay = style({
 
 export const modal = style({
   backgroundColor: "white",
+  position: "relative",
   borderRadius: "45px",
   padding: "32px",
   maxWidth: "600px",
@@ -182,4 +183,22 @@ export const addTagButton = style({
       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     },
   },
+})
+
+export const successBanner = style({
+  marginTop: "12px",
+  padding: "10px 12px",
+  borderRadius: "8px",
+  backgroundColor: "#e6ffed",
+  color: "#137333",
+  fontSize: "14px",
+})
+
+export const errorBanner = style({
+  marginTop: "12px",
+  padding: "10px 12px",
+  borderRadius: "8px",
+  backgroundColor: "#ffe6e6",
+  color: "#a50e0e",
+  fontSize: "14px",
 })

@@ -1,9 +1,10 @@
 import "@reach/dialog/styles.css"
 import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
+import { MdClose } from "react-icons/md"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
-import { Link } from "src/components"
+import { IconButton, Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
@@ -22,7 +23,10 @@ export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
+  const isBrowser = typeof window !== "undefined"
+
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
+    pause: !isBrowser,
     variables: { slug: doc.slug! },
   })
   const token = useCredentials()
@@ -39,6 +43,12 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     }
     return "apa"
   })
+
+  // Success/failure message for editing metadata
+  const [message, setMessage] = React.useState<null | {
+    type: "success" | "error"
+    message: string
+  }>(null)
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
@@ -133,10 +143,31 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       })
 
       await reexecuteQuery({ requestPolicy: "network-only" })
+
       setIsEditing(false)
+
+      setTimeout(() => {
+        setMessage({
+          type: "success",
+          message: "Metadata updated successfully!",
+        })
+      }, 250)
+
+      return { ok: true }
     } catch (error) {
-      console.error("Failed to update document:", error)
       setIsEditing(false)
+
+      setTimeout(() => {
+        setMessage({
+          type: "error",
+          message: "Failed to update metadata.",
+        })
+      }, 250)
+
+      return {
+        ok: false,
+        error: "Failed to update metadata.",
+      }
     }
   }
 
@@ -204,6 +235,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <p className={styles.subtitle}>
           {/* {docData.uploadedAt && `Uploaded ${new Date(docData.uploadedAt).toLocaleDateString()}`}
           {docData.editedAt && ` • Last Edited ${new Date(docData.editedAt).toLocaleDateString()}`} */}
+
+          {token && !isEditing && <EditButton />}
         </p>
       </div>
 
@@ -319,14 +352,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       {/* If the user is logged in, then display an edit button on the word
   panel along with its corresponding formatted header. Otherwise, display
   the normal word panel. */}
-      {token ? (
-        <>
-          {!isEditing && <>{metadataDisplay}</>}
-          <EditButton />
-        </>
-      ) : (
-        <>{metadataDisplay}</>
-      )}
+      {!isEditing && metadataDisplay}
 
       {isEditing ? (
         <EditDocumentModal
@@ -346,6 +372,26 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   return (
     <Fragment>
       {panel}
+
+      {message && (
+        <div className={styles.globalMessageOverlay}>
+          <div
+            className={`${styles.globalMessageBox} ${
+              message.type === "success" ? styles.success : styles.error
+            }`}
+          >
+            <span>{message.message}</span>
+
+            <IconButton
+              className={styles.messageCloseButton}
+              onClick={() => setMessage(null)}
+              aria-label="Close message"
+            >
+              <MdClose size={18} />
+            </IconButton>
+          </div>
+        </div>
+      )}
 
       {docData.sources && docData.sources.length > 0 ? (
         <section className={fullWidth}>
