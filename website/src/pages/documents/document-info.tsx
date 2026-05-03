@@ -400,7 +400,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
               onClick={() => setMessage(null)}
               aria-label="Close message"
             >
-              {/* <MdClose size={18} /> */}X
+              <MdClose size={18} />
             </IconButton>
           </div>
         </div>
