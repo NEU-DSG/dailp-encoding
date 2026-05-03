@@ -1,7 +1,7 @@
 import "@reach/dialog/styles.css"
 import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
-import { MdClose } from "react-icons/md"
+import { MdClose } from "react-icons/md/index"
 import { unstable_Form as Form } from "reakit"
 import { UserRole, useCredentials, useUserRole } from "src/auth"
 import { IconButton, Link } from "src/components"
@@ -400,7 +400,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
               onClick={() => setMessage(null)}
               aria-label="Close message"
             >
-              <MdClose size={18} />
+              {/* <MdClose size={18} /> */}X
             </IconButton>
           </div>
         </div>
