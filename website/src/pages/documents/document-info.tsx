@@ -161,16 +161,25 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     } catch (error) {
       setIsEditing(false)
 
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+          ? error
+          : JSON.stringify(error)
+
+      console.error("Failed to update metadata:", error)
+
       setTimeout(() => {
         setMessage({
           type: "error",
-          message: "Failed to update metadata.",
+          message: `Failed to update metadata: ${errorMessage}`,
         })
       }, 250)
 
       return {
         ok: false,
-        error: "Failed to update metadata.",
+        error: errorMessage,
       }
     }
   }
