@@ -648,8 +648,11 @@ export const BookmarkButton = (props: {
       )}
 
       {showMessage && (
-        <div className={css.messageOverlay}>
-          <div className={css.messageBox}>
+        <div
+          className={css.messageOverlay}
+          onClick={() => setShowMessage(false)}
+        >
+          <div className={css.messageBox} onClick={(e) => e.stopPropagation()}>
             <div className={css.messageContent}>
               <p className={css.messageText}>
                 Bookmark added! You can find your bookmarks in your dashboard.
