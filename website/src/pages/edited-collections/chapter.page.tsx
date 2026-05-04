@@ -1,9 +1,11 @@
 import React from "react"
+import ReactDOM from "react-dom"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
+import * as citationCss from "../cwkw/citationFooter.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
@@ -23,9 +25,7 @@ const ChapterPage = (props: {
   })
 
   const dialog = useDialog()
-
   const subchapters = useSubchapters(props.chapterSlug)
-
   const chapter = data?.chapter
 
   if (fetching) {
@@ -45,7 +45,115 @@ const ChapterPage = (props: {
     )
   }
 
-  const { document, wordpressId } = chapter
+  const { document: chapterDocument, wordpressId } = chapter
+
+  // Build APA citation for this chapter page
+  const chapterCitationFooter = (() => {
+    // Checks for ensuring not in doc and grabbing citatition footer position
+    if (chapterDocument) return null
+    if (typeof window === "undefined") return null
+    const slot = window.document.getElementById("citation-footer-slot")
+    if (!slot) return null
+
+    let authorNames: string[] = []
+    let chapterTitle: string = chapter.title ?? ""
+    let isoDate: string | undefined
+
+    if (chapterDocument) {
+      // Pull chapter's author and title from document
+      const authorContribs = (
+        (chapterDocument as any).contributors ?? []
+      ).filter((c: any) => c.role?.toLowerCase() === "author")
+      authorNames =
+        authorContribs.length > 0
+          ? authorContribs.map((c: any) => c.name)
+          : ((chapterDocument as any).creators ?? []).map((c: any) => c.name)
+
+      chapterTitle = (chapterDocument as any).title ?? chapter.title ?? ""
+
+      const d = (chapterDocument as any).date
+      if (d) {
+        isoDate = [
+          d.year,
+          String(d.month ?? 1).padStart(2, "0"),
+          String(d.day ?? 1).padStart(2, "0"),
+        ].join("-")
+      }
+    } else if (wordpressId) {
+      // When on word press, grabbing authors and title from DOM elements
+      const authorEl = window.document.querySelector(
+        ".wp-author, .entry-author, [rel='author'], .author-name"
+      )
+
+      if (authorEl?.textContent) {
+        authorNames = authorEl.textContent
+          .split(/\s+and\s+|,\s*/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      }
+
+      // Manually grab h2 or h3 which are what renders authors after h1
+      if (authorNames.length === 0) {
+        const titleEl = window.document.querySelector("article h1")
+        const nextEl = titleEl?.nextElementSibling
+        if (nextEl?.matches("h2, h3") && nextEl.textContent) {
+          authorNames = nextEl.textContent
+            .split(/\s+and\s+|,\s*/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        }
+      }
+
+      // Manually grab h2 or h3 anywhere
+      if (authorNames.length === 0) {
+        const headingEl = window.document.querySelector(
+          "article h2, article h3"
+        )
+        if (headingEl?.textContent) {
+          authorNames = headingEl.textContent
+            .split(/\s+and\s+|,\s*/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        }
+      }
+    }
+
+    // Build the citation
+    const authorPart =
+      authorNames.length > 0 ? authorNames.join(", & ") + ". " : ""
+
+    const accessed = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    const url = window.location.href
+
+    const citation =
+      authorPart.replace("Written by ", "").replace("and ", "") +
+      "(2026). " +
+      chapterTitle +
+      ". CWKW. " +
+      url +
+      " Retrieved " +
+      accessed
+
+    // Place citation bar at given slot
+    return ReactDOM.createPortal(
+      <div className={citationCss.citationBar}>
+        <div className={citationCss.citationInner}>
+          <p className={citationCss.citationText}>
+            <span className={citationCss.citationLabel}>
+              How to cite this chapter:{" "}
+            </span>
+            {citation}
+          </p>
+        </div>
+      </div>,
+      slot
+    )
+  })()
 
   return (
     <CWKWLayout>
@@ -89,14 +197,16 @@ const ChapterPage = (props: {
           ) : null}
 
           {/* If this chapter is a document, display the document contents. */}
-          {document ? (
+          {chapterDocument ? (
             <>
               <DocumentTitleHeader
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}
-                doc={document}
+                doc={chapterDocument}
               />
-              <TabSet doc={document} />
+              <TabSet
+                doc={chapterDocument as unknown as Dailp.DocumentFieldsFragment}
+              />
             </>
           ) : null}
 
@@ -111,6 +221,7 @@ const ChapterPage = (props: {
           </ul>
         </article>
       </main>
+      {chapterCitationFooter}
     </CWKWLayout>
   )
 }

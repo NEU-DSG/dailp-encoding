@@ -66,6 +66,7 @@ const CWKWLayout: React.FC = ({ children }) => {
         </div>
       </header>
       {children}
+      <div id="citation-footer-slot" />
       <footer
         aria-label="Site Footer"
         className={dialog.visible && isDesktop ? css.openHeader : css.header}

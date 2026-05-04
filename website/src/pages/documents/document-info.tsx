@@ -1,22 +1,21 @@
 import "@reach/dialog/styles.css"
 import React, { Fragment } from "react"
+import ReactDOM from "react-dom"
 import { Helmet } from "react-helmet"
-import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
 import { Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
-import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
+import { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
-import Cite from "../../utils/citation-config"
+import Cite, { templatesReady } from "../../utils/citation-config"
+import { buildCitationMetadata } from "../../utils/document-metadata"
+import * as citationCss from "../cwkw/citationFooter.css"
 import CitationField from "./citation-field"
 import * as styles from "./document-info.css"
 import * as css from "./document.css"
-import {
-  EditDocumentModal,
-  EditDocumentModalProps,
-} from "./edit-document-modal"
-import { EditingProvider, useEditing } from "./editing-context"
+import { EditDocumentModal } from "./edit-document-modal"
+import { useEditing } from "./editing-context"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -32,7 +31,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
   const [citation, setCitation] = React.useState<string>("")
 
-  // Initialize citation format from localStorage
+  // Initialize citation format from local storage or apa as default
   const [citeFormat, setCiteFormat] = React.useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("preferredCitationFormat") || "apa"
@@ -40,48 +39,115 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     return "apa"
   })
 
+  // Tracks when the async CSL template fetch has completed so the citation
+  // useEffect below re-runs once templates are actually available.
+  const [templatesLoaded, setTemplatesLoaded] = React.useState(false)
+  React.useEffect(() => {
+    templatesReady.then(() => setTemplatesLoaded(true))
+  }, [])
+
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
   // if (!docData) {
   //   return null
   // }
 
-  // Generate citation (is there a better way to do this?)
+  // Generate citation using buildCitationMetadata
   React.useEffect(() => {
     if (!docData) return
+    // For APA we don't need the extra templates; for others wait until loaded.
+    if (citeFormat !== "apa" && !templatesLoaded) return
 
     try {
-      const metadata = {
-        title: docData.title,
-        author: docData.creators?.map((c) => ({ literal: c.name })) || [],
-        issued: docData.date
-          ? {
-              "date-parts": [
-                [
-                  docData.date.year,
-                  docData.date.month || 1,
-                  docData.date.day || 1,
-                ],
-              ],
-            }
-          : undefined,
-        type: docData.format?.name?.toLowerCase() || "document",
-      }
+      // Prefer contributors with an "Author" role; fall back to creators
+      const authorContributors = docData.contributors?.filter(
+        (c) => c.role?.toLowerCase() === "author"
+      )
 
-      const docCitation = new Cite(metadata).format("bibliography", {
+      const creatorNames =
+        authorContributors && authorContributors.length > 0
+          ? authorContributors.map((c) => c.name)
+          : docData.creators?.map((c) => c.name) ?? []
+
+      // Extract translators from contributors
+      const translatorNames = (docData.contributors ?? [])
+        .filter((c) => c.role?.toLowerCase() === "translator")
+        .map((c) => c.name)
+
+      // Format publication date as YYYY/MM/DD
+      const dateString = docData.date
+        ? [
+            docData.date.year,
+            String(docData.date.month || 1).padStart(2, "0"),
+            String(docData.date.day || 1).padStart(2, "0"),
+          ].join("/")
+        : undefined
+
+      // Auto-generate today's date as accessed date
+      const now = new Date()
+      const accessedString = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+      ].join("/")
+
+      // Use the current browser URL as the source
+      const sourceUrl =
+        docData.sources?.[0]?.link ||
+        (typeof window !== "undefined" ? window.location.href : "")
+
+      const collectionSlugMatch = sourceUrl.match(/\/collections\/([^/?#]+)/)
+      // Collection title
+      const containerTitle = collectionSlugMatch
+        ? collectionSlugMatch[1]!.replace(/-/g, " ").toUpperCase()
+        : undefined
+
+      const cslData = buildCitationMetadata({
+        title: docData.title,
+        creator: creatorNames,
+        translator: translatorNames.length > 0 ? translatorNames : undefined,
+        date: dateString,
+        accessed: accessedString,
+        source: sourceUrl || undefined,
+        containerTitle,
+        type: "webpage",
+      })
+
+      let docCitation = new Cite(cslData).format("bibliography", {
         format: "text",
         template: citeFormat,
         lang: "en-US",
       })
 
+      if (cslData["accessed"]) {
+        const ap = cslData["accessed"]["date-parts"]?.[0] ?? []
+        const [yr, mo, dy] = ap
+        if (yr) {
+          const accessedDate = new Date(
+            yr as number,
+            ((mo as number) ?? 1) - 1,
+            (dy as number) ?? 1
+          )
+          const formatted = accessedDate.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          docCitation = docCitation.trimEnd().replace(/\.$/, "")
+
+          // APA uses "Retrieved"; Chicago/MLA use "Accessed"
+          const verb = citeFormat === "apa" ? "Retrieved" : "Accessed"
+          docCitation += `. ${verb} ${formatted}.`
+        }
+      }
+
       setCitation(docCitation)
     } catch (err) {
-      console.error("Citation error:", err)
       setCitation("Error generating citation")
     }
-  }, [docData, citeFormat]) // Regenerate when docData or citeFormat changes
+  }, [docData, citeFormat, templatesLoaded])
 
-  // Debug: check if data has been fetched
+  // check if data has been fetched
   if (!docData) {
     return <div>Loading document information...</div>
   }
@@ -135,7 +201,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       await reexecuteQuery({ requestPolicy: "network-only" })
       setIsEditing(false)
     } catch (error) {
-      console.error("Failed to update document:", error)
       setIsEditing(false)
     }
   }
@@ -343,6 +408,124 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     </>
   )
 
+  // Citation Footer building; temp using APA until cookies save preferences
+  const citationAuthors = (() => {
+    const contributors = docData.contributors ?? []
+    const creators = docData.creators ?? []
+    const source = contributors.length > 0 ? contributors : creators
+    return source.map((c: any) => ({
+      name: c.name as string,
+      href: undefined as string | undefined,
+    }))
+  })()
+
+  const canonicalUrl =
+    docData.sources?.[0]?.link ??
+    (typeof window !== "undefined" ? window.location.href : undefined)
+
+  const isoDate = docData.date
+    ? [
+        docData.date.year,
+        String(docData.date.month ?? 1).padStart(2, "0"),
+        String(docData.date.day ?? 1).padStart(2, "0"),
+      ].join("-")
+    : undefined
+
+  const collectionName = (() => {
+    const match = (canonicalUrl ?? "").match(/\/collections\/([^/?#]+)/)
+    return match ? match[1]!.replace(/-/g, " ").toUpperCase() : "CWKW"
+  })()
+
+  // Build "How to cite" + APA citation string
+  const citationString = (() => {
+    const authorContribs = (docData.contributors ?? []).filter(
+      (c: any) => c.role?.toLowerCase() === "author"
+    )
+    const authorNames: string[] =
+      authorContribs.length > 0
+        ? authorContribs.map((c: any) => c.name)
+        : (docData.creators ?? []).map((c: any) => c.name)
+
+    // Extract translators
+    const translatorNames: string[] = (docData.contributors ?? [])
+      .filter((c: any) => c.role?.toLowerCase() === "translator")
+      .map((c: any) => c.name)
+
+    const authorPart =
+      authorNames.length > 0 ? authorNames.join(", & ") + ". " : ""
+
+    let pubPart = ""
+    if (isoDate) {
+      const d = new Date(isoDate)
+      pubPart =
+        "(" +
+        d.getFullYear() +
+        ", " +
+        d.toLocaleDateString("en-US", { month: "long" }) +
+        " " +
+        d.getDate() +
+        ")."
+    } else {
+      pubPart = "(n.d.)."
+    }
+
+    // Build translator note
+    const transNote =
+      translatorNames.length > 0
+        ? " (" +
+          translatorNames
+            .map((name) => {
+              const parts = name.trim().split(/\s+/)
+              if (parts.length === 1) return parts[0]!
+              const initials = parts
+                .slice(0, -1)
+                .map((p) => p[0]! + ".")
+                .join(" ")
+              return `${initials} ${parts[parts.length - 1]}`
+            })
+            .join(", ") +
+          ", Trans.)"
+        : ""
+
+    const accessed = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+    const urlPart = canonicalUrl ? " " + canonicalUrl : ""
+    return (
+      authorPart +
+      pubPart +
+      " " +
+      docData.title +
+      transNote +
+      ". " +
+      (collectionName ?? "CWKW") +
+      "." +
+      urlPart +
+      " Retrieved " +
+      accessed
+    )
+  })()
+
+  // Portal into #citation-footer-slot which layout.tsx renders just before <Footer />
+  const citationBar =
+    typeof document !== "undefined"
+      ? ReactDOM.createPortal(
+          <div className={citationCss.citationBar}>
+            <div className={citationCss.citationInner}>
+              <p className={citationCss.citationText}>
+                <span className={citationCss.citationLabel}>
+                  How to cite this document:{" "}
+                </span>
+                {citationString}
+              </p>
+            </div>
+          </div>,
+          document.getElementById("citation-footer-slot") ?? document.body
+        )
+      : null
+
   return (
     <Fragment>
       {panel}
@@ -356,6 +539,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           .
         </section>
       ) : null}
+
+      {citationBar}
     </Fragment>
   )
 }
