@@ -48,9 +48,9 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
+import * as styles from "../../components/homepage-header.css"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import * as styles from "../../components/homepage-header.css"
 import { EditingProvider } from "./editing-context"
 
 enum Tabs {
@@ -89,8 +89,8 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       const chapterSlug = chapter?.path[chapter.path.length - 1]
       wordIndex
         ? navigate(
-          collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
-        )
+            collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
+          )
         : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }

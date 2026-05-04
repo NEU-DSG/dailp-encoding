@@ -399,4 +399,3 @@ export const closeButton = style({
     transform: "scale(1.02)",
   },
 })
-
