@@ -1,3 +1,4 @@
+import "@fontsource/charis-sil/400.css"
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
 import React, { useEffect, useState } from "react"
@@ -49,6 +50,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import * as styles from "../../components/homepage-header.css"
 import { EditingProvider } from "./editing-context"
 
 enum Tabs {
@@ -87,8 +89,8 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       const chapterSlug = chapter?.path[chapter.path.length - 1]
       wordIndex
         ? navigate(
-            collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
-          )
+          collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
+        )
         : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }
@@ -603,6 +605,19 @@ export const BookmarkButton = (props: {
   const [removeBookmarkMutationResult, removeBookmarkMutation] =
     Dailp.useRemoveBookmarkMutation()
 
+  // Controls whether bookmark confirmation message is shown
+  const [showMessage, setShowMessage] = React.useState(false) // Hidden by default
+
+  const handleAdd = async () => {
+    await addBookmarkMutation({ documentId: props.documentId })
+    setShowMessage(true)
+  }
+
+  const handleRemove = async () => {
+    await removeBookmarkMutation({ documentId: props.documentId })
+    setShowMessage(false)
+  }
+
   return (
     <>
       {props.isBookmarked ? (
@@ -613,6 +628,7 @@ export const BookmarkButton = (props: {
             className={css.BookmarkButton}
             onClick={() => {
               removeBookmarkMutation({ documentId: props.documentId })
+              setShowMessage(false)
             }}
           >
             Un-Bookmark
@@ -624,10 +640,42 @@ export const BookmarkButton = (props: {
           className={css.BookmarkButton}
           onClick={() => {
             addBookmarkMutation({ documentId: props.documentId })
+            setShowMessage(true) // Show bookmark confirmation message
           }}
         >
           Bookmark
         </IconTextButton>
+      )}
+
+      {showMessage && (
+        <div className={css.messageOverlay}>
+          <div className={css.messageBox}>
+            <div className={css.messageContent}>
+              <p className={css.messageText}>
+                Bookmark added! You can find your bookmarks in your dashboard.
+              </p>
+
+              <div className={css.messageButtonGroup}>
+                <a
+                  href="https://dailp.northeastern.edu/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.actionButton}
+                >
+                  Go to Dashboard
+                </a>
+
+                <Button
+                  className={css.closeButton}
+                  onClick={() => setShowMessage(false)}
+                  aria-label="Close message"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

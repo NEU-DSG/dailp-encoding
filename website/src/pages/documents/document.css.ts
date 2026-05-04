@@ -336,3 +336,67 @@ export const noScrollTop = style({
   visibility: "hidden",
   opacity: 0,
 })
+
+export const messageOverlay = style({
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0, 0, 0, 0.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+})
+
+export const messageBox = style({
+  background: "white",
+  color: "black",
+  padding: "20px 24px",
+  borderRadius: "10px",
+  minWidth: "320px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+})
+
+export const messageButtonGroup = style({
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "center",
+  gap: "2rem",
+})
+
+export const messageContent = style({
+  padding: "16px",
+})
+
+export const messageText = style({
+  fontSize: "24px",
+  fontFamily: fonts.body,
+})
+
+export const closeButton = style({
+  textDecoration: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  padding: "16px 35px",
+  backgroundColor: "#DCDCDC",
+  boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+  color: "black",
+  fontFamily: fonts.header,
+  fontWeight: "600",
+  fontSize: "18px",
+  border: "none",
+  cursor: "pointer",
+  transition: "background-color 0.2s ease",
+  minWidth: "140px",
+  ":hover": {
+    backgroundColor: "#BEBEBE",
+    boxShadow: "0 6px 10px rgba(0, 0, 0, 0.4)",
+    transform: "scale(1.02)",
+  },
+})
+
