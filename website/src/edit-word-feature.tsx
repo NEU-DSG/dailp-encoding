@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -8,9 +8,8 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
 import { v4 as uuidv4 } from "uuid"
-import { GRAPHQL_URL_WRITE } from "src/graphql"
 import * as Dailp from "src/graphql/dailp"
-import { UserRole, getCurrentUser, useUserId, useUserRole } from "./auth"
+import { UserRole, useUserId, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useEditWordCheckContext } from "./edit-word-check-context"
@@ -22,62 +21,16 @@ import { usePreferences } from "./preferences-context"
 export const EditButton = () => {
   const { form, isEditing, setIsEditing, setOriginalSegmentCount } = useForm()
   const { cherokeeRepresentation } = usePreferences()
-  const { lockToken, setLockToken, denialInfo, setDenialInfo } =
-    useEditWordCheckContext()
+  const {
+    lockToken,
+    setLockToken,
+    setLockedWordId,
+    denialInfo,
+    setDenialInfo,
+  } = useEditWordCheckContext()
 
   const [, acquireWordLock] = Dailp.useAcquireWordLockMutation()
   const [, releaseWordLock] = Dailp.useReleaseWordLockMutation()
-
-  // Track the active lock so we can release it if the component unmounts
-  // (e.g. user navigates away from the document page while editing is still open).
-  const heldLockRef = useRef<{ wordId: string; token: string } | null>(null)
-  useEffect(() => {
-    const wordId = form.values.word?.id
-    heldLockRef.current =
-      lockToken && wordId ? { wordId, token: lockToken } : null
-  }, [lockToken, form.values.word?.id])
-
-  useEffect(() => {
-    return () => {
-      const held = heldLockRef.current
-      if (held) {
-        releaseWordLock({ wordId: held.wordId, lockToken: held.token })
-      }
-    }
-  }, [])
-
-  // Best effort to release lock on tab/browser close. Uses fetch with keepalive so the
-  // request survives page unload; sendBeacon can't set the Authorization header.
-  // Forceful closures (eg. power loss, wifi cut, PC crash) fall back to the 5-min Postgres timeout.
-  useEffect(() => {
-    const wordId = form.values.word?.id
-    if (!lockToken || !wordId) return
-
-    const handleBeforeUnload = () => {
-      const jwt = getCurrentUser()
-        ?.getSignInUserSession()
-        ?.getIdToken()
-        .getJwtToken()
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      }
-      if (jwt) headers["Authorization"] = `Bearer ${jwt}`
-
-      fetch(GRAPHQL_URL_WRITE, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          query:
-            "mutation ReleaseWordLock($wordId: UUID!, $lockToken: UUID!) { releaseWordLock(wordId: $wordId, lockToken: $lockToken) }",
-          variables: { wordId, lockToken },
-        }),
-        keepalive: true,
-      })
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
-  }, [lockToken, form.values.word?.id])
 
   const currentUserId = useUserId()
   const [lockHolderResult] = Dailp.useUserByIdQuery({
@@ -97,6 +50,7 @@ export const EditButton = () => {
     const result = await acquireWordLock({ wordId, lockToken: token })
     if (result.data?.acquireWordLock.acquired) {
       setLockToken(token)
+      setLockedWordId(wordId ?? null)
       setDenialInfo(null)
       setIsEditing(true)
       setOriginalSegmentCount(form.values.word?.segments?.length || 0)
@@ -111,6 +65,7 @@ export const EditButton = () => {
     if (lockToken) {
       await releaseWordLock({ wordId: form.values.word?.id, lockToken })
       setLockToken(null)
+      setLockedWordId(null)
     }
     setDenialInfo(null)
     setIsEditing(false)
