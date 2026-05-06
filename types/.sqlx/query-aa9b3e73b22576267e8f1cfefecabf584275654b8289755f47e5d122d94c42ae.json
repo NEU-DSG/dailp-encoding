@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Release the editing lock on a word, but only if the caller currently holds it.\n-- The token check ensures users cannot release locks held by another session,\n-- including their own sessions on a different device.\n-- Parameters:\n--   $1 = word id\n--   $2 = client lock token\nupdate word set\n    currently_editing = false,\n    editing_started_at = null,\n    editing_user_id = null,\n    editing_lock_token = null\nwhere id = $1 and editing_lock_token = $2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa9b3e73b22576267e8f1cfefecabf584275654b8289755f47e5d122d94c42ae"
+}

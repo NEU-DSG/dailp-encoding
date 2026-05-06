@@ -290,7 +290,7 @@ pub fn is_root_morpheme(s: &str) -> bool {
 }
 
 /// A single word in an annotated document that can be edited.
-/// All fields except id are optional.
+/// All fields except id and lock_token are optional.
 #[derive(async_graphql::InputObject)]
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
@@ -305,6 +305,20 @@ pub struct AnnotatedFormUpdate {
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
     /// Possible updated english gloss
     pub english_gloss: MaybeUndefined<String>,
+    /// Lock token proving the caller holds the editing lock for this word.
+    /// The save will fail if the lock has expired or was acquired by another session.
+    pub lock_token: Uuid,
+}
+
+/// Result of an attempt to acquire the editing lock on a word.
+/// On success, `acquired` is true. On denial, `editing_user_id` identifies
+/// the user who currently holds the lock so the UI can show who is editing.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordLockResult {
+    /// True if the lock was granted to the caller.
+    pub acquired: bool,
+    /// The user id holding the lock when denial occurs. None on success.
+    pub editing_user_id: Option<Uuid>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.

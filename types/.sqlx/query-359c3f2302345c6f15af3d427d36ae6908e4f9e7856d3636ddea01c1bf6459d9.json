@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    simple_phonetics =\n        case\n            when $3::text[] != '{}' and $3[1] is not null then $3[1] \n            else simple_phonetics\n        end,\n    commentary =\n        case\n            when $4::text[] != '{}' and $4[1] is not null then $4[1]\n            else commentary\n        end,\n    english_gloss =\n        case\n            when $5::text[] != '{}' and $5[1] is not null then $5[1]\n            else english_gloss\n        end\n\n-- editing_lock_token check ensures only the session that holds the lock\n-- can save. If the lock has expired and someone else acquired it, this query\n-- updates zero rows and the caller fails.\nwhere id = $1 and editing_lock_token = $6\nreturning word.document_id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "359c3f2302345c6f15af3d427d36ae6908e4f9e7856d3636ddea01c1bf6459d9"
+}

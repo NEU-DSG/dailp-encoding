@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Returns NULL if the word is not locked or does not exist.\nselect editing_user_id\nfrom word\nwhere id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "editing_user_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "c784e1e3e4e0f9bb050edc0e884fc419b6b01858af61ac3a4b0601959cd8e59c"
+}

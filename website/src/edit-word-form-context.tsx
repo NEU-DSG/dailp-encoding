@@ -27,7 +27,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
 
   const { cherokeeRepresentation } = usePreferences()
 
-  const { romanizedSource } = useEditWordCheckContext()
+  const { romanizedSource, lockToken } = useEditWordCheckContext()
   const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
     useEditWordCheckContext()
 
@@ -98,6 +98,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
           englishGloss: Array.isArray(values.word["englishGloss"])
             ? values.word["englishGloss"].join(" ")
             : String(values.word["englishGloss"]),
+          lockToken: lockToken!,
         }
 
         console.log("Sending complete word update:", wordUpdate)
