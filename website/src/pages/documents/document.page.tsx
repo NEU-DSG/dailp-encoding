@@ -51,7 +51,8 @@ import PageImages from "../../page-image"
 import * as pageImageCss from "../../page-image.css"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
-import { PrintLayout, PrintLegend, printDocument } from "./print-document"
+import { PrintLayout, PrintLegend } from "./print-document"
+import * as printCss from "./print-document.css"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -113,6 +114,24 @@ export const TabSet = ({
   doc: Dailp.DocumentFieldsFragment
   breadcrumbString?: string
 }) => {
+  const [printDialogOpen, setPrintDialogOpen] = useState(false)
+  const [pendingPrint, setPendingPrint] = useState<string | null>(null)
+  const [selectedPrintView, setSelectedPrintView] = useState("annotation-tab")
+  const [selectedCherokeeStyle, setSelectedCherokeeStyle] =
+    useState<Dailp.CherokeeOrthography>(Dailp.CherokeeOrthography.Learner)
+  const [includeBlankLayers, setIncludeBlankLayers] = useState(false)
+  const [includePronunciationGuide, setIncludePronunciationGuide] =
+    useState(false)
+  const [includeMorphemeGlossary, setIncludeMorphemeGlossary] = useState(false)
+
+  useEffect(() => {
+    if (pendingPrint === null) return
+    document.fonts.ready.then(() => {
+      window.print()
+      setPendingPrint(null)
+    })
+  }, [pendingPrint])
+
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -132,7 +151,7 @@ export const TabSet = ({
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
+  const { levelOfDetail } = usePreferences()
   // const [{ data }] = Dailp.useDocumentDetailsQuery({
   //   variables: { slug: doc.slug! },
   // })
@@ -168,6 +187,11 @@ export const TabSet = ({
   }
   return (
     <>
+      {!isMobile && (
+        <div className={css.alignRight}>
+          <Button onClick={() => setPrintDialogOpen(true)}>Print</Button>
+        </div>
+      )}
       <div className={css.wideAndTop}>
         <TabList
           {...tabs}
@@ -232,7 +256,9 @@ export const TabSet = ({
       </TabPanel>
 
       {/* Hidden Print Design Components */}
-      {tabs.selectedId === Tabs.ANNOTATION && (
+      {(pendingPrint === Tabs.ANNOTATION ||
+        pendingPrint === "annotation-info" ||
+        (pendingPrint === null && tabs.selectedId === Tabs.ANNOTATION)) && (
         <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
           <PrintLegend levelOfDetail={levelOfDetail} />
           <h2 className={css.printSectionHeading}>
@@ -256,7 +282,7 @@ export const TabSet = ({
                   <DocumentContents
                     doc={doc}
                     levelOfDetail={levelOfDetail}
-                    cherokeeRepresentation={cherokeeRepresentation}
+                    cherokeeRepresentation={selectedCherokeeStyle}
                     openDetails={() => {}}
                     wordPanelDetails={{
                       currContents: null,
@@ -269,7 +295,7 @@ export const TabSet = ({
           </div>
         </PrintLayout>
       )}
-      {tabs.selectedId === Tabs.IMAGES && (
+      {pendingPrint === null && tabs.selectedId === Tabs.IMAGES && (
         <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
           {doc.translatedPages
             ?.filter((page) => !!page.image)
@@ -279,9 +305,9 @@ export const TabSet = ({
                   Original Document
                   <span className={css.printSectionHeadingRule} />
                 </h2>
-                <div className={css.printImageSource}>
+                {/* <div className={css.printImageSource}>
                   Image Source: {page.image!.url}
-                </div>
+                </div> */}
                 <img
                   className={pageImageCss.pageImage}
                   src={`${page.image!.url}/full/max/0/default.jpg`}
@@ -291,7 +317,8 @@ export const TabSet = ({
             ))}
         </PrintLayout>
       )}
-      {tabs.selectedId === Tabs.INFO && (
+      {(pendingPrint === "annotation-info" ||
+        (pendingPrint === null && tabs.selectedId === Tabs.INFO)) && (
         <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
           <h2 className={css.printSectionHeading}>
             Document Information
@@ -301,6 +328,110 @@ export const TabSet = ({
             <DocumentInfo doc={doc} />
           </EditingProvider>
         </PrintLayout>
+      )}
+      {printDialogOpen && (
+        <div
+          className={printCss.dialogOverlay}
+          onClick={() => setPrintDialogOpen(false)}
+        >
+          <div
+            className={printCss.dialogModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className={printCss.dialogTitle}>Print Information</h2>
+            <p className={printCss.dialogSubtitle}>
+              Please select the information you would like to print.
+            </p>
+            <div className={printCss.dialogDropdownGroup}>
+              <p className={printCss.dialogLabel}>Select Print Views:</p>
+              <select
+                className={printCss.printViewDropdown}
+                value={selectedPrintView}
+                onChange={(e) => setSelectedPrintView(e.target.value)}
+              >
+                <option value="annotation-tab">Translation</option>
+                <option value="annotation-info">
+                  Translation, Document Information
+                </option>
+              </select>
+            </div>
+            <div className={printCss.dialogDividerContainer}>
+              <hr className={printCss.dialogDivider} />
+            </div>
+            <p className={printCss.translationOptionsHeading}>
+              Translation Options
+            </p>
+            <div className={printCss.dialogDropdownGroup}>
+              <p className={printCss.dialogLabel}>
+                Cherokee Description Style:
+              </p>
+              <select
+                className={printCss.printViewDropdown}
+                value={selectedCherokeeStyle}
+                onChange={(e) =>
+                  setSelectedCherokeeStyle(
+                    e.target.value as Dailp.CherokeeOrthography
+                  )
+                }
+              >
+                <option value={Dailp.CherokeeOrthography.Learner}>
+                  Learner
+                </option>
+                <option value={Dailp.CherokeeOrthography.Crg}>
+                  Linguist: Cherokee Reference Grammar (CRG)
+                </option>
+                <option value={Dailp.CherokeeOrthography.Taoc}>
+                  Linguist: Tone and Accent in Oklahoma Cherokee (TAOC)
+                </option>
+              </select>
+            </div>
+            <div className={printCss.dialogCheckboxList}>
+              <label className={printCss.dialogCheckboxItem}>
+                <input
+                  type="checkbox"
+                  checked={includeBlankLayers}
+                  onChange={(e) => setIncludeBlankLayers(e.target.checked)}
+                />
+                Include Blank Layers
+              </label>
+              <label className={printCss.dialogCheckboxItem}>
+                <input
+                  type="checkbox"
+                  checked={includePronunciationGuide}
+                  onChange={(e) =>
+                    setIncludePronunciationGuide(e.target.checked)
+                  }
+                />
+                Include Pronunciation Guide
+              </label>
+              <label className={printCss.dialogCheckboxItem}>
+                <input
+                  type="checkbox"
+                  checked={includeMorphemeGlossary}
+                  onChange={(e) => setIncludeMorphemeGlossary(e.target.checked)}
+                />
+                Include Morpheme Glossary
+              </label>
+            </div>
+            <div className={printCss.dialogButtonGroup}>
+              <button
+                className={printCss.dialogCancelButton}
+                onClick={() => setPrintDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={printCss.dialogSubmitButton}
+                onClick={() => {
+                  setPrintDialogOpen(false)
+                  setPendingPrint(selectedPrintView)
+                }}
+              >
+                Print
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
@@ -570,12 +701,9 @@ export const DocumentTitleHeader = (p: {
           </div>
         )}
         <div className={css.alignRight}>
-          {
-            // for printing, turns special stylized print layout visible and hides the current webpage
-            !isMobile ? (
-              <Button onClick={p.onPrint ?? printDocument}>Print</Button>
-            ) : null
-          }
+          {!isMobile && p.onPrint ? (
+            <Button onClick={p.onPrint}>Print</Button>
+          ) : null}
         </div>
       </div>
       <div id="audio-and-recording-container">
