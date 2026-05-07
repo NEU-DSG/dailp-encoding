@@ -1,5 +1,7 @@
+import { CitationStyles } from "../types"
+import Cite, { templatesReady } from "../utils/citation-config"
+
 // TODO: Add more fields
-// Raw metadata for a document used to generate a citation
 interface RawDocMetadata {
   title?: string
   creator?: string[]
@@ -7,27 +9,29 @@ interface RawDocMetadata {
   date?: string
   accessed?: string
   source?: string
-  containerTitle?: string // Title of the collection this document belongs to
+  containerTitle?: string
   pages?: string
-  type?: string // Document type
+  type?: string
   publisher?: string
-  place?: string // Place of publication
+  place?: string
   doi?: string
   isbn?: string
-  originalYear?: number // Year of original publication (for translated works)
+  originalYear?: number
 }
 
-// Builds citation for a document based on the type of document
-// and the metadata available for it
-export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
+// Builds citation data from document metadata provided on function call
+function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
   const citation: any = {
+    // CSL doesn't relly like more accurate descriptions and only accepts document or article
     type:
       doc.type?.toLowerCase() === "document"
         ? "article"
         : doc.type?.toLowerCase() || "article",
 
+    // title
     ...(doc.title?.trim() && { title: doc.title }),
 
+    // Authors as creators
     author: Array.isArray(doc.creator)
       ? doc.creator
           .filter((c): c is string => typeof c === "string" && c.trim() !== "")
@@ -36,19 +40,21 @@ export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
       ? [{ literal: doc.creator }]
       : [],
 
+    // date of publication
     ...(doc.date?.trim() &&
       (() => {
-        const parts = doc.date
-          .split(/[-/]/)
+        const parts = doc
+          .date!.split(/[-/]/)
           .map((n) => parseInt(n, 10))
           .filter((n) => !isNaN(n))
         return parts.length > 0 ? { issued: { "date-parts": [parts] } } : {}
       })()),
 
+    // Date Accessed
     ...(doc.accessed?.trim() &&
       (() => {
-        const parts = doc.accessed
-          .split(/[-/]/)
+        const parts = doc
+          .accessed!.split(/[-/]/)
           .map((n) => parseInt(n, 10))
           .filter((n) => !isNaN(n))
         return parts.length > 0 ? { accessed: { "date-parts": [parts] } } : {}
@@ -64,7 +70,7 @@ export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
     ...(doc.doi?.trim() && { doi: doc.doi }),
     ...(doc.isbn?.trim() && { ISBN: doc.isbn }),
 
-    // Translator, has to manually be done for APA after building citation
+    // Translators
     ...(Array.isArray(doc.translator) && doc.translator.length > 0
       ? {
           translator: doc.translator
@@ -75,11 +81,64 @@ export function buildCitationMetadata(doc: RawDocMetadata): CSL.CitationData {
         }
       : {}),
 
-    // "(Original work published YEAR)" note appended if applicable
     ...(doc.originalYear
       ? { "original-date": { "date-parts": [[doc.originalYear]] } }
       : {}),
   }
 
   return citation
+}
+
+// Returns citation as string based on style provided (grabbed from local storage)
+export async function buildCitationString(
+  metadata: RawDocMetadata,
+  style: CitationStyles
+): Promise<string> {
+  // Ensure templates loaded, build citation data, generate citation string
+  await templatesReady
+  const cslData = buildCitationMetadata(metadata)
+  let result = new Cite(cslData).format("bibliography", {
+    format: "text",
+    template: style,
+    lang: "en-US",
+    maximumAuthors: 10,
+  })
+
+  // Ensure end has the date accessed/retrieved based on style
+  result = result.trimEnd().replace(/\.$/, "")
+
+  const accessedParts = cslData["accessed"]?.["date-parts"]?.[0] ?? []
+  const [yr, mo, dy] = accessedParts
+  if (yr) {
+    const accessedDate = new Date(
+      yr as number,
+      ((mo as number) ?? 1) - 1,
+      (dy as number) ?? 1
+    )
+    const formatted = accessedDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+    const verb = style === CitationStyles.APA ? "Retrieved" : "Accessed"
+    result += `. ${verb} ${formatted}.`
+  }
+
+  return result
+}
+
+// Grabs collection name from the url after "/collections/{CollectionName}"
+export function getCollectionName(url: string): string {
+  const match = url.match(/\/collections\/([^/?#]+)/)
+  return match ? match[1]!.replace(/-/g, " ").toUpperCase() : "CWKW"
+}
+
+// Generates todays date for date accessed
+export function getDateAccessed(): string {
+  const now = new Date()
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("/")
 }

@@ -1,10 +1,16 @@
-import React from "react"
+import React, { useEffect } from "react"
 import ReactDOM from "react-dom"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
 import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
+import {
+  buildCitationString,
+  getCollectionName,
+  getDateAccessed,
+} from "src/utils/document-metadata"
 import * as citationCss from "../cwkw/citationFooter.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
@@ -26,7 +32,86 @@ const ChapterPage = (props: {
 
   const dialog = useDialog()
   const subchapters = useSubchapters(props.chapterSlug)
-  const chapter = data?.chapter
+
+  const { preferredCitationStyle } = usePreferences()
+  const [citationString, setCitationString] = React.useState<string>("")
+
+  // Generate citation and rerender on change for preferences being changed
+  useEffect(() => {
+    // Only build citation so long as this is chapter and exists
+    const chapter = data?.chapter
+    if (!chapter || chapter.document) return
+
+    const url = typeof window !== "undefined" ? window.location.href : ""
+
+    // Build citation and update after authors found
+    const buildWithAuthors = (authorNames: string[]) => {
+      buildCitationString(
+        {
+          title: chapter.title ?? "",
+          creator: authorNames,
+          date: `${new Date().getFullYear()}/01/01`,
+          accessed: getDateAccessed(),
+          source: url,
+          containerTitle: getCollectionName(url),
+          type: "webpage",
+        },
+        preferredCitationStyle
+      ).then(setCitationString)
+    }
+
+    // Scrape authors of chapter from DOM
+    // Since were on wordpress, I had to grab the authors of this chapter
+    // by literally searching for h2 or h3 which are used for the "written by"
+    const scrapeAuthors = (): string[] => {
+      // Grab first h2/h3 in article, should be authors section, then clean and trim
+      const headingEl = window.document.querySelector("article h2, article h3")
+      if (headingEl?.textContent) {
+        const names = headingEl.textContent
+          .replace(/^written by\s*/i, "")
+          .split(/\s+and\s+|,\s*/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+        if (names.length > 0) return names
+      }
+
+      return []
+    }
+
+    // Build without authors if not on wordpress
+    if (!chapter.wordpressId) {
+      buildWithAuthors([])
+      return
+    }
+
+    // Use observer to check if DOM has loaded with article, then built citation
+    const article = window.document.querySelector("article")
+    if (!article) {
+      buildWithAuthors([])
+      return
+    }
+
+    const observer = new MutationObserver(() => {
+      const names = scrapeAuthors()
+      if (names.length > 0) {
+        observer.disconnect()
+        buildWithAuthors(names)
+      }
+    })
+
+    observer.observe(article, { childList: true, subtree: true })
+
+    // Waits but if content never appears, build without authors
+    const fallback = setTimeout(() => {
+      observer.disconnect()
+      buildWithAuthors(scrapeAuthors())
+    }, 3000)
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(fallback)
+    }
+  }, [data, preferredCitationStyle])
 
   if (fetching) {
     return <>Loading...</>
@@ -36,7 +121,7 @@ const ChapterPage = (props: {
     return <>Error: {error.message}</>
   }
 
-  if (!chapter) {
+  if (!data?.chapter) {
     return (
       <>
         Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
@@ -45,101 +130,17 @@ const ChapterPage = (props: {
     )
   }
 
+  const chapter = data.chapter
   const { document: chapterDocument, wordpressId } = chapter
 
-  // Build APA citation for this chapter page
+  // Build portal to place in parent by looking for footer slot
   const chapterCitationFooter = (() => {
-    // Checks for ensuring not in doc and grabbing citatition footer position
+    // Only build portal if document exists, portal exists, or citation exists
     if (chapterDocument) return null
-    if (typeof window === "undefined") return null
-    const slot = window.document.getElementById("citation-footer-slot")
-    if (!slot) return null
+    if (typeof document === "undefined") return null
+    const slot = document.getElementById("citation-footer-slot")
+    if (!slot || !citationString) return null
 
-    let authorNames: string[] = []
-    let chapterTitle: string = chapter.title ?? ""
-    let isoDate: string | undefined
-
-    if (chapterDocument) {
-      // Pull chapter's author and title from document
-      const authorContribs = (
-        (chapterDocument as any).contributors ?? []
-      ).filter((c: any) => c.role?.toLowerCase() === "author")
-      authorNames =
-        authorContribs.length > 0
-          ? authorContribs.map((c: any) => c.name)
-          : ((chapterDocument as any).creators ?? []).map((c: any) => c.name)
-
-      chapterTitle = (chapterDocument as any).title ?? chapter.title ?? ""
-
-      const d = (chapterDocument as any).date
-      if (d) {
-        isoDate = [
-          d.year,
-          String(d.month ?? 1).padStart(2, "0"),
-          String(d.day ?? 1).padStart(2, "0"),
-        ].join("-")
-      }
-    } else if (wordpressId) {
-      // When on word press, grabbing authors and title from DOM elements
-      const authorEl = window.document.querySelector(
-        ".wp-author, .entry-author, [rel='author'], .author-name"
-      )
-
-      if (authorEl?.textContent) {
-        authorNames = authorEl.textContent
-          .split(/\s+and\s+|,\s*/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-      }
-
-      // Manually grab h2 or h3 which are what renders authors after h1
-      if (authorNames.length === 0) {
-        const titleEl = window.document.querySelector("article h1")
-        const nextEl = titleEl?.nextElementSibling
-        if (nextEl?.matches("h2, h3") && nextEl.textContent) {
-          authorNames = nextEl.textContent
-            .split(/\s+and\s+|,\s*/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-        }
-      }
-
-      // Manually grab h2 or h3 anywhere
-      if (authorNames.length === 0) {
-        const headingEl = window.document.querySelector(
-          "article h2, article h3"
-        )
-        if (headingEl?.textContent) {
-          authorNames = headingEl.textContent
-            .split(/\s+and\s+|,\s*/)
-            .map((s) => s.trim())
-            .filter(Boolean)
-        }
-      }
-    }
-
-    // Build the citation
-    const authorPart =
-      authorNames.length > 0 ? authorNames.join(", & ") + ". " : ""
-
-    const accessed = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-
-    const url = window.location.href
-
-    const citation =
-      authorPart.replace("Written by ", "").replace("and ", "") +
-      "(2026). " +
-      chapterTitle +
-      ". CWKW. " +
-      url +
-      " Retrieved " +
-      accessed
-
-    // Place citation bar at given slot
     return ReactDOM.createPortal(
       <div className={citationCss.citationBar}>
         <div className={citationCss.citationInner}>
@@ -147,7 +148,7 @@ const ChapterPage = (props: {
             <span className={citationCss.citationLabel}>
               How to cite this chapter:{" "}
             </span>
-            {citation}
+            {citationString}
           </p>
         </div>
       </div>,

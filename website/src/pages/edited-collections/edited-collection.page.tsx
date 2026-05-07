@@ -1,24 +1,53 @@
-import React from "react"
+import React, { useEffect } from "react"
 import ReactDOM from "react-dom"
 import { Helmet } from "react-helmet"
-import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUserRole } from "src/auth"
+import { useUserRole } from "src/auth"
 import { Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
+import {
+  buildCitationString,
+  getCollectionName,
+  getDateAccessed,
+} from "src/utils/document-metadata"
 import * as citationCss from "../cwkw/citationFooter.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
 import { useChapters, useDialog } from "./edited-collection-context"
 
+const COLLECTION_AUTHORS = [
+  "Ellen Cushman",
+  "Ben Frey",
+  "Rachel Jackson",
+  "Ernestine Berry",
+  "Clara Proctor",
+  "Naomi Trevino",
+  "Jeffrey Bourns",
+  "Oleta Pritchett",
+  "Tyler Hodges",
+  "John Chewey",
+  "Shelby Snead",
+  "Chan Mi Oh",
+  "Kush Patel",
+  "Shashwat Patel",
+  "Nop Lertsumitkul",
+  "Henry Volchonok",
+  "Hazelyn Aroian",
+  "Victor Mendevil",
+]
+
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
   const userRole = useUserRole()
+
+  const { preferredCitationStyle } = usePreferences()
+  const [citationString, setCitationString] = React.useState<string>("")
 
   const chapters = useChapters()
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
@@ -52,6 +81,52 @@ const EditedCollectionPage = () => {
       : firstChapter.path[firstChapter.path.length - 1]
     : null
 
+  const collectionTitle = collection?.title ?? collectionSlug ?? "Collection"
+
+  // Build citation for this collection page and rerender when preferneces changed
+  useEffect(() => {
+    if (!collection) return
+
+    const url = typeof window !== "undefined" ? window.location.href : ""
+
+    buildCitationString(
+      {
+        title: collectionTitle,
+        creator: COLLECTION_AUTHORS,
+        date: `${new Date().getFullYear()}/01/01`,
+        accessed: getDateAccessed(),
+        source: url,
+        containerTitle: getCollectionName(url),
+        type: "webpage",
+      },
+      preferredCitationStyle
+    ).then((s) => {
+      setCitationString(s)
+    })
+  }, [collectionTitle, preferredCitationStyle])
+
+  // Build portal to place in parent by looking for footer slot
+  const collectionCitationBar = (() => {
+    // Only build portal if document exists, portal exists, or citation exists
+    if (typeof document === "undefined") return null
+    const slot = document.getElementById("citation-footer-slot")
+    if (!slot || !citationString) return null
+
+    return ReactDOM.createPortal(
+      <div className={citationCss.citationBar}>
+        <div className={citationCss.citationInner}>
+          <p className={citationCss.citationText}>
+            <span className={citationCss.citationLabel}>
+              How to cite this collection:{" "}
+            </span>
+            {citationString}
+          </p>
+        </div>
+      </div>,
+      slot
+    )
+  })()
+
   if (!collection) {
     return null
   }
@@ -73,78 +148,6 @@ const EditedCollectionPage = () => {
       </CWKWLayout>
     )
   }
-
-  // Build APA citation for this collection page
-  const collectionCitationBar = (() => {
-    // Don't show on doc
-    if (typeof document === "undefined") return null
-
-    // Grab slot specifically for citation so long as it exists on page
-    const slot = document.getElementById("citation-footer-slot")
-    if (!slot) return null
-
-    // Generate collection citation
-    const authors = [
-      "Ellen Cushman",
-      "Ben Frey",
-      "Rachel Jackson",
-      "Ernestine Berry",
-      "Clara Proctor",
-      "Naomi Trevino",
-      "Jeffrey Bourns",
-      "Oleta Pritchett",
-      "Tyler Hodges",
-      "John Chewey",
-      "Shelby Snead",
-      "Chan Mi Oh",
-      "Kush Patel",
-      "Shashwat Patel",
-      "Nop Lertsumitkul",
-      "Henry Volchonok",
-      "Hazelyn Aroian",
-      "Victor Mendevil",
-    ]
-
-    const authorPart =
-      authors.slice(0, -1).join(", ") +
-      ", & " +
-      authors[authors.length - 1] +
-      ". "
-
-    const accessed = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-
-    const url = typeof window !== "undefined" ? window.location.href : ""
-
-    const collectionTitle = collection?.title ?? collectionSlug ?? "Collection"
-
-    const citation =
-      authorPart +
-      "(2026). " +
-      collectionTitle +
-      ". CWKW. " +
-      url +
-      " Retrieved " +
-      accessed
-
-    // Place citation bar at given slot
-    return ReactDOM.createPortal(
-      <div className={citationCss.citationBar}>
-        <div className={citationCss.citationInner}>
-          <p className={citationCss.citationText}>
-            <span className={citationCss.citationLabel}>
-              How to cite this collection:{" "}
-            </span>
-            {citation}
-          </p>
-        </div>
-      </div>,
-      slot
-    )
-  })()
 
   return (
     <CWKWLayout>

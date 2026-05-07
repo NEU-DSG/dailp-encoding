@@ -6,6 +6,7 @@ import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { UserProvider } from "src/auth"
 import { CollectionProvider } from "src/pages/edited-collections/edited-collection-context"
+import { PreferencesProvider } from "src/preferences-context"
 
 export const rootElementId = "app-root"
 
@@ -18,19 +19,21 @@ export function PageShell({
 }) {
   const { Page, routeParams } = pageContext
   return (
-    <React.StrictMode>
-      <PageContextProvider pageContext={pageContext}>
-        <GraphQLProvider value={client}>
-          <ReakitProvider>
-            <UserProvider>
-              <CollectionProvider>
-                <Page {...routeParams} />
-              </CollectionProvider>
-            </UserProvider>
-          </ReakitProvider>
-        </GraphQLProvider>
-      </PageContextProvider>
-    </React.StrictMode>
+    <PreferencesProvider>
+      <React.StrictMode>
+        <PageContextProvider pageContext={pageContext}>
+          <GraphQLProvider value={client}>
+            <ReakitProvider>
+              <UserProvider>
+                <CollectionProvider>
+                  <Page {...routeParams} />
+                </CollectionProvider>
+              </UserProvider>
+            </ReakitProvider>
+          </GraphQLProvider>
+        </PageContextProvider>
+      </React.StrictMode>
+    </PreferencesProvider>
   )
 }
 

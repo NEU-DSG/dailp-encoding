@@ -6,6 +6,12 @@ export enum LevelOfDetail {
   Segmentation = 2,
 }
 
+export enum CitationStyles {
+  APA = "apa",
+  MLA = "mla",
+  Chicago = "chicago-author-date",
+}
+
 export type BasicMorphemeSegment = NonNullable<
   Dailp.FormFieldsFragment["segments"]
 >[0]

@@ -1,15 +1,9 @@
-import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
-import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
 import * as Dailp from "src/graphql/dailp"
-import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import Cite, { templatesReady } from "../../utils/citation-config"
-import { buildCitationMetadata } from "../../utils/document-metadata"
-import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
@@ -37,18 +31,6 @@ function getDateString(date: Date | null): string | undefined {
   const day = date.getDate().toString().padStart(2, "0")
 
   return `${year}/${month}/${day}`
-}
-
-// Citation formats for dropdown (mapped from display name to name Cite expects)
-export const formatMap: Record<string, string> = {
-  APA: "apa",
-  Chicago: "chicago-author-date",
-  MLA: "mla",
-}
-
-// Get citation format display name
-function getDisplayName(code: string) {
-  return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
 }
 
 // Reusable approved tags lists
@@ -110,7 +92,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   onClose,
   onSubmit,
   documentMetadata,
-  initialCiteFormat = "apa",
 }: EditDocumentModalProps) => {
   const { isEditing, setIsEditing } = useEditing()
 
@@ -182,20 +163,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [creatorInput, setCreatorInput] = useState(
     documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
   )
-
-  const [citation, setCitation] = useState("")
-  const [templatesLoaded, setTemplatesLoaded] = useState(false)
-  useEffect(() => {
-    templatesReady.then(() => setTemplatesLoaded(true))
-  }, [])
-
-  // Initialize citation format from localStorage or default to "apa"
-  const [citeFormat, setCiteFormat] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("preferredCitationFormat") || "apa"
-    }
-    return "apa"
-  })
 
   // Duplicate citation effect removed — see useEffect below that awaits templatesReady
 
@@ -387,114 +354,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
   }
 
-  const creatorStrings = useMemo(
-    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
-    [documentMetadata.creators]
-  )
-
-  // Extract translator names from contributors state
-  const translatorStrings = useMemo(
-    () =>
-      contributors
-        .filter((c) => c.role?.toLowerCase() === "translator")
-        .map((c) => c.name),
-    [contributors]
-  )
-
-  // current browser URL so URL + container-title are always populated.
-  const sourceUrl =
-    documentMetadata.sources?.[0]?.link ||
-    (typeof window !== "undefined" ? window.location.href : "")
-
-  // Collection title
-  const containerTitle = useMemo(() => {
-    const match = sourceUrl.match(/\/collections\/([^/?#]+)/)
-    return match ? match[1]!.replace(/-/g, " ").toUpperCase() : undefined
-  }, [sourceUrl])
-
-  const docMetadata = useMemo(
-    () =>
-      buildCitationMetadata({
-        title,
-        creator: creatorStrings,
-        translator:
-          translatorStrings.length > 0 ? translatorStrings : undefined,
-        date: getDateString(date),
-        accessed: getDateString(new Date()),
-        source: sourceUrl || undefined,
-        containerTitle,
-        // "webpage" is required for Chicago/MLA to render accessed date + URL.
-        // "article-journal" suppresses those fields.
-        type: "webpage",
-      }),
-    [title, creatorStrings, translatorStrings, date, sourceUrl, containerTitle]
-  )
-
-  // Rendering the citation on page
-  useEffect(() => {
-    // Wait for templates to load
-    if (citeFormat !== "apa" && !templatesLoaded) return
-    try {
-      let docCitation = new Cite(docMetadata).format("bibliography", {
-        format: "text",
-        template: citeFormat.toLowerCase() || "apa",
-        lang: "en-US",
-      })
-
-      // Append access date for fixed issue regarding APA not displaying it for some reason
-      if (docMetadata["accessed"]) {
-        const ap = (docMetadata["accessed"] as any)["date-parts"]?.[0] ?? []
-        const [yr, mo, dy] = ap
-        if (yr) {
-          const accessedDate = new Date(yr, (mo ?? 1) - 1, dy ?? 1)
-          const formatted = accessedDate.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-          docCitation = docCitation.trimEnd().replace(/\.$/, "")
-          const verb = citeFormat === "apa" ? "Retrieved" : "Accessed"
-          docCitation += `. ${verb} ${formatted}.`
-        }
-      }
-
-      // Inserting translator manually since not applicable for APA
-      if (
-        citeFormat === "apa" &&
-        (docMetadata as any)["translator"]?.length > 0
-      ) {
-        const transNames = (
-          (docMetadata as any)["translator"] as { literal: string }[]
-        )
-          .map((t) => {
-            const parts = t.literal.trim().split(/\s+/)
-            if (parts.length === 1) return parts[0]!
-            const initials = parts
-              .slice(0, -1)
-              .map((p) => p[0]! + ".")
-              .join(" ")
-            return `${initials} ${parts[parts.length - 1]}`
-          })
-          .join(", ")
-
-        const transNote = `(${transNames}, Trans.)`
-        const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-        const titleRegex = new RegExp(`(${escapedTitle})(\\.)`)
-
-        if (titleRegex.test(docCitation)) {
-          docCitation = docCitation.replace(titleRegex, `$1 ${transNote}$2`)
-        } else {
-          docCitation = docCitation.trimEnd().replace(/\.$/, "")
-          docCitation += ` ${transNote}.`
-        }
-      }
-
-      setCitation(docCitation)
-    } catch (err) {
-      setCitation("Error generating citation")
-    }
-  }, [citeFormat, docMetadata, templatesLoaded, title])
-
   const cancelEdits = () => {
     if (!backupState) return
     setTitle(backupState.title)
@@ -606,7 +465,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
-      citeFormat: citeFormat,
     }
 
     // Update backup state to new submitted state
@@ -859,35 +717,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onAdd={isEditing ? addCoverage : undefined}
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
-          />
-
-          <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>Citation</label>
-            <TextareaAutosize
-              className={styles.input}
-              value={citation}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setCitation(e.target.value)
-              }
-              minRows={1}
-              maxRows={10}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>{getDisplayName(citeFormat)}</div>
-          <Dropdown
-            options={Object.keys(formatMap)}
-            selected={
-              Object.entries(formatMap).find(
-                ([_, v]) => v === citeFormat
-              )?.[0] || "apa"
-            }
-            setSelected={(displayName) => {
-              setCiteFormat(formatMap[displayName] ?? "apa")
-            }}
-            addButtonLabel="Change Format"
-            disabled={!isEditing}
           />
 
           {/* Cancel and submit buttons */}

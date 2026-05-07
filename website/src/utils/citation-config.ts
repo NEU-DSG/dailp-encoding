@@ -16,6 +16,7 @@ const STYLE_SOURCES: Record<string, string[]> = {
   ],
 }
 
+// Register styles from urls
 async function registerStyle(name: string): Promise<void> {
   if (csl.templates.has(name)) return
   const urls = STYLE_SOURCES[name] ?? []
@@ -39,11 +40,6 @@ export const templatesReady: Promise<void> =
   typeof window === "undefined"
     ? Promise.resolve()
     : Promise.all(Object.keys(STYLE_SOURCES).map(registerStyle)).then(() => {})
-
-// Debug for if template exists when trying to generate them
-export function templateExists(name: string): boolean {
-  return csl.templates.has(name)
-}
 
 export default Cite
 export { plugins }

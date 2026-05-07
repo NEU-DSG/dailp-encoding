@@ -6,7 +6,6 @@ import { CreativeCommonsBy, Link } from "src/components"
 import Sidebar, { MobileSidebar } from "src/components/sidebar"
 import { useMediaQuery } from "src/custom-hooks"
 import { HeaderPrefDrawer } from "src/mode"
-import { PreferencesProvider } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { collectionRoute } from "src/routes"
 import { colors, mediaQueries } from "src/style/constants"
@@ -26,7 +25,7 @@ const CWKWLayout: React.FC = ({ children }) => {
   const { collectionSlug } = useRouteParams()
 
   return (
-    <PreferencesProvider>
+    <>
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
         <html lang="en" />
         <meta charSet="UTF-8" />
@@ -115,7 +114,7 @@ const CWKWLayout: React.FC = ({ children }) => {
           </div>
         </div>
       </footer>
-    </PreferencesProvider>
+    </>
   )
 }
 
