@@ -1229,6 +1229,11 @@ export type Query = {
   /** Get a single word given the word ID */
   readonly wordById: AnnotatedForm
   /**
+   * Read the current editing-lock state for a word. Used by the frontend
+   * to detect a stale lock (>5 min old) before saving.
+   */
+  readonly wordLockStatus: Maybe<WordLockStatus>
+  /**
    * Search for words that match any one of the given queries.
    * Each query may match against multiple fields of a word.
    */
@@ -1310,6 +1315,10 @@ export type QuerySyllabarySearchArgs = {
 
 export type QueryWordByIdArgs = {
   id: Scalars["UUID"]
+}
+
+export type QueryWordLockStatusArgs = {
+  wordId: Scalars["UUID"]
 }
 
 export type QueryWordSearchArgs = {
@@ -1443,6 +1452,23 @@ export type WordLockResult = {
   /** True if the lock was granted to the caller. */
   readonly acquired: Scalars["Boolean"]
   /** The user id holding the lock when denial occurs. None on success. */
+  readonly editingUserId: Maybe<Scalars["UUID"]>
+}
+
+/**
+ * Current state of the editing lock on a word. All four fields are
+ * NULL/false when the word is not locked. The frontend uses
+ * `editing_started_at` to detect a stale lock (>5 min old) before saving.
+ */
+export type WordLockStatus = {
+  readonly __typename?: "WordLockStatus"
+  /** True while an editor holds the lock. */
+  readonly currentlyEditing: Scalars["Boolean"]
+  /** Per-session token proving ownership of the lock. */
+  readonly editingLockToken: Maybe<Scalars["UUID"]>
+  /** When the current lock was acquired. */
+  readonly editingStartedAt: Maybe<DateTime>
+  /** User id holding the lock. */
   readonly editingUserId: Maybe<Scalars["UUID"]>
 }
 
@@ -2993,6 +3019,23 @@ export type ReleaseWordLockMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "releaseWordLock">
 
+export type WordLockStatusQueryVariables = Exact<{
+  wordId: Scalars["UUID"]
+}>
+
+export type WordLockStatusQuery = { readonly __typename?: "Query" } & {
+  readonly wordLockStatus: Maybe<
+    { readonly __typename?: "WordLockStatus" } & Pick<
+      WordLockStatus,
+      "currentlyEditing" | "editingUserId" | "editingLockToken"
+    > & {
+        readonly editingStartedAt: Maybe<
+          { readonly __typename?: "DateTime" } & Pick<DateTime, "timestamp">
+        >
+      }
+  >
+}
+
 export type AttachAudioToWordMutationVariables = Exact<{
   input: AttachAudioToWordInput
 }>
@@ -4346,6 +4389,27 @@ export function useReleaseWordLockMutation() {
     ReleaseWordLockMutation,
     ReleaseWordLockMutationVariables
   >(ReleaseWordLockDocument)
+}
+export const WordLockStatusDocument = gql`
+  query WordLockStatus($wordId: UUID!) {
+    wordLockStatus(wordId: $wordId) {
+      currentlyEditing
+      editingStartedAt {
+        timestamp
+      }
+      editingUserId
+      editingLockToken
+    }
+  }
+`
+
+export function useWordLockStatusQuery(
+  options: Omit<Urql.UseQueryArgs<WordLockStatusQueryVariables>, "query">
+) {
+  return Urql.useQuery<WordLockStatusQuery, WordLockStatusQueryVariables>({
+    query: WordLockStatusDocument,
+    ...options,
+  })
 }
 export const AttachAudioToWordDocument = gql`
   mutation AttachAudioToWord($input: AttachAudioToWordInput!) {

@@ -1522,6 +1522,11 @@ type Query {
 	"""
 	wordById(id: UUID!): AnnotatedForm!
 	"""
+	Read the current editing-lock state for a word. Used by the frontend
+	to detect a stale lock (>5 min old) before saving.
+	"""
+	wordLockStatus(wordId: UUID!): WordLockStatus
+	"""
 	Get a single paragraph given the paragraph ID
 	"""
 	paragraphById(id: UUID!): DocumentParagraph!
@@ -1757,6 +1762,30 @@ type WordLockResult {
 	The user id holding the lock when denial occurs. None on success.
 	"""
 	editingUserId: UUID
+}
+
+"""
+Current state of the editing lock on a word. All four fields are
+NULL/false when the word is not locked. The frontend uses
+`editing_started_at` to detect a stale lock (>5 min old) before saving.
+"""
+type WordLockStatus {
+	"""
+	True while an editor holds the lock.
+	"""
+	currentlyEditing: Boolean!
+	"""
+	When the current lock was acquired.
+	"""
+	editingStartedAt: DateTime
+	"""
+	User id holding the lock.
+	"""
+	editingUserId: UUID
+	"""
+	Per-session token proving ownership of the lock.
+	"""
+	editingLockToken: UUID
 }
 
 type WordSegment {

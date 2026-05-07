@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from "react"
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { getCurrentUser } from "src/auth"
 import { GRAPHQL_URL_WRITE } from "src/graphql"
 import * as Dailp from "src/graphql/dailp"
@@ -49,7 +55,7 @@ export const EditWordCheckProvider: React.FC<EditWordCheckProviderProps> = ({
         : null
   }, [lockToken, lockedWordId])
 
-  // Release on provider unmount — this fires only when the user navigates
+  // Release on provider unmount - this fires only when the user navigates
   // away from the document page entirely (e.g. to a different doc, home, etc).
   useEffect(() => {
     return () => {

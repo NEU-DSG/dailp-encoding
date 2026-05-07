@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -43,6 +43,22 @@ export const EditButton = () => {
     denialInfo.editingUserId === currentUserId
   const lockHolderName =
     lockHolderResult.data?.dailpUserById?.displayName ?? "another user"
+
+  // Show the denial as an alert popup. Wait for the user-name query to resolve
+  // so the display name can appear in the message, then clear
+  // denialInfo so the alert doesn't refire on re-renders.
+  useEffect(() => {
+    if (!denialInfo) return
+    const waitingForName =
+      !!denialInfo.editingUserId && !isSelfLock && lockHolderResult.fetching
+    if (waitingForName) return
+
+    const message = isSelfLock
+      ? "This account is editing this word on another device."
+      : `Currently being edited by "${lockHolderName}".`
+    alert(message)
+    setDenialInfo(null)
+  }, [denialInfo, isSelfLock, lockHolderResult.fetching, lockHolderName])
 
   const handleEditClick = async () => {
     const token = uuidv4()
@@ -94,22 +110,13 @@ export const EditButton = () => {
           </IconTextButton>
         </>
       ) : (
-        <>
-          {denialInfo && (
-            <label>
-              {isSelfLock
-                ? "This account is editing this word on another device"
-                : `Currently being edited by ${lockHolderName}`}
-            </label>
-          )}
-          <IconTextButton
-            icon={<HiPencilAlt />}
-            className={css.editPanelButton}
-            onClick={handleEditClick}
-          >
-            Edit
-          </IconTextButton>
-        </>
+        <IconTextButton
+          icon={<HiPencilAlt />}
+          className={css.editPanelButton}
+          onClick={handleEditClick}
+        >
+          Edit
+        </IconTextButton>
       )}
     </Form>
   )

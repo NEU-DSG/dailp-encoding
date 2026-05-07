@@ -13,7 +13,7 @@ use dailp::{
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
     DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
     SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
-    WordLockResult,
+    WordLockResult, WordLockStatus,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -336,6 +336,20 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .word_by_id(&id)
+            .await?)
+    }
+
+    /// Read the current editing-lock state for a word. Used by the frontend
+    /// to detect a stale lock (>5 min old) before saving.
+    async fn word_lock_status(
+        &self,
+        context: &Context<'_>,
+        word_id: Uuid,
+    ) -> FieldResult<Option<WordLockStatus>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_lock_status(word_id)
             .await?)
     }
 

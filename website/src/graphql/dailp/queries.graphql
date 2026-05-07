@@ -546,6 +546,17 @@ mutation ReleaseWordLock($wordId: UUID!, $lockToken: UUID!) {
   releaseWordLock(wordId: $wordId, lockToken: $lockToken)
 }
 
+query WordLockStatus($wordId: UUID!) {
+  wordLockStatus(wordId: $wordId) {
+    currentlyEditing
+    editingStartedAt {
+      timestamp
+    }
+    editingUserId
+    editingLockToken
+  }
+}
+
 mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
   attachAudioToWord(input: $input) {
     # ...FormFields

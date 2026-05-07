@@ -794,16 +794,31 @@ impl Database {
                 editing_user_id: None,
             })
         } else {
-            // Acquisition Denied -> look up the current lock holder id for the UI.
-            let holder = query_file_scalar!("queries/word_lock_holder.sql", word_id)
-                .fetch_optional(&self.client)
+            // Acquisition denied -> look up the current lock holder id for the UI.
+            let holder = self
+                .word_lock_status(word_id)
                 .await?
-                .flatten();
+                .and_then(|s| s.editing_user_id);
             Ok(WordLockResult {
                 acquired: false,
                 editing_user_id: holder,
             })
         }
+    }
+
+    /// Read the current lock state for a word: the four lock columns plus
+    /// any expiry information needed by the frontend to detect a stale lock
+    /// before saving. Returns `None` if the word does not exist.
+    pub async fn word_lock_status(&self, word_id: Uuid) -> Result<Option<WordLockStatus>> {
+        let row = query_file!("queries/word_lock_status.sql", word_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(row.map(|r| WordLockStatus {
+            currently_editing: r.currently_editing,
+            editing_started_at: r.editing_started_at.map(|d| DateTime::new(d.naive_utc())),
+            editing_user_id: r.editing_user_id,
+            editing_lock_token: r.editing_lock_token,
+        }))
     }
 
     /// Release the editing lock on a word. Does nothing if the caller does not

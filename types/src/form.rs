@@ -321,6 +321,21 @@ pub struct WordLockResult {
     pub editing_user_id: Option<Uuid>,
 }
 
+/// Current state of the editing lock on a word. All four fields are
+/// NULL/false when the word is not locked. The frontend uses
+/// `editing_started_at` to detect a stale lock (>5 min old) before saving.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordLockStatus {
+    /// True while an editor holds the lock.
+    pub currently_editing: bool,
+    /// When the current lock was acquired.
+    pub editing_started_at: Option<crate::DateTime>,
+    /// User id holding the lock.
+    pub editing_user_id: Option<Uuid>,
+    /// Per-session token proving ownership of the lock.
+    pub editing_lock_token: Option<Uuid>,
+}
+
 /// Trait that defines function which takes in a possibly undefined value.
 pub trait MaybeUndefinedExt<T> {
     /// If the given value is undefined, convert into a vector of option. Otherwise, return an empty vector.
