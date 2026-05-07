@@ -57,7 +57,12 @@ import PageImages from "../../page-image"
 import * as pageImageCss from "../../page-image.css"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
-import { PrintLayout, PrintLegend } from "./print-document"
+import {
+  PrintLayout,
+  PrintLegend,
+  documentInfoFields,
+  printDocument,
+} from "./print-document"
 import * as printCss from "./print-document.css"
 
 enum Tabs {
@@ -146,6 +151,21 @@ export const TabSet = ({
   const [includePronunciationGuide, setIncludePronunciationGuide] =
     useState(false)
   const [includeMorphemeGlossary, setIncludeMorphemeGlossary] = useState(false)
+  const [selectedDocumentInfoFields, setSelectedDocumentInfoFields] = useState<
+    Set<string>
+  >(new Set())
+
+  const toggleDocumentInfoField = (field: string) => {
+    setSelectedDocumentInfoFields((prev) => {
+      const next = new Set(prev)
+      if (next.has(field)) {
+        next.delete(field)
+      } else {
+        next.add(field)
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     if (pendingPrint === null) return
@@ -212,7 +232,17 @@ export const TabSet = ({
     <>
       {!isMobile && (
         <div className={css.alignRight}>
-          <Button onClick={() => setPrintDialogOpen(true)}>Print</Button>
+          <Button
+            onClick={() => {
+              if (tabs.selectedId === Tabs.IMAGES) {
+                printDocument()
+              } else {
+                setPrintDialogOpen(true)
+              }
+            }}
+          >
+            Print
+          </Button>
         </div>
       )}
       <div className={css.wideAndTop}>
@@ -316,6 +346,12 @@ export const TabSet = ({
               </FormProvider>
             </EditWordCheckProvider>
           </div>
+          {includeMorphemeGlossary && (
+            <h2 className={css.printSectionHeading}>
+              Word Parts Glossary
+              <span className={css.printSectionHeadingRule} />
+            </h2>
+          )}
         </PrintLayout>
       )}
       {pendingPrint === null && tabs.selectedId === Tabs.IMAGES && (
@@ -358,37 +394,49 @@ export const TabSet = ({
         title="Print Information"
         subtitle="Please select the information you would like to print."
       >
-        <div className={printCss.printDialogContent}>
-          <Dropdown
-            label="Select Print Views:"
-            options={printViewOptions.map((o) => o.label)}
-            value={
-              printViewOptions.find((o) => o.value === selectedPrintView)
-                ?.label ?? "Translation"
-            }
-            onChange={(label) => {
-              const match = printViewOptions.find((o) => o.label === label)
-              if (match) setSelectedPrintView(match.value)
-            }}
-          />
+        <div
+          className={[
+            printCss.printDialogContent,
+            selectedPrintView === "annotation-info" &&
+              printCss.printDialogContentScrollable,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <div className={printCss.printViewDropdownWrapper}>
+            <Dropdown
+              label="Select Print Views:"
+              options={printViewOptions.map((o) => o.label)}
+              value={
+                printViewOptions.find((o) => o.value === selectedPrintView)
+                  ?.label ?? "Translation"
+              }
+              onChange={(label) => {
+                const match = printViewOptions.find((o) => o.label === label)
+                if (match) setSelectedPrintView(match.value)
+              }}
+            />
+          </div>
           <div className={printCss.dialogDividerContainer}>
             <hr className={printCss.dialogDivider} />
           </div>
           <p className={printCss.translationOptionsHeading}>
             Translation Options
           </p>
-          <Dropdown
-            label="Cherokee Description Style:"
-            options={cherokeeOptions.map((o) => o.label)}
-            value={
-              cherokeeOptions.find((o) => o.value === selectedCherokeeStyle)
-                ?.label ?? "Learner"
-            }
-            onChange={(label) => {
-              const match = cherokeeOptions.find((o) => o.label === label)
-              if (match) setSelectedCherokeeStyle(match.value)
-            }}
-          />
+          <div className={printCss.cherokeeDropdownWrapper}>
+            <Dropdown
+              label="Cherokee Description Style:"
+              options={cherokeeOptions.map((o) => o.label)}
+              value={
+                cherokeeOptions.find((o) => o.value === selectedCherokeeStyle)
+                  ?.label ?? "Learner"
+              }
+              onChange={(label) => {
+                const match = cherokeeOptions.find((o) => o.label === label)
+                if (match) setSelectedCherokeeStyle(match.value)
+              }}
+            />
+          </div>
           <div className={printCss.dialogCheckboxList}>
             <label className={printCss.dialogCheckboxItem}>
               <input
@@ -415,6 +463,33 @@ export const TabSet = ({
               Include Morpheme Glossary
             </label>
           </div>
+          {selectedPrintView === "annotation-info" && (
+            <div className={printCss.documentInfoSection}>
+              <p className={printCss.documentInfoOptionsHeading}>
+                Document Information Options
+              </p>
+              <p className={printCss.documentInfoOptionsSubtitle}>
+                All documents include Title, Date Created, Creator,
+                Contributors, and Citation. Please select all additional
+                fields to print:
+              </p>
+              <div className={printCss.documentInfoCheckboxList}>
+                {documentInfoFields.map((field) => (
+                  <label
+                    key={field}
+                    className={printCss.documentInfoCheckboxItem}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDocumentInfoFields.has(field)}
+                      onChange={() => toggleDocumentInfoField(field)}
+                    />
+                    {field}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div className={printCss.dialogButtonGroup}>
             <CancelButton onClick={() => setPrintDialogOpen(false)} />
             <SubmitButton

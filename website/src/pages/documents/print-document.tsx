@@ -36,6 +36,18 @@ export const metaDataList = [
   "Citation",
 ] as const
 
+export const documentInfoFields = [
+  "Genre",
+  "Format",
+  "Pages",
+  "Source",
+  "URI",
+  "Keywords",
+  "Subject Headings",
+  "Languages",
+  "Spatial Coverage",
+] as const
+
 export const PrintLegend = ({
   levelOfDetail,
 }: {
@@ -129,7 +141,7 @@ export const PrintLayout = (p: {
           <p className={css.printBreadcrumbs}>{p.breadcrumbString}</p>
         )}
         <br />
-        <h1>
+        <h1 className={css.printTitle}>
           {p.doc.title}
           {p.doc.date && ` (${p.doc.date.year})`}
         </h1>

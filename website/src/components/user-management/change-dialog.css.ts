@@ -124,13 +124,15 @@ export const buttons = style({
 export const dropdownGroup = style({
   display: "flex",
   flexDirection: "column",
-  alignItems: "center",
 })
 
 export const dropdownLabel = style({
   fontSize: "0.85rem",
   fontWeight: 500,
   margin: 0,
+  textAlign: "left",
+  alignSelf: "stretch",
+  paddingLeft: hspace.edge,
 })
 
 export const dropdownSelect = style({
@@ -139,6 +141,7 @@ export const dropdownSelect = style({
   maxWidth: "100%",
   fontSize: "0.75rem",
   textAlign: "center",
+  alignSelf: "center",
 })
 
 globalStyle(`${dropdownSelect} option`, {

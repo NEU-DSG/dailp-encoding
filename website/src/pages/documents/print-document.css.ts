@@ -66,6 +66,15 @@ export const printHeader = style({
   },
 })
 
+export const printTitle = style({
+  "@media": {
+    [mediaQueries.print]: {
+      maxWidth: "23.68rem",
+      margin: "0 auto",
+    },
+  },
+})
+
 export const printDocument = style({
   display: "none",
   "@media": {
@@ -269,13 +278,21 @@ export const printTranslationLine = globalStyle(
 export const printDialogContent = style({
   display: "flex",
   flexDirection: "column",
-  gap: vspace.half,
+})
+
+export const printDialogContentScrollable = style({
+  maxHeight: "22rem",
+  overflowY: "auto",
+})
+
+export const printViewDropdownWrapper = style({
+  marginTop: "4.21rem",
 })
 
 export const dialogDividerContainer = style({
   display: "flex",
   justifyContent: "center",
-  marginTop: vspace.large,
+  marginTop: "1.58rem",
 })
 
 export const dialogDivider = style({
@@ -289,21 +306,74 @@ export const translationOptionsHeading = style({
   fontFamily: `"Charis SIL", serif`,
   fontSize: "0.95rem",
   fontWeight: 700,
-  textAlign: "center",
+  textAlign: "left",
   margin: 0,
+  marginTop: "1.32rem",
 })
 
-export const dialogButtonGroup = style({
-  display: "flex",
-  justifyContent: "center",
-  gap: "2.6rem",
-  marginTop: vspace.medium,
+export const cherokeeDropdownWrapper = style({
+  marginTop: "0.79rem",
 })
 
 export const dialogCheckboxList = style({
   display: "flex",
   flexDirection: "column",
   gap: vspace.medium,
+  paddingLeft: hspace.edge,
+  marginTop: "1.05rem",
+})
+
+export const documentInfoSection = style({
+  display: "flex",
+  flexDirection: "column",
+  marginTop: "1.84rem",
+})
+
+export const documentInfoOptionsHeading = style({
+  fontFamily: `"Charis SIL", serif`,
+  fontSize: "0.95rem",
+  fontWeight: 700,
+  lineHeight: 1.2,
+  textAlign: "left",
+  margin: 0,
+})
+
+export const documentInfoOptionsSubtitle = style({
+  fontFamily: `"Charis SIL", serif`,
+  fontSize: "0.85rem",
+  fontWeight: 400,
+  lineHeight: 1.2,
+  textAlign: "left",
+  margin: 0,
+  marginTop: vspace.quarter,
+})
+
+export const documentInfoCheckboxList = style({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  columnGap: hspace.edge,
+  rowGap: vspace.medium,
+  marginTop: vspace.medium,
+  paddingLeft: hspace.edge,
+  alignSelf: "stretch",
+})
+
+export const documentInfoCheckboxItem = style({
+  display: "flex",
+  alignItems: "center",
+  gap: hspace.medium,
+  fontFamily: `"Charis SIL", serif`,
+  fontSize: "0.85rem",
+  fontWeight: 400,
+  lineHeight: 1.2,
+  cursor: "pointer",
+})
+
+export const dialogButtonGroup = style({
+  display: "flex",
+  justifyContent: "center",
+  gap: "2.6rem",
+  marginTop: "1.84rem",
 })
 
 export const dialogCheckboxItem = style({
