@@ -114,7 +114,7 @@ export const label = style({
   "@media": {
     print: {
       width: "212px",
-      height: "25px",
+      minHeight: "25px",
       flexShrink: 0,
       fontFamily: `"Quattrocento", serif`,
       fontStyle: "normal",
@@ -132,7 +132,7 @@ export const value = style({
   "@media": {
     print: {
       width: "424px",
-      height: "20px",
+      minHeight: "20px",
       fontFamily: fonts.header,
       fontStyle: "normal",
       fontWeight: 400,

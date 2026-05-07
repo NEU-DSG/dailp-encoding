@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import {
   hspace,
   layers,
@@ -119,6 +119,30 @@ export const buttons = style({
       marginTop: 0,
     },
   },
+})
+
+export const dropdownGroup = style({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+})
+
+export const dropdownLabel = style({
+  fontSize: "0.85rem",
+  fontWeight: 500,
+  margin: 0,
+})
+
+export const dropdownSelect = style({
+  width: "24rem",
+  height: "1.3rem",
+  maxWidth: "100%",
+  fontSize: "0.75rem",
+  textAlign: "center",
+})
+
+globalStyle(`${dropdownSelect} option`, {
+  textAlign: "center",
 })
 
 export const roleSelect = style({

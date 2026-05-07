@@ -153,6 +153,35 @@ export const ConfirmationDialog = ({
   )
 }
 
+interface DropdownProps {
+  label: string
+  options: string[]
+  value: string
+  onChange: (value: string) => void
+}
+
+export const Dropdown = ({
+  label,
+  options,
+  value,
+  onChange,
+}: DropdownProps) => (
+  <div className={css.dropdownGroup}>
+    <p className={css.dropdownLabel}>{label}</p>
+    <select
+      className={css.dropdownSelect}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+)
+
 const userRoles: { value: UserGroup; label: string }[] = [
   { value: UserGroup.Readers, label: "Reader" },
   { value: UserGroup.Contributors, label: "Contributor" },

@@ -26,6 +26,12 @@ import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
+import {
+  CancelButton,
+  Dropdown,
+  EmptyDialog,
+  SubmitButton,
+} from "src/components/user-management/change-dialog"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -106,6 +112,23 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   )
 }
 export const Page = AnnotatedDocumentPage
+
+const printViewOptions = [
+  { label: "Translation", value: Tabs.ANNOTATION },
+  { label: "Translation, Document Information", value: "annotation-info" },
+]
+
+const cherokeeOptions = [
+  { label: "Learner", value: Dailp.CherokeeOrthography.Learner },
+  {
+    label: "Linguist: Cherokee Reference Grammar (CRG)",
+    value: Dailp.CherokeeOrthography.Crg,
+  },
+  {
+    label: "Linguist: Tone and Accent in Oklahoma Cherokee (TAOC)",
+    value: Dailp.CherokeeOrthography.Taoc,
+  },
+]
 
 export const TabSet = ({
   doc,
@@ -329,110 +352,82 @@ export const TabSet = ({
           </EditingProvider>
         </PrintLayout>
       )}
-      {printDialogOpen && (
-        <div
-          className={printCss.dialogOverlay}
-          onClick={() => setPrintDialogOpen(false)}
-        >
-          <div
-            className={printCss.dialogModal}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className={printCss.dialogTitle}>Print Information</h2>
-            <p className={printCss.dialogSubtitle}>
-              Please select the information you would like to print.
-            </p>
-            <div className={printCss.dialogDropdownGroup}>
-              <p className={printCss.dialogLabel}>Select Print Views:</p>
-              <select
-                className={printCss.printViewDropdown}
-                value={selectedPrintView}
-                onChange={(e) => setSelectedPrintView(e.target.value)}
-              >
-                <option value="annotation-tab">Translation</option>
-                <option value="annotation-info">
-                  Translation, Document Information
-                </option>
-              </select>
-            </div>
-            <div className={printCss.dialogDividerContainer}>
-              <hr className={printCss.dialogDivider} />
-            </div>
-            <p className={printCss.translationOptionsHeading}>
-              Translation Options
-            </p>
-            <div className={printCss.dialogDropdownGroup}>
-              <p className={printCss.dialogLabel}>
-                Cherokee Description Style:
-              </p>
-              <select
-                className={printCss.printViewDropdown}
-                value={selectedCherokeeStyle}
-                onChange={(e) =>
-                  setSelectedCherokeeStyle(
-                    e.target.value as Dailp.CherokeeOrthography
-                  )
-                }
-              >
-                <option value={Dailp.CherokeeOrthography.Learner}>
-                  Learner
-                </option>
-                <option value={Dailp.CherokeeOrthography.Crg}>
-                  Linguist: Cherokee Reference Grammar (CRG)
-                </option>
-                <option value={Dailp.CherokeeOrthography.Taoc}>
-                  Linguist: Tone and Accent in Oklahoma Cherokee (TAOC)
-                </option>
-              </select>
-            </div>
-            <div className={printCss.dialogCheckboxList}>
-              <label className={printCss.dialogCheckboxItem}>
-                <input
-                  type="checkbox"
-                  checked={includeBlankLayers}
-                  onChange={(e) => setIncludeBlankLayers(e.target.checked)}
-                />
-                Include Blank Layers
-              </label>
-              <label className={printCss.dialogCheckboxItem}>
-                <input
-                  type="checkbox"
-                  checked={includePronunciationGuide}
-                  onChange={(e) =>
-                    setIncludePronunciationGuide(e.target.checked)
-                  }
-                />
-                Include Pronunciation Guide
-              </label>
-              <label className={printCss.dialogCheckboxItem}>
-                <input
-                  type="checkbox"
-                  checked={includeMorphemeGlossary}
-                  onChange={(e) => setIncludeMorphemeGlossary(e.target.checked)}
-                />
-                Include Morpheme Glossary
-              </label>
-            </div>
-            <div className={printCss.dialogButtonGroup}>
-              <button
-                className={printCss.dialogCancelButton}
-                onClick={() => setPrintDialogOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className={printCss.dialogSubmitButton}
-                onClick={() => {
-                  setPrintDialogOpen(false)
-                  setPendingPrint(selectedPrintView)
-                }}
-              >
-                Print
-              </button>
-            </div>
+      <EmptyDialog
+        isOpen={printDialogOpen}
+        onClose={() => setPrintDialogOpen(false)}
+        title="Print Information"
+        subtitle="Please select the information you would like to print."
+      >
+        <div className={printCss.printDialogContent}>
+          <Dropdown
+            label="Select Print Views:"
+            options={printViewOptions.map((o) => o.label)}
+            value={
+              printViewOptions.find((o) => o.value === selectedPrintView)
+                ?.label ?? "Translation"
+            }
+            onChange={(label) => {
+              const match = printViewOptions.find((o) => o.label === label)
+              if (match) setSelectedPrintView(match.value)
+            }}
+          />
+          <div className={printCss.dialogDividerContainer}>
+            <hr className={printCss.dialogDivider} />
+          </div>
+          <p className={printCss.translationOptionsHeading}>
+            Translation Options
+          </p>
+          <Dropdown
+            label="Cherokee Description Style:"
+            options={cherokeeOptions.map((o) => o.label)}
+            value={
+              cherokeeOptions.find((o) => o.value === selectedCherokeeStyle)
+                ?.label ?? "Learner"
+            }
+            onChange={(label) => {
+              const match = cherokeeOptions.find((o) => o.label === label)
+              if (match) setSelectedCherokeeStyle(match.value)
+            }}
+          />
+          <div className={printCss.dialogCheckboxList}>
+            <label className={printCss.dialogCheckboxItem}>
+              <input
+                type="checkbox"
+                checked={includeBlankLayers}
+                onChange={(e) => setIncludeBlankLayers(e.target.checked)}
+              />
+              Include Blank Layers
+            </label>
+            <label className={printCss.dialogCheckboxItem}>
+              <input
+                type="checkbox"
+                checked={includePronunciationGuide}
+                onChange={(e) => setIncludePronunciationGuide(e.target.checked)}
+              />
+              Include Pronunciation Guide
+            </label>
+            <label className={printCss.dialogCheckboxItem}>
+              <input
+                type="checkbox"
+                checked={includeMorphemeGlossary}
+                onChange={(e) => setIncludeMorphemeGlossary(e.target.checked)}
+              />
+              Include Morpheme Glossary
+            </label>
+          </div>
+          <div className={printCss.dialogButtonGroup}>
+            <CancelButton onClick={() => setPrintDialogOpen(false)} />
+            <SubmitButton
+              onClick={() => {
+                setPrintDialogOpen(false)
+                setPendingPrint(selectedPrintView)
+              }}
+            >
+              Print
+            </SubmitButton>
           </div>
         </div>
-      )}
+      </EmptyDialog>
     </>
   )
 }

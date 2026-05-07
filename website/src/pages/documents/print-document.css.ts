@@ -4,16 +4,10 @@ import {
   colors,
   fonts,
   hspace,
-  layers,
   mediaQueries,
   thickness,
   vspace,
 } from "src/style/constants"
-
-// Design-specific colors for the print dialog, not in the theme contract.
-const dialogAccentColor = "#A4B3D1"
-const dialogSubmitColor = "#497CC7"
-const dialogSubmitHoverColor = "#3867AD"
 
 const printFonts = {
   quattrocento: `"Quattrocento", serif`,
@@ -272,58 +266,10 @@ export const printTranslationLine = globalStyle(
   }
 )
 
-export const dialogOverlay = style({
-  position: "fixed",
-  inset: 0,
-  backgroundColor: "rgba(0,0,0,0.4)",
-  zIndex: layers.top,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-})
-
-export const dialogModal = style({
-  backgroundColor: colors.body,
-  borderRadius: "2.4rem",
-  border: `0.53rem solid ${dialogAccentColor}`,
-  padding: `${vspace.one} ${hspace.edge}`,
-  width: "32rem",
-  maxWidth: "90%",
+export const printDialogContent = style({
   display: "flex",
   flexDirection: "column",
-  gap: vspace.quarter,
-})
-
-export const dialogTitle = style({
-  fontSize: "1.25rem",
-  fontWeight: 600,
-  textAlign: "center",
-  margin: 0,
-})
-
-export const dialogSubtitle = style({
-  fontSize: "0.75rem",
-  color: "#666",
-  textAlign: "center",
-  margin: 0,
-})
-
-export const dialogLabel = style({
-  fontSize: "0.85rem",
-  fontWeight: 500,
-  margin: 0,
-})
-
-export const dialogDropdownGroup = style({
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-})
-
-export const printViewDropdown = style({
-  width: "24rem",
-  height: "1.3rem",
-  maxWidth: "100%",
+  gap: vspace.half,
 })
 
 export const dialogDividerContainer = style({
@@ -352,36 +298,6 @@ export const dialogButtonGroup = style({
   justifyContent: "center",
   gap: "2.6rem",
   marginTop: vspace.medium,
-})
-
-export const dialogCancelButton = style({
-  backgroundColor: colors.body,
-  color: colors.text,
-  border: `${thickness.thin} solid ${colors.borders}`,
-  borderRadius: "0.42rem",
-  padding: `${vspace.medium} ${hspace.edge}`,
-  cursor: "pointer",
-  fontSize: "0.75rem",
-  selectors: {
-    "&:hover": {
-      backgroundColor: colors.bodyDark,
-    },
-  },
-})
-
-export const dialogSubmitButton = style({
-  backgroundColor: dialogSubmitColor,
-  color: colors.body,
-  border: "none",
-  borderRadius: "0.42rem",
-  padding: `${vspace.medium} ${hspace.edge}`,
-  cursor: "pointer",
-  fontSize: "0.75rem",
-  selectors: {
-    "&:hover": {
-      backgroundColor: dialogSubmitHoverColor,
-    },
-  },
 })
 
 export const dialogCheckboxList = style({
