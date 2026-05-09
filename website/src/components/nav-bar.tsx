@@ -1,3 +1,4 @@
+import { MdHome } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { DropdownNavItem } from "./dropdown-nav-item"
