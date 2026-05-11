@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Returns the current lock state for a word. All three columns are NULL\n-- when the word is not locked or does not exist; a non-null\n-- editing_lock_token means the lock is held.\nselect\n    editing_started_at,\n    editing_user_id,\n    editing_lock_token\nfrom word\nwhere id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "editing_started_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "editing_user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "editing_lock_token",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7df78626c3ca56748f543904eb92b7545d698d6e46e2d69104f9fc7c502b22db"
+}

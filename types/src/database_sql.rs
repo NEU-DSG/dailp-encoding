@@ -814,7 +814,6 @@ impl Database {
             .fetch_optional(&self.client)
             .await?;
         Ok(row.map(|r| WordLockStatus {
-            currently_editing: r.currently_editing,
             editing_started_at: r.editing_started_at.map(|d| DateTime::new(d.naive_utc())),
             editing_user_id: r.editing_user_id,
             editing_lock_token: r.editing_lock_token,

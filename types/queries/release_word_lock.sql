@@ -5,7 +5,6 @@
 --   $1 = word id
 --   $2 = client lock token
 update word set
-    currently_editing = false,
     editing_started_at = null,
     editing_user_id = null,
     editing_lock_token = null

@@ -321,13 +321,13 @@ pub struct WordLockResult {
     pub editing_user_id: Option<Uuid>,
 }
 
-/// Current state of the editing lock on a word. All four fields are
-/// NULL/false when the word is not locked. The frontend uses
-/// `editing_started_at` to detect a stale lock (>5 min old) before saving.
+/// Current state of the editing lock on a word. All three fields are NULL
+/// when the word is not locked; a non-null `editing_lock_token` means a lock
+/// is held. The frontend uses `editing_started_at` to detect a stale lock
+/// (>5 min old) before saving, and `editing_lock_token` to detect a lock
+/// that has been claimed by another session.
 #[derive(async_graphql::SimpleObject)]
 pub struct WordLockStatus {
-    /// True while an editor holds the lock.
-    pub currently_editing: bool,
     /// When the current lock was acquired.
     pub editing_started_at: Option<crate::DateTime>,
     /// User id holding the lock.

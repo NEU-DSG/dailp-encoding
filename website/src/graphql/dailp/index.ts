@@ -1456,14 +1456,14 @@ export type WordLockResult = {
 }
 
 /**
- * Current state of the editing lock on a word. All four fields are
- * NULL/false when the word is not locked. The frontend uses
- * `editing_started_at` to detect a stale lock (>5 min old) before saving.
+ * Current state of the editing lock on a word. All three fields are NULL
+ * when the word is not locked; a non-null `editing_lock_token` means a lock
+ * is held. The frontend uses `editing_started_at` to detect a stale lock
+ * (>5 min old) before saving, and `editing_lock_token` to detect a lock
+ * that has been claimed by another session.
  */
 export type WordLockStatus = {
   readonly __typename?: "WordLockStatus"
-  /** True while an editor holds the lock. */
-  readonly currentlyEditing: Scalars["Boolean"]
   /** Per-session token proving ownership of the lock. */
   readonly editingLockToken: Maybe<Scalars["UUID"]>
   /** When the current lock was acquired. */
@@ -3027,7 +3027,7 @@ export type WordLockStatusQuery = { readonly __typename?: "Query" } & {
   readonly wordLockStatus: Maybe<
     { readonly __typename?: "WordLockStatus" } & Pick<
       WordLockStatus,
-      "currentlyEditing" | "editingUserId" | "editingLockToken"
+      "editingUserId" | "editingLockToken"
     > & {
         readonly editingStartedAt: Maybe<
           { readonly __typename?: "DateTime" } & Pick<DateTime, "timestamp">
@@ -4393,7 +4393,6 @@ export function useReleaseWordLockMutation() {
 export const WordLockStatusDocument = gql`
   query WordLockStatus($wordId: UUID!) {
     wordLockStatus(wordId: $wordId) {
-      currentlyEditing
       editingStartedAt {
         timestamp
       }
