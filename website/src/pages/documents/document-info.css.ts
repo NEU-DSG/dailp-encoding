@@ -146,3 +146,16 @@ export const link = style({
   color: "#4A90E2",
   textDecoration: "underline",
 })
+
+export const screenOnly = style({
+  "@media": {
+    print: { display: "none" },
+  },
+})
+
+export const printOnly = style({
+  display: "none",
+  "@media": {
+    print: { display: "inline" },
+  },
+})

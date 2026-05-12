@@ -39,9 +39,7 @@ export const metaDataList = [
 export const documentInfoFields = [
   "Genre",
   "Format",
-  "Pages",
   "Source",
-  "URI",
   "Keywords",
   "Subject Headings",
   "Languages",

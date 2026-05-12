@@ -21,7 +21,29 @@ import { EditingProvider, useEditing } from "./editing-context"
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
-export const DocumentInfo = ({ doc }: { doc: Document }) => {
+const alwaysIncludedFields = new Set([
+  "Title",
+  "Date Created",
+  "Creator",
+  "Contributors",
+  "Citation",
+])
+
+export const DocumentInfo = ({
+  doc,
+  selectedFields,
+}: {
+  doc: Document
+  selectedFields?: Set<string>
+}) => {
+  const showField = (key: string) =>
+    !selectedFields || alwaysIncludedFields.has(key) || selectedFields.has(key)
+  const empty = (label: string) => (
+    <>
+      <span className={styles.screenOnly}>{label}</span>
+      <span className={styles.printOnly}>--</span>
+    </>
+  )
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })

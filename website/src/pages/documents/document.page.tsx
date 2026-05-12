@@ -438,7 +438,7 @@ export const TabSet = ({
             />
           </div>
           <div className={printCss.dialogCheckboxList}>
-            <label className={printCss.dialogCheckboxItem}>
+            {/* <label className={printCss.dialogCheckboxItem}>
               <input
                 type="checkbox"
                 checked={includeBlankLayers}
@@ -453,7 +453,7 @@ export const TabSet = ({
                 onChange={(e) => setIncludePronunciationGuide(e.target.checked)}
               />
               Include Pronunciation Guide
-            </label>
+            </label> */}
             <label className={printCss.dialogCheckboxItem}>
               <input
                 type="checkbox"
@@ -470,8 +470,8 @@ export const TabSet = ({
               </p>
               <p className={printCss.documentInfoOptionsSubtitle}>
                 All documents include Title, Date Created, Creator,
-                Contributors, and Citation. Please select all additional
-                fields to print:
+                Contributors, and Citation. Please select all additional fields
+                to print:
               </p>
               <div className={printCss.documentInfoCheckboxList}>
                 {documentInfoFields.map((field) => (
