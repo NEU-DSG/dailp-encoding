@@ -230,33 +230,41 @@ export const DocumentInfo = ({
       </div>
 
       <div className={styles.infoSection}>
-        <div className={styles.field}>
-          <div className={styles.label}>TITLE</div>
-          <div className={styles.value}>
-            {docData.title || "Title Not Yet Available."}
+        {showField("Title") && (
+          <div className={styles.field}>
+            <div className={styles.label}>TITLE</div>
+            <div className={styles.value}>
+              {docData.title || "Title Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>DATE CREATED</div>
-          <div className={styles.value}>
-            {formatDate(docData.date) || "Date Not Available."}
+        {showField("Date Created") && (
+          <div className={styles.field}>
+            <div className={styles.label}>DATE CREATED</div>
+            <div className={styles.value}>
+              {formatDate(docData.date) || "Date Not Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>DOCUMENT TYPE</div>
-          <div className={styles.value}>
-            {docData.genre?.name || "Document Type Not Yet Available."}
+        {showField("Genre") && (
+          <div className={styles.field}>
+            <div className={styles.label}>DOCUMENT TYPE</div>
+            <div className={styles.value}>
+              {docData.genre?.name || "Document Type Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>FORMAT</div>
-          <div className={styles.value}>
-            {docData.format?.name || "Format Not Yet Available."}
+        {showField("Format") && (
+          <div className={styles.field}>
+            <div className={styles.label}>FORMAT</div>
+            <div className={styles.value}>
+              {docData.format?.name || "Format Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* {docData.pages && (
           <div className={styles.field}>
@@ -265,30 +273,36 @@ export const DocumentInfo = ({
           </div>
         )} */}
 
-        <div className={styles.field}>
-          <div className={styles.label}>CREATOR</div>
-          <div className={styles.value}>
-            {formatArray(docData.creators) || "Creator(s) Not Available."}
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <div className={styles.label}>CONTRIBUTORS</div>
-          <div className={styles.value}>
-            {formatContributors() || "Contributors Not Yet Available."}
-          </div>
-        </div>
-
-        {docData.sources && docData.sources.length > 0 && (
+        {showField("Creator") && (
           <div className={styles.field}>
-            <div className={styles.label}>SOURCE</div>
+            <div className={styles.label}>CREATOR</div>
             <div className={styles.value}>
-              <a href={docData.sources[0]!.link} className={styles.link}>
-                {docData.sources[0]!.link}
-              </a>
+              {formatArray(docData.creators) || "Creator(s) Not Available."}
             </div>
           </div>
         )}
+
+        {showField("Contributors") && (
+          <div className={styles.field}>
+            <div className={styles.label}>CONTRIBUTORS</div>
+            <div className={styles.value}>
+              {formatContributors() || "Contributors Not Yet Available."}
+            </div>
+          </div>
+        )}
+
+        {showField("Source") &&
+          docData.sources &&
+          docData.sources.length > 0 && (
+            <div className={styles.field}>
+              <div className={styles.label}>SOURCE</div>
+              <div className={styles.value}>
+                <a href={docData.sources[0]!.link} className={styles.link}>
+                  {docData.sources[0]!.link}
+                </a>
+              </div>
+            </div>
+          )}
 
         {/* {docData.doi && (
           <div className={styles.field}>
@@ -301,37 +315,45 @@ export const DocumentInfo = ({
           </div>
         )} */}
 
-        <div className={styles.field}>
-          <div className={styles.label}>KEYWORDS</div>
-          <div className={styles.value}>
-            {formatArray(docData.keywords) || "Keywords Not Yet Available."}
+        {showField("Keywords") && (
+          <div className={styles.field}>
+            <div className={styles.label}>KEYWORDS</div>
+            <div className={styles.value}>
+              {formatArray(docData.keywords) || "Keywords Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>SUBJECT HEADINGS</div>
-          <div className={styles.value}>
-            {formatArray(docData.subjectHeadings) ||
-              "Subject Headings Not Yet Available."}
+        {showField("Subject Headings") && (
+          <div className={styles.field}>
+            <div className={styles.label}>SUBJECT HEADINGS</div>
+            <div className={styles.value}>
+              {formatArray(docData.subjectHeadings) ||
+                "Subject Headings Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>LANGUAGES</div>
-          <div className={styles.value}>
-            {formatArray(docData.languages) || "Languages Not Yet Available."}
+        {showField("Languages") && (
+          <div className={styles.field}>
+            <div className={styles.label}>LANGUAGES</div>
+            <div className={styles.value}>
+              {formatArray(docData.languages) || "Languages Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>SPATIAL COVERAGE</div>
-          <div className={styles.value}>
-            {formatArray(docData.spatialCoverage) ||
-              "Spatial Coverage Not Yet Available."}
+        {showField("Spatial Coverage") && (
+          <div className={styles.field}>
+            <div className={styles.label}>SPATIAL COVERAGE</div>
+            <div className={styles.value}>
+              {formatArray(docData.spatialCoverage) ||
+                "Spatial Coverage Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <CitationField citation={citation} />
+        {showField("Citation") && <CitationField citation={citation} />}
       </div>
     </div>
   )

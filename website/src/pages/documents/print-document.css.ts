@@ -309,6 +309,7 @@ export const translationOptionsHeading = style({
   textAlign: "left",
   margin: 0,
   marginTop: "1.32rem",
+  paddingLeft: hspace.edge,
 })
 
 export const cherokeeDropdownWrapper = style({
@@ -336,6 +337,7 @@ export const documentInfoOptionsHeading = style({
   lineHeight: 1.2,
   textAlign: "left",
   margin: 0,
+  paddingLeft: hspace.edge,
 })
 
 export const documentInfoOptionsSubtitle = style({
@@ -346,6 +348,7 @@ export const documentInfoOptionsSubtitle = style({
   textAlign: "left",
   margin: 0,
   marginTop: vspace.quarter,
+  paddingLeft: hspace.edge,
 })
 
 export const documentInfoCheckboxList = style({

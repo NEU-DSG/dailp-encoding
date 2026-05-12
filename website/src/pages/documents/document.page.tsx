@@ -26,12 +26,6 @@ import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
-import {
-  CancelButton,
-  Dropdown,
-  EmptyDialog,
-  SubmitButton,
-} from "src/components/user-management/change-dialog"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -58,12 +52,13 @@ import * as pageImageCss from "../../page-image.css"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
 import {
+  PrintDialog,
   PrintLayout,
   PrintLegend,
-  documentInfoFields,
+  PrintSelection,
+  createDefaultPrintSelection,
   printDocument,
 } from "./print-document"
-import * as printCss from "./print-document.css"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -118,23 +113,6 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-const printViewOptions = [
-  { label: "Translation", value: Tabs.ANNOTATION },
-  { label: "Translation, Document Information", value: "annotation-info" },
-]
-
-const cherokeeOptions = [
-  { label: "Learner", value: Dailp.CherokeeOrthography.Learner },
-  {
-    label: "Linguist: Cherokee Reference Grammar (CRG)",
-    value: Dailp.CherokeeOrthography.Crg,
-  },
-  {
-    label: "Linguist: Tone and Accent in Oklahoma Cherokee (TAOC)",
-    value: Dailp.CherokeeOrthography.Taoc,
-  },
-]
-
 export const TabSet = ({
   doc,
   breadcrumbString,
@@ -144,28 +122,9 @@ export const TabSet = ({
 }) => {
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
   const [pendingPrint, setPendingPrint] = useState<string | null>(null)
-  const [selectedPrintView, setSelectedPrintView] = useState("annotation-tab")
-  const [selectedCherokeeStyle, setSelectedCherokeeStyle] =
-    useState<Dailp.CherokeeOrthography>(Dailp.CherokeeOrthography.Learner)
-  const [includeBlankLayers, setIncludeBlankLayers] = useState(false)
-  const [includePronunciationGuide, setIncludePronunciationGuide] =
-    useState(false)
-  const [includeMorphemeGlossary, setIncludeMorphemeGlossary] = useState(false)
-  const [selectedDocumentInfoFields, setSelectedDocumentInfoFields] = useState<
-    Set<string>
-  >(new Set())
-
-  const toggleDocumentInfoField = (field: string) => {
-    setSelectedDocumentInfoFields((prev) => {
-      const next = new Set(prev)
-      if (next.has(field)) {
-        next.delete(field)
-      } else {
-        next.add(field)
-      }
-      return next
-    })
-  }
+  const [printOptions, setPrintOptions] = useState<PrintSelection>(
+    createDefaultPrintSelection
+  )
 
   useEffect(() => {
     if (pendingPrint === null) return
@@ -335,7 +294,7 @@ export const TabSet = ({
                   <DocumentContents
                     doc={doc}
                     levelOfDetail={levelOfDetail}
-                    cherokeeRepresentation={selectedCherokeeStyle}
+                    cherokeeRepresentation={printOptions.cherokeeStyle}
                     openDetails={() => {}}
                     wordPanelDetails={{
                       currContents: null,
@@ -346,7 +305,7 @@ export const TabSet = ({
               </FormProvider>
             </EditWordCheckProvider>
           </div>
-          {includeMorphemeGlossary && (
+          {printOptions.includeMorphemeGlossary && (
             <h2 className={css.printSectionHeading}>
               Word Parts Glossary
               <span className={css.printSectionHeadingRule} />
@@ -384,125 +343,26 @@ export const TabSet = ({
             <span className={css.printSectionHeadingRule} />
           </h2>
           <EditingProvider>
-            <DocumentInfo doc={doc} />
+            <DocumentInfo
+              doc={doc}
+              selectedFields={
+                pendingPrint === "annotation-info"
+                  ? printOptions.documentInfoFields
+                  : undefined
+              }
+            />
           </EditingProvider>
         </PrintLayout>
       )}
-      <EmptyDialog
+      <PrintDialog
         isOpen={printDialogOpen}
         onClose={() => setPrintDialogOpen(false)}
-        title="Print Information"
-        subtitle="Please select the information you would like to print."
-      >
-        <div
-          className={[
-            printCss.printDialogContent,
-            selectedPrintView === "annotation-info" &&
-              printCss.printDialogContentScrollable,
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <div className={printCss.printViewDropdownWrapper}>
-            <Dropdown
-              label="Select Print Views:"
-              options={printViewOptions.map((o) => o.label)}
-              value={
-                printViewOptions.find((o) => o.value === selectedPrintView)
-                  ?.label ?? "Translation"
-              }
-              onChange={(label) => {
-                const match = printViewOptions.find((o) => o.label === label)
-                if (match) setSelectedPrintView(match.value)
-              }}
-            />
-          </div>
-          <div className={printCss.dialogDividerContainer}>
-            <hr className={printCss.dialogDivider} />
-          </div>
-          <p className={printCss.translationOptionsHeading}>
-            Translation Options
-          </p>
-          <div className={printCss.cherokeeDropdownWrapper}>
-            <Dropdown
-              label="Cherokee Description Style:"
-              options={cherokeeOptions.map((o) => o.label)}
-              value={
-                cherokeeOptions.find((o) => o.value === selectedCherokeeStyle)
-                  ?.label ?? "Learner"
-              }
-              onChange={(label) => {
-                const match = cherokeeOptions.find((o) => o.label === label)
-                if (match) setSelectedCherokeeStyle(match.value)
-              }}
-            />
-          </div>
-          <div className={printCss.dialogCheckboxList}>
-            {/* <label className={printCss.dialogCheckboxItem}>
-              <input
-                type="checkbox"
-                checked={includeBlankLayers}
-                onChange={(e) => setIncludeBlankLayers(e.target.checked)}
-              />
-              Include Blank Layers
-            </label>
-            <label className={printCss.dialogCheckboxItem}>
-              <input
-                type="checkbox"
-                checked={includePronunciationGuide}
-                onChange={(e) => setIncludePronunciationGuide(e.target.checked)}
-              />
-              Include Pronunciation Guide
-            </label> */}
-            <label className={printCss.dialogCheckboxItem}>
-              <input
-                type="checkbox"
-                checked={includeMorphemeGlossary}
-                onChange={(e) => setIncludeMorphemeGlossary(e.target.checked)}
-              />
-              Include Morpheme Glossary
-            </label>
-          </div>
-          {selectedPrintView === "annotation-info" && (
-            <div className={printCss.documentInfoSection}>
-              <p className={printCss.documentInfoOptionsHeading}>
-                Document Information Options
-              </p>
-              <p className={printCss.documentInfoOptionsSubtitle}>
-                All documents include Title, Date Created, Creator,
-                Contributors, and Citation. Please select all additional fields
-                to print:
-              </p>
-              <div className={printCss.documentInfoCheckboxList}>
-                {documentInfoFields.map((field) => (
-                  <label
-                    key={field}
-                    className={printCss.documentInfoCheckboxItem}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedDocumentInfoFields.has(field)}
-                      onChange={() => toggleDocumentInfoField(field)}
-                    />
-                    {field}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className={printCss.dialogButtonGroup}>
-            <CancelButton onClick={() => setPrintDialogOpen(false)} />
-            <SubmitButton
-              onClick={() => {
-                setPrintDialogOpen(false)
-                setPendingPrint(selectedPrintView)
-              }}
-            >
-              Print
-            </SubmitButton>
-          </div>
-        </div>
-      </EmptyDialog>
+        onPrint={(selection) => {
+          setPrintOptions(selection)
+          setPrintDialogOpen(false)
+          setPendingPrint(selection.printView)
+        }}
+      />
     </>
   )
 }
