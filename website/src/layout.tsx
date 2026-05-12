@@ -5,7 +5,7 @@ import "normalize.css"
 import { rgba } from "polished"
 import React from "react"
 import { Helmet } from "react-helmet"
-import { MdHome } from "react-icons/md/index"
+import { MdOutlineBookmark } from "react-icons/md/index"
 import Link from "src/components/link"
 import "src/style/global.css"
 import { themeClass } from "src/theme.css"
@@ -72,7 +72,7 @@ export const DashboardButton = ({ color }: DashboardButtonProps) => {
   return (
     <div className={css.wrapper} style={{ color }}>
       <Link href="/dashboard" className={css.iconLink} aria-label="Dashboard">
-        <MdHome size={32} />
+        <MdOutlineBookmark size={32} />
       </Link>
 
       <div className={css.tooltip}>Go to my dashboard</div>
