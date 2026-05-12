@@ -386,3 +386,67 @@ export const dialogCheckboxItem = style({
   fontSize: "0.75rem",
   cursor: "pointer",
 })
+
+export const printGlossary = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      columnCount: 2,
+      columnGap: "1rem",
+      marginTop: vspace.one,
+      marginBottom: vspace.one,
+      marginLeft: "1.5rem",
+    },
+  },
+})
+
+export const printGlossaryCategory = style({
+  breakInside: "avoid",
+  marginTop: vspace.one,
+  selectors: {
+    "&:first-child": {
+      marginTop: 0,
+    },
+  },
+})
+
+export const printGlossaryEntry = style({
+  breakInside: "avoid",
+  marginTop: vspace.medium,
+  width: "12.95rem",
+})
+
+export const printGlossaryCategoryHeading = style({
+  fontFamily: `"Quattrocento", serif`,
+  fontSize: "1.05rem",
+  fontWeight: 700,
+  lineHeight: 1.2,
+  margin: 0,
+  marginBottom: vspace.quarter,
+})
+
+export const printGlossaryAbbrev = style({
+  fontFamily: `"Quattrocento", serif`,
+  fontSize: "1.05rem",
+  fontWeight: 700,
+  lineHeight: 1.2,
+  margin: 0,
+})
+
+export const printGlossaryName = style({
+  fontFamily: `"Quattrocento Sans", sans-serif`,
+  fontSize: "0.95rem",
+  fontWeight: 400,
+  lineHeight: 1.2,
+  margin: 0,
+})
+
+export const printGlossaryDescription = style({
+  fontFamily: `"Quattrocento Sans", sans-serif`,
+  fontSize: "0.85rem",
+  fontWeight: 400,
+  lineHeight: 1.2,
+  margin: 0,
+  marginTop: vspace.quarter,
+})

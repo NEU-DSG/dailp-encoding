@@ -10,6 +10,7 @@ import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"
 import { LevelOfDetail } from "src/types"
+import * as docCss from "./document.css"
 import * as css from "./print-document.css"
 
 export const printDocument = () => {
@@ -330,3 +331,109 @@ export const PrintDialog = (p: {
     </EmptyDialog>
   )
 }
+
+interface GlossaryEntry {
+  abbreviation: string
+  name: string
+  description: string
+}
+
+interface GlossaryCategory {
+  name: string
+  entries: GlossaryEntry[]
+}
+
+const morphemeGlossaryData: GlossaryCategory[] = [
+  {
+    name: "Aspectual Suffixes",
+    entries: [
+      {
+        abbreviation: "cmp",
+        name: "Completive Stem",
+        description:
+          "The Completive (CMP) or Perfective (PFT) stem indicates a past or future completed action.",
+      },
+    ],
+  },
+  {
+    name: "Modal Suffixes",
+    entries: [
+      {
+        abbreviation: "cmf",
+        name: "Completive Future Final Suffix",
+        description: "No Description",
+      },
+      {
+        abbreviation: "exp",
+        name: "Experienced Past Final Suffix",
+        description: "No Description",
+      },
+    ],
+  },
+  {
+    name: "Nominal Suffixes",
+    entries: [
+      {
+        abbreviation: "pcp",
+        name: "Participle Suffix",
+        description: "No Description",
+      },
+    ],
+  },
+  {
+    name: "Prepronominal Prefixes",
+    entries: [
+      {
+        abbreviation: "ga",
+        name: "gaa- Prepronominal Prefix",
+        description:
+          "The GA or Negative (NEG) prepronominal prefix has several uses. The most common use of this prefix is to indicate that something has not happened for a certain period.",
+      },
+    ],
+  },
+  {
+    name: "Pronominal Prefixes",
+    entries: [
+      {
+        abbreviation: "1a",
+        name: "Set A 1SG Pronominal Prefix",
+        description: 'Meaning "I."',
+      },
+      {
+        abbreviation: "3a.ns",
+        name: "Set A 3PL Pronominal Prefix",
+        description: "No Description",
+      },
+      {
+        abbreviation: "3b.ns",
+        name: "Set B 3 PL Pronominal Prefix",
+        description: "No Description",
+      },
+    ],
+  },
+]
+
+export const PrintGlossary = () => (
+  <>
+    <h2 className={docCss.printSectionHeading}>
+      Word Parts Glossary
+      <span className={docCss.printSectionHeadingRule} />
+    </h2>
+    <div className={css.printGlossary}>
+      {morphemeGlossaryData.map((category) => (
+        <div key={category.name} className={css.printGlossaryCategory}>
+          <h3 className={css.printGlossaryCategoryHeading}>{category.name}</h3>
+          {category.entries.map((entry) => (
+            <div key={entry.abbreviation} className={css.printGlossaryEntry}>
+              <p className={css.printGlossaryAbbrev}>{entry.abbreviation}</p>
+              <p className={css.printGlossaryName}>{entry.name}</p>
+              <p className={css.printGlossaryDescription}>
+                {entry.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </>
+)

@@ -53,6 +53,7 @@ import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
 import {
   PrintDialog,
+  PrintGlossary,
   PrintLayout,
   PrintLegend,
   PrintSelection,
@@ -305,12 +306,6 @@ export const TabSet = ({
               </FormProvider>
             </EditWordCheckProvider>
           </div>
-          {printOptions.includeMorphemeGlossary && (
-            <h2 className={css.printSectionHeading}>
-              Word Parts Glossary
-              <span className={css.printSectionHeadingRule} />
-            </h2>
-          )}
         </PrintLayout>
       )}
       {pendingPrint === null && tabs.selectedId === Tabs.IMAGES && (
@@ -335,25 +330,40 @@ export const TabSet = ({
             ))}
         </PrintLayout>
       )}
-      {(pendingPrint === "annotation-info" ||
-        (pendingPrint === null && tabs.selectedId === Tabs.INFO)) && (
-        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
-          <h2 className={css.printSectionHeading}>
-            Document Information
-            <span className={css.printSectionHeadingRule} />
-          </h2>
-          <EditingProvider>
-            <DocumentInfo
-              doc={doc}
-              selectedFields={
-                pendingPrint === "annotation-info"
-                  ? printOptions.documentInfoFields
-                  : undefined
-              }
-            />
-          </EditingProvider>
-        </PrintLayout>
-      )}
+      {(() => {
+        const showGlossary =
+          (pendingPrint === Tabs.ANNOTATION ||
+            pendingPrint === "annotation-info" ||
+            (pendingPrint === null && tabs.selectedId === Tabs.ANNOTATION)) &&
+          printOptions.includeMorphemeGlossary
+        const showMetadata =
+          pendingPrint === "annotation-info" ||
+          (pendingPrint === null && tabs.selectedId === Tabs.INFO)
+        if (!showGlossary && !showMetadata) return null
+        return (
+          <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
+            {showGlossary && <PrintGlossary />}
+            {showMetadata && (
+              <>
+                <h2 className={css.printSectionHeading}>
+                  Document Information
+                  <span className={css.printSectionHeadingRule} />
+                </h2>
+                <EditingProvider>
+                  <DocumentInfo
+                    doc={doc}
+                    selectedFields={
+                      pendingPrint === "annotation-info"
+                        ? printOptions.documentInfoFields
+                        : undefined
+                    }
+                  />
+                </EditingProvider>
+              </>
+            )}
+          </PrintLayout>
+        )
+      })()}
       <PrintDialog
         isOpen={printDialogOpen}
         onClose={() => setPrintDialogOpen(false)}
