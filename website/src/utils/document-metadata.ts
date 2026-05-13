@@ -101,7 +101,6 @@ export async function buildCitationString(
     format: "text",
     template: style,
     lang: "en-US",
-    maximumAuthors: 10,
   })
 
   // Ensure end has the date accessed/retrieved based on style

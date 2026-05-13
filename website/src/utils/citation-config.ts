@@ -3,6 +3,16 @@ import "@citation-js/plugin-csl"
 
 const csl = plugins.config.get("@csl")
 
+// Some context for future work on citations:
+// APA is the only citation properly fetched from the plugin
+//
+//
+//
+if (csl.templates.has("apa")) {
+  const apaXml = csl.templates.get("apa") as string
+  csl.templates.add("apa", removeEtAl(apaXml))
+}
+
 // Manually grabbing sources so we don't have to import new plugins
 // (didn't work when I tried)
 const STYLE_SOURCES: Record<string, string[]> = {
@@ -16,6 +26,14 @@ const STYLE_SOURCES: Record<string, string[]> = {
   ],
 }
 
+function removeEtAl(xml: string): string {
+  return xml
+    .replace(/\s+et-al-min=["']\d+["']/g, "")
+    .replace(/\s+et-al-use-first=["']\d+["']/g, "")
+    .replace(/\s+et-al-subsequent-min=["']\d+["']/g, "")
+    .replace(/\s+et-al-subsequent-use-first=["']\d+["']/g, "")
+}
+
 // Register styles from urls
 async function registerStyle(name: string): Promise<void> {
   if (csl.templates.has(name)) return
@@ -25,7 +43,7 @@ async function registerStyle(name: string): Promise<void> {
     try {
       const res = await fetch(url)
       if (!res.ok) continue
-      const xml = await res.text()
+      const xml = removeEtAl(await res.text())
       csl.templates.add(name, xml)
       return
     } catch {

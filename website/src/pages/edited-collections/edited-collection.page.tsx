@@ -24,20 +24,6 @@ const COLLECTION_AUTHORS = [
   "Ben Frey",
   "Rachel Jackson",
   "Ernestine Berry",
-  "Clara Proctor",
-  "Naomi Trevino",
-  "Jeffrey Bourns",
-  "Oleta Pritchett",
-  "Tyler Hodges",
-  "John Chewey",
-  "Shelby Snead",
-  "Chan Mi Oh",
-  "Kush Patel",
-  "Shashwat Patel",
-  "Nop Lertsumitkul",
-  "Henry Volchonok",
-  "Hazelyn Aroian",
-  "Victor Mendevil",
 ]
 
 // Renders an edited collection page based on the route parameters.
