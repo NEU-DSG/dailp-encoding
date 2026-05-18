@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.description,\n    e.slug,\n    e.thumbnail_url\nfrom edited_collection as e;",
+  "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.description,\n    e.slug,\n    e.thumbnail_url,\n    e.publication_date,\n    e.editors\nfrom edited_collection as e;",
   "describe": {
     "columns": [
       {
@@ -32,6 +32,16 @@
         "ordinal": 5,
         "name": "thumbnail_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "publication_date",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 7,
+        "name": "editors",
+        "type_info": "TextArray"
       }
     ],
     "parameters": {
@@ -43,8 +53,10 @@
       true,
       true,
       false,
+      true,
+      true,
       true
     ]
   },
-  "hash": "666ca11632c6ce33f6fa36f05bdf9289282d4dca4348ce9ba63643973b32ed60"
+  "hash": "6af961da0137ce91c28172c19113e9246a874b2133779f713e083f9e30db7a3b"
 }

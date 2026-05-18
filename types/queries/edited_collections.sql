@@ -4,5 +4,7 @@ select
     e.wordpress_menu_id,
     e.description,
     e.slug,
-    e.thumbnail_url
+    e.thumbnail_url,
+    e.publication_date,
+    e.editors
 from edited_collection as e;

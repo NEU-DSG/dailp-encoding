@@ -38,79 +38,23 @@ const ChapterPage = (props: {
 
   // Generate citation and rerender on change for preferences being changed
   useEffect(() => {
-    // Only build citation so long as this is chapter and exists
     const chapter = data?.chapter
     if (!chapter || chapter.document) return
 
     const url = typeof window !== "undefined" ? window.location.href : ""
 
-    // Build citation and update after authors found
-    const buildWithAuthors = (authorNames: string[]) => {
-      buildCitationString(
-        {
-          title: chapter.title ?? "",
-          creator: authorNames,
-          date: `${new Date().getFullYear()}/01/01`,
-          accessed: getDateAccessed(),
-          source: url,
-          containerTitle: getCollectionName(url),
-          type: "webpage",
-        },
-        preferredCitationStyle
-      ).then(setCitationString)
-    }
-
-    // Scrape authors of chapter from DOM
-    // Since were on wordpress, I had to grab the authors of this chapter
-    // by literally searching for h2 or h3 which are used for the "written by"
-    const scrapeAuthors = (): string[] => {
-      // Grab first h2/h3 in article, should be authors section, then clean and trim
-      const headingEl = window.document.querySelector("article h2, article h3")
-      if (headingEl?.textContent) {
-        const names = headingEl.textContent
-          .replace(/^written by\s*/i, "")
-          .split(/\s+and\s+|,\s*/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-        if (names.length > 0) return names
-      }
-
-      return []
-    }
-
-    // Build without authors if not on wordpress
-    if (!chapter.wordpressId) {
-      buildWithAuthors([])
-      return
-    }
-
-    // Use observer to check if DOM has loaded with article, then built citation
-    const article = window.document.querySelector("article")
-    if (!article) {
-      buildWithAuthors([])
-      return
-    }
-
-    const observer = new MutationObserver(() => {
-      const names = scrapeAuthors()
-      if (names.length > 0) {
-        observer.disconnect()
-        buildWithAuthors(names)
-      }
-    })
-
-    observer.observe(article, { childList: true, subtree: true })
-
-    // Waits but if content never appears, build without authors
-    const fallback = setTimeout(() => {
-      observer.disconnect()
-      buildWithAuthors(scrapeAuthors())
-    }, 3000)
-
-    return () => {
-      observer.disconnect()
-      clearTimeout(fallback)
-    }
+    buildCitationString(
+      {
+        title: chapter.title ?? "",
+        creator: (chapter.authors ?? []) as string[],
+        date: chapter.publicationDate ?? undefined,
+        accessed: getDateAccessed(),
+        source: url,
+        containerTitle: getCollectionName(url),
+        type: "webpage",
+      },
+      preferredCitationStyle
+    ).then(setCitationString)
   }, [data, preferredCitationStyle])
 
   if (fetching) {

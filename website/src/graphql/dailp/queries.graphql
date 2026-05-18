@@ -259,6 +259,8 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    publicationDate
+    editors
   }
 }
 
@@ -274,7 +276,11 @@ query EditedCollection($slug: String!) {
       section
       path
       slug
+      publicationDate
+      authors
     }
+    publicationDate
+    editors
   }
 }
 
@@ -479,6 +485,8 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     document {
       ...DocumentFields
     }
+    publicationDate
+    authors
   }
 }
 

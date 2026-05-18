@@ -23,6 +23,16 @@ export type Scalars = {
   /** A scalar that can represent any JSON value. */
   JSON: any
   /**
+   * ISO 8601 calendar date without timezone.
+   * Format: %Y-%m-%d
+   *
+   * # Examples
+   *
+   * * `1994-11-13`
+   * * `2000-02-24`
+   */
+  NaiveDate: any
+  /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
    * entities without requiring a central allocating authority.
@@ -304,6 +314,7 @@ export enum CherokeeOrthography {
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
+  readonly authors: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   readonly document: Maybe<AnnotatedDoc>
@@ -313,6 +324,7 @@ export type CollectionChapter = {
   readonly indexInParent: Scalars["Int"]
   /** Full path of the chapter */
   readonly path: ReadonlyArray<Scalars["String"]>
+  readonly publicationDate: Maybe<Scalars["NaiveDate"]>
   /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
   readonly slug: Scalars["String"]
@@ -656,8 +668,10 @@ export type EditedCollection = {
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** Description of the collection (optional) */
   readonly description: Maybe<Scalars["String"]>
+  readonly editors: Maybe<ReadonlyArray<Scalars["String"]>>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
+  readonly publicationDate: Maybe<Scalars["NaiveDate"]>
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
   /** Cover image URL */
@@ -2171,7 +2185,13 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description" | "thumbnailUrl"
+      | "id"
+      | "title"
+      | "slug"
+      | "description"
+      | "thumbnailUrl"
+      | "publicationDate"
+      | "editors"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2193,13 +2213,20 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "publicationDate" | "editors"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "id" | "title" | "indexInParent" | "section" | "path" | "slug"
+              | "id"
+              | "title"
+              | "indexInParent"
+              | "section"
+              | "path"
+              | "slug"
+              | "publicationDate"
+              | "authors"
             >
           >
         >
@@ -2569,7 +2596,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "id" | "title" | "wordpressId" | "slug"
+      "id" | "title" | "wordpressId" | "slug" | "publicationDate" | "authors"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -3824,6 +3851,8 @@ export const EditedCollectionsDocument = gql`
         path
       }
       thumbnailUrl
+      publicationDate
+      editors
     }
   }
 `
@@ -3848,7 +3877,11 @@ export const EditedCollectionDocument = gql`
         section
         path
         slug
+        publicationDate
+        authors
       }
+      publicationDate
+      editors
     }
   }
 `
@@ -4172,6 +4205,8 @@ export const CollectionChapterDocument = gql`
       document {
         ...DocumentFields
       }
+      publicationDate
+      authors
     }
   }
   ${DocumentFieldsFragmentDoc}

@@ -19,13 +19,6 @@ import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
 import { useChapters, useDialog } from "./edited-collection-context"
 
-const COLLECTION_AUTHORS = [
-  "Ellen Cushman",
-  "Ben Frey",
-  "Rachel Jackson",
-  "Ernestine Berry",
-]
-
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
@@ -72,23 +65,20 @@ const EditedCollectionPage = () => {
   // Build citation for this collection page and rerender when preferneces changed
   useEffect(() => {
     if (!collection) return
-
     const url = typeof window !== "undefined" ? window.location.href : ""
 
     buildCitationString(
       {
         title: collectionTitle,
-        creator: COLLECTION_AUTHORS,
-        date: `${new Date().getFullYear()}/01/01`,
+        creator: (collection.editors ?? []) as string[],
+        date: collection.publicationDate ?? undefined,
         accessed: getDateAccessed(),
         source: url,
         containerTitle: getCollectionName(url),
         type: "webpage",
       },
       preferredCitationStyle
-    ).then((s) => {
-      setCitationString(s)
-    })
+    ).then(setCitationString)
   }, [collectionTitle, preferredCitationStyle])
 
   // Build portal to place in parent by looking for footer slot
