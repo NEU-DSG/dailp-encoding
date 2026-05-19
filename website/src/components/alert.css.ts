@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { colors, fonts, hspace, rhythm } from "src/style/constants"
 
 export const wrapper = style({
@@ -14,6 +14,12 @@ export const notice = style({
   padding: "1.5rem 2rem",
   maxWidth: "800px",
   width: "100%",
+})
+
+export const noticeNoMargin = style([notice])
+
+globalStyle(`${noticeNoMargin} > p`, {
+  margin: 0,
 })
 
 export const title = style({

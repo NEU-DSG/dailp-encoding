@@ -9,6 +9,9 @@ use std::ops::Bound;
 use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
+use ammonia::Builder;
+use maplit::hashset;
+use maplit::hashmap;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
@@ -2643,7 +2646,36 @@ impl Database {
             _ => return Err(anyhow::anyhow!("input body is empty")),
         };
 
-        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
+        // Sanitization MUST stay in sync with website/src/utils/sanitize_html.tsx
+        let allowed_tags = hashset![
+            "p", "br", "hr", "span", "div",
+            "strong", "em", "i", "b", "u", "a",
+            "ul", "ol", "li",
+            "h1", "h2", "h3", "h4", "h5", "h6",
+            "blockquote", "img", "figure", "figcaption",
+            "table", "thead", "tbody", "tr", "th", "td",
+        ];
+        let allowed_attrs = hashset![
+            "href", "title", "alt", "src", "target",
+            "class", "style",
+            "loading", "decoding", "width", "height", "srcset", "sizes",
+        ];
+        let url_schemes = hashset!["http", "https", "mailto"];
+
+        let sanitized_body = Builder::new()
+            .tags(allowed_tags)
+            .generic_attributes(allowed_attrs)
+            .tag_attributes(std::collections::HashMap::new())
+            .url_schemes(url_schemes)
+            .url_relative(ammonia::UrlRelative::PassThrough)
+            .clean(&body)
+            .to_string();
+
+        if sanitized_body.trim().is_empty() {
+            return Err(anyhow::anyhow!("input body is empty"));
+        }
+
+        query_file!("queries/upsert_page.sql", slug, input.path, title, sanitized_body)
             .execute(&self.client)
             .await?;
         Ok(input.path)

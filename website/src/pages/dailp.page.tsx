@@ -11,6 +11,7 @@ import {
   usePageByPathQuery,
 } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
+import { sanitizeHtml } from "src/sanitize-html"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
@@ -190,7 +191,7 @@ export const DailpPageContents = (props: { path: string }) => {
           )}
         </header>
         {content.charAt(0) === "<" ? (
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
         ) : (
           <Markdown>{content}</Markdown>
         )}
@@ -241,7 +242,7 @@ export const DailpPageContents = (props: { path: string }) => {
         }
       </header>
       {content.charAt(0) === "<" ? (
-        <div dangerouslySetInnerHTML={{ __html: content }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
       ) : (
         <Markdown>{content}</Markdown>
       )}
