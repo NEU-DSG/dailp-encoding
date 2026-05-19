@@ -6,12 +6,12 @@ import * as alertCSS from "src/components/alert.css"
 import { AuthGuard } from "src/components/auth-guard"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
-import { sanitizeHtml, sanitizeHtmlWithReport } from "src/sanitize-html"
 import {
   useLocation,
   usePageContext,
   useRouteParams,
 } from "src/renderer/PageShell"
+import { sanitizeHtml, sanitizeHtmlWithReport } from "src/sanitize-html"
 
 const DISALLOWED_WORDS = [
   "admin",

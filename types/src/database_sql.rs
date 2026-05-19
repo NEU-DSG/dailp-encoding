@@ -1,17 +1,17 @@
 #![allow(missing_docs)]
 
+use ammonia::Builder;
 use anyhow::Error;
 use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
+use maplit::hashmap;
+use maplit::hashset;
 use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
-use ammonia::Builder;
-use maplit::hashset;
-use maplit::hashmap;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
@@ -2648,17 +2648,40 @@ impl Database {
 
         // Sanitization MUST stay in sync with website/src/utils/sanitize_html.tsx
         let allowed_tags = hashset![
-            "p", "br", "hr", "span", "div",
-            "strong", "em", "i", "b", "u", "a",
-            "ul", "ol", "li",
-            "h1", "h2", "h3", "h4", "h5", "h6",
-            "blockquote", "img", "figure", "figcaption",
-            "table", "thead", "tbody", "tr", "th", "td",
+            "p",
+            "br",
+            "hr",
+            "span",
+            "div",
+            "strong",
+            "em",
+            "i",
+            "b",
+            "u",
+            "a",
+            "ul",
+            "ol",
+            "li",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "blockquote",
+            "img",
+            "figure",
+            "figcaption",
+            "table",
+            "thead",
+            "tbody",
+            "tr",
+            "th",
+            "td",
         ];
         let allowed_attrs = hashset![
-            "href", "title", "alt", "src", "target",
-            "class", "style",
-            "loading", "decoding", "width", "height", "srcset", "sizes",
+            "href", "title", "alt", "src", "target", "class", "style", "loading", "decoding",
+            "width", "height", "srcset", "sizes",
         ];
         let url_schemes = hashset!["http", "https", "mailto"];
 
@@ -2675,9 +2698,15 @@ impl Database {
             return Err(anyhow::anyhow!("input body is empty"));
         }
 
-        query_file!("queries/upsert_page.sql", slug, input.path, title, sanitized_body)
-            .execute(&self.client)
-            .await?;
+        query_file!(
+            "queries/upsert_page.sql",
+            slug,
+            input.path,
+            title,
+            sanitized_body
+        )
+        .execute(&self.client)
+        .await?;
         Ok(input.path)
     }
 
