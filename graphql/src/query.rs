@@ -3,20 +3,18 @@
 use dailp::{
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
-    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
     CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    CurateDocumentAudioInput, CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
-use itertools::{Itertools, Position};
+use itertools::Itertools;
 use log::{debug, info};
-use reqwest::{header, Client};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
