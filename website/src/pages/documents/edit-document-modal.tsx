@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
-import { form } from "src/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
@@ -12,7 +11,7 @@ import Cite from "../../utils/citation-config"
 import { buildCitationMetadata } from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
-import { EditingProvider, useEditing } from "./editing-context"
+import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
@@ -187,7 +186,12 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       name: s.name,
     })) ?? []
   )
+
+  // For the subject heading input field
   const [newSubjectName, setNewSubjectName] = useState("")
+
+  // For tag selector, used for newly added subject headings that are blue
+  const [newSubjectNames, setNewSubjectNames] = useState<Set<string>>(new Set())
 
   // Grab just strings from the db
   const approvedSubjectNames = useMemo(() => {
@@ -228,6 +232,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       }
     }
     setNewSubjectName("")
+    setNewSubjectNames((prev) => new Set(prev).add(nameToAdd))
   }
 
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
@@ -841,6 +846,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             label="Subject Headings"
             selectedTags={selectedSubjects.map((s) => s.name)}
             approvedTags={approvedSubjectNames}
+            newTags={newSubjectNames}
             onAdd={(tagName) => {
               const existing = allSubjectsData?.allSubjectHeadings?.find(
                 (h) => h.name === tagName
@@ -851,6 +857,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                   { id: existing.id, name: existing.name },
                 ])
               }
+              setNewSubjectNames((prev) => new Set(prev).add(tagName))
             }}
             onRemove={(index) => {
               setSelectedSubjects((prev) => prev.filter((_, i) => i !== index))
@@ -859,7 +866,11 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             customForm={
               approvedSubjectNames.length === 0 && (
                 <div
-                  style={{ color: "#666", fontStyle: "italic", padding: "8px" }}
+                  style={{
+                    color: "#666",
+                    fontStyle: "italic",
+                    padding: "0.5rem",
+                  }}
                 >
                   No subject headings found in database.
                 </div>
@@ -870,10 +881,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 <div
                   style={{
                     display: "flex",
-                    gap: "8px",
+                    gap: "0.5rem",
                     alignItems: "center",
                     width: "100%",
-                    marginTop: "4px",
+                    marginTop: "0.25rem",
                   }}
                 >
                   <input
@@ -884,7 +895,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                     onChange={(e) => setNewSubjectName(e.target.value)}
                     style={{
                       flex: 1,
-                      height: "42px",
+                      height: "2.625rem",
                       marginBottom: 0,
                       boxSizing: "border-box",
                     }}
@@ -900,10 +911,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                     onClick={handleCreateSubject}
                     className={styles.addTagButton}
                     style={{
-                      height: "42px",
+                      height: "2.625rem",
                       marginTop: 0,
                       whiteSpace: "nowrap",
-                      padding: "0 20px",
+                      padding: "0 1.25rem",
                     }}
                   >
                     Add New Subject
