@@ -876,6 +876,23 @@ impl Database {
         .execute(&mut *tx)
         .await?;
 
+        for (gloss, ling_type) in internal_glosses.iter().zip(role.iter()) {
+            let abstract_id =
+                query_file_scalar!("queries/upsert_morpheme_tag.sql", gloss as _, role as _)
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+            query_file!(
+                "queries/upsert_morpheme_gloss.sql",
+                document_id,
+                gloss as _,
+                None::<String>,
+                abstract_id
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+        }
+
         tx.commit().await?;
 
         Ok(word.id)
