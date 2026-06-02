@@ -2755,23 +2755,25 @@ impl Database {
         Ok(())
     }
 
-    /// Create a new user account
-    /// Returns the new user's ID
-    pub async fn create_user(&self, email: String, password: String) -> Result<Uuid> {
-        // Validate inputs
+    /// Create a new user account.
+    /// Returns `Ok(Some(user_id))` on success, or `Ok(None)` if the email is
+    /// already registered. Callers should treat the `None` case as
+    /// indistinguishable from success so that signup cannot be used to
+    /// enumerate existing accounts.
+    pub async fn create_user(&self, email: String, password: String) -> Result<Option<Uuid>> {
         Self::validate_email(&email)?;
 
-        // Hash password
         let password_hash = Self::hash_password(&password)?;
-
-        // Normalize email and bind to a variable
         let normalized_email = email.to_lowercase().trim().to_string();
-        let user_id =
-            query_file_scalar!("queries/create_user.sql", &normalized_email, password_hash)
-                .fetch_one(&self.client)
-                .await?;
 
-        Ok(user_id)
+        match query_file_scalar!("queries/create_user.sql", &normalized_email, password_hash)
+            .fetch_one(&self.client)
+            .await
+        {
+            Ok(user_id) => Ok(Some(user_id)),
+            Err(sqlx::Error::Database(e)) if e.code().as_deref() == Some("23505") => Ok(None),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// Create a refresh token (session) for a user
@@ -2809,7 +2811,7 @@ impl Database {
             id: row.id,
             email: row.email.unwrap_or_default(),
             password_hash: row.password_hash.unwrap_or_default(),
-            email_verified: row.email_verified.unwrap_or_default(),
+            email_verified: row.email_verified,
             role: role_user_group,
             display_name: row.display_name,
         }))
@@ -3002,22 +3004,25 @@ impl Database {
             return Err(anyhow::anyhow!("Local user accounts are disabled"));
         }
 
-        // 2. Get user from database
+        // 2. Get user from database. Use the same error for missing account
+        //    and bad password so the endpoint cannot be used to enumerate
+        //    registered emails.
         let user = self
             .get_user_by_email(&email)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Invalid email or password"))?;
 
-        // 3. Check if email is verified
+        // 3. Verify password before disclosing anything about account state.
+        if !Self::verify_password(&password, &user.password_hash)? {
+            return Err(anyhow::anyhow!("Invalid email or password"));
+        }
+
+        // 4. Only after the credentials check, reveal whether the email is
+        //    still pending verification.
         if !user.email_verified {
             return Err(anyhow::anyhow!(
                 "Email not verified. Please check your email for verification link."
             ));
-        }
-
-        // 4. Verify password
-        if !Self::verify_password(&password, &user.password_hash)? {
-            return Err(anyhow::anyhow!("Invalid email or password"));
         }
 
         // 5. Generate access token (JWT)

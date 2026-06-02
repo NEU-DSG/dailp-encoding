@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use crate::email;
+use crate::dailp_auth;
 use dailp::{
     async_graphql::InputType,
     auth::{
@@ -978,41 +978,14 @@ impl Mutation {
         context: &Context<'_>,
         input: SignupInput,
     ) -> FieldResult<MessageResponse> {
-        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-
-        if auth_mode != "dailp" {
-            return Err("Signup is only available in DAILP authentication mode".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Create user account
-        let user_id = db.create_user(input.email.clone(), input.password).await?;
-
-        // Generate verification code
-        let verification_code = db.create_email_verification_token(user_id).await?;
-
-        // Send verification email
-        email::send_verification_email(&input.email, &verification_code).await?;
-
-        Ok(MessageResponse {
-            message: "Account created successfully! Please check your email for your 6-digit verification code.".to_string(),
-        })
+        Ok(dailp_auth::signup(db, input).await?)
     }
 
     /// Login with email and password (DAILP auth only)
     async fn login(&self, context: &Context<'_>, input: LoginInput) -> FieldResult<AuthResponse> {
-        // Check auth mode
-        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
-            return Err("Local user accounts are not enabled".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Authenticate and get tokens (returns AuthResponse with user_id, email, role, etc.)
-        let auth_response = db.login(input.email, input.password).await?;
-
-        Ok(auth_response)
+        Ok(dailp_auth::login(db, input).await?)
     }
 
     /// Refresh access token using refresh token (DAILP auth only)
@@ -1021,33 +994,14 @@ impl Mutation {
         context: &Context<'_>,
         input: RefreshTokenInput,
     ) -> FieldResult<RefreshTokenResponse> {
-        // Check auth mode
-        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
-            return Err("Local user accounts are not enabled".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Refresh the access token
-        let response = db.refresh_access_token(input.refresh_token).await?;
-
-        Ok(response)
+        Ok(dailp_auth::refresh_token(db, input).await?)
     }
 
     /// Logout by revoking refresh token (DAILP auth only)
     async fn logout(&self, context: &Context<'_>, refresh_token: String) -> FieldResult<bool> {
-        // Check auth mode
-        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
-            return Err("Local user accounts are not enabled".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Hash and revoke the refresh token
-        let token_hash = Database::hash_token(&refresh_token);
-        db.revoke_refresh_token(&token_hash).await?;
-
-        Ok(true)
+        Ok(dailp_auth::logout(db, refresh_token).await?)
     }
 
     /// Request a password reset email (DAILP auth only)
@@ -1056,25 +1010,8 @@ impl Mutation {
         context: &Context<'_>,
         input: RequestPasswordResetInput,
     ) -> FieldResult<MessageResponse> {
-        // Check auth mode
-        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
-            return Err("Local user accounts are not enabled".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Check if user exists (don't reveal if they don't for security)
-        if let Some(user) = db.get_user_by_email(&input.email).await? {
-            // Create and send password reset token
-            let reset_token = db.create_password_reset_token(user.id).await?;
-            email::send_password_reset_email(&input.email, &reset_token).await?;
-        }
-
-        // Always return success to prevent email enumeration
-        Ok(MessageResponse {
-            message: "If an account with that email exists, a password reset link has been sent."
-                .to_string(),
-        })
+        Ok(dailp_auth::request_password_reset(db, input).await?)
     }
 
     /// Reset password using reset token (DAILP auth only)
@@ -1083,29 +1020,8 @@ impl Mutation {
         context: &Context<'_>,
         input: ResetPasswordInput,
     ) -> FieldResult<MessageResponse> {
-        // Only available in DAILP mode
-        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-        if auth_mode != "dailp" {
-            return Err("Password reset is only available in DAILP authentication mode".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Validate token and get user_id
-        let user_id = db
-            .validate_and_use_password_reset_token(&input.token)
-            .await?;
-
-        // Update password
-        db.update_user_password(user_id, input.new_password).await?;
-
-        // Revoke all existing tokens for security
-        db.revoke_all_user_refresh_tokens(user_id).await?;
-
-        Ok(MessageResponse {
-            message: "Password reset successfully! You can now log in with your new password."
-                .to_string(),
-        })
+        Ok(dailp_auth::reset_password(db, input).await?)
     }
 
     /// Verify email address using verification token (DAILP auth only)
@@ -1114,20 +1030,8 @@ impl Mutation {
         context: &Context<'_>,
         token: String,
     ) -> FieldResult<MessageResponse> {
-        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-
-        if auth_mode != "dailp" {
-            return Err("Email verification is only available in DAILP authentication mode".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Validate token and mark email as verified
-        let _user_id = db.validate_and_use_email_verification_token(&token).await?;
-
-        Ok(MessageResponse {
-            message: "Email verified successfully! You can now log in.".to_string(),
-        })
+        Ok(dailp_auth::verify_email(db, token).await?)
     }
 
     /// Resend verification email to user
@@ -1136,37 +1040,8 @@ impl Mutation {
         context: &Context<'_>,
         email: String,
     ) -> FieldResult<MessageResponse> {
-        // Only available in DAILP mode
-        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-        if auth_mode != "dailp" {
-            return Err("Email verification is only available in DAILP authentication mode".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Get user by email
-        let user = db
-            .get_user_by_email(&email)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("No account found with that email address"))?;
-
-        // Check if already verified
-        if user.email_verified {
-            return Err("This email address has already been verified. You can log in now.".into());
-        }
-
-        // Create new verification token (invalidates any existing tokens)
-        let verification_code = db.create_email_verification_token(user.id).await?;
-
-        // Try to send email - log errors but don't fail the mutation
-        match email::send_verification_email(&email, &verification_code).await {
-            Ok(_) => log::info!("Resent verification email to {}", email),
-            Err(e) => log::error!("Failed to resend verification email to {}: {}", email, e),
-        }
-
-        Ok(MessageResponse {
-            message: "Verification email resent! Please check your inbox.".to_string(),
-        })
+        Ok(dailp_auth::resend_verification_email(db, email).await?)
     }
 
     /// Resend password reset email to user
@@ -1175,32 +1050,8 @@ impl Mutation {
         context: &Context<'_>,
         email: String,
     ) -> FieldResult<MessageResponse> {
-        // Only available in DAILP mode
-        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-        if auth_mode != "dailp" {
-            return Err("Password reset is only available in DAILP authentication mode".into());
-        }
-
         let db = context.data::<DataLoader<Database>>()?.loader();
-
-        // Get user by email
-        let user = db
-            .get_user_by_email(&email)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("No account found with that email address"))?;
-
-        // Create new password reset token (invalidates any existing tokens)
-        let reset_code = db.create_password_reset_token(user.id).await?;
-
-        // Try to send email - log errors but don't fail the mutation
-        match email::send_password_reset_email(&email, &reset_code).await {
-            Ok(_) => log::info!("Resent password reset email to {}", email),
-            Err(e) => log::error!("Failed to resend password reset email to {}: {}", email, e),
-        }
-
-        Ok(MessageResponse {
-            message: "Password reset email resent! Please check your inbox.".to_string(),
-        })
+        Ok(dailp_auth::resend_password_reset(db, email).await?)
     }
 
     async fn validate_turnstile_token(

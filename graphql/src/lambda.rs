@@ -1,3 +1,4 @@
+mod dailp_auth;
 mod email;
 mod query;
 

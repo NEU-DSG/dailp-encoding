@@ -1,10 +1,11 @@
 -- Add migration script here
--- All of these in-house account specific columns
--- must be nullable to ensure cognito compatibility
+-- email and password_hash must be nullable to ensure cognito compatibility,
+-- since cognito-authenticated users have no local password and may not have
+-- an email stored in this table.
 alter table dailp_user
     add column email text unique,
     add column password_hash text,
-    add column email_verified boolean default false;
+    add column email_verified boolean not null default false;
 
 create table refresh_tokens (
     id uuid primary key default gen_random_uuid(),

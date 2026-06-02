@@ -2,7 +2,7 @@
 
 ## `dailp_user`
 
-Stores user account data. Supports two authentication modes controlled by the `AUTH_MODE` environment variable: AWS Cognito (`cognito`) or local accounts (`dailp`). When using Cognito, `id` corresponds to the Cognito `sub` claim; when using local accounts, `id` is generated at signup. The local account columns (`email`, `password_hash`, `email_verified`) are nullable to maintain compatibility with the Cognito auth mode.
+Stores user account data. Supports two authentication modes controlled by the `AUTH_MODE` environment variable: AWS Cognito (`cognito`) or local accounts (`dailp`). When using Cognito, `id` corresponds to the Cognito `sub` claim; when using local accounts, `id` is generated at signup. `email` and `password_hash` are nullable to maintain compatibility with the Cognito auth mode (Cognito-authenticated users have no local password and may not have an email stored in this table). `email_verified` is non-nullable and defaults to `false`; Cognito users are not subject to the local verification gate, so the value is meaningless for them but storing `false` is harmless.
 
 | column           | type        | description                                                                |
 | ---------------- | ----------- | -------------------------------------------------------------------------- |
@@ -16,7 +16,7 @@ Stores user account data. Supports two authentication modes controlled by the `A
 | `role`           | `user_role` | User's role, defaults to `Readers`                                         |
 | `email`          | `text?`     | Email address (local accounts only, unique)                                |
 | `password_hash`  | `text?`     | Argon2 password hash (local accounts only)                                 |
-| `email_verified` | `boolean?`  | Whether email has been verified (local accounts only), defaults to `false` |
+| `email_verified` | `boolean`   | Whether email has been verified (local accounts only), defaults to `false` |
 
 ## `user_role`
 

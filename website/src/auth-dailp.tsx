@@ -316,14 +316,6 @@ function handleDailpError(err: any) {
     alert("Invalid email or password. Please try again.")
   } else if (message.includes("Email not verified")) {
     alert("Please verify your email before logging in. Check your inbox.")
-  } else if (message.includes("User already exists")) {
-    if (
-      confirm(
-        "An account with this email already exists. Would you like to login instead?"
-      )
-    ) {
-      navigate("/auth/login")
-    }
   } else {
     alert(`Authentication error: ${message}`)
   }
