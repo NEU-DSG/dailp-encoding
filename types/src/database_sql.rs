@@ -2714,33 +2714,21 @@ impl Database {
         Ok(())
     }
 
-    pub async fn get_all_subject_headings(&self) -> Result<Vec<SubjectHeading>> {
-        let results = sqlx::query_as::<_, SubjectHeading>(
-            r#"
-            SELECT id, name, status 
-            FROM subject_heading 
-            ORDER BY name ASC
-            "#,
+    pub async fn all_subject_headings(&self) -> Result<Vec<SubjectHeading>> {
+        Ok(
+            query_file_as!(SubjectHeading, "queries/all_subject_headings.sql")
+                .fetch_all(&self.client)
+                .await?,
         )
-        .fetch_all(&self.client)
-        .await?;
-
-        Ok(results)
     }
 
     pub async fn insert_subject_heading(&self, heading: &SubjectHeading) -> Result<()> {
-        sqlx::query(
-            r#"
-            INSERT INTO subject_heading (id, name, status)
-            VALUES ($1, $2, $3)
-            "#,
-        )
-        .bind(heading.id)
-        .bind(&heading.name)
-        .bind(heading.status)
-        .execute(&self.client)
-        .await?;
-
+        sqlx::query(include_str!("../queries/insert_subject_heading.sql"))
+            .bind(heading.id)
+            .bind(&heading.name)
+            .bind(heading.status)
+            .execute(&self.client)
+            .await?;
         Ok(())
     }
 }

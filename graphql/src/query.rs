@@ -417,7 +417,7 @@ impl Query {
     ) -> FieldResult<Vec<SubjectHeading>> {
         let db = context.data::<DataLoader<Database>>()?.loader();
 
-        Ok(db.get_all_subject_headings().await?)
+        Ok(db.all_subject_headings().await?)
     }
 }
 

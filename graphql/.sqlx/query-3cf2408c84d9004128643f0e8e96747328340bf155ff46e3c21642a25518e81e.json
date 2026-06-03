@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT d.id\nFROM document as d\nJOIN user_bookmarked_document as ubd on ubd.document_id = d.id\nWHERE ubd.user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3cf2408c84d9004128643f0e8e96747328340bf155ff46e3c21642a25518e81e"
+}
