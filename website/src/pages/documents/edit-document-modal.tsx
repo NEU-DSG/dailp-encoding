@@ -795,42 +795,34 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onRemove={removeKeyword}
             addButtonLabel="Add Pre-existing Keywords"
           >
-            {isEditing && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  marginBottom: "12px",
-                  alignItems: "center",
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginBottom: "12px",
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Enter keyword..."
+                value={freeKeyword}
+                onChange={(e) => setFreeKeyword(e.target.value)}
+              />
+              <button
+                type="button"
+                className={styles.addTagButton}
+                onClick={() => {
+                  if (freeKeyword.trim()) {
+                    addKeyword(freeKeyword.trim())
+                    setFreeKeyword("")
+                  }
                 }}
               >
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Enter keyword..."
-                  value={freeKeyword}
-                  onChange={(e) => setFreeKeyword(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && freeKeyword.trim()) {
-                      addKeyword(freeKeyword.trim())
-                      setFreeKeyword("")
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className={styles.addTagButton}
-                  onClick={() => {
-                    if (freeKeyword.trim()) {
-                      addKeyword(freeKeyword.trim())
-                      setFreeKeyword("")
-                    }
-                  }}
-                >
-                  Add Keyword
-                </button>
-              </div>
-            )}
+                Add Keyword
+              </button>
+            </div>
           </TagSelector>
 
           <TagSelector
