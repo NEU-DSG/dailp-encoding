@@ -20,6 +20,31 @@ import { DailpPageContents } from "./dailp.page"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
+  // Block vite-plugin-ssr's scroll restoration on the homepage.
+  // The framework calls window.scrollTo to restore the previous position
+  // after render, so we temporarily intercept it to only allow scroll-to-top.
+  React.useEffect(() => {
+    const originalScrollTo = window.scrollTo
+    window.scrollTo = ((...args: unknown[]) => {
+      const isScrollToTop =
+        (args[0] === 0 && args[1] === 0) ||
+        (typeof args[0] === "object" &&
+          args[0] !== null &&
+          (args[0] as ScrollToOptions).top === 0)
+      if (isScrollToTop) {
+        originalScrollTo.call(window, 0, 0)
+      }
+    }) as typeof window.scrollTo
+    originalScrollTo.call(window, 0, 0)
+    const timer = setTimeout(() => {
+      window.scrollTo = originalScrollTo
+    }, 200)
+    return () => {
+      clearTimeout(timer)
+      window.scrollTo = originalScrollTo
+    }
+  }, [])
+
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
   const userRole = useUserRole()
 
