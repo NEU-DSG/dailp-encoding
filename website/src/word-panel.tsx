@@ -319,6 +319,7 @@ const EditSegmentation = (p: {
                             index.toString(),
                             "morpheme",
                           ]}
+                          style={{ width: "6rem" }}
                         />
                       </td>
                       <td className={css.editGlossCells}>
