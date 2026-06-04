@@ -6,6 +6,8 @@ select
     index_in_parent,
     section as "section: CollectionSection",
     chapter_path,
+    publication_date,
+    authors,
     ltree2text(subpath(chapter_path, 0, 1)) AS "collection_slug!"
 from collection_chapter
 where ltree2text(subpath(chapter_path, 0, 1)) = any($1);

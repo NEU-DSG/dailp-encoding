@@ -28,6 +28,10 @@ pub struct EditedCollection {
     pub slug: String,
     /// Cover image URL
     pub thumbnail_url: Option<String>,
+    // Date of publication for this edited collection
+    pub publication_date: Option<chrono::NaiveDate>,
+    // Editors who have contributed to this collection
+    pub editors: Option<Vec<String>>,
 }
 
 /// Input object for creating a new collection
@@ -61,6 +65,10 @@ pub struct CollectionChapter {
     #[graphql(skip)]
     /// Full path of the chapter
     pub path: Vec<String>,
+    // Date of publication for this chatper
+    pub publication_date: Option<chrono::NaiveDate>,
+    // Authors who have contributed to this chatper
+    pub authors: Option<Vec<String>>,
 }
 
 /// Enum to represent the sections in an edited collection

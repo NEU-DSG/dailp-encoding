@@ -1,18 +1,11 @@
-import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
-import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
-import { form } from "src/edit-word-feature.css"
 import * as Dailp from "src/graphql/dailp"
-import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import { buildCitationMetadata } from "../../utils/build-citation-metadata"
-import Cite from "../../utils/citation-config"
-import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
-import { EditingProvider, useEditing } from "./editing-context"
+import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
@@ -29,7 +22,7 @@ export interface FormContributor extends Dailp.Contributor {
   isVisible: boolean | false
 }
 
-// year month day as string
+// Gets this date for citation date accessed
 function getDateString(date: Date | null): string | undefined {
   if (!date) return undefined
 
@@ -38,18 +31,6 @@ function getDateString(date: Date | null): string | undefined {
   const day = date.getDate().toString().padStart(2, "0")
 
   return `${year}/${month}/${day}`
-}
-
-// Citation formats for dropdown (mapped from display name to name Cite expects)
-export const formatMap: Record<string, string> = {
-  APA: "apa",
-  Vancouver: "vancouver",
-  Harvard: "harvard1",
-}
-
-// Get citation format display name
-function getDisplayName(code: string) {
-  return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
 }
 
 // Reusable approved tags lists
@@ -111,31 +92,11 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   onClose,
   onSubmit,
   documentMetadata,
-  initialCiteFormat = "apa",
 }: EditDocumentModalProps) => {
   const { isEditing, setIsEditing } = useEditing()
 
   // Only render the modal when isOpen is true
   if (!isOpen) return null
-
-  const handleDateChange = (e: any) => {
-    const selectedDateValue = e as Date
-
-    if (selectedDateValue) {
-      setDate(selectedDateValue)
-
-      const selectedDay = selectedDateValue.getDate()
-      const selectedMonth = selectedDateValue.getMonth() + 1
-      const selectedYear = selectedDateValue.getFullYear()
-
-      setDay(selectedDay)
-      setMonth(selectedMonth)
-      setYear(selectedYear)
-    }
-  }
-
-  const userRole = useUserRole()
-  const isContributor = userRole === UserRole.Contributor
 
   // Memoize extracted names from metadata so they update when documentMetadata changes
   const keywordStrings = useMemo(
@@ -161,9 +122,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [title, setTitle] = useState(documentMetadata.title ?? "")
 
   const [date, setDate] = useState<Date | null>(null)
-  const [day, setDay] = useState<Number>()
-  const [month, setMonth] = useState<Number>()
-  const [year, setYear] = useState<Number>()
 
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
@@ -206,38 +164,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
   )
 
-  const [citation, setCitation] = useState("")
-
-  // Initialize citation format from localStorage or default to "apa"
-  const [citeFormat, setCiteFormat] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("preferredCitationFormat") || "apa"
-    }
-    return "apa"
-  })
-
-  // Generate citation from document metadata and selected format (APA by default)
-  useEffect(() => {
-    const hasTemplate = !!plugins?.config
-      ?.get?.("csl")
-      ?.templates?.has?.(citeFormat)
-    console.log("Using template:", citeFormat, "exists?", hasTemplate)
-
-    try {
-      // Create text citation using selected format
-      const docCitation = new Cite(docMetadata).format("bibliography", {
-        format: "text",
-        template: citeFormat || "apa",
-        lang: "en-US",
-      })
-      console.log("Using citeFormat:", citeFormat)
-      console.log("Generated citation:", docCitation)
-      setCitation(docCitation)
-    } catch (err) {
-      console.error("Citation formatting failed:", err)
-      setCitation("Error generating citation")
-    }
-  }, [citeFormat, documentMetadata]) // Re-run everytime format or metadata changes
+  // Duplicate citation effect removed — see useEffect below that awaits templatesReady
 
   // useEffect(() => {
   //   if (!isOpen) return
@@ -427,38 +354,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
   }
 
-  const creatorStrings = useMemo(
-    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
-    [documentMetadata.creators]
-  )
-
-  const docMetadata = useMemo(
-    () =>
-      buildCitationMetadata({
-        title,
-        creator: creatorStrings,
-        date: getDateString(date),
-        // source,
-        // pages,
-        type: format.toLowerCase() || "document",
-        // doi,
-      }),
-    [title, creator, date, format]
-  )
-
-  useEffect(() => {
-    try {
-      const docCitation = new Cite(docMetadata).format("bibliography", {
-        format: "text",
-        template: citeFormat.toLowerCase() || "apa",
-        lang: "en-US",
-      })
-      setCitation(docCitation)
-    } catch {
-      setCitation("Error generating citation")
-    }
-  }, [citeFormat, docMetadata])
-
   const cancelEdits = () => {
     if (!backupState) return
     setTitle(backupState.title)
@@ -570,7 +465,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
-      citeFormat: citeFormat,
     }
 
     // Update backup state to new submitted state
@@ -823,36 +717,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onAdd={isEditing ? addCoverage : undefined}
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
-          />
-
-          {/* Might need to pull the creator(s) from creator or contributors w/ author role */}
-          <div className={styles.fullWidthGroup}>
-            <label className={styles.label}>Citation</label>
-            <TextareaAutosize
-              className={styles.input}
-              value={citation}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setCitation(e.target.value)
-              }
-              minRows={1}
-              maxRows={10}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div>{getDisplayName(citeFormat)}</div>
-          <Dropdown
-            options={Object.keys(formatMap)}
-            selected={
-              Object.entries(formatMap).find(
-                ([_, v]) => v === citeFormat
-              )?.[0] || "apa"
-            }
-            setSelected={(displayName) => {
-              setCiteFormat(formatMap[displayName] ?? "apa")
-            }}
-            addButtonLabel="Change Format"
-            disabled={!isEditing}
           />
 
           {/* Cancel and submit buttons */}

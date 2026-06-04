@@ -1,24 +1,17 @@
 import React, { useEffect } from "react"
 import { IconBaseProps } from "react-icons/lib"
-import {
-  MdClose,
-  MdSettings,
-  MdStayPrimaryLandscape,
-} from "react-icons/md/index"
+import { MdClose, MdSettings } from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
   useDialogState,
 } from "reakit"
-import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import { useRouteParams } from "./renderer/PageShell"
-import { colors } from "./style/theme-contract.css"
-import { LevelOfDetail } from "./types"
+import { CitationStyles, LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }
 
@@ -57,6 +50,21 @@ const cherokeeRepresentationMapping: Record<
     label: "Linguist: Tone and Accent in Oklahoma Cherokee",
     details:
       "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). Transliterates the syllabary with kw and c. Displays extensive tone and vowel length information using accents.",
+  },
+}
+
+const preferredCitationMapping: Record<string, PreferenceDetails> = {
+  [CitationStyles.APA]: {
+    label: "APA",
+    details: `Change all site-wide citations to APA style.`,
+  },
+  [CitationStyles.MLA]: {
+    label: "MLA",
+    details: `Change all site-wide citations to MLA style.`,
+  },
+  [CitationStyles.Chicago]: {
+    label: "Chicago",
+    details: `Change all site-wide citations to Chicago author date style.`,
   },
 }
 
@@ -118,6 +126,22 @@ export const PrefPanel = () => {
           cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
         }
+      </p>
+
+      <Label htmlFor="preferred-citation-style">
+        Preferred Citation Style:
+      </Label>
+      <PreferenceSelect
+        id="preferred-citation-style"
+        aria-describedby="preferred-citation-style-desc"
+        value={preferences.preferredCitationStyle}
+        onChange={(x) =>
+          preferences.setPreferredCitationStyle(x as CitationStyles)
+        }
+        mapping={preferredCitationMapping}
+      />
+      <p id="preferred-citation-style-desc">
+        {preferredCitationMapping[preferences.preferredCitationStyle]?.details}
       </p>
     </div>
   )

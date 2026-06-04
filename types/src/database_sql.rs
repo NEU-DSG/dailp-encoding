@@ -2350,6 +2350,8 @@ impl Database {
                 document_id: chapter_data.document_id.map(DocumentId),
                 wordpress_id: chapter_data.wordpress_id,
                 section: chapter_data.section,
+                publication_date: None,
+                authors: None,
             }));
         }
 
@@ -2380,6 +2382,8 @@ impl Database {
             document_id: chapter.document_id.map(DocumentId),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
+            publication_date: None,
+            authors: None,
         }))
     }
 
@@ -2410,6 +2414,8 @@ impl Database {
                         document_id: chapter.document_id.map(DocumentId),
                         wordpress_id: chapter.wordpress_id,
                         section: chapter.section,
+                        publication_date: None,
+                        authors: None,
                     })
                     .collect(),
             ))
@@ -3371,6 +3377,8 @@ impl Loader<ChaptersInCollection> for Database {
                             .into_iter()
                             .map(|s| (*s).into())
                             .collect(),
+                        publication_date: chapter.publication_date,
+                        authors: chapter.authors,
                     },
                 )
             })
@@ -3403,6 +3411,8 @@ impl Loader<EditedCollectionDetails> for Database {
                         description: collection.description,
                         slug: collection.slug,
                         thumbnail_url: collection.thumbnail_url,
+                        publication_date: collection.publication_date,
+                        editors: collection.editors,
                     },
                 )
             })

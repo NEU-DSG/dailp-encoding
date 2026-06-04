@@ -1,7 +1,7 @@
 import Cookies from "js-cookie"
 import React, { useContext, useEffect, useState } from "react"
 import * as Dailp from "src/graphql/dailp"
-import { LevelOfDetail } from "./types"
+import { CitationStyles, LevelOfDetail } from "./types"
 
 // Set up context for preferences
 const PreferencesContext = React.createContext({
@@ -9,6 +9,8 @@ const PreferencesContext = React.createContext({
   setLevelOfDetail: (p: LevelOfDetail) => {},
   cherokeeRepresentation: Dailp.CherokeeOrthography.Learner,
   setCherokeeRepresentation: (p: Dailp.CherokeeOrthography) => {},
+  preferredCitationStyle: CitationStyles.APA,
+  setPreferredCitationStyle: (p: CitationStyles) => {},
 })
 
 export const usePreferences = () => useContext(PreferencesContext)
@@ -19,11 +21,15 @@ export const PreferencesProvider = (props: any) => {
   const [cherokeeRepresentation, setCherokeeRepresentation] = useState(
     savedCherokeeRepresentation()
   )
+  const [preferredCitationStyle, setPreferredCitationStyle] = useState(
+    savedCitationStyle()
+  )
 
   useEffect(() => {
     save(PreferenceKey.LevelOfDetail, levelOfDetail)
     save(PreferenceKey.CherokeeRepresentation, cherokeeRepresentation)
-  }, [levelOfDetail, cherokeeRepresentation])
+    save(PreferenceKey.PreferredCitationStyle, preferredCitationStyle)
+  }, [levelOfDetail, cherokeeRepresentation, preferredCitationStyle])
 
   useEffect(() => {
     // Remove all deprecated cookies, keep this code for at least several months
@@ -39,6 +45,8 @@ export const PreferencesProvider = (props: any) => {
         setLevelOfDetail,
         cherokeeRepresentation,
         setCherokeeRepresentation,
+        preferredCitationStyle,
+        setPreferredCitationStyle,
       }}
     >
       {props.children}
@@ -55,6 +63,7 @@ function save(key: PreferenceKey, value: any) {
 enum PreferenceKey {
   LevelOfDetail = "level-of-detail",
   CherokeeRepresentation = "cherokee-system",
+  PreferredCitationStyle = "preferred-citation-style",
 }
 
 enum DeprecatedCookie {
@@ -103,4 +112,11 @@ const savedCherokeeRepresentation = (): Dailp.CherokeeOrthography => {
   } else {
     return Dailp.CherokeeOrthography.Learner
   }
+}
+
+const savedCitationStyle = (): CitationStyles => {
+  const newValue = LocalStorage.getItem(
+    PreferenceKey.PreferredCitationStyle
+  ) as CitationStyles
+  return newValue ?? CitationStyles.APA
 }

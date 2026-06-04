@@ -1,22 +1,25 @@
 import "@reach/dialog/styles.css"
 import React, { Fragment } from "react"
+import ReactDOM from "react-dom"
 import { Helmet } from "react-helmet"
-import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
 import { Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
-import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
+import { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
 import { fullWidth } from "src/style/utils.css"
-import Cite from "../../utils/citation-config"
+import {
+  buildCitationString,
+  getCollectionName,
+  getDateAccessed,
+} from "src/utils/document-metadata"
+import * as citationCss from "../cwkw/citationFooter.css"
 import CitationField from "./citation-field"
 import * as styles from "./document-info.css"
 import * as css from "./document.css"
-import {
-  EditDocumentModal,
-  EditDocumentModalProps,
-} from "./edit-document-modal"
-import { EditingProvider, useEditing } from "./editing-context"
+import { EditDocumentModal } from "./edit-document-modal"
+import { useEditing } from "./editing-context"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -30,72 +33,64 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const { isEditing, setIsEditing } = useEditing()
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
 
+  // Citation states for footer and end of metadata page
+  const { preferredCitationStyle } = usePreferences()
   const [citation, setCitation] = React.useState<string>("")
-
-  // Initialize citation format from localStorage
-  const [citeFormat, setCiteFormat] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("preferredCitationFormat") || "apa"
-    }
-    return "apa"
-  })
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
 
-  // if (!docData) {
-  //   return null
-  // }
-
-  // Generate citation (is there a better way to do this?)
+  // Generate citation using buildCitationMetadata and update when prefreneces change
   React.useEffect(() => {
     if (!docData) return
 
-    try {
-      const metadata = {
+    const sourceUrl =
+      docData.sources?.[0]?.link ??
+      (typeof window !== "undefined" ? window.location.href : "")
+
+    const authorContributors = docData.contributors?.filter(
+      (c) => c.role?.toLowerCase() === "author"
+    )
+    const creatorNames =
+      authorContributors && authorContributors.length > 0
+        ? authorContributors.map((c) => c.name)
+        : docData.creators?.map((c) => c.name) ?? []
+
+    const translatorNames = (docData.contributors ?? [])
+      .filter((c) => c.role?.toLowerCase() === "translator")
+      .map((c) => c.name)
+
+    const dateString = docData.date
+      ? [
+          docData.date.year,
+          String(docData.date.month || 1).padStart(2, "0"),
+          String(docData.date.day || 1).padStart(2, "0"),
+        ].join("/")
+      : undefined
+
+    buildCitationString(
+      {
         title: docData.title,
-        author: docData.creators?.map((c) => ({ literal: c.name })) || [],
-        issued: docData.date
-          ? {
-              "date-parts": [
-                [
-                  docData.date.year,
-                  docData.date.month || 1,
-                  docData.date.day || 1,
-                ],
-              ],
-            }
-          : undefined,
-        type: docData.format?.name?.toLowerCase() || "document",
-      }
+        creator: creatorNames,
+        translator: translatorNames.length > 0 ? translatorNames : undefined,
+        date: dateString,
+        accessed: getDateAccessed(),
+        source: sourceUrl || undefined,
+        containerTitle: getCollectionName(sourceUrl),
+        type: "webpage",
+      },
+      preferredCitationStyle
+    )
+      .then(setCitation)
+      .catch(() => setCitation("Error generating citation"))
+  }, [docData, preferredCitationStyle])
 
-      const docCitation = new Cite(metadata).format("bibliography", {
-        format: "text",
-        template: citeFormat,
-        lang: "en-US",
-      })
-
-      setCitation(docCitation)
-    } catch (err) {
-      console.error("Citation error:", err)
-      setCitation("Error generating citation")
-    }
-  }, [docData, citeFormat]) // Regenerate when docData or citeFormat changes
-
-  // Debug: check if data has been fetched
+  // check if data has been fetched
   if (!docData) {
     return <div>Loading document information...</div>
   }
 
   const handleUpdate = async (changes: any) => {
     try {
-      // Update citation format if it changed and save to localStorage
-      if (changes.citeFormat) {
-        setCiteFormat(changes.citeFormat)
-        if (typeof window !== "undefined") {
-          localStorage.setItem("preferredCitationFormat", changes.citeFormat)
-        }
-      }
-
       // Format date
       let writtenAtValue = null
       if (changes.date) {
@@ -135,7 +130,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       await reexecuteQuery({ requestPolicy: "network-only" })
       setIsEditing(false)
     } catch (error) {
-      console.error("Failed to update document:", error)
       setIsEditing(false)
     }
   }
@@ -174,24 +168,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       })
       .join(", ")
   }
-
-  const contributorsList = (
-    <>
-      <Helmet>
-        <title>{docData.title} - Details</title>
-      </Helmet>
-      <section className={fullWidth}>
-        <h3 className={css.topMargin}>Contributors</h3>
-        <ul>
-          {docData.contributors.map((person) => (
-            <li key={person.name}>
-              {person.name}: {person.role}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </>
-  )
 
   const metadataDisplay = (
     <div className={styles.container}>
@@ -335,13 +311,31 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           onClose={() => setIsEditing(false)}
           onSubmit={handleUpdate}
           documentMetadata={docData} // configure edit-document-metadata documentMetadata to expect AnnotatedDoc
-          initialCiteFormat={citeFormat}
+          initialCiteFormat={preferredCitationStyle}
         />
       ) : (
         <></>
       )}
     </>
   )
+
+  // Portal into #citation-footer-slot which layout.tsx renders just before <Footer />
+  const citationBar =
+    typeof document !== "undefined" && citation
+      ? ReactDOM.createPortal(
+          <div className={citationCss.citationBar}>
+            <div className={citationCss.citationInner}>
+              <p className={citationCss.citationText}>
+                <span className={citationCss.citationLabel}>
+                  How to cite this document:{" "}
+                </span>
+                {citation}
+              </p>
+            </div>
+          </div>,
+          document.getElementById("citation-footer-slot") ?? document.body
+        )
+      : null
 
   return (
     <Fragment>
@@ -356,6 +350,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           .
         </section>
       ) : null}
+
+      {citationBar}
     </Fragment>
   )
 }
