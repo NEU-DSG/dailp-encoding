@@ -324,7 +324,7 @@ const EditSegmentation = (p: {
                       </td>
                       <td
                         className={css.editGlossCells}
-                        style={{ width: "175px" }}
+                        style={{ maxWidth: "175px" }}
                       >
                         {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
                         <EditWordPartGloss
