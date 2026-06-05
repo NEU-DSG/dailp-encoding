@@ -319,10 +319,13 @@ const EditSegmentation = (p: {
                             index.toString(),
                             "morpheme",
                           ]}
-                          style={{ width: "6rem" }}
+                          style={{ width: "100px" }}
                         />
                       </td>
-                      <td className={css.editGlossCells}>
+                      <td
+                        className={css.editGlossCells}
+                        style={{ width: "175px" }}
+                      >
                         {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
                         <EditWordPartGloss
                           // TODO: this key will need to be changed later since a morpheme can be changed
