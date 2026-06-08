@@ -960,6 +960,15 @@ impl Mutation {
             .await?)
     }
 
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn delete_page(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_page(&id)
+            .await?)
+    }
+
     // dennis todo: should be admin, but admin accs not implemented yet
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {

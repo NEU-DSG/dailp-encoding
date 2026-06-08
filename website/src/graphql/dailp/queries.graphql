@@ -754,8 +754,14 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+mutation DeletePage($id: UUID!) {
+  deletePage(id: $id)
+}
+
 query AllPages {
   allPages {
+    id
+    title
     path
   }
 }
