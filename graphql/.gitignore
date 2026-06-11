@@ -1,3 +1,4 @@
 ./secrets.json
 .serverless/
 node_modules/
+dailp-uat-data/

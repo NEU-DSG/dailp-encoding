@@ -3,9 +3,12 @@ import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
+import { useClient } from "urql"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as Dailp from "./graphql/dailp"
 import { usePreferences } from "./preferences-context"
+
+const LOCK_TIMEOUT_SECONDS = 5 * 60
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
@@ -27,9 +30,12 @@ export const FormProvider = (props: { children: ReactNode }) => {
 
   const { cherokeeRepresentation } = usePreferences()
 
-  const { romanizedSource } = useEditWordCheckContext()
+  const { romanizedSource, lockToken, setLockToken, setLockedWordId } =
+    useEditWordCheckContext()
   const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
     useEditWordCheckContext()
+
+  const urqlClient = useClient()
 
   const settingsAlert =
     "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
@@ -81,31 +87,66 @@ export const FormProvider = (props: { children: ReactNode }) => {
       }
 
       if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
-        setIsEditing(false)
+        // Check the lock state before saving. If the lock is stale,
+        // another editor could have claimed it -> discard changes
+        const submit = async () => {
+          const status = await urqlClient
+            .query(
+              Dailp.WordLockStatusDocument,
+              { wordId: values.word["id"] },
+              { requestPolicy: "network-only" }
+            )
+            .toPromise()
+          const serverToken = status.data?.wordLockStatus?.editingLockToken
+          const startedAt =
+            status.data?.wordLockStatus?.editingStartedAt?.timestamp
+          // Two ways the local lock can be invalid:
+          //  (1) Our token no longer matches - someone else acquired the lock
+          //      after we timed out, even if their fresh editing_started_at
+          //      makes the row look young.
+          //  (2) Our token still matches but it's been >5 min since we
+          //      acquired - nobody else grabbed it, but we've still timed out
+          //      from the user's perspective.
+          const tokenMismatch = serverToken !== lockToken
+          const staleByTime =
+            !!startedAt && Date.now() / 1000 - startedAt > LOCK_TIMEOUT_SECONDS
+          if (tokenMismatch || staleByTime) {
+            alert(
+              "Editing time limit of 5 minutes exceeded - discarding changes"
+            )
+            setIsEditing(false)
+            setLockToken(null)
+            setLockedWordId(null)
+            setConfirmRomanizedSourceDelete(false)
+            return
+          }
 
-        // Create a completely new word state
-        const wordUpdate: Dailp.AnnotatedFormUpdate = {
-          id: values.word["id"],
-          source: values.word["source"],
-          commentary: values.word["commentary"],
-          segments: values.word["segments"].map((segment) => ({
-            system: cherokeeRepresentation,
-            morpheme: segment.morpheme,
-            gloss: segment.gloss,
-            role: segment.role,
-          })),
-          romanizedSource: values.word["romanizedSource"],
-          englishGloss: Array.isArray(values.word["englishGloss"])
-            ? values.word["englishGloss"].join(" ")
-            : String(values.word["englishGloss"]),
-        }
+          setIsEditing(false)
 
-        console.log("Sending complete word update:", wordUpdate)
+          // Create a completely new word state
+          const wordUpdate: Dailp.AnnotatedFormUpdate = {
+            id: values.word["id"],
+            source: values.word["source"],
+            commentary: values.word["commentary"],
+            segments: values.word["segments"].map((segment) => ({
+              system: cherokeeRepresentation,
+              morpheme: segment.morpheme,
+              gloss: segment.gloss,
+              role: segment.role,
+            })),
+            romanizedSource: values.word["romanizedSource"],
+            englishGloss: Array.isArray(values.word["englishGloss"])
+              ? values.word["englishGloss"].join(" ")
+              : String(values.word["englishGloss"]),
+            lockToken: lockToken!,
+          }
 
-        runUpdate({
-          word: wordUpdate,
-          morphemeSystem: cherokeeRepresentation,
-        }).then(({ data, error }) => {
+          // console.log("Sending complete word update:", wordUpdate)
+
+          const { data, error } = await runUpdate({
+            word: wordUpdate,
+            morphemeSystem: cherokeeRepresentation,
+          })
           if (error) {
             console.log("Update error:", error)
           } else if (data) {
@@ -113,7 +154,8 @@ export const FormProvider = (props: { children: ReactNode }) => {
             form.update("word", data.updateWord)
           }
           setConfirmRomanizedSourceDelete(false)
-        })
+        }
+        submit()
       } else {
         alert(settingsAlert)
       }

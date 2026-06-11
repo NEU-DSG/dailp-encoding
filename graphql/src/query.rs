@@ -13,6 +13,7 @@ use dailp::{
     CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
     DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
     SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    WordLockResult, WordLockStatus,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -338,6 +339,20 @@ impl Query {
             .await?)
     }
 
+    /// Read the current editing-lock state for a word. Used by the frontend
+    /// to detect a stale lock (>5 min old) before saving.
+    async fn word_lock_status(
+        &self,
+        context: &Context<'_>,
+        word_id: Uuid,
+    ) -> FieldResult<Option<WordLockStatus>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_lock_status(word_id)
+            .await?)
+    }
+
     /// Get a single paragraph given the paragraph ID
     async fn paragraph_by_id(
         &self,
@@ -580,9 +595,53 @@ impl Mutation {
         word: AnnotatedFormUpdate,
     ) -> FieldResult<AnnotatedForm> {
         let database = context.data::<DataLoader<Database>>()?.loader();
-        Ok(database
-            .word_by_id(&database.update_word(word).await?)
+
+        // Store the lock identifiers before `word` is consumed by update_word.
+        let word_id = word.id;
+        let lock_token = word.lock_token;
+        let updated_word_id = database.update_word(word).await?;
+
+        // Release the editing lock after a successful save.
+        database.release_word_lock(word_id, lock_token).await?;
+
+        Ok(database.word_by_id(&updated_word_id).await?)
+    }
+
+    /// Acquire (or refresh) the editing lock on a word. The caller passes a
+    /// UUID (generated in the front-end) as the `lock_token`. On denial, the result
+    /// includes the user id of the current lock holder.
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    async fn acquire_word_lock(
+        &self,
+        context: &Context<'_>,
+        word_id: Uuid,
+        lock_token: Uuid,
+    ) -> FieldResult<WordLockResult> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .acquire_word_lock(word_id, user.id, lock_token)
             .await?)
+    }
+
+    /// Release the editing lock on a word. The token must match the one
+    /// stored on the row for the release to take effect.
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    async fn release_word_lock(
+        &self,
+        context: &Context<'_>,
+        word_id: Uuid,
+        lock_token: Uuid,
+    ) -> FieldResult<bool> {
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .release_word_lock(word_id, lock_token)
+            .await?;
+        Ok(true)
     }
 
     /// Updates a dailp_user's information

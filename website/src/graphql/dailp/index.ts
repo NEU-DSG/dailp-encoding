@@ -211,7 +211,7 @@ export type AnnotatedFormSegmentsArgs = {
 
 /**
  * A single word in an annotated document that can be edited.
- * All fields except id are optional.
+ * All fields except id and lock_token are optional.
  */
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
@@ -220,6 +220,11 @@ export type AnnotatedFormUpdate = {
   readonly englishGloss: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /**
+   * Lock token proving the caller holds the editing lock for this word.
+   * The save will fail if the lock has expired or was acquired by another session.
+   */
+  readonly lockToken: Scalars["UUID"]
   /** Possible update to normalized source content */
   readonly romanizedSource: InputMaybe<Scalars["String"]>
   /** Updated segments */
@@ -910,6 +915,12 @@ export type MorphemeTag = {
 
 export type Mutation = {
   readonly __typename?: "Mutation"
+  /**
+   * Acquire (or refresh) the editing lock on a word. The caller passes a
+   * UUID (generated in the front-end) as the `lock_token`. On denial, the result
+   * includes the user id of the current lock holder.
+   */
+  readonly acquireWordLock: WordLockResult
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
   /** Minimal mutation to add a document with only essential fields */
@@ -945,6 +956,11 @@ export type Mutation = {
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
+  /**
+   * Release the editing lock on a word. The token must match the one
+   * stored on the row for the release to take effect.
+   */
+  readonly releaseWordLock: Scalars["Boolean"]
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
   readonly updateAnnotation: Scalars["Boolean"]
@@ -962,6 +978,11 @@ export type Mutation = {
   readonly updateWord: AnnotatedForm
   readonly upsertPage: Scalars["String"]
   readonly validateTurnstileToken: Scalars["Boolean"]
+}
+
+export type MutationAcquireWordLockArgs = {
+  lockToken: Scalars["UUID"]
+  wordId: Scalars["UUID"]
 }
 
 export type MutationAddBookmarkArgs = {
@@ -1008,6 +1029,11 @@ export type MutationInsertCustomMorphemeTagArgs = {
 
 export type MutationPostCommentArgs = {
   input: PostCommentInput
+}
+
+export type MutationReleaseWordLockArgs = {
+  lockToken: Scalars["UUID"]
+  wordId: Scalars["UUID"]
 }
 
 export type MutationRemoveBookmarkArgs = {
@@ -1203,6 +1229,11 @@ export type Query = {
   /** Get a single word given the word ID */
   readonly wordById: AnnotatedForm
   /**
+   * Read the current editing-lock state for a word. Used by the frontend
+   * to detect a stale lock (>5 min old) before saving.
+   */
+  readonly wordLockStatus: Maybe<WordLockStatus>
+  /**
    * Search for words that match any one of the given queries.
    * Each query may match against multiple fields of a word.
    */
@@ -1284,6 +1315,10 @@ export type QuerySyllabarySearchArgs = {
 
 export type QueryWordByIdArgs = {
   id: Scalars["UUID"]
+}
+
+export type QueryWordLockStatusArgs = {
+  wordId: Scalars["UUID"]
 }
 
 export type QueryWordSearchArgs = {
@@ -1405,6 +1440,36 @@ export type UserUpdate = {
   readonly organization: InputMaybe<Scalars["String"]>
   /** Role of the user (optional) */
   readonly role: InputMaybe<UserGroup>
+}
+
+/**
+ * Result of an attempt to acquire the editing lock on a word.
+ * On success, `acquired` is true. On denial, `editing_user_id` identifies
+ * the user who currently holds the lock so the UI can show who is editing.
+ */
+export type WordLockResult = {
+  readonly __typename?: "WordLockResult"
+  /** True if the lock was granted to the caller. */
+  readonly acquired: Scalars["Boolean"]
+  /** The user id holding the lock when denial occurs. None on success. */
+  readonly editingUserId: Maybe<Scalars["UUID"]>
+}
+
+/**
+ * Current state of the editing lock on a word. All three fields are NULL
+ * when the word is not locked; a non-null `editing_lock_token` means a lock
+ * is held. The frontend uses `editing_started_at` to detect a stale lock
+ * (>5 min old) before saving, and `editing_lock_token` to detect a lock
+ * that has been claimed by another session.
+ */
+export type WordLockStatus = {
+  readonly __typename?: "WordLockStatus"
+  /** Per-session token proving ownership of the lock. */
+  readonly editingLockToken: Maybe<Scalars["UUID"]>
+  /** When the current lock was acquired. */
+  readonly editingStartedAt: Maybe<DateTime>
+  /** User id holding the lock. */
+  readonly editingUserId: Maybe<Scalars["UUID"]>
 }
 
 export type WordSegment = {
@@ -2933,6 +2998,44 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type AcquireWordLockMutationVariables = Exact<{
+  wordId: Scalars["UUID"]
+  lockToken: Scalars["UUID"]
+}>
+
+export type AcquireWordLockMutation = { readonly __typename?: "Mutation" } & {
+  readonly acquireWordLock: { readonly __typename?: "WordLockResult" } & Pick<
+    WordLockResult,
+    "acquired" | "editingUserId"
+  >
+}
+
+export type ReleaseWordLockMutationVariables = Exact<{
+  wordId: Scalars["UUID"]
+  lockToken: Scalars["UUID"]
+}>
+
+export type ReleaseWordLockMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "releaseWordLock">
+
+export type WordLockStatusQueryVariables = Exact<{
+  wordId: Scalars["UUID"]
+}>
+
+export type WordLockStatusQuery = { readonly __typename?: "Query" } & {
+  readonly wordLockStatus: Maybe<
+    { readonly __typename?: "WordLockStatus" } & Pick<
+      WordLockStatus,
+      "editingUserId" | "editingLockToken"
+    > & {
+        readonly editingStartedAt: Maybe<
+          { readonly __typename?: "DateTime" } & Pick<DateTime, "timestamp">
+        >
+      }
+  >
+}
+
 export type AttachAudioToWordMutationVariables = Exact<{
   input: AttachAudioToWordInput
 }>
@@ -4259,6 +4362,53 @@ export function useUpdateWordMutation() {
   return Urql.useMutation<UpdateWordMutation, UpdateWordMutationVariables>(
     UpdateWordDocument
   )
+}
+export const AcquireWordLockDocument = gql`
+  mutation AcquireWordLock($wordId: UUID!, $lockToken: UUID!) {
+    acquireWordLock(wordId: $wordId, lockToken: $lockToken) {
+      acquired
+      editingUserId
+    }
+  }
+`
+
+export function useAcquireWordLockMutation() {
+  return Urql.useMutation<
+    AcquireWordLockMutation,
+    AcquireWordLockMutationVariables
+  >(AcquireWordLockDocument)
+}
+export const ReleaseWordLockDocument = gql`
+  mutation ReleaseWordLock($wordId: UUID!, $lockToken: UUID!) {
+    releaseWordLock(wordId: $wordId, lockToken: $lockToken)
+  }
+`
+
+export function useReleaseWordLockMutation() {
+  return Urql.useMutation<
+    ReleaseWordLockMutation,
+    ReleaseWordLockMutationVariables
+  >(ReleaseWordLockDocument)
+}
+export const WordLockStatusDocument = gql`
+  query WordLockStatus($wordId: UUID!) {
+    wordLockStatus(wordId: $wordId) {
+      editingStartedAt {
+        timestamp
+      }
+      editingUserId
+      editingLockToken
+    }
+  }
+`
+
+export function useWordLockStatusQuery(
+  options: Omit<Urql.UseQueryArgs<WordLockStatusQueryVariables>, "query">
+) {
+  return Urql.useQuery<WordLockStatusQuery, WordLockStatusQueryVariables>({
+    query: WordLockStatusDocument,
+    ...options,
+  })
 }
 export const AttachAudioToWordDocument = gql`
   mutation AttachAudioToWord($input: AttachAudioToWordInput!) {

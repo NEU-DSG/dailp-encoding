@@ -214,7 +214,7 @@ type AnnotatedForm {
 
 """
 A single word in an annotated document that can be edited.
-All fields except id are optional.
+All fields except id and lock_token are optional.
 """
 input AnnotatedFormUpdate {
 	"""
@@ -241,6 +241,11 @@ input AnnotatedFormUpdate {
 	Possible updated english gloss
 	"""
 	englishGloss: String
+	"""
+	Lock token proving the caller holds the editing lock for this word.
+	The save will fail if the lock has expired or was acquired by another session.
+	"""
+	lockToken: UUID!
 }
 
 """
@@ -1276,6 +1281,17 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Acquire (or refresh) the editing lock on a word. The caller passes a
+	UUID (generated in the front-end) as the `lock_token`. On denial, the result
+	includes the user id of the current lock holder.
+	"""
+	acquireWordLock(wordId: UUID!, lockToken: UUID!): WordLockResult!
+	"""
+	Release the editing lock on a word. The token must match the one
+	stored on the row for the release to take effect.
+	"""
+	releaseWordLock(wordId: UUID!, lockToken: UUID!): Boolean!
+	"""
 	Updates a dailp_user's information
 	"""
 	updateUser(user: UserUpdate!): User!
@@ -1506,6 +1522,11 @@ type Query {
 	"""
 	wordById(id: UUID!): AnnotatedForm!
 	"""
+	Read the current editing-lock state for a word. Used by the frontend
+	to detect a stale lock (>5 min old) before saving.
+	"""
+	wordLockStatus(wordId: UUID!): WordLockStatus
+	"""
 	Get a single paragraph given the paragraph ID
 	"""
 	paragraphById(id: UUID!): DocumentParagraph!
@@ -1725,6 +1746,44 @@ input UserUpdate {
 	Role of the user (optional)
 	"""
 	role: UserGroup
+}
+
+"""
+Result of an attempt to acquire the editing lock on a word.
+On success, `acquired` is true. On denial, `editing_user_id` identifies
+the user who currently holds the lock so the UI can show who is editing.
+"""
+type WordLockResult {
+	"""
+	True if the lock was granted to the caller.
+	"""
+	acquired: Boolean!
+	"""
+	The user id holding the lock when denial occurs. None on success.
+	"""
+	editingUserId: UUID
+}
+
+"""
+Current state of the editing lock on a word. All three fields are NULL
+when the word is not locked; a non-null `editing_lock_token` means a lock
+is held. The frontend uses `editing_started_at` to detect a stale lock
+(>5 min old) before saving, and `editing_lock_token` to detect a lock
+that has been claimed by another session.
+"""
+type WordLockStatus {
+	"""
+	When the current lock was acquired.
+	"""
+	editingStartedAt: DateTime
+	"""
+	User id holding the lock.
+	"""
+	editingUserId: UUID
+	"""
+	Per-session token proving ownership of the lock.
+	"""
+	editingLockToken: UUID
 }
 
 type WordSegment {

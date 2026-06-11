@@ -20,5 +20,8 @@ update word set
             else english_gloss
         end
 
-where id = $1
+-- editing_lock_token check ensures only the session that holds the lock
+-- can save. If the lock has expired and someone else acquired it, this query
+-- updates zero rows and the caller fails.
+where id = $1 and editing_lock_token = $6
 returning word.document_id;

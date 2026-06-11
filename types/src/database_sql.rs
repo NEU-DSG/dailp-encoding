@@ -770,6 +770,66 @@ impl Database {
         todo!("Implement image annotations")
     }
 
+    /// Try to acquire (or refresh) the editing lock on a word.
+    /// Returns a `WordLockResult` indicating success or denial. On denial,
+    /// the result includes the current lock holder's user id.
+    pub async fn acquire_word_lock(
+        &self,
+        word_id: Uuid,
+        user_id: Uuid,
+        lock_token: Uuid,
+    ) -> Result<WordLockResult> {
+        let acquired_row = query_file!(
+            "queries/acquire_word_lock.sql",
+            word_id,
+            user_id,
+            lock_token
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        if acquired_row.is_some() {
+            Ok(WordLockResult {
+                acquired: true,
+                editing_user_id: None,
+            })
+        } else {
+            // Acquisition denied -> look up the current lock holder id for the UI.
+            let holder = self
+                .word_lock_status(word_id)
+                .await?
+                .and_then(|s| s.editing_user_id);
+            Ok(WordLockResult {
+                acquired: false,
+                editing_user_id: holder,
+            })
+        }
+    }
+
+    /// Read the current lock state for a word: the four lock columns plus
+    /// any expiry information needed by the frontend to detect a stale lock
+    /// before saving. Returns `None` if the word does not exist.
+    pub async fn word_lock_status(&self, word_id: Uuid) -> Result<Option<WordLockStatus>> {
+        let row = query_file!("queries/word_lock_status.sql", word_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(row.map(|r| WordLockStatus {
+            editing_started_at: r.editing_started_at.map(|d| DateTime::new(d.naive_utc())),
+            editing_user_id: r.editing_user_id,
+            editing_lock_token: r.editing_lock_token,
+        }))
+    }
+
+    /// Release the editing lock on a word. Does nothing if the caller does not
+    /// hold the lock (token does not match), which is the correct outcome
+    /// for already-released or expired locks.
+    pub async fn release_word_lock(&self, word_id: Uuid, lock_token: Uuid) -> Result<()> {
+        query_file!("queries/release_word_lock.sql", word_id, lock_token)
+            .execute(&self.client)
+            .await?;
+        Ok(())
+    }
+
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
@@ -782,13 +842,16 @@ impl Database {
         };
         let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
+        // The editing_lock_token is checked in update_word.sql's WHERE clause.
+        // If the lock has expired or was taken by another session, fetch_one will error
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _
+            &english_gloss as _,
+            word.lock_token
         )
         .fetch_one(&mut *tx)
         .await?

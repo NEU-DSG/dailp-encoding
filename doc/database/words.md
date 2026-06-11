@@ -19,8 +19,12 @@
 | `index_in_document`                  | `bigint`                 | Position of the word in the whole document                                                          |
 | `page_id`                            | `uuid? -> document_page` | Physical page containing this word                                                                  |
 | `character_range`                    | `int8range?`             | Order of words in a paragraph is determined by character indices                                    |
+| `editing_started_at`                 | `timestamptz?`           | When the current editing lock was acquired. Used to auto-expire stale locks after 5 minutes.        |
+| `editing_user_id`                    | `uuid? -> dailp_user`    | User holding the editing lock. `null` when no lock is held.                                         |
+| `editing_lock_token`                 | `uuid?`                  | Per-session token (generated client-side) proving ownership of the lock for save and release. A non-null value means the lock is held. |
 
 - One of `page_id` or `character_range` must be supplied
+- The `editing_started_at` / `editing_user_id` / `editing_lock_token` columns implement per-word editing locks. A non-null `editing_lock_token` means a lock is held; release sets all three back to null. See `types/queries/acquire_word_lock.sql`, `release_word_lock.sql`, and the `editing_lock_token` check in `update_word.sql`.
 
 ## `word_user_media`
 

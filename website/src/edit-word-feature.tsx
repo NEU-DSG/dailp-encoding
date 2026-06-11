@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -7,8 +7,9 @@ import {
   unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
+import { v4 as uuidv4 } from "uuid"
 import * as Dailp from "src/graphql/dailp"
-import { UserRole, useUserRole } from "./auth"
+import { UserRole, useUserId, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useEditWordCheckContext } from "./edit-word-check-context"
@@ -19,8 +20,72 @@ import { usePreferences } from "./preferences-context"
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
   const { form, isEditing, setIsEditing, setOriginalSegmentCount } = useForm()
-
   const { cherokeeRepresentation } = usePreferences()
+  const {
+    lockToken,
+    setLockToken,
+    setLockedWordId,
+    denialInfo,
+    setDenialInfo,
+  } = useEditWordCheckContext()
+
+  const [, acquireWordLock] = Dailp.useAcquireWordLockMutation()
+  const [, releaseWordLock] = Dailp.useReleaseWordLockMutation()
+
+  const currentUserId = useUserId()
+  const [lockHolderResult] = Dailp.useUserByIdQuery({
+    variables: { id: denialInfo?.editingUserId ?? "" },
+    pause: !denialInfo?.editingUserId,
+  })
+  const isSelfLock =
+    !!denialInfo?.editingUserId &&
+    !!currentUserId &&
+    denialInfo.editingUserId === currentUserId
+  const lockHolderName =
+    lockHolderResult.data?.dailpUserById?.displayName ?? "another user"
+
+  // Show the denial as an alert popup. Wait for the user-name query to resolve
+  // so the display name can appear in the message, then clear
+  // denialInfo so the alert doesn't refire on re-renders.
+  useEffect(() => {
+    if (!denialInfo) return
+    const waitingForName =
+      !!denialInfo.editingUserId && !isSelfLock && lockHolderResult.fetching
+    if (waitingForName) return
+
+    const message = isSelfLock
+      ? "This account is editing this word on another device."
+      : `Currently being edited by "${lockHolderName}".`
+    alert(message)
+    setDenialInfo(null)
+  }, [denialInfo, isSelfLock, lockHolderResult.fetching, lockHolderName])
+
+  const handleEditClick = async () => {
+    const token = uuidv4()
+    const wordId = form.values.word?.id
+    const result = await acquireWordLock({ wordId, lockToken: token })
+    if (result.data?.acquireWordLock.acquired) {
+      setLockToken(token)
+      setLockedWordId(wordId ?? null)
+      setDenialInfo(null)
+      setIsEditing(true)
+      setOriginalSegmentCount(form.values.word?.segments?.length || 0)
+    } else {
+      setDenialInfo({
+        editingUserId: result.data?.acquireWordLock.editingUserId ?? null,
+      })
+    }
+  }
+
+  const handleCancelClick = async () => {
+    if (lockToken) {
+      await releaseWordLock({ wordId: form.values.word?.id, lockToken })
+      setLockToken(null)
+      setLockedWordId(null)
+    }
+    setDenialInfo(null)
+    setIsEditing(false)
+  }
 
   return (
     <Form {...form} className={css.form}>
@@ -30,9 +95,7 @@ export const EditButton = () => {
           <IconButton
             className={css.cancelButton}
             round={false}
-            onClick={() => {
-              setIsEditing(false)
-            }}
+            onClick={handleCancelClick}
           >
             Cancel
           </IconButton>
@@ -50,11 +113,7 @@ export const EditButton = () => {
         <IconTextButton
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
-          onClick={() => {
-            setIsEditing(true)
-            // Store original segment count when entering edit mode
-            setOriginalSegmentCount(form.values.word?.segments?.length || 0)
-          }}
+          onClick={handleEditClick}
         >
           Edit
         </IconTextButton>

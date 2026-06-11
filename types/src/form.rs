@@ -290,7 +290,7 @@ pub fn is_root_morpheme(s: &str) -> bool {
 }
 
 /// A single word in an annotated document that can be edited.
-/// All fields except id are optional.
+/// All fields except id and lock_token are optional.
 #[derive(async_graphql::InputObject)]
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
@@ -305,6 +305,35 @@ pub struct AnnotatedFormUpdate {
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
     /// Possible updated english gloss
     pub english_gloss: MaybeUndefined<String>,
+    /// Lock token proving the caller holds the editing lock for this word.
+    /// The save will fail if the lock has expired or was acquired by another session.
+    pub lock_token: Uuid,
+}
+
+/// Result of an attempt to acquire the editing lock on a word.
+/// On success, `acquired` is true. On denial, `editing_user_id` identifies
+/// the user who currently holds the lock so the UI can show who is editing.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordLockResult {
+    /// True if the lock was granted to the caller.
+    pub acquired: bool,
+    /// The user id holding the lock when denial occurs. None on success.
+    pub editing_user_id: Option<Uuid>,
+}
+
+/// Current state of the editing lock on a word. All three fields are NULL
+/// when the word is not locked; a non-null `editing_lock_token` means a lock
+/// is held. The frontend uses `editing_started_at` to detect a stale lock
+/// (>5 min old) before saving, and `editing_lock_token` to detect a lock
+/// that has been claimed by another session.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordLockStatus {
+    /// When the current lock was acquired.
+    pub editing_started_at: Option<crate::DateTime>,
+    /// User id holding the lock.
+    pub editing_user_id: Option<Uuid>,
+    /// Per-session token proving ownership of the lock.
+    pub editing_lock_token: Option<Uuid>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.
