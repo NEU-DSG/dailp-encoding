@@ -1,17 +1,14 @@
 import { ReactElement, useEffect } from "react"
 import { FaMicrophone, FaRegStopCircle } from "react-icons/fa/index"
 import { RiRecordCircleFill } from "react-icons/ri/index"
-import { AudioPlayer } from ".."
-import * as Dailp from "../../graphql/dailp"
-import {
-  MediaPermissionStatus,
-  useMediaRecorder,
-} from "../../use-media-recorder"
-import { CleanButton, IconTextButton } from "../button"
-import { contributeAudioOptions } from "../contribute-audio-section.css"
-import { SubtleButton } from "../subtle-button"
-import { subtleButton } from "../subtle-button.css"
+import { AudioPlayer } from "src/components"
+import { CleanButton, IconTextButton } from "src/components/button/button"
+import { SubtleButton } from "src/components/subtle-button/subtle-button"
+import { subtleButton } from "src/components/subtle-button/subtle-button.css"
+import * as Dailp from "src/graphql/dailp"
+import { contributeAudioOptions } from "../contribute-audio-section/contribute-audio-section.css"
 import { ContributeAudioPanel } from "./contribute-audio-panel"
+import { MediaPermissionStatus, useMediaRecorder } from "./use-media-recorder"
 
 export function RecordWordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   return (

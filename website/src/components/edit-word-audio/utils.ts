@@ -1,8 +1,8 @@
 import { CognitoUser } from "amazon-cognito-identity-js"
 import { useMemo, useState } from "react"
 import { useUser } from "src/auth"
-import * as Dailp from "../../graphql/dailp"
-import { S3Uploader } from "../../utils/s3"
+import * as Dailp from "src/graphql/dailp"
+import { S3Uploader } from "src/utils/s3"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 

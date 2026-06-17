@@ -1,6 +1,6 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    pkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -189,7 +189,7 @@
               nasm
               terraform
               rust-toolchain
-              nodejs-18_x
+              nodejs_24
               yarn
               act
               postgresql_14

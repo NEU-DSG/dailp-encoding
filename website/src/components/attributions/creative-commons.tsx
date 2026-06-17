@@ -1,8 +1,8 @@
 import React from "react"
-import Link from "../link"
+import Link from "../link/link"
 import * as css from "./creative-commons.css"
 
-interface Props {
+export interface Props {
   title: string
   authors: Array<{ name: string; link?: string }>
 }

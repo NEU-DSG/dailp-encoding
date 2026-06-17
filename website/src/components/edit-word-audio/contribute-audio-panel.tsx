@@ -1,11 +1,11 @@
 import { IconType } from "react-icons"
+import * as css from "src/components/panel-layout/panel-layout.css"
+import { CollapsiblePanel } from "src/components/word-panel/word-panel"
 import * as Dailp from "src/graphql/dailp"
-import { CollapsiblePanel } from "src/word-panel"
-import * as css from "../../panel-layout.css"
 import {
   ContributeAudioComponent,
   ContributeAudioSection,
-} from "../contribute-audio-section"
+} from "../contribute-audio-section/contribute-audio-section"
 
 export function ContributeAudioPanel(p: {
   panelTitle: string

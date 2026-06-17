@@ -1,4 +1,4 @@
-import Link from "./components/link"
+import Link from "./components/link/link"
 import * as css from "./footer.css"
 import { usePageContext } from "./renderer/PageShell"
 
