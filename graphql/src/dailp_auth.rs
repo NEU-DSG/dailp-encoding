@@ -26,11 +26,11 @@ pub fn user_info_from_authorization(auth: &str) -> Result<UserInfo, anyhow::Erro
     Ok(user_info)
 }
 
-fn require_dailp_mode(feature: &str) -> anyhow::Result<()> {
+fn require_dailp_mode(error_label: &str) -> anyhow::Result<()> {
     if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
         return Err(anyhow::anyhow!(
             "{} is only available in DAILP authentication mode",
-            feature
+            error_label
         ));
     }
     Ok(())
