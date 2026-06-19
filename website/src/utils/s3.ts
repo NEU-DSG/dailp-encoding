@@ -9,6 +9,14 @@ interface S3UploadConfig {
   keyPrefix: string
   contentType?: string
   extension?: string
+  metadata?: Record<string, string>
+}
+
+// Relational context for a contributor audio upload, stored as S3 metadata.
+export interface ContributorAudioMetadata {
+  wordId?: string
+  documentId?: string
+  speakerId?: string
 }
 
 export class S3Uploader {
@@ -52,6 +60,7 @@ export class S3Uploader {
         Key: key,
         ContentType:
           config.contentType || data.type || "application/octet-stream",
+        Metadata: config.metadata,
       })
     )
 
@@ -63,13 +72,27 @@ export class S3Uploader {
 
   // Convenience methods for common upload types
   async uploadContributorAudio(
-    data: Blob
+    data: Blob,
+    meta?: ContributorAudioMetadata
   ): Promise<{ resourceUrl: string; key: string }> {
     const bucket = `dailp-${process.env["TF_STAGE"] || "dev"}-media-storage`
+
+    // Describe the audio on the S3 object: format + upload date for every clip,
+    // plus whatever relational context (document/word/speaker) was provided.
+    const metadata: Record<string, string> = {
+      format: "mp3",
+      "upload-date": new Date().toISOString(),
+    }
+    if (meta?.documentId) metadata["document-id"] = meta.documentId
+    if (meta?.wordId) metadata["word-id"] = meta.wordId
+    if (meta?.speakerId) metadata["speaker-id"] = meta.speakerId
+
     return this.uploadFile(data, {
       bucket,
       keyPrefix: "user-uploaded-audio",
-      contentType: "audio/wav", // or detect from blob
+      contentType: "audio/mpeg", // or detect from blob
+      extension: "mp3",
+      metadata,
     })
   }
 

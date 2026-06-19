@@ -6,7 +6,7 @@ import {
   statusMessage,
   statusMessageError,
 } from "./contribute-audio-section.css"
-import { useAudioUpload } from "./edit-word-audio/utils"
+import { AudioUploadRelations, useAudioUpload } from "./edit-word-audio/utils"
 
 export type ContributeAudioComponent = (p: {
   uploadAudio: (blob: Blob) => Promise<boolean>
@@ -19,10 +19,11 @@ export type ContributeAudioComponent = (p: {
 export function ContributeAudioSection(p: {
   Component: ContributeAudioComponent
   processUploadedAudio: (resourceUrl: string) => Promise<boolean>
+  relations?: AudioUploadRelations
 }): ReactElement {
-  // const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(p.word.id)
   const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(
-    p.processUploadedAudio
+    p.processUploadedAudio,
+    p.relations
   )
 
   return (
