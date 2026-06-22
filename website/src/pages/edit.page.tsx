@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
+import * as alertCSS from "src/components/alert.css"
 import { AuthGuard } from "src/components/auth-guard"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -10,6 +11,7 @@ import {
   usePageContext,
   useRouteParams,
 } from "src/renderer/PageShell"
+import { sanitizeHtml, sanitizeHtmlWithReport } from "src/sanitize-html"
 
 const DISALLOWED_WORDS = [
   "admin",
@@ -82,10 +84,11 @@ const NewPage = () => {
       }
     }
 
+    const sanitizedContent = isHtml ? sanitizeHtml(content) : content
     upsertPage({
       pageInput: {
         title,
-        body: [content],
+        body: [sanitizedContent],
         path: formatPath(path),
       },
     }).then((res) => {
@@ -117,6 +120,11 @@ const NewPage = () => {
   }
 
   const isHtml = content.charAt(0) === "<"
+  const sanitizeReport = isHtml ? sanitizeHtmlWithReport(content) : null
+  const hasRemovals =
+    sanitizeReport !== null &&
+    (sanitizeReport.removedTags.length > 0 ||
+      sanitizeReport.removedAttrs.length > 0)
 
   return (
     <AuthGuard requiredRole={UserRole.Editor}>
@@ -175,6 +183,20 @@ const NewPage = () => {
               }}
             />
             <br />
+            {hasRemovals && sanitizeReport && (
+              // The Alert component but using the noticeNoMargin style to keep the p tag centered.
+              <div className={alertCSS.wrapper}>
+                <div className={alertCSS.noticeNoMargin} role="alert">
+                  <p>
+                    <strong>The following were removed for safety:</strong>{" "}
+                    {[
+                      ...sanitizeReport.removedTags.map((t) => `<${t}>`),
+                      ...sanitizeReport.removedAttrs.map((a) => `${a}=`),
+                    ].join(", ")}
+                  </p>
+                </div>
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               <textarea
                 style={{ width: "50%" }}
@@ -192,7 +214,11 @@ const NewPage = () => {
                 }}
               >
                 {isHtml ? (
-                  <div dangerouslySetInnerHTML={{ __html: content }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeReport?.clean ?? sanitizeHtml(content),
+                    }}
+                  />
                 ) : (
                   <Markdown>{content}</Markdown>
                 )}
