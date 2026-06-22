@@ -1842,9 +1842,9 @@ impl Database {
     pub async fn insert_edited_collection(
         &self,
         collection: CreateEditedCollectionInput,
-    ) -> Result<Uuid> {
+    ) -> Result<String> {
         // let mut tx = self.client.begin().await?;
-        let collection_id = query_file_scalar!(
+        let collection_slug = query_file_scalar!(
             "queries/insert_edited_collection.sql",
             collection.title,
             slug::slugify(&collection.title).replace("-", "_"),
@@ -1853,7 +1853,7 @@ impl Database {
         )
         .fetch_one(&self.client)
         .await?;
-        Ok(collection_id)
+        Ok(collection_slug)
     }
 
     pub async fn document_breadcrumbs(

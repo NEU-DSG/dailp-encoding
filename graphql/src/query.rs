@@ -947,8 +947,7 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .insert_edited_collection(input)
-            .await?
-            .to_string())
+            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
