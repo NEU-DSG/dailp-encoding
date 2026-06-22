@@ -914,6 +914,7 @@ export type Mutation = {
   readonly addBookmark: AnnotatedDoc
   /** Minimal mutation to add a document with only essential fields */
   readonly addDocument: AddDocumentPayload
+  readonly addUser: Scalars["String"]
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -942,6 +943,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly deleteUser: Scalars["String"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
@@ -972,6 +974,11 @@ export type MutationAddDocumentArgs = {
   input: CreateDocumentFromFormInput
 }
 
+export type MutationAddUserArgs = {
+  displayName: Scalars["String"]
+  role: UserGroup
+}
+
 export type MutationAttachAudioToDocumentArgs = {
   input: AttachAudioToDocumentInput
 }
@@ -998,6 +1005,10 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationDeleteUserArgs = {
+  userId: Scalars["UUID"]
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
@@ -3338,6 +3349,25 @@ export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
   >
 }
 
+export type AddUserMutationVariables = Exact<{
+  displayName: Scalars["String"]
+  role: UserGroup
+}>
+
+export type AddUserMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "addUser"
+>
+
+export type DeleteUserMutationVariables = Exact<{
+  userId: Scalars["UUID"]
+}>
+
+export type DeleteUserMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "deleteUser"
+>
+
 export type UserByIdQueryVariables = Exact<{
   id: Scalars["UUID"]
 }>
@@ -3357,6 +3387,30 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
         { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
       >
     }
+}
+
+export type AllUsersQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllUsersQuery = { readonly __typename?: "Query" } & {
+  readonly listUsers: ReadonlyArray<
+    { readonly __typename?: "User" } & Pick<
+      User,
+      | "id"
+      | "displayName"
+      | "avatarUrl"
+      | "bio"
+      | "organization"
+      | "location"
+      | "role"
+    > & {
+        readonly createdAt: Maybe<
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "formattedDate" | "day" | "month" | "year"
+          >
+        >
+      }
+  >
 }
 
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
@@ -4564,6 +4618,28 @@ export function useUpdateUserMutation() {
     UpdateUserDocument
   )
 }
+export const AddUserDocument = gql`
+  mutation addUser($displayName: String!, $role: UserGroup!) {
+    addUser(displayName: $displayName, role: $role)
+  }
+`
+
+export function useAddUserMutation() {
+  return Urql.useMutation<AddUserMutation, AddUserMutationVariables>(
+    AddUserDocument
+  )
+}
+export const DeleteUserDocument = gql`
+  mutation deleteUser($userId: UUID!) {
+    deleteUser(userId: $userId)
+  }
+`
+
+export function useDeleteUserMutation() {
+  return Urql.useMutation<DeleteUserMutation, DeleteUserMutationVariables>(
+    DeleteUserDocument
+  )
+}
 export const UserByIdDocument = gql`
   query UserById($id: UUID!) {
     dailpUserById(id: $id) {
@@ -4588,6 +4664,34 @@ export function useUserByIdQuery(
 ) {
   return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
     query: UserByIdDocument,
+    ...options,
+  })
+}
+export const AllUsersDocument = gql`
+  query AllUsers {
+    listUsers {
+      id
+      displayName
+      createdAt {
+        formattedDate
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useAllUsersQuery(
+  options?: Omit<Urql.UseQueryArgs<AllUsersQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllUsersQuery, AllUsersQueryVariables>({
+    query: AllUsersDocument,
     ...options,
   })
 }

@@ -28,6 +28,7 @@ export const CollectionProvider = (props: { children: any }) => {
   // Queries for chapters of a collection.
   const [{ data }] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug! },
+    pause: !collectionSlug,
   })
 
   // Add fallback query for when the singular query fails

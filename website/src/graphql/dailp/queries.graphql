@@ -717,11 +717,37 @@ mutation updateUser($user: UserUpdate!) {
   }
 }
 
+mutation addUser($displayName: String!, $role: UserGroup!) {
+  addUser(displayName: $displayName, role: $role)
+}
+
+mutation deleteUser($userId: UUID!) {
+  deleteUser(userId: $userId)
+}
+
 query UserById($id: UUID!) {
   dailpUserById(id: $id) {
     id
     displayName
     createdAt {
+      day
+      month
+      year
+    }
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+query AllUsers {
+  listUsers {
+    id
+    displayName
+    createdAt {
+      formattedDate
       day
       month
       year
