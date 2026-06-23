@@ -199,6 +199,7 @@ fragment FormFields on AnnotatedForm {
     }
     role
     previousSeparator
+    system
   }
   englishGloss
   commentary
