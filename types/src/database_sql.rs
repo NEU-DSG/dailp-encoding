@@ -1497,6 +1497,27 @@ impl Database {
         Ok(document.id)
     }
 
+    pub async fn iiif_source_for_document_metadata(
+        &self,
+        document_id: Uuid,
+    ) -> Result<Option<String>> {
+        let row = query_file!(
+            "queries/get_iiif_source_for_document_metadata.sql",
+            document_id
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        Ok(row.map(|r| {
+            // transform row into url
+            format!(
+                "{}/{}/info.json",
+                r.base_url,
+                r.iiif_oid.unwrap_or_default()
+            )
+        }))
+    }
+
     pub async fn update_paragraph(
         &self,
         paragraph: ParagraphUpdate,
