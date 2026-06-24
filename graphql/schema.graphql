@@ -1315,6 +1315,10 @@ type Mutation {
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 	validateTurnstileToken(token: String!): Boolean!
+	"""
+	Adds a new subject heading to the global list.
+	"""
+	createSubjectHeading(name: String!, status: ApprovalStatus!): SubjectHeading!
 }
 
 """
@@ -1532,6 +1536,10 @@ type Query {
 	Retrieves the IIIF image source URL of a document
 	"""
 	iiifSourceForDocumentMetadata(documentId: UUID!): String
+  """
+	Fetch all available subject headings.
+	"""
+	allSubjectHeadings: [SubjectHeading!]!
 }
 
 """

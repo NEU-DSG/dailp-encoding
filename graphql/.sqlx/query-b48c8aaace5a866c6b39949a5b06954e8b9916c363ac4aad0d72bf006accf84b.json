@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Selects the internal_gloss if there is one, otherwise \n-- selects the given gloss, a custom gloss entered by the user.\nselect coalesce(internal_gloss, input_gloss) as gloss\nfrom abstract_morpheme_tag\n\n-- Limits the fields of the table to only those with one abstract id,\n-- and which have the same abstract id as the abstract_morpheme_tag table.\n  inner join morpheme_tag\n    on array_length(morpheme_tag.abstract_ids, 1) = 1 \n      and abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1] \n\n-- Limits the fields of the table to only those with the matching short name\n-- as the input and those with the corresponding system id from morpheme_tag.\n  inner join abbreviation_system \n    on abbreviation_system.short_name = $2::text \n      and morpheme_tag.system_id = abbreviation_system.id\n\n-- Joins matching glosses with the morpheme_tag table,\n-- and keeps the input_gloss even if there is no matching gloss (these will\n-- be the custom gloss entered by the user.)\n  right join unnest($1::text[]) as input_gloss\n    on input_gloss = morpheme_tag.gloss",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "gloss",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b48c8aaace5a866c6b39949a5b06954e8b9916c363ac4aad0d72bf006accf84b"
+}
