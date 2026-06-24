@@ -162,6 +162,21 @@ fragment DocFormFields on AnnotatedDoc {
   }
 }
 
+query AllSubjectHeadings {
+  allSubjectHeadings {
+    id
+    name
+    status
+  }
+}
+
+mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+  createSubjectHeading(name: $name, status: $status) {
+    id
+    name
+    status
+  }
+}
 fragment ParagraphFormFields on DocumentParagraph {
   __typename
   id
