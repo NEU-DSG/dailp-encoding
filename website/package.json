@@ -19,6 +19,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@citation-js/core": "^0.7.21",
     "@citation-js/plugin-csl": "^0.7.21",
     "@fontsource/charis-sil": "^4.5.7",

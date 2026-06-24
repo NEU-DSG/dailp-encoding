@@ -1,6 +1,7 @@
 import { ReactElement, useEffect } from "react"
 import { FaMicrophone, FaRegStopCircle } from "react-icons/fa/index"
 import { RiRecordCircleFill } from "react-icons/ri/index"
+import { encodeBlobToMp3 } from "src/utils/encode-mp3"
 import { AudioPlayer } from ".."
 import * as Dailp from "../../graphql/dailp"
 import {
@@ -45,7 +46,16 @@ export function RecordAudioContent({
   }, [permissionStatus])
 
   async function uploadAudioAndReset(data: Blob) {
-    if (await uploadAudio(data)) {
+    // Transcode the recording (Opus) to MP3, then hand the uploader a named
+    // file so the audio carries its format (extension) and upload date
+    // (lastModified) at the file level.
+    const mp3 = await encodeBlobToMp3(data)
+    const mp3File = new File(
+      [mp3],
+      `recording-${new Date().toISOString().replace(/[:.]/g, "-")}.mp3`,
+      { type: "audio/mpeg", lastModified: Date.now() }
+    )
+    if (await uploadAudio(mp3File)) {
       clearRecording?.()
     }
   }

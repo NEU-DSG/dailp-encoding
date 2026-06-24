@@ -21,6 +21,7 @@ export function ContributeAudioPanel(p: {
       content={
         <ContributeAudioSection
           Component={p.Component}
+          relations={{ wordId: p.word.id }}
           processUploadedAudio={async (resourceUrl: string) => {
             const result = await contributeAudio({
               input: { wordId: p.word.id, contributorAudioUrl: resourceUrl },
