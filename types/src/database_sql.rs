@@ -2649,6 +2649,12 @@ impl Database {
         Ok(input.path)
     }
 
+    pub async fn delete_page(&self, page_id: &Uuid) -> Result<Uuid> {
+        Ok(query_file_scalar!("queries/delete_page.sql", page_id)
+            .fetch_one(&self.client)
+            .await?)
+    }
+
     pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
         let record = query_file!("queries/page_by_path.sql", path)
             .fetch_optional(&self.client)

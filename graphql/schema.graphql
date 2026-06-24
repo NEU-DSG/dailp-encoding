@@ -1313,6 +1313,7 @@ type Mutation {
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
+	deletePage(id: UUID!): UUID!
 	updateMenu(menu: MenuUpdate!): Menu!
 	validateTurnstileToken(token: String!): Boolean!
 	"""
