@@ -406,6 +406,20 @@ impl Query {
             .get_menu_by_slug(slug)
             .await?)
     }
+
+    /// Retrieves the IIIF image source URL of a document
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn iiif_source_for_document_metadata(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<Option<String>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .iiif_source_for_document_metadata(document_id)
+            .await?)
+    }
 }
 
 pub struct Mutation;

@@ -1528,6 +1528,10 @@ type Query {
 	listUsers: [User!]!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
+	"""
+	Retrieves the IIIF image source URL of a document
+	"""
+	iiifSourceForDocumentMetadata(documentId: UUID!): String
 }
 
 """

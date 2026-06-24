@@ -187,6 +187,29 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
   const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
+
+  // Query IIIF link for format type of this document
+  const [{ data: iiifData }] = Dailp.useIiifSourceForDocumentMetadataQuery({
+    variables: { documentId: documentMetadata.id },
+    pause: !documentMetadata.id,
+  })
+  const [iiifFormat, setIiifFormat] = useState<string>("")
+
+  // When URL is accessible, grab format type from IIIF url info.json
+  useEffect(() => {
+    if (!iiifData?.iiifSourceForDocumentMetadata) return
+
+    fetch(iiifData.iiifSourceForDocumentMetadata)
+      .then((res) => res.json())
+      .then((info) => {
+        const formats = info?.profile?.[1]?.formats
+        if (Array.isArray(formats) && formats.length > 0) {
+          setIiifFormat(formats[0])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [iiifData])
+
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
@@ -346,7 +369,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setDate(dateObj)
 
     setTitle(dm.title ?? "")
-    setFormat(dm.format?.name ?? "")
+    setFormat(dm.format?.name ?? iiifFormat ?? "")
     setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
@@ -386,7 +409,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       languages: [...(dm.languages ?? [])],
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
     })
-  }, [documentMetadata])
+  }, [documentMetadata, iiifFormat])
 
   const addContributor = (
     name: string,
