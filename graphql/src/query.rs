@@ -7,13 +7,12 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput, 
-    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole, 
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, 
-    Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, 
-    DocumentParagraph, PositionInDocument, SubjectHeading, SourceAttribution,
-    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
-
+    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 use log::{debug, info};

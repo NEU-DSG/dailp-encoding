@@ -1536,7 +1536,7 @@ type Query {
 	Retrieves the IIIF image source URL of a document
 	"""
 	iiifSourceForDocumentMetadata(documentId: UUID!): String
-  """
+	"""
 	Fetch all available subject headings.
 	"""
 	allSubjectHeadings: [SubjectHeading!]!

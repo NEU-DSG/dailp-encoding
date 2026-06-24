@@ -1497,7 +1497,6 @@ impl Database {
         Ok(document.id)
     }
 
-    
     pub async fn iiif_source_for_document_metadata(
         &self,
         document_id: Uuid,

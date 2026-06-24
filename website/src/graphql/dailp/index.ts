@@ -3834,7 +3834,6 @@ export function useDocumentContentsQuery(
     ...options,
   })
 }
-
 export const IiifSourceForDocumentMetadataDocument = gql`
   query IiifSourceForDocumentMetadata($documentId: UUID!) {
     iiifSourceForDocumentMetadata(documentId: $documentId)
@@ -3852,7 +3851,6 @@ export function useIiifSourceForDocumentMetadataQuery(
     IiifSourceForDocumentMetadataQueryVariables
   >({ query: IiifSourceForDocumentMetadataDocument, ...options })
 }
-
 export const AllSubjectHeadingsDocument = gql`
   query AllSubjectHeadings {
     allSubjectHeadings {
@@ -3871,7 +3869,6 @@ export function useAllSubjectHeadingsQuery(
     AllSubjectHeadingsQueryVariables
   >({ query: AllSubjectHeadingsDocument, ...options })
 }
-
 export const CreateSubjectHeadingDocument = gql`
   mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
     createSubjectHeading(name: $name, status: $status) {
@@ -3888,7 +3885,6 @@ export function useCreateSubjectHeadingMutation() {
     CreateSubjectHeadingMutationVariables
   >(CreateSubjectHeadingDocument)
 }
-
 export const CollectionDocument = gql`
   query Collection($slug: String!) {
     collection(slug: $slug) {
