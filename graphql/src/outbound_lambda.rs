@@ -1,13 +1,8 @@
-mod query;
-mod service_integrations;
-mod outbound_lambda;
-
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, EmptySubscription, Schema},
+    dailp::async_graphql::{self, EmptySubscription, Schema},
     dailp::auth::{ApiGatewayUserInfo, UserInfo},
     lambda_http::{http::header, IntoResponse, Request, RequestExt, Response},
     log::info,
-    query::*,
 };
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -18,56 +13,18 @@ async fn main() -> Result<(), Error> {
     // Share database connection between executions.
     // This prevents each lambda invocation from creating a new connection to
     // the database.
-    let connections = Some(16);
-    let database = dailp::Database::connect(connections)?;
-    let schema = {
-        Schema::build(Query, Mutation, EmptySubscription)
-            .data(DataLoader::new(
-                dailp::Database::connect(connections)?,
-                tokio::spawn,
-            ))
-            .finish()
-    };
-    let database = &database;
-    let schema = &schema;
     lambda_http::run(lambda_http::service_fn(|req| {
-        handler(req, database, schema)
+        handler(req)
     }))
     .await?;
     Ok(())
 }
 
-/// Takes an HTTP request containing a GraphQL query,
-/// processes it with our GraphQL schema, then returns a JSON response.
+/// Calls external services from outside our VPC
 async fn handler(
     req: Request,
-    database: &dailp::Database,
-    schema: &Schema<Query, Mutation, EmptySubscription>,
 ) -> Result<impl IntoResponse, Error> {
     info!("API Gateway Request: {:?}", req);
-
-    // We have this nasty optional result type because we have three options
-    // 1. The authorizer has no claims (None)
-    // 2. The authorizer has valid claims (Some(Ok(UserInfo)))
-    // 2. The authorizer has invalid claims (Some(Err(_)))
-    let user: Option<Result<UserInfo, _>> = match req.request_context() {
-        lambda_http::request::RequestContext::ApiGatewayV1(ctx) => {
-            ctx.authorizer.get("claims").map(|claims| {
-                serde_json::from_value::<ApiGatewayUserInfo>(claims.clone())
-                    .map(|ApiGatewayUserInfo(user)| user)
-            })
-        }
-        _ => None,
-    };
-
-    if let Some(Ok(user)) = user.as_ref() {
-        database.upsert_dailp_user(user.id).await?;
-    }
-
-    if let Some(Err(err)) = user {
-        info!("Failed to decode UserInfo from authorizer: {:?}", err);
-        return Err(Box::new(err));
-    }
 
     // TODO Hook up warp or tide instead of using a manual conditional.
     let path = req.uri().path();

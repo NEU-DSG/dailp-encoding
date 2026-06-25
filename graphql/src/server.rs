@@ -1,7 +1,9 @@
 use log::error;
 
-mod cognito;
 mod query;
+mod service_integrations;
+
+use crate::service_integrations::cognito;
 
 use {
     dailp::async_graphql::{
