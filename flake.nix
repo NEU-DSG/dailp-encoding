@@ -1,6 +1,6 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    pkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -30,7 +30,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-s1RPtyvDGJaX/BisLT+ifVfuhDT1nZkZ1NcK8sbwELM=";
+          sha256 = "sha256-SDu4snEWjuZU475PERvu+iO50Mi39KVjqCeJeNvpguU=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -189,10 +189,10 @@
               nasm
               terraform
               rust-toolchain
-              nodejs-18_x
+              nodejs_20
               yarn
               act
-              postgresql_14
+              postgresql
               sqlx-cli
               sqlfluff
               (writers.writeBashBin "dev-check" ./check.sh)
@@ -224,8 +224,7 @@
                 cargo sqlx prepare -- -p dailp
               '')
             ] ++ lib.optionals stdenv.isDarwin [
-              darwin.apple_sdk.frameworks.Security
-              darwin.apple_sdk.frameworks.SystemConfiguration
+              apple-sdk
               libiconv
             ];
           };
