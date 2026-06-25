@@ -1,83 +1,31 @@
 use {
-    dailp::async_graphql::{self, EmptySubscription, Schema},
-    dailp::auth::{ApiGatewayUserInfo, UserInfo},
-    lambda_http::{http::header, IntoResponse, Request, RequestExt, Response},
-    log::info,
+    crate::service_integrations::turnstile::validate_token, lambda_runtime::{Error, LambdaEvent, run, service_fn}, log::info, serde_json::Value
 };
+
+// Even though a dedicated struct for inputs is overkill for now,
+// we expect more service integrations soon for our backup strategy
+#[derive(Deserialize, Serialize)]
+struct OutboundRequest {
+    service: String,
+    data: String
+}
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
-    // Share database connection between executions.
-    // This prevents each lambda invocation from creating a new connection to
-    // the database.
-    lambda_http::run(lambda_http::service_fn(|req| {
-        handler(req)
-    }))
+    run(service_fn(handler))
     .await?;
     Ok(())
 }
 
 /// Calls external services from outside our VPC
 async fn handler(
-    req: Request,
-) -> Result<impl IntoResponse, Error> {
-    info!("API Gateway Request: {:?}", req);
-
-    // TODO Hook up warp or tide instead of using a manual conditional.
-    let path = req.uri().path();
-    // GraphQL queries route to the /graphql endpoint.
-    if path.contains("/graphql") {
-        if req.method() == lambda_http::http::Method::GET {
-            // Serve GraphQL Playground over GET to allow introspection in the browser!
-            let playground = async_graphql::http::playground_source(
-                async_graphql::http::GraphQLPlaygroundConfig::new(req.uri().path()),
-            );
-            Ok(Response::builder()
-                .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
-                .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-                .body(playground)?)
-        } else if let lambda_http::Body::Text(req) = req.into_body() {
-            // Other requests (usually POST) should be processed as an actual
-            // GraphQL query.
-            let req: async_graphql::Request = serde_json::from_str(&req)?;
-            // If the request was made by an authenticated user, add their
-            // information to the request data.
-            let req = if let Some(Ok(user)) = user {
-                req.data(user)
-            } else {
-                req
-            };
-            let res = schema.execute(req).await;
-            let result = serde_json::to_string(&res)?;
-            let resp = Response::builder()
-                .header(header::CONTENT_TYPE, "application/json")
-                .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-                .header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true")
-                .body(result)?;
-            Ok(resp)
-        } else {
-            // TODO Make a custom error type for DAILP to cover this and ingestion errors.
-            Err(Box::new(std::fmt::Error))
-        }
-    }
-    // Document manifests are found at /manifests/{id}
-    else if path.starts_with("/manifests") {
-        let full_url = req.uri().to_string();
-        let full_path = req.uri().path();
-        let mut parts = full_path.split('/');
-        let document_name = parts.nth(2).expect("No manifest ID given");
-        let manifest = database.document_manifest(document_name, full_url).await?;
-        let json = serde_json::to_string(&manifest)?;
-        let resp = Response::builder()
-            .header(header::CONTENT_TYPE, "application/json")
-            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-            .body(json)?;
-        Ok(resp)
-    } else {
-        // TODO Make a custom error type for DAILP to cover this and ingestion errors.
-        Err(Box::new(std::fmt::Error))
-    }
+    event: LambdaEvent<Value>,
+) -> Result<bool, Error> {
+    let payload = event.payload;
+    let request: OutboundRequest = serde_json::from_value(payload)?;
+    let token = request.data;
+    validate_token(token)
 }

@@ -994,6 +994,11 @@ impl Mutation {
             use aws_sdk_lambda as lambda;
             let config = aws_config::load_from_env().await;
             let client = lambda::Client::new(&config);
+            let result = client
+                .invoke()
+                .function_name(todo!()) // Outbound lambda function
+                .payload(todo!())
+                .send();
             todo!()
         }
     }
