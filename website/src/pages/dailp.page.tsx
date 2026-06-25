@@ -1,6 +1,7 @@
 import React from "react"
 import { useState } from "react"
 import Markdown from "react-markdown"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
@@ -85,6 +86,8 @@ export const DailpPageContents = (props: { path: string }) => {
   const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
   const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
+  const [updatePagePathResult, updatePagePath] =
+    Dailp.useUpdatePagePathMutation()
 
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
@@ -98,7 +101,36 @@ export const DailpPageContents = (props: { path: string }) => {
     return <Alert>Page content not found. {props.path}</Alert>
   }
 
-  const handlePublishClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const slugify = (value: string) =>
+    value.toLowerCase().trim().split(" ").join("-")
+
+  const stripTrailingSlash = (value: string) =>
+    value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value
+
+  const buildPublishedPath = (menuLabel: string, currentPath: string) => {
+    const prefix = slugify(menuLabel)
+    return `/${prefix}${stripTrailingSlash(currentPath)}`
+  }
+
+  const buildUnpublishedPath = (menuLabel: string, currentPath: string) => {
+    const prefix = `/${slugify(menuLabel)}`
+    const normalized = stripTrailingSlash(currentPath)
+    return normalized.startsWith(prefix + "/") || normalized === prefix
+      ? normalized.slice(prefix.length) || "/"
+      : normalized
+  }
+
+  const findParentMenuLabel = (path: string) => {
+    const normalized = stripTrailingSlash(path)
+    const parent = menu?.items?.find((item) =>
+      item.items?.some(
+        (subItem) => stripTrailingSlash(subItem.path) === normalized
+      )
+    )
+    return parent?.label ?? null
+  }
+
+  const handlePublishClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     const action = isPublished && !isLocationSelected ? "unpublish" : "publish"
     const confirm = window.confirm(
       `Are you sure you want to ${action} this page?`
@@ -122,9 +154,30 @@ export const DailpPageContents = (props: { path: string }) => {
         })) as ReadonlyArray<Dailp.MenuItemInput>
       }
 
+      const parentLabel =
+        action === "unpublish" ? findParentMenuLabel(props.path) : null
+
+      const targetPath =
+        action === "publish"
+          ? buildPublishedPath(selectedLocation, props.path)
+          : parentLabel
+          ? buildUnpublishedPath(parentLabel, props.path)
+          : props.path
+
+      if (targetPath !== props.path) {
+        const res = await updatePagePath({
+          oldPath: props.path,
+          newPath: targetPath,
+        })
+        if (res.error) {
+          window.alert(`Failed to ${action} page: ${res.error.message}`)
+          return
+        }
+      }
+
       const updatedItems =
         menu?.items?.map((item) => {
-          if (action === "publish" && item.path === selectedLocation) {
+          if (action === "publish" && item.label === selectedLocation) {
             const currentItems = item.items || []
             return {
               ...item,
@@ -132,7 +185,7 @@ export const DailpPageContents = (props: { path: string }) => {
                 ...currentItems,
                 {
                   label: page.title,
-                  path: props.path,
+                  path: targetPath,
                   items: [],
                 },
               ],
@@ -158,9 +211,13 @@ export const DailpPageContents = (props: { path: string }) => {
         items: itemsInput,
       }
 
-      updateMenu({ menu: menuUpdate })
+      await updateMenu({ menu: menuUpdate })
       // reset dropdown to "None" after action
       setSelectedLocation("")
+
+      if (targetPath !== props.path) {
+        navigate(targetPath)
+      }
     }
   }
 
@@ -171,7 +228,7 @@ export const DailpPageContents = (props: { path: string }) => {
         </option>
       ))
     : menu?.items?.map((item) => (
-        <option key={item.label} value={item.path}>
+        <option key={item.label} value={item.label}>
           {item.label}
         </option>
       ))

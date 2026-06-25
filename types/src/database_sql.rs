@@ -2649,6 +2649,20 @@ impl Database {
         Ok(input.path)
     }
 
+    /// Move an existing page record from `old_path` to `new_path`.
+    /// Used when publishing a page under a menu so its URL reflects the menu
+    /// header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
+    /// Returns an error if no page exists at `old_path`.
+    pub async fn update_page_path(&self, old_path: &str, new_path: &str) -> Result<String> {
+        let record = query_file!("queries/update_page_path.sql", old_path, new_path)
+            .fetch_optional(&self.client)
+            .await?;
+        match record {
+            Some(row) => Ok(row.path),
+            None => Err(anyhow::anyhow!("no page found at path {}", old_path)),
+        }
+    }
+
     pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
         let record = query_file!("queries/page_by_path.sql", path)
             .fetch_optional(&self.client)

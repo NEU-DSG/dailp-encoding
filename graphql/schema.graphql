@@ -1313,6 +1313,12 @@ type Mutation {
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
+	"""
+	Move an existing page from `old_path` to `new_path`.
+	Used when publishing a page under a menu so its URL reflects the
+	menu header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
+	"""
+	updatePagePath(oldPath: String!, newPath: String!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 	validateTurnstileToken(token: String!): Boolean!
 }
