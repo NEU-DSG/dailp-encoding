@@ -1321,6 +1321,10 @@ type Mutation {
 	updatePagePath(oldPath: String!, newPath: String!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 	validateTurnstileToken(token: String!): Boolean!
+	"""
+	Adds a new subject heading to the global list.
+	"""
+	createSubjectHeading(name: String!, status: ApprovalStatus!): SubjectHeading!
 }
 
 """
@@ -1534,6 +1538,10 @@ type Query {
 	listUsers: [User!]!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
+	"""
+	Fetch all available subject headings.
+	"""
+	allSubjectHeadings: [SubjectHeading!]!
 }
 
 """
