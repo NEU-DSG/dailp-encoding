@@ -1434,6 +1434,8 @@ export type WordSegment = {
   readonly previousSeparator: Scalars["String"]
   /** What kind of thing is this segment? */
   readonly role: WordSegmentRole
+  /** Orhological system that this word segment belongs to (Learner, CRG, or TOAC) */
+  readonly system: Maybe<CherokeeOrthography>
 }
 
 /**
@@ -1673,6 +1675,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   | "gloss"
                                   | "role"
                                   | "previousSeparator"
+                                  | "system"
                                 > & {
                                     readonly matchingTag: Maybe<
                                       {
@@ -1790,7 +1793,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly segments: ReadonlyArray<
                 { readonly __typename?: "WordSegment" } & Pick<
                   WordSegment,
-                  "morpheme" | "gloss" | "role" | "previousSeparator"
+                  "morpheme" | "gloss" | "role" | "previousSeparator" | "system"
                 > & {
                     readonly matchingTag: Maybe<
                       { readonly __typename?: "MorphemeTag" } & Pick<
@@ -1991,7 +1994,7 @@ export type ParagraphFormFieldsFragment = {
             readonly segments: ReadonlyArray<
               { readonly __typename?: "WordSegment" } & Pick<
                 WordSegment,
-                "morpheme" | "gloss" | "role" | "previousSeparator"
+                "morpheme" | "gloss" | "role" | "previousSeparator" | "system"
               > & {
                   readonly matchingTag: Maybe<
                     { readonly __typename?: "MorphemeTag" } & Pick<
@@ -2103,7 +2106,7 @@ export type FormFieldsFragment = {
     readonly segments: ReadonlyArray<
       { readonly __typename?: "WordSegment" } & Pick<
         WordSegment,
-        "morpheme" | "gloss" | "role" | "previousSeparator"
+        "morpheme" | "gloss" | "role" | "previousSeparator" | "system"
       > & {
           readonly matchingTag: Maybe<
             { readonly __typename?: "MorphemeTag" } & Pick<
@@ -2499,7 +2502,7 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
               readonly segments: ReadonlyArray<
                 { readonly __typename?: "WordSegment" } & Pick<
                   WordSegment,
-                  "morpheme" | "gloss" | "role" | "previousSeparator"
+                  "morpheme" | "gloss" | "role" | "previousSeparator" | "system"
                 > & {
                     readonly matchingTag: Maybe<
                       { readonly __typename?: "MorphemeTag" } & Pick<
@@ -2886,7 +2889,7 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
       readonly segments: ReadonlyArray<
         { readonly __typename?: "WordSegment" } & Pick<
           WordSegment,
-          "morpheme" | "gloss" | "role" | "previousSeparator"
+          "morpheme" | "gloss" | "role" | "previousSeparator" | "system"
         > & {
             readonly matchingTag: Maybe<
               { readonly __typename?: "MorphemeTag" } & Pick<
@@ -3635,6 +3638,7 @@ export const FormFieldsFragmentDoc = gql`
       }
       role
       previousSeparator
+      system
     }
     englishGloss
     commentary

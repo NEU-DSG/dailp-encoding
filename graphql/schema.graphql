@@ -1737,6 +1737,10 @@ input UserUpdate {
 
 type WordSegment {
 	"""
+	Orhological system that this word segment belongs to (Learner, CRG, or TOAC)
+	"""
+	system: CherokeeOrthography
+	"""
 	Phonemic representation of the morpheme
 	"""
 	morpheme: String!

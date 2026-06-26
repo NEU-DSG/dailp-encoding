@@ -232,7 +232,6 @@ export const TranslationTab = ({
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
-
   useEffect(() => {
     selectAndShowContent(null)
   }, [doc.id])
@@ -274,6 +273,10 @@ export const TranslationTab = ({
   }
 
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
+
+  useEffect(() => {
+    selectAndShowContent(null)
+  }, [cherokeeRepresentation])
 
   const isDesktop = useMediaQuery(mediaQueries.medium)
 

@@ -934,7 +934,7 @@ impl Mutation {
         let system_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .abbreviation_id_from_short_name("CUS")
+            .abbreviation_id_from_short_name(&system)
             .await?;
 
         context
