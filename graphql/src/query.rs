@@ -8,11 +8,12 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -407,6 +408,16 @@ impl Query {
             .loader()
             .get_menu_by_slug(slug)
             .await?)
+    }
+
+    /// Fetch all available subject headings.
+    async fn all_subject_headings(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        Ok(db.all_subject_headings().await?)
     }
 }
 
@@ -976,8 +987,9 @@ impl Mutation {
         token: String,
     ) -> FieldResult<bool> {
         // POST to SiteVerify API directly unless an override is provided. Used for AWS Infra testing
-        let turnstile_api = std::env::var("TURNSTILE_API")
-            .unwrap_or("https://challenges.cloudflare.com/turnstile/v0/siteverify".to_string());
+        // let turnstile_api = std::env::var("TURNSTILE_API")
+        // .unwrap_or("https://challenges.cloudflare.com/turnstile/v0/siteverify".to_string());
+        let turnstile_api = "https://checkip.amazonaws.com";
         let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
         let params = [("secret", secret), ("response", token)];
         let client = reqwest::Client::new();
@@ -985,12 +997,14 @@ impl Mutation {
         info!("Sending POST to SiteVerify API");
         debug!("Payload: {:?}", params);
 
-        let response = client
-            .post(turnstile_api)
-            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-            .form(&params)
-            .send()
-            .await?;
+        // let response = client
+        //     .post(turnstile_api)
+        //     .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+        //     // .form(&params)
+        //     .send()
+        //     .await?;
+
+        let response = client.get(turnstile_api).send().await?;
 
         info!("Response recieved from SiteVerify API");
         debug!("Status Code: {}", response.status());
@@ -1000,6 +1014,26 @@ impl Mutation {
         let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
         Ok(body_json["success"].as_bool().unwrap())
+    }
+
+    /// Adds a new subject heading to the global list.
+    async fn create_subject_heading(
+        &self,
+        context: &Context<'_>,
+        name: String,
+        status: ApprovalStatus,
+    ) -> FieldResult<SubjectHeading> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let new_heading = SubjectHeading {
+            id: Uuid::new_v4(),
+            name,
+            status,
+        };
+
+        db.insert_subject_heading(&new_heading).await?;
+
+        Ok(new_heading)
     }
 }
 

@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into document (\n  short_name, title, is_reference, written_at, audio_slice_id, group_id\n)\nvalues ($1, $2, $3, $4, $5, $6)\non conflict (short_name) do update set\ntitle = excluded.title,\nis_reference = excluded.is_reference,\nwritten_at = excluded.written_at,\naudio_slice_id = excluded.audio_slice_id,\ngroup_id = excluded.group_id\nreturning id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bool",
+        "Date",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9f91be464c9e113d326e6ba91b03dc95f1b94adf482990dba756305fb68b0165"
+}
