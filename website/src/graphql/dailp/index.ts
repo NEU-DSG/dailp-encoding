@@ -2246,7 +2246,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "isHidden"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -3966,6 +3966,7 @@ export const EditedCollectionDocument = gql`
         path
         slug
       }
+      isHidden
     }
   }
 `

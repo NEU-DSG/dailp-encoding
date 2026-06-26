@@ -296,6 +296,7 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+    isHidden
   }
 }
 
