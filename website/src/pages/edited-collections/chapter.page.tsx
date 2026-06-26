@@ -57,6 +57,10 @@ const ChapterPage = (props: {
             <>
               <header className={chapterStyle.docHeader}>
                 <Breadcrumbs aria-label="Breadcrumbs">
+                  <Link href={collectionRoute(props.collectionSlug)}>
+                    {props.collectionSlug.toUpperCase()}
+                  </Link>
+
                   {chapter.breadcrumbs
                     .map((crumb) => (
                       <Link
