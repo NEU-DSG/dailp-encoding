@@ -50,13 +50,31 @@ export const numberedListItem = style([
   },
 ])
 
+// export const listItem = style([
+//   numberedListItem,
+//   {
+//     display: "block",
+//     ":before": {
+//       content: 'counters(item, ".") " "',
+//       counterIncrement: "item",
+//     },
+//   },
+// ])
+
 export const listItem = style([
   numberedListItem,
   {
+    // display: "flex",
+    // alignItems: "center",
+    // justifyContent: "space-between",
     display: "block",
-    ":before": {
-      content: 'counters(item, ".") " "',
-      counterIncrement: "item",
+
+    selectors: {
+      "&::before": {
+        display: "inline",
+        marginRight: "8px",
+        whiteSpace: "nowrap",
+      },
     },
   },
 ])
@@ -67,6 +85,10 @@ export const link = style([
   {
     color: colors.primaryText,
     textDecoration: "none",
+    minWidth: 0,
+
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
   },
 ])
 
@@ -82,3 +104,50 @@ export const title = style([
     fontWeight: "bolder",
   },
 ])
+
+// Collapsible parent chapter toggle styling
+export const chapterToggle = style({
+  background: "none",
+  border: "none",
+  padding: 0,
+  margin: 0,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "0.3rem",
+  color: colors.primaryText,
+  fontSize: "inherit",
+})
+
+export const toggleIcon = style({
+  transition: "transform 0.2s ease",
+})
+
+export const toggleIconOpen = style({
+  transform: "rotate(180deg)",
+})
+
+export const row = style({
+  display: "grid",
+  gridTemplateColumns: "auto 1fr auto",
+  alignItems: "start",
+  gap: "8px",
+  width: "100%",
+})
+
+export const number = style({
+  width: "40px",
+  textAlign: "right",
+  opacity: 0.7,
+  fontVariantNumeric: "tabular-nums",
+})
+
+export const toggleSpacer = style({
+  width: "40px",
+})
+
+export const nestedList = style({
+  paddingLeft: "1rem",
+  margin: 0,
+  listStyle: "none",
+})

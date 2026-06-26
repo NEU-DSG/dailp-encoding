@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useState } from "react"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -7,12 +7,14 @@ import {
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
+import { DropdownToggle } from "./dropdown-toggle"
 import Link from "./link"
 import * as css from "./toc.css"
 
 type TOCProps = {
   section: CollectionSection
   chapters: Chapter[]
+  prefix?: number[]
 }
 
 const CollectionTOC = () => {
@@ -64,9 +66,26 @@ const CollectionTOC = () => {
   )
 }
 
-const TOC = ({ section, chapters }: TOCProps) => {
+const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
   const { collectionSlug } = useRouteParams()
   const { onSelect, isSelected, lastSelected } = useFunctions()
+
+  // Control if chapter dropdown is open or not
+  const [openChapters, setOpenChapters] = useState<Set<string>>(new Set())
+
+  const toggleChapter = (slug: string) => {
+    setOpenChapters((prev) => {
+      const next = new Set(prev)
+
+      if (next.has(slug)) {
+        next.delete(slug)
+      } else {
+        next.add(slug)
+      }
+
+      return next
+    })
+  }
 
   const listStyle =
     section === CollectionSection.Body
@@ -78,22 +97,45 @@ const TOC = ({ section, chapters }: TOCProps) => {
 
   return (
     <>
-      <ol className={listStyle}>
-        {chapters.map((item) => (
-          <li key={item.slug} className={listItemStyle}>
-            <Link
-              href={chapterRoute(collectionSlug!, item.slug)}
-              className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => onSelect(item)}
-            >
-              {item.title}
-            </Link>
+      {/* <ol className={listStyle}> */}
+      <ol className={prefix.length === 0 ? css.orderedList : css.nestedList}>
+        {chapters.map((item, i) => {
+          const number = [...prefix, i + 1].join(".")
 
-            {isSelected(item) && item.children ? (
-              <TOC section={section} chapters={item.children} />
-            ) : null}
-          </li>
-        ))}
+          return (
+            <li key={item.slug} className={css.listItem}>
+              <div className={css.row}>
+                <span className={css.number}>{number}</span>
+
+                <Link
+                  href={chapterRoute(collectionSlug!, item.slug)}
+                  className={lastSelected(item) ? css.selectedLink : css.link}
+                  onClick={() => onSelect(item)}
+                >
+                  {item.title}
+                </Link>
+
+                {item.children?.length ? (
+                  <DropdownToggle
+                    label=""
+                    isOpen={openChapters.has(item.slug)}
+                    onToggle={() => toggleChapter(item.slug)}
+                  />
+                ) : (
+                  <span className={css.toggleSpacer} />
+                )}
+              </div>
+
+              {openChapters.has(item.slug) && item.children ? (
+                <TOC
+                  section={section}
+                  chapters={item.children}
+                  prefix={[...prefix, i + 1]}
+                />
+              ) : null}
+            </li>
+          )
+        })}
       </ol>
     </>
   )
