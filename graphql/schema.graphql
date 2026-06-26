@@ -878,6 +878,7 @@ type EditedCollection {
 	Cover image URL
 	"""
 	thumbnailUrl: String
+	isHidden: Boolean!
 	"""
 	URL slug for the collection, like "cwkw"
 	"""
@@ -1319,6 +1320,7 @@ type Mutation {
 	Adds a new subject heading to the global list.
 	"""
 	createSubjectHeading(name: String!, status: ApprovalStatus!): SubjectHeading!
+	toggleCollectionVisibility(collectionId: UUID!): EditedCollection!
 }
 
 """
@@ -1532,6 +1534,10 @@ type Query {
 	listUsers: [User!]!
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
+	"""
+	Retrieves the IIIF image source URL of a document
+	"""
+	iiifSourceForDocumentMetadata(documentId: UUID!): String
 	"""
 	Fetch all available subject headings.
 	"""

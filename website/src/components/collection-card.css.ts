@@ -1,5 +1,6 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { fonts, radii, space } from "src/style/constants"
+import { button } from "./button.css"
 
 export const collectionCard = style({
   display: "flex",
@@ -19,21 +20,18 @@ export const collectionCard = style({
 export const cardContent = style({
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between",
   flexGrow: 1,
   padding: "0px 20px 20px",
 })
 
-export const collectionCardImage = style([
-  {
-    width: "100%",
-    maxHeight: "175px",
-    objectFit: "cover",
-    padding: 0,
-    borderTopLeftRadius: radii.medium,
-    borderTopRightRadius: radii.medium,
-  },
-])
+export const collectionCardImage = style({
+  width: "100%",
+  maxHeight: "175px",
+  objectFit: "cover",
+  padding: 0,
+  borderTopLeftRadius: radii.medium,
+  borderTopRightRadius: radii.medium,
+})
 
 export const collectionCardHeader = style({
   fontFamily: fonts.header,
@@ -41,7 +39,8 @@ export const collectionCardHeader = style({
   textDecoration: "none",
   color: "#405372",
   margin: 0,
-  paddingBottom: "10px",
+  paddingBottom: "4px",
+  flexGrow: 1,
 })
 
 globalStyle(`${collectionCardHeader} a`, {
@@ -55,13 +54,12 @@ globalStyle(`${collectionCardHeader} a:hover`, {
   textDecoration: "underline",
 })
 
-export const collectionCardText = style([
-  {
-    fontFamily: fonts.body,
-    paddingTop: space.none,
-    paddingBottom: space.large,
-  },
-])
+export const collectionCardText = style({
+  fontFamily: fonts.body,
+  paddingTop: space.none,
+  paddingBottom: space.large,
+  flexGrow: 1,
+})
 
 export const actionButton = style({
   textDecoration: "none",
@@ -85,4 +83,64 @@ export const actionButton = style({
     boxShadow: "0 6px 10px rgba(0, 0, 0, 0.4)",
     transform: "scale(1.02)",
   },
+})
+
+export const toggleButton = style([
+  button,
+  {
+    position: "absolute",
+    top: "8px",
+    right: "8px",
+    padding: "2px 8px",
+    margin: 0,
+    fontSize: "16px",
+    backgroundColor: "#f0f0f0",
+    borderColor: "#aaa",
+    color: "#555",
+    zIndex: 1,
+    boxShadow: "none",
+    ":hover": {
+      backgroundColor: "#e0e0e0",
+    },
+    ":active": {
+      boxShadow: "none",
+    },
+  },
+])
+
+export const badgeWrapper = style({
+  paddingBottom: "8px",
+})
+
+export const publishedBadge = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "4px 12px",
+  backgroundColor: "#405372",
+  fontSize: "12px",
+  borderRadius: radii.large,
+  color: "white",
+})
+
+export const hiddenBadge = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "4px 12px",
+  border: "1px solid #ccc",
+  fontSize: "12px",
+  borderRadius: radii.large,
+  color: "#666",
+})
+
+export const headerSection = style({
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "flex-end",
+  paddingBottom: "10px",
+})
+
+export const titleWrapper = style({
+  paddingBottom: "5px",
 })

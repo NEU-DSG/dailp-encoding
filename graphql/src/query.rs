@@ -3,7 +3,6 @@
 use dailp::{
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
-    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
@@ -15,9 +14,8 @@ use dailp::{
     PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
     UpdateContributorAttribution, Uuid,
 };
-use itertools::{Itertools, Position};
+use itertools::Itertools;
 use log::{debug, info};
-use reqwest::{header, Client};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -407,6 +405,20 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .get_menu_by_slug(slug)
+            .await?)
+    }
+
+    /// Retrieves the IIIF image source URL of a document
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn iiif_source_for_document_metadata(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<Option<String>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .iiif_source_for_document_metadata(document_id)
             .await?)
     }
 
@@ -1034,6 +1046,19 @@ impl Mutation {
         db.insert_subject_heading(&new_heading).await?;
 
         Ok(new_heading)
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn toggle_collection_visibility(
+        &self,
+        context: &Context<'_>,
+        collection_id: Uuid,
+    ) -> FieldResult<EditedCollection> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .toggle_collection_visibility(collection_id)
+            .await?)
     }
 }
 

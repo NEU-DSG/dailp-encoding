@@ -543,6 +543,20 @@ impl Database {
         Ok((collection.slug).to_string())
     }
 
+    pub async fn toggle_collection_visibility(
+        &self,
+        collection_id: Uuid,
+    ) -> Result<EditedCollection> {
+        let collection = query_file_as!(
+            EditedCollection,
+            "queries/toggle_collection_visibility.sql",
+            collection_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection)
+    }
+
     pub async fn insert_all_chapters(
         &self,
         chapters: Vec<raw::CollectionChapter>,
@@ -1495,6 +1509,27 @@ impl Database {
             document.id
         );
         Ok(document.id)
+    }
+
+    pub async fn iiif_source_for_document_metadata(
+        &self,
+        document_id: Uuid,
+    ) -> Result<Option<String>> {
+        let row = query_file!(
+            "queries/get_iiif_source_for_document_metadata.sql",
+            document_id
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        Ok(row.map(|r| {
+            // transform row into url
+            format!(
+                "{}/{}/info.json",
+                r.base_url,
+                r.iiif_oid.unwrap_or_default()
+            )
+        }))
     }
 
     pub async fn update_paragraph(
@@ -3421,6 +3456,7 @@ impl Loader<EditedCollectionDetails> for Database {
                         description: collection.description,
                         slug: collection.slug,
                         thumbnail_url: collection.thumbnail_url,
+                        is_hidden: collection.is_hidden,
                     },
                 )
             })

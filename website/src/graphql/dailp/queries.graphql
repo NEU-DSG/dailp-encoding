@@ -100,6 +100,10 @@ query DocumentContents(
   }
 }
 
+query IiifSourceForDocumentMetadata($documentId: UUID!) {
+  iiifSourceForDocumentMetadata(documentId: $documentId)
+}
+
 fragment AudioSliceFields on AudioSlice {
   sliceId
   index # if this is used as a caching key, we will have performance issues
@@ -177,6 +181,7 @@ mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
     status
   }
 }
+
 fragment ParagraphFormFields on DocumentParagraph {
   __typename
   id
@@ -274,6 +279,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -290,6 +296,15 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+    isHidden
+  }
+}
+
+mutation ToggleCollectionVisibility($collectionId: UUID!) {
+  toggleCollectionVisibility(collectionId: $collectionId) {
+    id
+    title
+    isHidden
   }
 }
 

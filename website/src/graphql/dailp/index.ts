@@ -658,6 +658,7 @@ export type EditedCollection = {
   readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
+  readonly isHidden: Scalars["Boolean"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
   /** Cover image URL */
@@ -949,6 +950,7 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
   /** Update a comment */
   readonly updateComment: CommentParent
@@ -1019,6 +1021,10 @@ export type MutationPostCommentArgs = {
 
 export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationToggleCollectionVisibilityArgs = {
+  collectionId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -1176,6 +1182,8 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Retrieves the IIIF image source URL of a document */
+  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /** Gets all dailp_user with their id, username, and role for now */
   readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
@@ -1249,6 +1257,10 @@ export type QueryDocumentByUuidArgs = {
 
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryIiifSourceForDocumentMetadataArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type QueryMenuBySlugArgs = {
@@ -1884,6 +1896,14 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type IiifSourceForDocumentMetadataQueryVariables = Exact<{
+  documentId: Scalars["UUID"]
+}>
+
+export type IiifSourceForDocumentMetadataQuery = {
+  readonly __typename?: "Query"
+} & Pick<Query, "iiifSourceForDocumentMetadata">
+
 export type AudioSliceFieldsFragment = {
   readonly __typename?: "AudioSlice"
 } & Pick<
@@ -2204,7 +2224,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description" | "thumbnailUrl"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl" | "isHidden"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2226,7 +2246,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "isHidden"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2238,6 +2258,18 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
         >
       }
   >
+}
+
+export type ToggleCollectionVisibilityMutationVariables = Exact<{
+  collectionId: Scalars["UUID"]
+}>
+
+export type ToggleCollectionVisibilityMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly toggleCollectionVisibility: {
+    readonly __typename?: "EditedCollection"
+  } & Pick<EditedCollection, "id" | "title" | "isHidden">
 }
 
 export type WordSearchQueryVariables = Exact<{
@@ -3820,6 +3852,23 @@ export function useDocumentContentsQuery(
     ...options,
   })
 }
+export const IiifSourceForDocumentMetadataDocument = gql`
+  query IiifSourceForDocumentMetadata($documentId: UUID!) {
+    iiifSourceForDocumentMetadata(documentId: $documentId)
+  }
+`
+
+export function useIiifSourceForDocumentMetadataQuery(
+  options: Omit<
+    Urql.UseQueryArgs<IiifSourceForDocumentMetadataQueryVariables>,
+    "query"
+  >
+) {
+  return Urql.useQuery<
+    IiifSourceForDocumentMetadataQuery,
+    IiifSourceForDocumentMetadataQueryVariables
+  >({ query: IiifSourceForDocumentMetadataDocument, ...options })
+}
 export const AllSubjectHeadingsDocument = gql`
   query AllSubjectHeadings {
     allSubjectHeadings {
@@ -3891,6 +3940,7 @@ export const EditedCollectionsDocument = gql`
         path
       }
       thumbnailUrl
+      isHidden
     }
   }
 `
@@ -3916,6 +3966,7 @@ export const EditedCollectionDocument = gql`
         path
         slug
       }
+      isHidden
     }
   }
 `
@@ -3927,6 +3978,22 @@ export function useEditedCollectionQuery(
     query: EditedCollectionDocument,
     ...options,
   })
+}
+export const ToggleCollectionVisibilityDocument = gql`
+  mutation ToggleCollectionVisibility($collectionId: UUID!) {
+    toggleCollectionVisibility(collectionId: $collectionId) {
+      id
+      title
+      isHidden
+    }
+  }
+`
+
+export function useToggleCollectionVisibilityMutation() {
+  return Urql.useMutation<
+    ToggleCollectionVisibilityMutation,
+    ToggleCollectionVisibilityMutationVariables
+  >(ToggleCollectionVisibilityDocument)
 }
 export const WordSearchDocument = gql`
   query WordSearch($query: String!) {
