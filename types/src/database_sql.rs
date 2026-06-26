@@ -543,6 +543,20 @@ impl Database {
         Ok((collection.slug).to_string())
     }
 
+    pub async fn toggle_collection_visibility(
+        &self,
+        collection_id: Uuid,
+    ) -> Result<EditedCollection> {
+        let collection = query_file_as!(
+            EditedCollection,
+            "queries/toggle_collection_visibility.sql",
+            collection_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection)
+    }
+
     pub async fn insert_all_chapters(
         &self,
         chapters: Vec<raw::CollectionChapter>,
@@ -3442,6 +3456,7 @@ impl Loader<EditedCollectionDetails> for Database {
                         description: collection.description,
                         slug: collection.slug,
                         thumbnail_url: collection.thumbnail_url,
+                        is_hidden: collection.is_hidden,
                     },
                 )
             })
