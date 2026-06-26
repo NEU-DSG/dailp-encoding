@@ -15,11 +15,11 @@ export const CollectionCard = (props: {
   canToggle?: boolean
   canView?: boolean
 }) => {
-  const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
+  //const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
 
   const handleToggle = async () => {
     if (!props.collectionId) return
-    await toggleVisibility({ collectionId: props.collectionId })
+    //  await toggleVisibility({ collectionId: props.collectionId })
   }
 
   return (
