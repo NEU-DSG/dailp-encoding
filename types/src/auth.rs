@@ -9,7 +9,7 @@ pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     pub id: Uuid,
     email: String,
-    groups: Vec<UserGroup>,
+    pub groups: Vec<UserGroup>,
 }
 
 /// serde deserialization struct for UserInfo.

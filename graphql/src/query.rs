@@ -547,6 +547,15 @@ impl Mutation {
     #[graphql(guard = "AuthGuard")]
     async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
         let user_id = Uuid::from(&user.id);
+        let requestor = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        // Users may only edit their own information. Administrators may edit anyone's.
+        if requestor.id != user_id && !requestor.groups.contains(&UserGroup::Administrators) {
+            return Err("User attempted to modify another user's information".into());
+        }
+
         let db = context.data::<DataLoader<Database>>()?.loader();
 
         db.update_dailp_user(user).await?;
