@@ -111,9 +111,7 @@ pub async fn request_password_reset(
     match db.get_user_by_email(&input.email).await {
         Ok(Some(user)) => match db.create_password_reset_token(user.id).await {
             Ok(reset_token) => {
-                if let Err(e) =
-                    email::send_password_reset_email(&input.email, &reset_token).await
-                {
+                if let Err(e) = email::send_password_reset_email(&input.email, &reset_token).await {
                     log::error!(
                         "request_password_reset: failed to send email for user {}: {}",
                         user.id,
@@ -143,7 +141,9 @@ pub async fn reset_password(
 ) -> anyhow::Result<MessageResponse> {
     require_dailp_mode("Password reset")?;
 
-    let user_id = db.validate_and_use_password_reset_token(&input.token).await?;
+    let user_id = db
+        .validate_and_use_password_reset_token(&input.token)
+        .await?;
     db.update_user_password(user_id, input.new_password).await?;
     db.revoke_all_user_refresh_tokens(user_id).await?;
 
@@ -217,8 +217,7 @@ pub async fn resend_password_reset(
     match db.get_user_by_email(&email_address).await {
         Ok(Some(user)) => match db.create_password_reset_token(user.id).await {
             Ok(reset_code) => {
-                if let Err(e) =
-                    email::send_password_reset_email(&email_address, &reset_code).await
+                if let Err(e) = email::send_password_reset_email(&email_address, &reset_code).await
                 {
                     log::error!(
                         "resend_password_reset: send failed for user {}: {}",
