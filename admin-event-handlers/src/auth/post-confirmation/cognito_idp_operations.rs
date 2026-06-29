@@ -46,9 +46,12 @@ impl CognitoClient {
         temporary_password: String,
         group: UserGroup,
     ) -> Result<(), anyhow::Error> {
-        self.client
+        let client = self.client.clone();
+        let pool_id = self.pool_id.clone();
+
+        client
             .admin_create_user()
-            .user_pool_id(&self.pool_id)
+            .user_pool_id(&pool_id)
             .username(&email)
             .temporary_password(temporary_password)
             .user_attributes(
@@ -62,8 +65,26 @@ impl CognitoClient {
             .await
             .map_err(|e| anyhow::Error::new(e))?;
 
-        // Add user to the appropriate group
-        self.add_user_to_group(email, group).await?;
+        // Add user to the appropriate group. If this fails, the user has already
+        // been created with a working temporary password, so roll back the
+        // creation to avoid leaving a stray account behind.
+        if let Err(group_err) = self.add_user_to_group(email.clone(), group).await {
+            if let Err(cleanup_err) = client
+                .admin_delete_user()
+                .user_pool_id(&pool_id)
+                .username(&email)
+                .send()
+                .await
+            {
+                // If the rollback fails, we have a user with a working temporary password but no group membership.
+                // At this point just log the error.
+                return Err(anyhow::Error::new(cleanup_err).context(format!(
+                    "Failed to add user to group and failed to roll back user creation: {}",
+                    group_err
+                )));
+            }
+            return Err(group_err);
+        }
 
         Ok(())
     }

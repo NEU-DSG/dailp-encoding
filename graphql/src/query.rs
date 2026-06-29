@@ -2,7 +2,7 @@
 
 use dailp::{
     async_graphql::InputType,
-    auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
+    auth::{AnyGroupGuard, AuthGuard, GroupGuard, UserGroup, UserInfo},
     collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
@@ -359,13 +359,13 @@ impl Query {
     }
 
     /// Gets a dailp_user by their id
-    async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .dailp_user_by_id(&id)
-            .await?)
-    }
+    // async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
+    //     Ok(context
+    //         .data::<DataLoader<Database>>()?
+    //         .loader()
+    //         .dailp_user_by_id(&id)
+    //         .await?)
+    // }
 }
 
 pub struct Mutation;
@@ -460,7 +460,7 @@ impl Mutation {
     }
 
     /// Mutation for adding/changing contributor attributions
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -474,7 +474,7 @@ impl Mutation {
     }
 
     ///Mutation for deleting contributor attributions
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn delete_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -488,7 +488,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -501,7 +501,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -516,7 +516,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -531,7 +531,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -602,7 +602,7 @@ impl Mutation {
     }
 
     /// Decide if a piece audio should be included in edited collection
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn curate_word_audio(
         &self,
         context: &Context<'_>,
@@ -653,7 +653,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
+    #[graphql(guard = "AnyGroupGuard::non_readers()")]
     async fn update_document_metadata(
         &self,
         context: &Context<'_>,

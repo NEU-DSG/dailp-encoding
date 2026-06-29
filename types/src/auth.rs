@@ -133,6 +133,43 @@ impl Guard for GroupGuard {
     }
 }
 
+/// Requires that the user is authenticated and a member of at least one of the
+/// given groups. Fails closed: unauthenticated users and users with no matching
+/// group are denied.
+pub struct AnyGroupGuard {
+    groups: Vec<UserGroup>,
+}
+
+impl AnyGroupGuard {
+    pub fn new(groups: Vec<UserGroup>) -> Self {
+        Self { groups }
+    }
+
+    /// Groups permitted to perform write/edit operations (everyone above Reader).
+    pub fn non_readers() -> Self {
+        Self::new(vec![
+            UserGroup::Contributors,
+            UserGroup::Editors,
+            UserGroup::Administrators,
+        ])
+    }
+}
+
+#[async_trait::async_trait]
+impl Guard for AnyGroupGuard {
+    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
+        let user = ctx.data_opt::<UserInfo>();
+        let allowed = user.map(|user| user.groups.iter().any(|group| self.groups.contains(group)))
+            == Some(true);
+
+        if allowed {
+            Ok(())
+        } else {
+            Err("Forbidden, user not in an authorized group".into())
+        }
+    }
+}
+
 /// Blocks access if the user is in the specified group.
 pub struct NotGroupGuard {
     group: UserGroup,
