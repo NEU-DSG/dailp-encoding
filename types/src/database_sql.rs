@@ -1511,7 +1511,6 @@ impl Database {
         Ok(document.id)
     }
 
-   
     pub async fn update_paragraph(
         &self,
         paragraph: ParagraphUpdate,
