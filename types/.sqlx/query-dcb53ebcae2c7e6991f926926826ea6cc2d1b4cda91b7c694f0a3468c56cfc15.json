@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Adds a contributor attribution with role\ninsert into contributor_attribution (document_id, contributor_id, contribution_role)\nvalues ($1, $2, $3);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dcb53ebcae2c7e6991f926926826ea6cc2d1b4cda91b7c694f0a3468c56cfc15"
+}
