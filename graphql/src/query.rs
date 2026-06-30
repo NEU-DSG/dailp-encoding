@@ -408,20 +408,6 @@ impl Query {
             .await?)
     }
 
-    /// Retrieves the IIIF image source URL of a document
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn iiif_source_for_document_metadata(
-        &self,
-        context: &Context<'_>,
-        document_id: Uuid,
-    ) -> FieldResult<Option<String>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .iiif_source_for_document_metadata(document_id)
-            .await?)
-    }
-
     /// Fetch all available subject headings.
     async fn all_subject_headings(
         &self,
