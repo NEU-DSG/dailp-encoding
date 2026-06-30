@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { useCommentStateContext } from "src/comment-state-context"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
@@ -127,14 +127,14 @@ export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
   }
   const userName = useUserId()
   const [deleteCommentResult, deleteComment] = Dailp.useDeleteCommentMutation()
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
 
-  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDelete = async () => {
     const handleError = async (error: any) => {
       if (error) {
         console.error(error)
       }
     }
-    e.preventDefault()
     const commentId = p.comment.id
     if (commentId) {
       try {
@@ -143,6 +143,7 @@ export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
             commentId: commentId,
           },
         })
+        setIsConfirmingDelete(false)
         handleError(deleteCommentError)
       } catch (err) {
         console.error("An unexpected error occurred:", err)
@@ -152,6 +153,30 @@ export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
 
   return (
     <div className={css.commentWrapper}>
+      {isConfirmingDelete && (
+        <div className={css.overlay}>
+          <div className={css.confirmationBox}>
+            <p className={css.confirmationText}>
+              Are you sure you want to delete this comment?
+            </p>
+
+            <div className={css.modalButtonGroup}>
+              <Button onClick={() => setIsConfirmingDelete(false)}>
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleDelete}
+                style={{
+                  backgroundColor: "#b72d3b",
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {p.comment.textContent}
       <div className={css.commentFooters}>
         <div
@@ -172,7 +197,7 @@ export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
             <Button
               type="button"
               className={css.deleteButton}
-              onClick={handleDelete}
+              onClick={() => setIsConfirmingDelete(true)}
             >
               Delete
             </Button>
