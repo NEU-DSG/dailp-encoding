@@ -2210,7 +2210,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description" | "thumbnailUrl" | "isHidden"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2232,7 +2232,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "isHidden"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -3909,7 +3909,6 @@ export const EditedCollectionsDocument = gql`
         path
       }
       thumbnailUrl
-      isHidden
     }
   }
 `
@@ -3935,7 +3934,6 @@ export const EditedCollectionDocument = gql`
         path
         slug
       }
-      isHidden
     }
   }
 `
