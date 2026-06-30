@@ -11,35 +11,36 @@ export const CollectionCard = (props: {
   description: string
   buttonLabel: string
   collectionId?: string
-  //isHidden?: boolean
-  //canToggle?: boolean
-  //canView?: boolean
+  isHidden?: boolean
+  canToggle?: boolean
+  canView?: boolean
 }) => {
-  //const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
-  /*
+  const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
+
   const handleToggle = async () => {
     if (!props.collectionId) return
     await toggleVisibility({ collectionId: props.collectionId })
-  }*/
+  }
 
   return (
     <Group className={css.collectionCard}>
-      {/*props.canToggle && (
+      {props.canToggle && (
         <button onClick={handleToggle} className={css.toggleButton}>
           {props.isHidden ? "Publish Collection" : "Hide Collection"}
         </button>
-      )*/}
+      )}
       <img src={props.thumbnail} className={css.collectionCardImage} />
 
       <div className={css.cardContent}>
-        <h2 className={css.collectionCardHeader}>
-          {props.header.link ? (
-            <a href={props.header.link}>{props.header.text}</a>
-          ) : (
-            props.header.text
-          )}
-        </h2>
-        {/*(props.canToggle || props.canView) && (
+        <div className={css.titleWrapper}>
+          <h2 className={css.collectionCardHeader}>
+            {props.header.link ? (
+              <a href={props.header.link}>{props.header.text}</a>
+            ) : (
+              props.header.text
+            )}
+          </h2>
+          {(props.canToggle || props.canView) && (
             <div>
               {props.isHidden ? (
                 <span className={css.hiddenBadge}>
@@ -51,8 +52,8 @@ export const CollectionCard = (props: {
                 </span>
               )}
             </div>
-          )*/}
-
+          )}
+        </div>
         <p className={css.collectionCardText}>{props.description}</p>
         <a href={props.header.link} className={css.actionButton}>
           {props.buttonLabel}

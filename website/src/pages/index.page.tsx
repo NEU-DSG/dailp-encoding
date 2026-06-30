@@ -62,9 +62,9 @@ const IndexPage = () => {
   const canViewHiddenCollections =
     canToggleCollections || userRole === UserRole.Contributor
 
-  /*const visibleCollections = dailp?.allEditedCollections.filter(
+  const visibleCollections = dailp?.allEditedCollections.filter(
     (c) => canViewHiddenCollections || !c.isHidden
-  )*/
+  )
 
   // Show loading state while determining user role
   if (userRole === undefined) {
@@ -153,7 +153,7 @@ const IndexPage = () => {
               </div>
             )}
             <ul className={cardGroup}>
-              {dailp?.allEditedCollections?.map((collection) => (
+              {visibleCollections?.map((collection) => (
                 <CollectionCard
                   key={collection.slug}
                   thumbnail={collection.thumbnailUrl ?? cwkwLogo}
@@ -167,6 +167,9 @@ const IndexPage = () => {
                   }
                   buttonLabel="View the collection"
                   collectionId={collection.id}
+                  isHidden={collection.isHidden}
+                  canToggle={canToggleCollections}
+                  canView={canViewHiddenCollections}
                 />
               ))}
             </ul>
