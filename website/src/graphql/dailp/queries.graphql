@@ -275,6 +275,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -291,6 +292,7 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+    isHidden
   }
 }
 
