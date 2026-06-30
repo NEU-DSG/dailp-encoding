@@ -720,6 +720,16 @@ mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
 }
 
+mutation UpdateCollectionChapterOrder(
+  $input: UpdateCollectionChapterOrderInput!
+) {
+  updateCollectionChapterOrder(input: $input)
+}
+
+mutation RemoveCollectionChapter($chapterId: UUID!) {
+  removeCollectionChapter(chapterId: $chapterId)
+}
+
 mutation updateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
