@@ -9,7 +9,7 @@ use dailp::{
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
     AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
     PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
     UpdateContributorAttribution, Uuid,
