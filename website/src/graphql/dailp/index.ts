@@ -2210,7 +2210,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description" | "thumbnailUrl" | "isHidden"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2232,7 +2232,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "isHidden"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2244,18 +2244,6 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
         >
       }
   >
-}
-
-export type ToggleCollectionVisibilityMutationVariables = Exact<{
-  collectionId: Scalars["UUID"]
-}>
-
-export type ToggleCollectionVisibilityMutation = {
-  readonly __typename?: "Mutation"
-} & {
-  readonly toggleCollectionVisibility: {
-    readonly __typename?: "EditedCollection"
-  } & Pick<EditedCollection, "id" | "title" | "isHidden">
 }
 
 export type WordSearchQueryVariables = Exact<{
@@ -3909,7 +3897,6 @@ export const EditedCollectionsDocument = gql`
         path
       }
       thumbnailUrl
-      isHidden
     }
   }
 `
@@ -3935,7 +3922,6 @@ export const EditedCollectionDocument = gql`
         path
         slug
       }
-      isHidden
     }
   }
 `
@@ -3947,22 +3933,6 @@ export function useEditedCollectionQuery(
     query: EditedCollectionDocument,
     ...options,
   })
-}
-export const ToggleCollectionVisibilityDocument = gql`
-  mutation ToggleCollectionVisibility($collectionId: UUID!) {
-    toggleCollectionVisibility(collectionId: $collectionId) {
-      id
-      title
-      isHidden
-    }
-  }
-`
-
-export function useToggleCollectionVisibilityMutation() {
-  return Urql.useMutation<
-    ToggleCollectionVisibilityMutation,
-    ToggleCollectionVisibilityMutationVariables
-  >(ToggleCollectionVisibilityDocument)
 }
 export const WordSearchDocument = gql`
   query WordSearch($query: String!) {
