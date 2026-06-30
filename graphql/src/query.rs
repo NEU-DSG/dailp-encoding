@@ -3,21 +3,19 @@
 use dailp::{
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
-    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
     AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
     PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
     UpdateContributorAttribution, Uuid,
 };
-use itertools::{Itertools, Position};
+use itertools::Itertools;
 use log::{debug, info};
-use reqwest::{header, Client};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -1034,6 +1032,19 @@ impl Mutation {
         db.insert_subject_heading(&new_heading).await?;
 
         Ok(new_heading)
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn toggle_collection_visibility(
+        &self,
+        context: &Context<'_>,
+        collection_id: Uuid,
+    ) -> FieldResult<EditedCollection> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .toggle_collection_visibility(collection_id)
+            .await?)
     }
 }
 

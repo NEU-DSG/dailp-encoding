@@ -238,6 +238,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
   const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
+
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
