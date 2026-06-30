@@ -999,20 +999,20 @@ impl Mutation {
             .await?;
         Ok(collection_slug)
     }
-
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn add_collection_chapter(
-        &self,
-        context: &Context<'_>,
-        input: AddChapterInput,
-    ) -> FieldResult<Uuid> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .add_collection_chapter(input)
-            .await?)
-    }
-
+    /*
+        #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+        async fn add_collection_chapter(
+            &self,
+            context: &Context<'_>,
+            input: AddChapterInput,
+        ) -> FieldResult<Uuid> {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .add_collection_chapter(input)
+                .await?)
+        }
+    */
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn remove_collection_chapter(
         &self,

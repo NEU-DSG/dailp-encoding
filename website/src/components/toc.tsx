@@ -1,4 +1,5 @@
 import React, { Fragment } from "react"
+import { UserRole, useUserRole } from "src/auth"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -16,6 +17,7 @@ type TOCProps = {
 }
 
 const CollectionTOC = () => {
+  const userRole = useUserRole()
   const chapters = useChapters()
   const { collectionSlug } = useRouteParams()
 
@@ -50,14 +52,19 @@ const CollectionTOC = () => {
     { section: CollectionSection.Credit, chapters: creditChapters },
   ]
 
+  const canEditTOC = userRole === UserRole.Editor || userRole === UserRole.Admin
+
   return (
     <>
-      <Link
-        href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
-        className={css.link}
-      >
-        Edit TOC
-      </Link>
+      {canEditTOC && (
+        <a
+          href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
+          className={css.editTOCButton}
+        >
+          Edit TOC
+        </a>
+      )}
+
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>

@@ -288,12 +288,6 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
-/** Input for batch upserting multiple chapters */
-export type BatchUpsertChaptersInput = {
-  /** List of chapters to upsert */
-  readonly chapters: ReadonlyArray<UpsertChapterInput>
-}
-
 /** Input for updating a single chapter's order */
 export type ChapterOrderInput = {
   /** The id of the chapter */
@@ -947,7 +941,6 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
-  readonly batchUpsertChapters: Scalars["String"]
   readonly createEditedCollection: Scalars["String"]
   /** Adds a new subject heading to the global list. */
   readonly createSubjectHeading: SubjectHeading
@@ -982,7 +975,7 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
-  readonly upsertChapter: Scalars["String"]
+  readonly upsertEditedCollection: Scalars["String"]
   readonly upsertPage: Scalars["String"]
   readonly validateTurnstileToken: Scalars["Boolean"]
 }
@@ -1001,10 +994,6 @@ export type MutationAttachAudioToDocumentArgs = {
 
 export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
-}
-
-export type MutationBatchUpsertChaptersArgs = {
-  input: BatchUpsertChaptersInput
 }
 
 export type MutationCreateEditedCollectionArgs = {
@@ -1090,7 +1079,7 @@ export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
 }
 
-export type MutationUpsertChapterArgs = {
+export type MutationUpsertEditedCollectionArgs = {
   input: UpsertChapterInput
 }
 
@@ -1348,7 +1337,6 @@ export type SourceAttribution = {
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
 }
-
 
 /** Stores a spatial coverage associated with a document */
 export type SpatialCoverage = {
@@ -3426,23 +3414,6 @@ export type UpdateCollectionChapterOrderMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateCollectionChapterOrder">
 
-export type UpsertChapterMutationVariables = Exact<{
-  input: UpsertChapterInput
-}>
-
-export type UpsertChapterMutation = { readonly __typename?: "Mutation" } & Pick<
-  Mutation,
-  "upsertChapter"
->
-
-export type BatchUpsertChaptersMutationVariables = Exact<{
-  input: BatchUpsertChaptersInput
-}>
-
-export type BatchUpsertChaptersMutation = {
-  readonly __typename?: "Mutation"
-} & Pick<Mutation, "batchUpsertChapters">
-
 export type RemoveCollectionChapterMutationVariables = Exact<{
   chapterId: Scalars["UUID"]
 }>
@@ -4722,30 +4693,6 @@ export function useUpdateCollectionChapterOrderMutation() {
     UpdateCollectionChapterOrderMutation,
     UpdateCollectionChapterOrderMutationVariables
   >(UpdateCollectionChapterOrderDocument)
-}
-export const UpsertChapterDocument = gql`
-  mutation UpsertChapter($input: UpsertChapterInput!) {
-    upsertChapter(input: $input)
-  }
-`
-
-export function useUpsertChapterMutation() {
-  return Urql.useMutation<
-    UpsertChapterMutation,
-    UpsertChapterMutationVariables
-  >(UpsertChapterDocument)
-}
-export const BatchUpsertChaptersDocument = gql`
-  mutation BatchUpsertChapters($input: BatchUpsertChaptersInput!) {
-    batchUpsertChapters(input: $input)
-  }
-`
-
-export function useBatchUpsertChaptersMutation() {
-  return Urql.useMutation<
-    BatchUpsertChaptersMutation,
-    BatchUpsertChaptersMutationVariables
-  >(BatchUpsertChaptersDocument)
 }
 export const RemoveCollectionChapterDocument = gql`
   mutation RemoveCollectionChapter($chapterId: UUID!) {

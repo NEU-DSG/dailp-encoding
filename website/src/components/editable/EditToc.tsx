@@ -127,8 +127,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
   const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addDocument] = Dailp.useAddDocumentMutation()
-  const [, upsertChapter] = Dailp.useUpsertChapterMutation()
-  const [, batchUpsertChapters] = Dailp.useBatchUpsertChaptersMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [chaptersBySection, setChaptersBySection] = useState<{
@@ -330,141 +328,28 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setErrorMessage(null)
     setIsSaving(true)
 
-    // Collect current input values from DOM to ensure we have the latest edits
-    // This handles the case where user edits but doesn't blur before clicking save
-    const inputUpdates = new Map<string, { title?: string; slug?: string }>()
-
-    // Find all title and slug inputs with their chapter IDs from data attributes
-    const titleInputs = document.querySelectorAll<HTMLInputElement>(
-      'input[data-chapter-id][data-field="title"]'
-    )
-    const slugInputs = document.querySelectorAll<HTMLInputElement>(
-      'input[data-chapter-id][data-field="slug"]'
-    )
-
-    titleInputs.forEach((input) => {
-      const chapterId = input.getAttribute("data-chapter-id")
-      if (chapterId) {
-        const current = inputUpdates.get(chapterId) || {}
-        inputUpdates.set(chapterId, { ...current, title: input.value })
-      }
-    })
-
-    slugInputs.forEach((input) => {
-      const chapterId = input.getAttribute("data-chapter-id")
-      if (chapterId) {
-        const current = inputUpdates.get(chapterId) || {}
-        inputUpdates.set(chapterId, { ...current, slug: input.value })
-      }
-    })
-
-    // Update state with current input values for UI consistency
-    if (inputUpdates.size > 0) {
-      setChaptersBySection((prev) => {
-        const updated = { ...prev }
-        ;(["intro", "body", "credit"] as const).forEach((sectionKey) => {
-          updated[sectionKey] = updateChaptersFromInputs(
-            prev[sectionKey],
-            inputUpdates
-          )
-        })
-        return updated
-      })
-    }
-
     try {
-      // Apply input updates directly to chapters for saving (since state updates are async)
-      const chaptersWithUpdates =
-        inputUpdates.size > 0
-          ? {
-              intro: updateChaptersFromInputs(
-                chaptersBySection.intro,
-                inputUpdates
-              ),
-              body: updateChaptersFromInputs(
-                chaptersBySection.body,
-                inputUpdates
-              ),
-              credit: updateChaptersFromInputs(
-                chaptersBySection.credit,
-                inputUpdates
-              ),
-            }
-          : chaptersBySection
-
-      // Collect all chapters from all sections (including subchapters) for order update
-      const chapters: Dailp.ChapterOrderInput[] = []
-
-      chapters.push(
-        ...flattenChapters(chaptersWithUpdates.intro, CollectionSection.Intro)
-      )
-      chapters.push(
-        ...flattenChapters(chaptersWithUpdates.body, CollectionSection.Body)
-      )
-      chapters.push(
-        ...flattenChapters(chaptersWithUpdates.credit, CollectionSection.Credit)
-      )
+      const chapters: Dailp.ChapterOrderInput[] = [
+        ...flattenChapters(chaptersBySection.intro, CollectionSection.Intro),
+        ...flattenChapters(chaptersBySection.body, CollectionSection.Body),
+        ...flattenChapters(chaptersBySection.credit, CollectionSection.Credit),
+      ]
 
       if (chapters.length === 0) {
-        setErrorMessage("No chapters to save. Please add chapters first.")
+        setErrorMessage("No chapters to save.")
         setIsSaving(false)
         return
       }
 
-      // Collect all chapters with full data for title/slug updates
-      // Use chaptersWithUpdates to ensure we have the latest input values
-      const chaptersForUpsert = [
-        ...flattenChaptersForUpsert(
-          chaptersWithUpdates.intro,
-          CollectionSection.Intro
-        ),
-        ...flattenChaptersForUpsert(
-          chaptersWithUpdates.body,
-          CollectionSection.Body
-        ),
-        ...flattenChaptersForUpsert(
-          chaptersWithUpdates.credit,
-          CollectionSection.Credit
-        ),
-      ]
+      const result = await updateOrder({
+        input: { collectionSlug, chapters },
+      })
 
-      // Batch update chapter titles, slugs, sections, and indices
-      // Only update chapters that have valid IDs (existing chapters from the database)
-      const chaptersToUpsert = chaptersForUpsert
-        .filter((chapter) => {
-          if (!chapter.id) {
-            console.warn("Skipping chapter without ID:", chapter)
-            return false
-          }
-          return true
-        })
-        .map((chapter) => ({
-          id: chapter.id!,
-          title: chapter.title || null,
-          section: chapter.section,
-          indexInParent: chapter.indexInParent,
-          description: null as Dailp.InputMaybe<string>,
-          thumbnailUrl: null as Dailp.InputMaybe<string>,
-          slug: chapter.slug || null,
-        }))
-
-      if (chaptersToUpsert.length > 0) {
-        const batchResult = await batchUpsertChapters({
-          input: {
-            chapters: chaptersToUpsert,
-          },
-        })
-
-        if (batchResult.error) {
-          setErrorMessage(
-            batchResult.error.message || "Failed to save chapter updates"
-          )
-          setIsSaving(false)
-          return
-        }
+      if (result.error) {
+        setErrorMessage(result.error.message || "Failed to save order")
+        return
       }
 
-      // Refetch the collection to get updated data
       await refetch()
       setErrorMessage(null)
     } catch (error: any) {
@@ -881,51 +766,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
 
   return (
     <>
-      <div
-        style={{
-          marginBottom: 24,
-          padding: 16,
-          border: "1px solid #e0e0e0",
-          borderRadius: 8,
-          background: "#fafafa",
-        }}
-      >
-        <h5 style={{ marginTop: 0, marginBottom: 12 }}>Collection Details</h5>
-        <input
-          type="text"
-          name="collection title"
-          placeholder="Collection Title"
-          value={collectionTitle}
-          onChange={(e) => setCollectionTitle(e.target.value)}
-          style={{
-            width: "100%",
-            marginBottom: 12,
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: 4,
-            fontSize: 14,
-          }}
-        />
-        <textarea
-          name="collection description"
-          placeholder="Description"
-          value={collectionDescription}
-          onChange={(e) => setCollectionDescription(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: 4,
-            fontSize: 14,
-            minHeight: 80,
-            resize: "vertical",
-          }}
-        />
-      </div>
       <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 8 }}>
-        <h2 style={{ marginTop: 0, marginBottom: 16 }}>
-          Table of Contents Editor
-        </h2>
+        <h2 style={{ marginTop: 0, marginBottom: 16 }}>{collection.title}</h2>
         <DragDropContext onDragEnd={handleDragEnd}>
           <div
             style={{

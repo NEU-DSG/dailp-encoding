@@ -16,7 +16,7 @@ export function PageShell({
   pageContext: PageContext
   client: GraphQLClient
 }) {
-  const { Page, routeParams, pageProps } = pageContext
+  const { Page, routeParams, pageProps = {} } = pageContext
   return (
     <React.StrictMode>
       <PageContextProvider pageContext={pageContext}>
@@ -74,8 +74,8 @@ export type PageContext = Pick<
   | "urlParsed"
   | "urlPathname"
   | "Page"
-  | "pageProps"
 > &
+  Partial<Pick<PageContextServer, "pageProps">> &
   Omit<PageContextBuiltInClient, "isBackwardNavigation">
 
 export type PageProps = {}
