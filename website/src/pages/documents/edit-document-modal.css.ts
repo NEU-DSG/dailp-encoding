@@ -240,11 +240,12 @@ export const keepEditingButton = style({
   alignItems: "center",
   justifyContent: "center",
   gap: "8px",
-  padding: "16px 35px",
+  padding: "12px 60px",
   backgroundColor: "white",
   boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+  borderRadius: "8px",
   color: "#4E4E4E",
-  fontFamily: fonts.header,
+  fontFamily: "'Inter', sans-serif",
   fontWeight: "600",
   fontSize: "16px",
   borderStyle: "solid",
@@ -267,11 +268,12 @@ export const discardButton = style({
   alignItems: "center",
   justifyContent: "center",
   gap: "8px",
-  padding: "16px 35px",
+  padding: "12px 60px",
   backgroundColor: "#D32F2F",
   boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+  borderRadius: "8px",
   color: "white",
-  fontFamily: fonts.header,
+  fontFamily: "'Inter', sans-serif",
   fontWeight: "600",
   fontSize: "16px",
   border: "none",
@@ -284,3 +286,39 @@ export const discardButton = style({
     transform: "scale(1.02)",
   },
 })
+
+// export const modalCancelButton = style({
+//   padding: "12px 60px",
+//   backgroundColor: "white",
+//   color: "#666",
+//   border: "1px solid #ccc",
+//   borderRadius: "8px",
+//   fontSize: "16px",
+//   fontWeight: "600",
+//   cursor: "pointer",
+//   minWidth: "120px",
+//   boxShadow: "0 4px 4px rgba(0, 0, 0, 0.3)",
+//   selectors: {
+//     "&:hover": {
+//       backgroundColor: "#e8e8e8ff",
+//     },
+//   },
+// })
+
+// export const submitButton = style({
+//   padding: "12px 60px",
+//   backgroundColor: "#497CC7",
+//   color: "white",
+//   border: "none",
+//   borderRadius: "8px",
+//   fontSize: "16px",
+//   fontWeight: "600",
+//   cursor: "pointer",
+//   minWidth: "120px",
+//   boxShadow: "0 4px 4px rgba(0, 0, 0, 0.3)",
+//   selectors: {
+//     "&:hover": {
+//       backgroundColor: "#3867AD",
+//     },
+//   },
+// })
