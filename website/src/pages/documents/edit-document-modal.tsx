@@ -1025,6 +1025,14 @@ export const CancelButton = (props: {
 
   return (
     <div>
+      <button
+        type="button"
+        onClick={() => setShowCancelConfirmation(true)}
+        className={styles.modalCancelButton}
+      >
+        Cancel
+      </button>
+
       {showCancelConfirmation && (
         <div
           className={styles.messageOverlay}

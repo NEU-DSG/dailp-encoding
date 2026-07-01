@@ -187,10 +187,12 @@ export const addTagButton = style({
 
 // Cancel confirmation styles
 export const messageTitle = style({
-  fontSize: "45px",
-  fontFamily: fonts.body,
+  fontSize: "36px",
+  fontFamily: fonts.header,
   fontWeight: "bold",
-  justifyContent: "left",
+  color: "black",
+  paddingBottom: "1rem",
+  marginBottom: 0,
 })
 
 export const messageOverlay = style({
@@ -213,22 +215,22 @@ export const messageBox = style({
   flexDirection: "column",
   justifyContent: "space-between",
   alignItems: "center",
-  gap: "12px",
+  gap: "0px",
 })
 
 export const messageButtonGroup = style({
   display: "flex",
   flexDirection: "row",
   justifyContent: "left",
-  gap: "2rem",
+  gap: "0.5rem",
 })
 
 export const messageContent = style({
-  padding: "16px",
+  padding: "18px",
 })
 
 export const messageText = style({
-  fontSize: "24px",
+  fontSize: "16px",
   fontFamily: fonts.body,
 })
 
@@ -244,7 +246,8 @@ export const keepEditingButton = style({
   color: "#4E4E4E",
   fontFamily: fonts.header,
   fontWeight: "600",
-  fontSize: "18px",
+  fontSize: "16px",
+  borderStyle: "solid",
   borderWidth: "3px",
   borderColor: "#3B3B3B",
   cursor: "pointer",
@@ -261,7 +264,7 @@ export const keepEditingButton = style({
 export const discardButton = style({
   textDecoration: "none",
   display: "flex",
-  alignContent: "center",
+  alignItems: "center",
   justifyContent: "center",
   gap: "8px",
   padding: "16px 35px",
@@ -270,7 +273,7 @@ export const discardButton = style({
   color: "white",
   fontFamily: fonts.header,
   fontWeight: "600",
-  fontSize: "18px",
+  fontSize: "16px",
   border: "none",
   cursor: "pointer",
   transition: "background-color 0.2s ease",
