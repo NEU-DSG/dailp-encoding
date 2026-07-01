@@ -1,9 +1,10 @@
 import { plugins } from "@citation-js/core"
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
+import { Button } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
@@ -94,6 +95,20 @@ const approvedSpatialCoverages = [
   "Paris, France",
   "Dubai, UAE",
 ]
+
+// Define as type to pass to cancel button
+type BackupStateType = null | {
+  title: string
+  date: Date | null
+  format: Dailp.Format["name"]
+  genre: Dailp.Genre["name"]
+  contributors: FormContributor[]
+  creator: Dailp.Creator[]
+  keywords: Dailp.Keyword[]
+  subjectHeadings: Dailp.SubjectHeading[]
+  languages: Dailp.Language[]
+  spatialCoverages: Dailp.SpatialCoverage[]
+}
 
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
@@ -342,23 +357,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     removeTag: removeCoverage,
   } = useTagSelector(spatialCoverageStrings, approvedSpatialCoverages)
 
-  const [backupState, setBackupState] = useState<null | {
-    title: string
-    date: Date | null
-    // description: string
-    // type: string
-    format: Dailp.Format["name"]
-    genre: Dailp.Genre["name"]
-    // pages: string
-    creator: Dailp.Creator[]
-    // source: string
-    // doi: string
-    contributors: FormContributor[]
-    keywords: Dailp.Keyword[]
-    subjectHeadings: Dailp.SubjectHeading[]
-    languages: Dailp.Language[]
-    spatialCoverages: Dailp.SpatialCoverage[]
-  }>(null)
+  const [backupState, setBackupState] = useState<BackupStateType>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -513,6 +512,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const cancelEdits = () => {
     if (!backupState) return
+
     setTitle(backupState.title)
     setDate(backupState.date)
     //setDescription(backupState.description)
@@ -978,13 +978,22 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           <div className={styles.buttonGroup}>
             {isEditing ? (
               <>
-                <button
+                {/* <button
                   type="button"
                   onClick={cancelEdits}
                   className={styles.modalCancelButton}
                 >
                   Cancel
-                </button>
+                </button> */}
+                <CancelButton
+                  onCancel={cancelEdits}
+                  backupState={null}
+                  setBackupState={function (
+                    value: React.SetStateAction<BackupStateType>
+                  ): void {
+                    throw new Error("Error occurred. Please try again.")
+                  }}
+                />
                 <button type="submit" className={styles.submitButton}>
                   Submit
                 </button>
@@ -1001,6 +1010,71 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           </div>
         </form>
       </div>
+    </div>
+  )
+}
+
+// {showCancelConfirmation && (component logic)}
+
+export const CancelButton = (props: {
+  backupState: BackupStateType
+  setBackupState: Dispatch<SetStateAction<BackupStateType>>
+  onCancel: () => void
+}) => {
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setShowCancelConfirmation(true)}
+        className={styles.modalCancelButton}
+      >
+        Cancel
+      </button>
+
+      {showCancelConfirmation && (
+        <div
+          className={styles.messageOverlay}
+          onClick={() => setShowCancelConfirmation(false)}
+        >
+          <div
+            className={styles.messageBox}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.messageContent}>
+              <h3 className={styles.messageTitle}>Discard Changes?</h3>
+              <p className={styles.messageText}>
+                You will lose all of the changes you have made for this
+                document.
+              </p>
+
+              <div className={styles.messageButtonGroup}>
+                {/* Just close message */}
+                <a
+                  className={styles.keepEditingButton}
+                  onClick={() => setShowCancelConfirmation(false)}
+                  aria-label="Keep Editing"
+                >
+                  Keep Editing
+                </a>
+
+                {/* Reset to backup state and close message */}
+                <Button
+                  className={styles.discardButton}
+                  onClick={() => {
+                    setShowCancelConfirmation(false)
+                    props.onCancel()
+                  }}
+                  aria-label="Discard changes"
+                >
+                  Discard Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
