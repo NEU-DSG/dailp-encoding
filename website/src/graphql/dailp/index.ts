@@ -658,6 +658,7 @@ export type EditedCollection = {
   readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
+  readonly isHidden: Scalars["Boolean"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
   /** Cover image URL */
@@ -949,6 +950,7 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
   /** Update a comment */
   readonly updateComment: CommentParent
@@ -1019,6 +1021,10 @@ export type MutationPostCommentArgs = {
 
 export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationToggleCollectionVisibilityArgs = {
+  collectionId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
