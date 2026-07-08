@@ -156,6 +156,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
+  const [freeKeyword, setFreeKeyword] = useState("")
   const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
   const [spatialCoverage, setSpatialCoverage] = useState(
     documentMetadata.spatialCoverage ?? []
@@ -839,8 +840,37 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newKeywords}
             onAdd={(tagName) => addKeyword(tagName)}
             onRemove={removeKeyword}
-            addButtonLabel="Add Keyword"
-          />
+            addButtonLabel="Add Pre-existing Keywords"
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginBottom: "12px",
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Enter keyword..."
+                value={freeKeyword}
+                onChange={(e) => setFreeKeyword(e.target.value)}
+              />
+              <button
+                type="button"
+                className={styles.addTagButton}
+                onClick={() => {
+                  if (freeKeyword.trim()) {
+                    addKeyword(freeKeyword.trim())
+                    setFreeKeyword("")
+                  }
+                }}
+              >
+                Add Keyword
+              </button>
+            </div>
+          </TagSelector>
 
           <TagSelector
             label="Subject Headings"
