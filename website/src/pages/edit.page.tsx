@@ -71,9 +71,7 @@ const NewPage = () => {
     fileInputRef.current?.click()
   }
 
-  const handleMediaSelect = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Reset the input so selecting the same file again still fires onChange.
     e.target.value = ""
