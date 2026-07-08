@@ -815,6 +815,19 @@ query MenuBySlug($slug: String!) {
   }
 }
 
+query AllChapterSlugs($collectionSlug: String!) {
+  allChapterSlugs(collectionSlug: $collectionSlug) {
+    id
+    title
+    slug
+    documentId
+  }
+}
+
+mutation AddCollectionChapter($input: AddChapterInput!) {
+  addCollectionChapter(input: $input)
+}
+
 mutation UpdateMenu($menu: MenuUpdate!) {
   updateMenu(menu: $menu) {
     id

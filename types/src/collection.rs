@@ -63,6 +63,19 @@ pub struct CollectionChapter {
     pub path: Vec<String>,
 }
 
+/// Struct of the chapter slug returned for parsing when editing a TOC
+#[derive(Debug, Clone, async_graphql::SimpleObject)]
+pub struct ChapterSlugInfo {
+    /// UUID of the grabbed slug's document
+    pub id: Uuid,
+    /// Title of the associated chapter
+    pub title: String,
+    /// Slug of this chapter
+    pub slug: String,
+    /// Related document ID for the chapter entry
+    pub document_id: Option<Uuid>,
+}
+
 /// Enum to represent the sections in an edited collection
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, sqlx::Type)]
 #[sqlx(type_name = "collection_section")]
@@ -187,6 +200,8 @@ pub struct BatchUpsertChaptersInput {
 /// Input for adding a new chapter to a collection
 #[derive(async_graphql::InputObject)]
 pub struct AddChapterInput {
+    /// id
+    pub id: Uuid,
     /// The slug of the collection this chapter belongs to
     pub collection_slug: String,
     /// The title of the chapter

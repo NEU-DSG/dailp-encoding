@@ -1,4 +1,4 @@
-import * as css from "./ConfirmationPopup.css"
+import * as css from "./confirmation-popup.css"
 
 interface ConfirmationPopupProps {
   PopupText: string

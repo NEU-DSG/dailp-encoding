@@ -58,11 +58,33 @@ export const desktopNav = style([
 export const openNav = style([
   desktopNav,
   padding(vspace.small),
-  { transform: `translateX(${drawerWidth})` },
+  {
+    transform: `translateX(${drawerWidth})`,
+    transition: "transform 0.25s ease",
+  },
 ])
 
 export const closedNav = style([
   desktopNav,
   padding(vspace.small),
-  { transform: `translateX(${hspace[0]})` },
+  {
+    transform: `translateX(${hspace[0]})`,
+    transition: "transform 0.25s ease",
+  },
 ])
+
+export const previewTab = style({
+  height: "55px",
+  width: "100px",
+  position: "absolute",
+  top: vspace.large,
+  left: hspace[0],
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+})
+
+export const previewTabText = style({
+  color: colors.body,
+  margin: 0,
+})

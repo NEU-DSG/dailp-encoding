@@ -611,6 +611,21 @@ impl Database {
         Ok(slug)
     }
 
+    pub async fn all_chapter_slugs(
+        &self,
+        collection_slug: &str,
+    ) -> Result<Vec<crate::collection::ChapterSlugInfo>> {
+        // Fetch all rows that are unassigned
+        let rows = sqlx::query_file_as!(
+            ChapterSlugInfo,
+            "queries/all_chapter_slugs.sql",
+            collection_slug
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(rows)
+    }
+
     pub async fn document_manifest(
         &self,
         _document_name: &str,
@@ -1926,11 +1941,71 @@ impl Database {
         Ok(())
     }
 
-    pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<()> {
-        query_file!("queries/remove_collection_chapter.sql", chapter_id)
-            .execute(&self.client)
+    pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<Uuid> {
+        // Removes chapter index temporarily to be unassigned
+        query_file_scalar!("queries/remove_collection_chapter.sql", chapter_id)
+            .fetch_one(&self.client)
             .await?;
-        Ok(())
+        Ok(chapter_id)
+    }
+
+    pub async fn add_collection_chapter(&self, input: AddChapterInput) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+
+        // Normalize slug and path
+        let collection_slug_for_path = input.collection_slug.replace("-", "_");
+        let chapter_slug = crate::slugs::slugify_ltree(&input.slug);
+
+        let (chapter_path, index_in_parent) = if let Some(parent_id) = input.parent_id {
+            let parent_path = sqlx::query_scalar!(
+                "SELECT chapter_path::text FROM collection_chapter WHERE id = $1",
+                parent_id
+            )
+            .fetch_one(&mut *tx)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Parent chapter not found"))?;
+
+            let child_count = sqlx::query_scalar!(
+                "SELECT COUNT(*) FROM collection_chapter \
+                WHERE chapter_path ~ lquery(($1 || '.*{1}')::text)",
+                parent_path
+            )
+            .fetch_one(&mut *tx)
+            .await?
+            .unwrap_or(0i64);
+
+            let path = PgLTree::from_str(&format!("{}.{}", parent_path, chapter_slug))?;
+            (path, child_count + 1)
+        } else {
+            let chapter_count = sqlx::query_scalar!(
+                "SELECT COUNT(*) FROM collection_chapter
+                WHERE collection_slug = $1
+                AND index_in_parent != 0",
+                collection_slug_for_path
+            )
+            .fetch_one(&mut *tx)
+            .await?
+            .unwrap_or(0i64);
+
+            let path =
+                PgLTree::from_str(&format!("{}.{}", collection_slug_for_path, chapter_slug))?;
+            (path, chapter_count + 1)
+        };
+
+        let chapter_id = query_file_scalar!(
+            "queries/add_collection_chapter.sql",
+            chapter_path,
+            index_in_parent,
+            input.section as CollectionSection,
+            input.title,
+            input.document_id,
+            input.id,
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(chapter_id)
     }
 
     pub async fn insert_edited_collection(

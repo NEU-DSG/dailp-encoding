@@ -1,4 +1,5 @@
 import { style, styleVariants } from "@vanilla-extract/css"
+import { button } from "../button.css"
 
 export const container = style({
   border: "1px solid #ddd",
@@ -133,50 +134,31 @@ export const inputBase = style({
 export const titleInput = style([inputBase, { width: 160, flex: "1 1 140px" }])
 export const slugInput = style([inputBase, { width: 130, flex: "1 1 110px" }])
 
-export const buttonBase = style({
-  padding: "5px 10px",
-  fontSize: 11,
-  border: "none",
-  borderRadius: 3,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  flexShrink: 0,
-})
+export const tocButtonBase = style([
+  button,
+  {
+    color: "white",
+    fontSize: "12px",
+    padding: "5px",
+    margin: "5px",
+    height: 28,
+  },
+])
 
-export const buttonOutlineBase = style({
-  padding: "5px 10px",
-  fontSize: 11,
-  borderRadius: 3,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  background: "transparent",
-  flexShrink: 0,
-})
-
-export const button = styleVariants({
-  danger: [buttonBase, { background: "#dc3545", color: "white" }],
-  neutral: [buttonBase, { background: "#6c757d", color: "white" }],
-  success: [buttonBase, { background: "#28a745", color: "white" }],
-  primary: [buttonBase, { background: "#007bff", color: "white" }],
-})
-
-export const buttonOutline = styleVariants({
-  primary: [
-    buttonOutlineBase,
-    { color: "#007bff", border: "1px solid #007bff" },
+export const tocButton = styleVariants({
+  danger: [
+    tocButtonBase,
+    {
+      background: "#b72d3b",
+    },
   ],
-})
-
-export const addChapterButton = style({
-  marginTop: 6,
-  padding: "6px 10px",
-  background: "transparent",
-  color: "#007bff",
-  border: "1px dashed #007bff",
-  borderRadius: 4,
-  fontSize: 12,
-  cursor: "pointer",
-  width: "100%",
+  neutral: [
+    tocButtonBase,
+    {
+      background: "#6c757d",
+    },
+  ],
+  primary: [tocButtonBase],
 })
 
 export const errorBanner = style({
@@ -194,22 +176,4 @@ export const saveRow = style({
   gap: 8,
   alignItems: "center",
   marginTop: 16,
-})
-
-export const saveButton = style({
-  padding: "8px 16px",
-  border: "none",
-  borderRadius: 4,
-  fontSize: 13,
-})
-
-export const saveButtonState = styleVariants({
-  active: [
-    saveButton,
-    { background: "#007bff", color: "white", cursor: "pointer" },
-  ],
-  disabled: [
-    saveButton,
-    { background: "#6c757d", color: "white", cursor: "not-allowed" },
-  ],
 })

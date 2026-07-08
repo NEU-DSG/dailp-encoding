@@ -9,11 +9,12 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, CollectionChapter, CollectionSection, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
-    UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
+    AttachAudioToWordInput, ChapterSlugInfo, CollectionChapter, CollectionSection, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
+    Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
+    DocumentParagraph, PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage,
+    TranslatedSection, UpdateCollectionChapterOrderInput, UpdateContributorAttribution,
+    UpsertChapterInput, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::{debug, info};
@@ -418,6 +419,19 @@ impl Query {
         let db = context.data::<DataLoader<Database>>()?.loader();
 
         Ok(db.all_subject_headings().await?)
+    }
+
+    /// Returns a chapter slug info for all unassigned chapters in a given chatper
+    async fn all_chapter_slugs(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+    ) -> FieldResult<Vec<ChapterSlugInfo>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_chapter_slugs(&collection_slug)
+            .await?)
     }
 }
 
@@ -999,32 +1013,32 @@ impl Mutation {
             .await?;
         Ok(collection_slug)
     }
-    /*
-        #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-        async fn add_collection_chapter(
-            &self,
-            context: &Context<'_>,
-            input: AddChapterInput,
-        ) -> FieldResult<Uuid> {
-            Ok(context
-                .data::<DataLoader<Database>>()?
-                .loader()
-                .add_collection_chapter(input)
-                .await?)
-        }
-    */
+
+    /// Adds the collection chapter to the TOC by updating index and chapter path, etc.
+    async fn add_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        input: AddChapterInput,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_collection_chapter(input)
+            .await?)
+    }
+
+    /// Removes the provided chapter id from a TOC by setting its index to -1
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn remove_collection_chapter(
         &self,
         context: &Context<'_>,
         chapter_id: Uuid,
-    ) -> FieldResult<String> {
-        context
+    ) -> FieldResult<Uuid> {
+        Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
             .remove_collection_chapter(chapter_id)
-            .await?;
-        Ok("Chapter removed from collection".to_string())
+            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
