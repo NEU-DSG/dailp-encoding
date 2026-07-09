@@ -1062,6 +1062,21 @@ impl Database {
         Ok(_document_id)
     }
 
+    pub async fn toggle_collection_visibility(
+        &self,
+        collection_id: Uuid,
+    ) -> Result<EditedCollection> {
+        let collection = query_file_as!(
+            EditedCollection,
+            "queries/toggle_collection_visibility.sql",
+            collection_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(collection)
+    }
+
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         info!(
             "Starting update_document_metadata for document: {:?}",

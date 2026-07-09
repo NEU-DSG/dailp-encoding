@@ -1034,6 +1034,7 @@ impl Mutation {
         Ok(new_heading)
     }
 
+    /// Inverts associated collection's visiblity
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn toggle_collection_visibility(
         &self,
