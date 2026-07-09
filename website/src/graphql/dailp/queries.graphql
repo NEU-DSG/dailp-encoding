@@ -274,6 +274,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -282,6 +283,7 @@ query EditedCollection($slug: String!) {
     id
     title
     slug
+    isHidden
     chapters {
       id
       title
@@ -290,6 +292,14 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+  }
+}
+
+mutation ToggleCollectionVisibility($collectionId: UUID!) {
+  toggleCollectionVisibility(collectionId: $collectionId) {
+    id
+    slug
+    isHidden
   }
 }
 
