@@ -1,4 +1,4 @@
-UPDATE edited_collection
-SET is_hidden = NOT is_hidden
-WHERE id = $1
-RETURNING id, title, description, wordpress_menu_id, slug, thumbnail_url, is_hidden
+update edited_collection
+set is_hidden = not is_hidden
+where id = $1
+returning id, title, description, wordpress_menu_id, slug, thumbnail_url, is_hidden

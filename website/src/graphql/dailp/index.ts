@@ -950,6 +950,7 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  /** Inverts associated collection's visiblity */
   readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
   /** Update a comment */

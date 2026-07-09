@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE edited_collection\r\nSET is_hidden = NOT is_hidden\r\nWHERE id = $1\r\nRETURNING id, title, description, wordpress_menu_id, slug, thumbnail_url, is_hidden",
+  "query": "update edited_collection\r\nset is_hidden = not is_hidden\r\nwhere id = $1\r\nreturning id, title, description, wordpress_menu_id, slug, thumbnail_url, is_hidden",
   "describe": {
     "columns": [
       {
@@ -54,5 +54,5 @@
       false
     ]
   },
-  "hash": "218d175102f6c11c1f1af9296dc7a93b5307a57ae550ff73c037ab898298cca8"
+  "hash": "3e58a3b4f6c194efced969c3311b66819369f8f2e225f6330f7e5f14fc804b80"
 }

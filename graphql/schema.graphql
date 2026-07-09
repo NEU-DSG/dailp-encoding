@@ -1320,6 +1320,9 @@ type Mutation {
 	Adds a new subject heading to the global list.
 	"""
 	createSubjectHeading(name: String!, status: ApprovalStatus!): SubjectHeading!
+	"""
+	Inverts associated collection's visiblity
+	"""
 	toggleCollectionVisibility(collectionId: UUID!): EditedCollection!
 }
 
