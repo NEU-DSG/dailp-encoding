@@ -1,7 +1,7 @@
 --- -1 index removes the chapter from the TOC to be unassigned and not 
 --- accessible until reassigned
-UPDATE collection_chapter
-SET
+update collection_chapter
+set
     index_in_parent = -1,
     section = 'Body'
-WHERE id = $1
+where id = $1

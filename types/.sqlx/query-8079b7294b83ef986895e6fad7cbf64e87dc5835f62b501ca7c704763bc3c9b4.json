@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "--- Grabs information required for ChapterSlugInfo of all unassinged slugs \r\n--- (chapters with a -1 index in collection_chapters)\r\nSELECT\r\n    id,\r\n    title,\r\n    slug,\r\n    document_id\r\nFROM collection_chapter\r\nWHERE collection_slug = $1\r\nAND index_in_parent = -1\r\nORDER BY slug",
+  "query": "--- Grabs information required for ChapterSlugInfo of all unassinged slugs \r\n--- (chapters with a -1 index in collection_chapters)\r\nselect\r\n    id,\r\n    title,\r\n    slug,\r\n    document_id\r\nfrom collection_chapter\r\nwhere collection_slug = $1\r\nand index_in_parent = -1\r\norder by slug",
   "describe": {
     "columns": [
       {
@@ -36,5 +36,5 @@
       true
     ]
   },
-  "hash": "89e61a5fd11079b40e6d0b4d8107f87c6731181faf5a27f96fdb2a9601e382c0"
+  "hash": "8079b7294b83ef986895e6fad7cbf64e87dc5835f62b501ca7c704763bc3c9b4"
 }

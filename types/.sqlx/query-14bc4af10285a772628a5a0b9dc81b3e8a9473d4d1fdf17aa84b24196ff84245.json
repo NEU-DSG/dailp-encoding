@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT chapter_path::text FROM collection_chapter WHERE id = $1",
+  "query": "--- Return chapter path of chapter by its id\r\nselect chapter_path::text\r\nfrom collection_chapter\r\nwhere id = $1",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "8c6f351a132bf07d5d5dde9d45b05244b3fcd169a177f78b5456a32fe126b55f"
+  "hash": "14bc4af10285a772628a5a0b9dc81b3e8a9473d4d1fdf17aa84b24196ff84245"
 }

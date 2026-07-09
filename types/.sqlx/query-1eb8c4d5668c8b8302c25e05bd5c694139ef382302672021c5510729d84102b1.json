@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "--- Updates the chapter path, index, section, title, and optionally document id\r\n--- so that it is properly updated within the toc\r\nUPDATE collection_chapter\r\nSET\r\n    chapter_path = $1,\r\n    index_in_parent = $2,\r\n    section = $3,\r\n    title = $4,\r\n    document_id = $5\r\nWHERE id = $6\r\nRETURNING id",
+  "query": "--- Updates the chapter path, index, section, title, and optionally document id\r\n--- so that it is properly updated within the toc\r\nupdate collection_chapter\r\nset\r\n    chapter_path = $1,\r\n    index_in_parent = $2,\r\n    section = $3,\r\n    title = $4,\r\n    document_id = $5\r\nwhere id = $6\r\nreturning id",
   "describe": {
     "columns": [
       {
@@ -39,5 +39,5 @@
       false
     ]
   },
-  "hash": "542a61cb50b7ff72f5dc8fd634abe01a1c592f95391ab19145fe415abf370c75"
+  "hash": "1eb8c4d5668c8b8302c25e05bd5c694139ef382302672021c5510729d84102b1"
 }

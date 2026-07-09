@@ -1952,41 +1952,34 @@ impl Database {
     pub async fn add_collection_chapter(&self, input: AddChapterInput) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
-        // Normalize slug and path
+        /// Normalize slug and chapter_path
         let collection_slug_for_path = input.collection_slug.replace("-", "_");
         let chapter_slug = crate::slugs::slugify_ltree(&input.slug);
 
+        // Determine path and index in parent if this is subchapter else treat as parent
         let (chapter_path, index_in_parent) = if let Some(parent_id) = input.parent_id {
-            let parent_path = sqlx::query_scalar!(
-                "SELECT chapter_path::text FROM collection_chapter WHERE id = $1",
-                parent_id
-            )
-            .fetch_one(&mut *tx)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Parent chapter not found"))?;
+            /// Get parent chapter path as string for this subchapter
+            let parent_path: String =
+                query_file_scalar!("queries/get_chapter_path_by_id.sql", parent_id)
+                    .fetch_optional(&mut *tx)
+                    .await?
+                    .ok_or_else(|| anyhow::anyhow!("Parent chapter not found"))?
+                    .ok_or_else(|| anyhow::anyhow!("Parent chapter has no path"))?;
 
-            let child_count = sqlx::query_scalar!(
-                "SELECT COUNT(*) FROM collection_chapter \
-                WHERE chapter_path ~ lquery(($1 || '.*{1}')::text)",
-                parent_path
-            )
-            .fetch_one(&mut *tx)
-            .await?
-            .unwrap_or(0i64);
-
+            /// Generate and return the path from string of this chapter
             let path = PgLTree::from_str(&format!("{}.{}", parent_path, chapter_slug))?;
-            (path, child_count + 1)
+            (path, 1i64)
         } else {
-            let chapter_count = sqlx::query_scalar!(
-                "SELECT COUNT(*) FROM collection_chapter
-                WHERE collection_slug = $1
-                AND index_in_parent != 0",
+            /// For chapter count number of direct children and handle null
+            let chapter_count = query_file_scalar!(
+                "queries/count_assigned_chapters_in_collection.sql",
                 collection_slug_for_path
             )
             .fetch_one(&mut *tx)
             .await?
             .unwrap_or(0i64);
 
+            /// Generate and return the path from string of this chapter
             let path =
                 PgLTree::from_str(&format!("{}.{}", collection_slug_for_path, chapter_slug))?;
             (path, chapter_count + 1)
