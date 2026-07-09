@@ -15,7 +15,7 @@ fi
 
 # Require database docs to stay updated with schema changes.
 if git-staged "types/migrations/**.sql" && ! git-staged "doc/database/**.md"; then
-    printf "\nDatabase schema changed without documentation.\nPlease update database documentation in the doc/database directory.\n"
+    printf "\nDatabase schema changed without documentation.\nPlease update database documentation in the  directory.\n"
     HOOKS_FAILED=1
 fi
 

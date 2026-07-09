@@ -4,15 +4,15 @@
 
 A single edited collection, for example "Cherokees Writing the Keetoowah Way".
 
-| column              | type      | description                                                     |
-| ------------------- | --------- | --------------------------------------------------------------- |
-| `id`                | `uuid`    | Primary key                                                     |
-| `title`             | `text`    | Full title of the collection                                    |
-| `wordpress_menu_id` | `bigint?` | ID of WordPress menu for navigating the collection              |
-| `slug`              | `text`    | URL slug for the collection, like `"cwkw"`                      |
-| `description`       | `text`    | Description for the collection                                  |
-| `thumbnail_url`     | `text`    | Thumbnail url for the edited collection, from S3                |
-| `is_hidden`         | `boolean` | Inidicates if this collection is hidden to readers on main page |
+| column              | type      | description                                                    |
+| ------------------- | --------- | -------------------------------------------------------------- |
+| `id`                | `uuid`    | Primary key                                                    |
+| `title`             | `text`    | Full title of the collection                                   |
+| `wordpress_menu_id` | `bigint?` | ID of WordPress menu for navigating the collection             |
+| `slug`              | `text`    | URL slug for the collection, like `"cwkw"`                     |
+| `description`       | `text`    | Description for the collection                                 |
+| `thumbnail_url`     | `text`    | Thumbnail url for the edited collection, from S3               |
+| `is_hidden`         | `boolean` | Indicates if this collection is hidden to readers on main page |
 
 ## `collection_chapter`
 
