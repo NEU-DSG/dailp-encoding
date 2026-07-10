@@ -8,7 +8,9 @@ export const numberedOrderedList = style([
   {
     display: "block",
     listStyleType: "lower-roman",
-    listStylePosition: "inside",
+    listStylePosition: "outside",
+    paddingLeft: "1rem",
+    alignContent: "left",
 
     selectors: {
       // Removes the left margin in a list.
@@ -131,12 +133,12 @@ export const row = style({
   display: "grid",
   gridTemplateColumns: "auto 1fr auto",
   alignItems: "start",
-  gap: "8px",
+  gap: "4px",
   width: "100%",
 })
 
 export const number = style({
-  width: "40px",
+  width: "auto",
   textAlign: "right",
   opacity: 0.7,
   fontVariantNumeric: "tabular-nums",
@@ -147,7 +149,11 @@ export const toggleSpacer = style({
 })
 
 export const nestedList = style({
-  paddingLeft: "1rem",
-  margin: 0,
+  paddingLeft: "0",
+  marginLeft: "1rem",
   listStyle: "none",
+})
+
+export const simpleRow = style({
+  display: "block",
 })

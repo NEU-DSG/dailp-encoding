@@ -97,15 +97,20 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
 
   return (
     <>
-      {/* <ol className={listStyle}> */}
-      <ol className={prefix.length === 0 ? css.orderedList : css.nestedList}>
+      <ol className={prefix.length === 0 ? listStyle : css.nestedList}>
         {chapters.map((item, i) => {
           const number = [...prefix, i + 1].join(".")
 
           return (
-            <li key={item.slug} className={css.listItem}>
-              <div className={css.row}>
-                <span className={css.number}>{number}</span>
+            <li key={item.slug} className={listItemStyle}>
+              <div
+                className={
+                  section === CollectionSection.Body ? css.row : css.simpleRow
+                }
+              >
+                {section === CollectionSection.Body && (
+                  <span className={css.number}>{number}</span>
+                )}
 
                 <Link
                   href={chapterRoute(collectionSlug!, item.slug)}
