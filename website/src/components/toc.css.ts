@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { margin } from "polished"
 import { colors, hsize, hspace, vspace } from "src/style/constants"
 import { marginY, onHover, paddingX, paddingY } from "src/style/utils"
@@ -166,4 +166,12 @@ export const simpleRow = style({
   gridTemplateColumns: "1fr auto",
   alignItems: "center",
   width: "100%",
+})
+
+export const selectedRow = style({
+  color: colors.focus,
+})
+
+globalStyle(`${selectedRow} button`, {
+  color: colors.focus,
 })

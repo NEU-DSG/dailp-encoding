@@ -112,9 +112,10 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
           return (
             <li key={item.slug} className={listItemStyle}>
               <div
-                className={
-                  section === CollectionSection.Body ? css.row : css.simpleRow
-                }
+                className={[
+                  section === CollectionSection.Body ? css.row : css.simpleRow,
+                  openChapters.has(item.slug) ? css.selectedRow : "",
+                ].join(" ")}
               >
                 {section === CollectionSection.Body && (
                   <span className={css.number}>{number}</span>
@@ -122,8 +123,15 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
 
                 <Link
                   href={chapterRoute(collectionSlug!, item.slug)}
-                  className={lastSelected(item) ? css.selectedLink : css.link}
-                  onClick={() => onSelect(item)}
+                  className={
+                    openChapters.has(item.slug) ? css.selectedLink : css.link
+                  }
+                  onClick={() => {
+                    onSelect(item)
+                    if (item.children?.length) {
+                      toggleChapter(item.slug)
+                    }
+                  }}
                 >
                   {item.title}
                 </Link>
@@ -132,7 +140,10 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
                   <DropdownToggle
                     label=""
                     isOpen={openChapters.has(item.slug)}
-                    onToggle={() => toggleChapter(item.slug)}
+                    onToggle={() => {
+                      onSelect(item)
+                      toggleChapter(item.slug)
+                    }}
                   />
                 ) : (
                   <span className={css.toggleSpacer} />
