@@ -2,15 +2,11 @@
 name = "dailp-graphql"
 version = "0.2.1"
 authors = ["Shelby Snead <taylor@snead.xyz>"]
-edition = "2024"
+edition = "2021"
 
 [[bin]]
 name = "dailp-graphql"
 path = "src/lambda.rs"
-
-[[bin]]
-name = "dailp-outbound"
-path = "src/outbound-lambda.rs"
 
 [[bin]]
 name = "dailp-graphql-local"
@@ -42,8 +38,6 @@ async-graphql-tide = "4"
 tide = "0.16"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 jsonwebtoken = "8"
-aws-config = "1.1.7"
-aws-sdk-lambda = "1.122.0"
 
 dailp = {path = "../types"}
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
