@@ -1322,6 +1322,17 @@ type Mutation {
 }
 
 """
+ISO 8601 calendar date without timezone.
+Format: %Y-%m-%d
+
+# Examples
+
+* `1994-11-13`
+* `2000-02-24`
+"""
+scalar NaiveDate
+
+"""
 Input struct for a page.
 """
 input NewPageInput {
@@ -1352,6 +1363,7 @@ type Page {
 	title: String!
 	body: [ContentBlock!]!
 	path: String!
+	createdAt: NaiveDate
 }
 
 type PageImage {

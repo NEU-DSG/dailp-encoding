@@ -182,6 +182,11 @@ export const DailpPageContents = (props: { path: string }) => {
       <>
         <header>
           <h1>{page.title}</h1>
+          {page.createdAt && (
+            <time dateTime={page.createdAt}>
+              {new Date(page.createdAt).toLocaleDateString()}
+            </time>
+          )}
           {/* dennis todo: should be admin in the future */}
           {userRole === UserRole.Editor && (
             <div>
