@@ -68,24 +68,24 @@ const CollectionTOC = () => {
 
 const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
   const { collectionSlug } = useRouteParams()
-  const { onSelect, isSelected, lastSelected } = useFunctions()
+  const { onToggle, isSelected, lastSelected } = useFunctions()
 
   // Control if chapter dropdown is open or not
-  const [openChapters, setOpenChapters] = useState<Set<string>>(new Set())
+  // const [openChapters, setOpenChapters] = useState<Set<string>>(new Set())
 
-  const toggleChapter = (slug: string) => {
-    setOpenChapters((prev) => {
-      const next = new Set(prev)
+  // const toggleChapter = (slug: string) => {
+  //   setOpenChapters((prev) => {
+  //     const next = new Set(prev)
 
-      if (next.has(slug)) {
-        next.delete(slug)
-      } else {
-        next.add(slug)
-      }
+  //     if (next.has(slug)) {
+  //       next.delete(slug)
+  //     } else {
+  //       next.add(slug)
+  //     }
 
-      return next
-    })
-  }
+  //     return next
+  //   })
+  // }
 
   const listStyle =
     section === CollectionSection.Body
@@ -114,7 +114,7 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
               <div
                 className={[
                   section === CollectionSection.Body ? css.row : css.simpleRow,
-                  openChapters.has(item.slug) ? css.selectedRow : "",
+                  isSelected(item) ? css.selectedRow : "",
                 ].join(" ")}
               >
                 {section === CollectionSection.Body && (
@@ -123,15 +123,8 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
 
                 <Link
                   href={chapterRoute(collectionSlug!, item.slug)}
-                  className={
-                    openChapters.has(item.slug) ? css.selectedLink : css.link
-                  }
-                  onClick={() => {
-                    onSelect(item)
-                    if (item.children?.length) {
-                      toggleChapter(item.slug)
-                    }
-                  }}
+                  className={isSelected(item) ? css.selectedLink : css.link}
+                  onClick={() => onToggle(item)}
                 >
                   {item.title}
                 </Link>
@@ -139,18 +132,15 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
                 {item.children?.length ? (
                   <DropdownToggle
                     label=""
-                    isOpen={openChapters.has(item.slug)}
-                    onToggle={() => {
-                      onSelect(item)
-                      toggleChapter(item.slug)
-                    }}
+                    isOpen={isSelected(item)}
+                    onToggle={() => onToggle(item)}
                   />
                 ) : (
                   <span className={css.toggleSpacer} />
                 )}
               </div>
 
-              {openChapters.has(item.slug) && item.children ? (
+              {isSelected(item) && item.children ? (
                 <TOC
                   section={section}
                   chapters={item.children}

@@ -92,23 +92,29 @@ export const useFunctions = () => {
   const { selected, setSelected } = useContext(CollectionContext)
 
   function onSelect(chapter: Chapter) {
-    // The last chapter selected is the currentmost selected chapter.
-    let lastChapter = selected[selected.length - 1]
+    const lastChapter = selected[selected.length - 1]
 
     if (!lastChapter || chapter.indexInParent === 1) {
-      // If no chapter was last selected, then start a new list of selected chapters.
       setSelected([chapter])
-    } else if (lastChapter) {
+    } else {
       const idx = selected.findIndex(
         (c) => c.indexInParent === chapter.indexInParent
       )
 
-      if (idx > 0) {
-        selected.splice(idx, selected.length - idx)
-      }
+      const next = idx > 0 ? selected.slice(0, idx) : [...selected]
+      next.push(chapter)
+      setSelected(next)
+    }
+  }
 
-      selected.push(chapter)
-      setSelected(selected)
+  // Handles TOC dropdown toggle functionality
+  function onToggle(chapter: Chapter) {
+    if (isSelected(chapter)) {
+      setSelected(
+        selected.filter((c) => c.indexInParent !== chapter.indexInParent)
+      )
+    } else {
+      onSelect(chapter)
     }
   }
 
@@ -124,7 +130,7 @@ export const useFunctions = () => {
     return false
   }
 
-  return { onSelect, isSelected, lastSelected }
+  return { onSelect, onToggle, isSelected, lastSelected }
 }
 
 export const useChapters = () => {
