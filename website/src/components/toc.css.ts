@@ -138,6 +138,7 @@ export const row = style({
 })
 
 export const number = style({
+  gap: "20px",
   width: "auto",
   textAlign: "right",
   opacity: 0.7,
@@ -151,9 +152,18 @@ export const toggleSpacer = style({
 export const nestedList = style({
   paddingLeft: "0",
   marginLeft: "1rem",
-  listStyle: "none",
+})
+
+export const nestedOrderedList = style({
+  listStyleType: "lower-roman",
+  listStylePosition: "outside",
+  paddingLeft: "1.5rem",
+  marginLeft: "0",
 })
 
 export const simpleRow = style({
-  display: "block",
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  alignItems: "center",
+  width: "100%",
 })

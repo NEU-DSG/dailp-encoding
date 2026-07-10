@@ -97,7 +97,15 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
 
   return (
     <>
-      <ol className={prefix.length === 0 ? listStyle : css.nestedList}>
+      <ol
+        className={
+          prefix.length === 0
+            ? listStyle
+            : section === CollectionSection.Body
+            ? css.nestedList
+            : css.nestedOrderedList
+        }
+      >
         {chapters.map((item, i) => {
           const number = [...prefix, i + 1].join(".")
 
