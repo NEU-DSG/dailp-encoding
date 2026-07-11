@@ -1035,6 +1035,19 @@ impl Mutation {
 
         Ok(new_heading)
     }
+
+    /// Inverts associated collection's visiblity
+    async fn toggle_collection_visibility(
+        &self,
+        context: &Context<'_>,
+        collection_id: Uuid,
+    ) -> FieldResult<EditedCollection> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .toggle_collection_visibility(collection_id)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
