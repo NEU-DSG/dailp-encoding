@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.description,\n    e.slug,\n    e.thumbnail_url\nfrom edited_collection as e;",
+  "query": "update edited_collection\r\nset is_hidden = not is_hidden\r\nwhere id = $1\r\nreturning id, title, description, wordpress_menu_id, slug, thumbnail_url, is_hidden",
   "describe": {
     "columns": [
       {
@@ -15,13 +15,13 @@
       },
       {
         "ordinal": 2,
-        "name": "wordpress_menu_id",
-        "type_info": "Int8"
+        "name": "description",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "description",
-        "type_info": "Text"
+        "name": "wordpress_menu_id",
+        "type_info": "Int8"
       },
       {
         "ordinal": 4,
@@ -32,10 +32,17 @@
         "ordinal": 5,
         "name": "thumbnail_url",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_hidden",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
@@ -43,8 +50,9 @@
       true,
       true,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "666ca11632c6ce33f6fa36f05bdf9289282d4dca4348ce9ba63643973b32ed60"
+  "hash": "3e58a3b4f6c194efced969c3311b66819369f8f2e225f6330f7e5f14fc804b80"
 }
