@@ -175,3 +175,10 @@ export const selectedRow = style({
 globalStyle(`${selectedRow} button`, {
   color: colors.focus,
 })
+
+export const linkGroup = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  flex: 1,
+})

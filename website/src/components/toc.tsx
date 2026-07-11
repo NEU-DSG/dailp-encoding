@@ -112,32 +112,36 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
           return (
             <li key={item.slug} className={listItemStyle}>
               <div
-                className={[
-                  section === CollectionSection.Body ? css.row : css.simpleRow,
-                  isSelected(item) ? css.selectedRow : "",
-                ].join(" ")}
+                className={
+                  section === CollectionSection.Body ? css.row : css.simpleRow
+                }
               >
                 {section === CollectionSection.Body && (
                   <span className={css.number}>{number}</span>
                 )}
-
-                <Link
-                  href={chapterRoute(collectionSlug!, item.slug)}
-                  className={isSelected(item) ? css.selectedLink : css.link}
-                  onClick={() => onToggle(item)}
+                <div
+                  className={[
+                    css.linkGroup,
+                    isSelected(item) ? css.selectedRow : "",
+                  ].join(" ")}
                 >
-                  {item.title}
-                </Link>
-
-                {item.children?.length ? (
-                  <DropdownToggle
-                    label=""
-                    isOpen={isSelected(item)}
-                    onToggle={() => onToggle(item)}
-                  />
-                ) : (
-                  <span className={css.toggleSpacer} />
-                )}
+                  <Link
+                    href={chapterRoute(collectionSlug!, item.slug)}
+                    className={isSelected(item) ? css.selectedLink : css.link}
+                    onClick={() => onToggle(item)}
+                  >
+                    {item.title}
+                  </Link>
+                  {item.children?.length ? (
+                    <DropdownToggle
+                      label=""
+                      isOpen={isSelected(item)}
+                      onToggle={() => onToggle(item)}
+                    />
+                  ) : (
+                    <span className={css.toggleSpacer} />
+                  )}
+                </div>
               </div>
 
               {isSelected(item) && item.children ? (
