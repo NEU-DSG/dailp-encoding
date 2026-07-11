@@ -1,3 +1,4 @@
+import "@fontsource/charis-sil/400.css"
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
 import React, { useEffect, useState } from "react"
@@ -47,6 +48,7 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
+import * as styles from "../../components/homepage-header.css"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { EditingProvider } from "./editing-context"
@@ -603,6 +605,19 @@ export const BookmarkButton = (props: {
   const [removeBookmarkMutationResult, removeBookmarkMutation] =
     Dailp.useRemoveBookmarkMutation()
 
+  // Controls whether bookmark confirmation message is shown
+  const [showMessage, setShowMessage] = React.useState(false) // Hidden by default
+
+  const handleAdd = async () => {
+    await addBookmarkMutation({ documentId: props.documentId })
+    setShowMessage(true)
+  }
+
+  const handleRemove = async () => {
+    await removeBookmarkMutation({ documentId: props.documentId })
+    setShowMessage(false)
+  }
+
   return (
     <>
       {props.isBookmarked ? (
@@ -613,6 +628,7 @@ export const BookmarkButton = (props: {
             className={css.BookmarkButton}
             onClick={() => {
               removeBookmarkMutation({ documentId: props.documentId })
+              setShowMessage(false)
             }}
           >
             Un-Bookmark
@@ -624,10 +640,45 @@ export const BookmarkButton = (props: {
           className={css.BookmarkButton}
           onClick={() => {
             addBookmarkMutation({ documentId: props.documentId })
+            setShowMessage(true) // Show bookmark confirmation message
           }}
         >
           Bookmark
         </IconTextButton>
+      )}
+
+      {showMessage && (
+        <div
+          className={css.messageOverlay}
+          onClick={() => setShowMessage(false)}
+        >
+          <div className={css.messageBox} onClick={(e) => e.stopPropagation()}>
+            <div className={css.messageContent}>
+              <p className={css.messageText}>
+                Bookmark added! You can find your bookmarks in your dashboard.
+              </p>
+
+              <div className={css.messageButtonGroup}>
+                <a
+                  href="https://dailp.northeastern.edu/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.actionButton}
+                >
+                  Go to Dashboard
+                </a>
+
+                <Button
+                  className={css.closeButton}
+                  onClick={() => setShowMessage(false)}
+                  aria-label="Close message"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
