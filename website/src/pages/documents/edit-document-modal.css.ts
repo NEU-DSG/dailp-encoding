@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css"
+import { fonts } from "src/style/constants"
 
 export const overlay = style({
   position: "fixed",
@@ -181,5 +182,107 @@ export const addTagButton = style({
       backgroundColor: "#6F85A9",
       boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
     },
+  },
+})
+
+// Cancel confirmation styles
+export const messageTitle = style({
+  fontSize: "36px",
+  fontFamily: fonts.header,
+  fontWeight: "bold",
+  color: "black",
+  paddingBottom: "1rem",
+  marginBottom: 0,
+})
+
+export const messageOverlay = style({
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0, 0, 0, 0.6)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+})
+
+export const messageBox = style({
+  background: "white",
+  color: "black",
+  padding: "20px 24px",
+  borderRadius: "10px",
+  minWidth: "320px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "0px",
+})
+
+export const messageButtonGroup = style({
+  display: "flex",
+  flexDirection: "row",
+  justifyContent: "left",
+  gap: "0.5rem",
+})
+
+export const messageContent = style({
+  padding: "18px",
+})
+
+export const messageText = style({
+  fontSize: "16px",
+  fontFamily: fonts.body,
+})
+
+export const keepEditingButton = style({
+  textDecoration: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  padding: "12px 60px",
+  backgroundColor: "white",
+  boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+  borderRadius: "8px",
+  color: "#4E4E4E",
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: "600",
+  fontSize: "16px",
+  borderStyle: "solid",
+  borderWidth: "3px",
+  borderColor: "#3B3B3B",
+  cursor: "pointer",
+  transition: "background-color 0.2s ease",
+  minWidth: "140px",
+  ":hover": {
+    backgroundColor: "#3B3B3B",
+    color: "white",
+    boxShadow: "0 6px 10px rgba(0, 0, 0, 0.4)",
+    transform: "scale(1.02)",
+  },
+})
+
+export const discardButton = style({
+  textDecoration: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  padding: "12px 60px",
+  backgroundColor: "#D32F2F",
+  boxShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+  borderRadius: "8px",
+  color: "white",
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: "600",
+  fontSize: "16px",
+  border: "none",
+  cursor: "pointer",
+  transition: "background-color 0.2s ease",
+  minWidth: "140px",
+  ":hover": {
+    backgroundColor: "#B40000",
+    boxShadow: "0 6px 10px rgba(0, 0, 0, 0.4)",
+    transform: "scale(1.02)",
   },
 })

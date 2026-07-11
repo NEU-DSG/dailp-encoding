@@ -1,9 +1,10 @@
 import { plugins } from "@citation-js/core"
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
+import { Button } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
@@ -94,6 +95,20 @@ const approvedSpatialCoverages = [
   "Paris, France",
   "Dubai, UAE",
 ]
+
+// Define as type to pass to cancel button
+type BackupStateType = null | {
+  title: string
+  date: Date | null
+  format: Dailp.Format["name"]
+  genre: Dailp.Genre["name"]
+  contributors: FormContributor[]
+  creator: Dailp.Creator[]
+  keywords: Dailp.Keyword[]
+  subjectHeadings: Dailp.SubjectHeading[]
+  languages: Dailp.Language[]
+  spatialCoverages: Dailp.SpatialCoverage[]
+}
 
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
@@ -342,23 +357,169 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     removeTag: removeCoverage,
   } = useTagSelector(spatialCoverageStrings, approvedSpatialCoverages)
 
-  const [backupState, setBackupState] = useState<null | {
-    title: string
-    date: Date | null
-    // description: string
-    // type: string
-    format: Dailp.Format["name"]
-    genre: Dailp.Genre["name"]
-    // pages: string
-    creator: Dailp.Creator[]
-    // source: string
-    // doi: string
-    contributors: FormContributor[]
-    keywords: Dailp.Keyword[]
-    subjectHeadings: Dailp.SubjectHeading[]
-    languages: Dailp.Language[]
-    spatialCoverages: Dailp.SpatialCoverage[]
-  }>(null)
+  const [backupState, setBackupState] = useState<BackupStateType>(null)
+
+  // Check if user has made any changes to the metadata
+  function haveModalChanges() {
+    return (
+      title !== backupState!.title ||
+      getDateString(date) !== getDateString(backupState!.date) ||
+      format !== backupState!.format ||
+      genre !== backupState!.genre ||
+      haveCreatorsChanges() ||
+      haveContributorsChanges() ||
+      haveKeywordsChanges() ||
+      haveSubjectHeadingsChanges() ||
+      haveLanguagesChanges() ||
+      haveSpatialCoverageChanges()
+    )
+  }
+
+  // Check if there were changes to creators
+  function haveCreatorsChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (creator.length != backupState.creator.length) {
+      return true
+    }
+
+    // Check if each creator name is the same as the backup state creator name
+    for (let i = 0; i < creator.length; i++) {
+      // If names aren't the same, then there are changes
+      if (creator[i]?.name != backupState.creator[i]?.name) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
+
+  // Check if there were changes to contributors
+  function haveContributorsChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (contributors.length != backupState.contributors.length) {
+      return true
+    }
+
+    // Check if each creator name is the same as the backup state creator name
+    for (let i = 0; i < contributors.length; i++) {
+      // If names, roles, or visibility aren't the same, then there are changes
+      if (
+        contributors[i]?.name != backupState.contributors[i]?.name ||
+        contributors[i]?.role != backupState.contributors[i]?.role ||
+        contributors[i]?.isVisible != backupState.contributors[i]?.isVisible
+      ) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
+
+  // Check if there were changes to keywords
+  function haveKeywordsChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (selectedKeywords.length != backupState.keywords.length) {
+      return true
+    }
+
+    // Check if each keyword name is the same as the backup state keyword name
+    for (let i = 0; i < selectedKeywords.length; i++) {
+      // If names aren't the same, then there are changes
+      if (selectedKeywords[i] != backupState.keywords[i]?.name) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
+
+  // Check if there were changes to subject headings
+  function haveSubjectHeadingsChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (selectedSubjects.length != backupState.subjectHeadings.length) {
+      return true
+    }
+
+    // Check if each subject heading name is the same as the backup state subject heading name
+    for (let i = 0; i < selectedSubjects.length; i++) {
+      // If names aren't the same, then there are changes
+      if (selectedSubjects[i] != backupState.subjectHeadings[i]?.name) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
+
+  // Check if there were changes to subject headings
+  function haveLanguagesChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (selectedLanguages.length != backupState.languages.length) {
+      return true
+    }
+
+    // Check if each language name is the same as the backup state language name
+    for (let i = 0; i < selectedLanguages.length; i++) {
+      // If names aren't the same, then there are changes
+      if (selectedLanguages[i] != backupState.languages[i]?.name) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
+
+  // Check if there were changes to subject headings
+  function haveSpatialCoverageChanges() {
+    if (!backupState) {
+      throw new Error("Backup state does not exist.")
+    }
+
+    // If lengths differ, then there are changes
+    if (
+      selectedSpatialCoverages.length != backupState.spatialCoverages.length
+    ) {
+      return true
+    }
+
+    // Check if each spatial coverage name is the same as the backup state spatial coverage name
+    for (let i = 0; i < selectedSpatialCoverages.length; i++) {
+      // If names aren't the same, then there are changes
+      if (
+        selectedSpatialCoverages[i] != backupState.spatialCoverages[i]?.name
+      ) {
+        return true
+      }
+    }
+
+    // Return false if no changes
+    return false
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -432,7 +593,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       creator: [...(dm.creators ?? [])],
       // source,
       // doi,
-      contributors: formattedContributors,
+      contributors: formattedContributors.map((c) => ({ ...c })),
       keywords: [...(dm.keywords ?? [])],
       subjectHeadings: [...(dm.subjectHeadings ?? [])],
       languages: [...(dm.languages ?? [])],
@@ -513,6 +674,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const cancelEdits = () => {
     if (!backupState) return
+
     setTitle(backupState.title)
     setDate(backupState.date)
     //setDescription(backupState.description)
@@ -978,13 +1140,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           <div className={styles.buttonGroup}>
             {isEditing ? (
               <>
-                <button
-                  type="button"
-                  onClick={cancelEdits}
-                  className={styles.modalCancelButton}
-                >
-                  Cancel
-                </button>
+                <CancelButton
+                  onCancel={cancelEdits}
+                  hasChanges={haveModalChanges}
+                />
                 <button type="submit" className={styles.submitButton}>
                   Submit
                 </button>
@@ -1001,6 +1160,78 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           </div>
         </form>
       </div>
+    </div>
+  )
+}
+
+// function that compares backup state to current state + returns true/false
+// pass function to CancelButton as prop
+// pass to setShowCancelConfirmation in onClick
+
+export const CancelButton = (props: {
+  hasChanges: () => boolean
+  onCancel: () => void
+}) => {
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false)
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => {
+          if (props.hasChanges()) {
+            setShowCancelConfirmation(true)
+          } else {
+            props.onCancel()
+          }
+        }}
+        className={styles.modalCancelButton}
+      >
+        Cancel
+      </button>
+
+      {showCancelConfirmation && (
+        <div
+          className={styles.messageOverlay}
+          onClick={() => setShowCancelConfirmation(false)}
+        >
+          <div
+            className={styles.messageBox}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.messageContent}>
+              <h3 className={styles.messageTitle}>Discard Changes?</h3>
+              <p className={styles.messageText}>
+                You will lose all of the changes you have made for this
+                document.
+              </p>
+
+              <div className={styles.messageButtonGroup}>
+                {/* Just close message */}
+                <a
+                  className={styles.keepEditingButton}
+                  onClick={() => setShowCancelConfirmation(false)}
+                  aria-label="Keep Editing"
+                >
+                  Keep Editing
+                </a>
+
+                {/* Reset to backup state and close message */}
+                <Button
+                  className={styles.discardButton}
+                  onClick={() => {
+                    setShowCancelConfirmation(false)
+                    props.onCancel()
+                  }}
+                  aria-label="Discard changes"
+                >
+                  Discard Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
