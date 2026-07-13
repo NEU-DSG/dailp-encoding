@@ -22,11 +22,12 @@ export function RecordDocumentAudioPanel(p: {
       content={
         <ContributeAudioSection
           Component={RecordAudioContent}
+          relations={{ documentId: p.document.id }}
           processUploadedAudio={async (resourceUrl: string) => {
             const result = await contributeAudio({
               input: {
                 documentId: p.document.id,
-                contributorAudioUrl: `https://${resourceUrl}`,
+                contributorAudioUrl: resourceUrl,
               },
             })
             return result.error === undefined
