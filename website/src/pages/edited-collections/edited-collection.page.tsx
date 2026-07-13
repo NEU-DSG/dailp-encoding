@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
+import { CollectionAuthGuard } from "src/components/collection-auth-guard"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
@@ -57,65 +58,61 @@ const EditedCollectionPage = () => {
   // Show loading state while determining user role
   if (userRole === undefined) {
     return (
-      <CWKWLayout>
-        <Helmet>
-          {collection.isHidden && (
-            <meta name="robots" content="noindex,nofollow" />
-          )}
-        </Helmet>
-        <main className={util.paddedCenterColumn}>
-          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
-            <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <p>Loading...</p>
-            </div>
-          </article>
-        </main>
-      </CWKWLayout>
+      <CollectionAuthGuard isHidden={collection.isHidden}>
+        <CWKWLayout>
+          <main className={util.paddedCenterColumn}>
+            <article
+              className={dialog.visible ? css.leftMargin : util.fullWidth}
+            >
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <p>Loading...</p>
+              </div>
+            </article>
+          </main>
+        </CWKWLayout>
+      </CollectionAuthGuard>
     )
   }
 
   return (
-    <CWKWLayout>
-      <Helmet>
-        {collection.isHidden && (
-          <meta name="robots" content="noindex,nofollow" />
-        )}
-      </Helmet>
-      <main className={util.paddedCenterColumn}>
-        <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
-          <header>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-              }}
-            >
-              <h1>{collection.title}</h1>
-            </div>
-          </header>
+    <CollectionAuthGuard isHidden={collection.isHidden}>
+      <CWKWLayout>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <header>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
+                <h1>{collection.title}</h1>
+              </div>
+            </header>
 
-          <h3>
-            A digital collection presented by <Link href="/">DAILP</Link>
-          </h3>
+            <h3>
+              A digital collection presented by <Link href="/">DAILP</Link>
+            </h3>
 
-          <DailpPageContents path={`/${collectionSlug}`} />
+            <DailpPageContents path={`/${collectionSlug}`} />
 
-          <h3>
-            {firstChapterSlug ? (
-              <Link href={chapterRoute(collectionSlug!, firstChapterSlug)}>
-                Begin reading
-              </Link>
-            ) : firstChapter ? (
-              <span>First chapter found but missing slug</span>
-            ) : (
-              <span>No chapters found</span>
-            )}
-          </h3>
-        </article>
-      </main>
-    </CWKWLayout>
+            <h3>
+              {firstChapterSlug ? (
+                <Link href={chapterRoute(collectionSlug!, firstChapterSlug)}>
+                  Begin reading
+                </Link>
+              ) : firstChapter ? (
+                <span>First chapter found but missing slug</span>
+              ) : (
+                <span>No chapters found</span>
+              )}
+            </h3>
+          </article>
+        </main>
+      </CWKWLayout>
+    </CollectionAuthGuard>
   )
 }
 export const Page = EditedCollectionPage

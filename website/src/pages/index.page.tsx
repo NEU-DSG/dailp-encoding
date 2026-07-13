@@ -146,6 +146,18 @@ const IndexPage = () => {
                 </button>
               </div>
             )}
+            {visibleCollections?.length === 0 && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingTop: "50px",
+                }}
+              >
+                <p>Edited collections forthcoming, please check back soon.</p>
+              </div>
+            )}
             <ul className={cardGroup}>
               {visibleCollections?.map((collection) => (
                 <CollectionCard
