@@ -37,11 +37,15 @@ export async function encodeBlobToMp3(blob: Blob): Promise<Blob> {
           right.subarray(i, i + SAMPLES_PER_FRAME)
         )
       : encoder.encodeBuffer(leftChunk)
-    if (encoded.length > 0) mp3Chunks.push(encoded)
+    if (encoded.length > 0) {
+      mp3Chunks.push(encoded)
+    }
   }
 
   const flushed = encoder.flush()
-  if (flushed.length > 0) mp3Chunks.push(flushed)
+  if (flushed.length > 0) {
+    mp3Chunks.push(flushed)
+  }
 
   // Concatenate all MP3 chunks into a single Blob tagged audio/mpeg and return it
   const blobParts: BlobPart[] = mp3Chunks.map((chunk) => new Uint8Array(chunk))
