@@ -1,10 +1,15 @@
 import { style, styleVariants } from "@vanilla-extract/css"
-import { button } from "../button.css"
+import { mediaQueries } from "src/style/constants"
+import { button } from "../../button.css"
 
 export const container = style({
   border: "1px solid #ddd",
   padding: 16,
   borderRadius: 8,
+  boxSizing: "border-box",
+  width: "100%",
+  maxWidth: "100%",
+  overflowX: "hidden",
 })
 
 export const collectionTitle = style({
@@ -14,8 +19,13 @@ export const collectionTitle = style({
 
 export const sectionsGrid = style({
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+  gridTemplateColumns: "1fr",
   gap: 16,
+  "@media": {
+    [mediaQueries.medium]: {
+      gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+    },
+  },
 })
 
 export const sectionHeading = style({
@@ -76,11 +86,18 @@ export const chapterRow = styleVariants({
 // Outer row: left group (identity/inputs) and right group (actions) pinned apart
 export const chapterRowContent = style({
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
+  flexDirection: "column",
+  alignItems: "flex-start",
   gap: 8,
   width: "100%",
   minWidth: 0,
+  "@media": {
+    [mediaQueries.medium]: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+  },
 })
 
 export const leftGroup = style({
@@ -90,6 +107,7 @@ export const leftGroup = style({
   flex: "1 1 auto",
   minWidth: 0,
   flexWrap: "wrap",
+  width: "100%",
 })
 
 export const rightGroup = style({
@@ -97,7 +115,14 @@ export const rightGroup = style({
   alignItems: "center",
   gap: 6,
   flexShrink: 0,
-  marginLeft: "auto",
+  flexWrap: "wrap",
+  width: "100%",
+  "@media": {
+    [mediaQueries.medium]: {
+      width: "auto",
+      marginLeft: "auto",
+    },
+  },
 })
 
 export const dragHandle = style({
@@ -129,10 +154,33 @@ export const inputBase = style({
   borderRadius: 3,
   fontSize: 12,
   minWidth: 0,
+  boxSizing: "border-box",
 })
+export const titleInput = style([
+  inputBase,
+  {
+    width: "100%",
+    flex: "1 1 140px",
+    "@media": {
+      [mediaQueries.medium]: {
+        width: 160,
+      },
+    },
+  },
+])
 
-export const titleInput = style([inputBase, { width: 160, flex: "1 1 140px" }])
-export const slugInput = style([inputBase, { width: 130, flex: "1 1 110px" }])
+export const slugInput = style([
+  inputBase,
+  {
+    width: "100%",
+    flex: "1 1 110px",
+    "@media": {
+      [mediaQueries.medium]: {
+        width: 130,
+      },
+    },
+  },
+])
 
 export const tocButtonBase = style([
   button,
@@ -176,4 +224,5 @@ export const saveRow = style({
   gap: 8,
   alignItems: "center",
   marginTop: 16,
+  flexWrap: "wrap",
 })

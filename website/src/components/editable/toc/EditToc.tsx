@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 import { MdDragIndicator } from "react-icons/md/index"
+import Sidebar from "src/components/sidebar"
 import * as Dailp from "src/graphql/dailp"
 import { CollectionSection } from "src/graphql/dailp"
-import ConfirmationPopup from "../confirmation-popup"
-import Sidebar from "../sidebar"
+import ConfirmationPopup from "../../confirmation-popup"
 import * as css from "./EditToc.css"
 import PreviewToc from "./preview-toc-content"
 
@@ -37,7 +37,7 @@ type ChapterNode = {
   indexInParent: number
   path: string[]
   children: ChapterNode[]
-  isNew?: boolean
+  isNew?: boolean // staged only in this editing session, not yet persisted
 }
 
 type SectionKey = "intro" | "body" | "credit"
@@ -144,7 +144,6 @@ type DraftRowProps = {
   onSlugChange: (value: string) => void
   onConfirm: () => void
   onCancel: () => void
-  availableSlugs: string[] | undefined
 }
 
 const DraftRow = ({
@@ -154,7 +153,6 @@ const DraftRow = ({
   onSlugChange,
   onConfirm,
   onCancel,
-  availableSlugs,
 }: DraftRowProps) => (
   <li className={css.chapterRow.draft}>
     <div className={css.chapterRowContent}>
@@ -166,18 +164,13 @@ const DraftRow = ({
           onChange={(e) => onTitleChange(e.target.value)}
           className={css.titleInput}
         />
-        <select
-          value={draftSlug}
-          onChange={(e) => onSlugChange(e.target.value)}
+        <input
+          type="text"
+          placeholder="Slug"
+          value={(draftSlug ?? "").replace(/_/g, "-")}
+          onChange={(e) => onSlugChange(e.target.value.replace(/-/g, "_"))}
           className={css.slugInput}
-        >
-          <option value="">Select a slug...</option>
-          {availableSlugs?.map((s) => (
-            <option value={s} key={s}>
-              {s.replace(/_/g, "-")}
-            </option>
-          ))}
-        </select>
+        />
       </div>
       <div className={css.rightGroup}>
         <button
@@ -199,6 +192,7 @@ const DraftRow = ({
   </li>
 )
 
+// ---- ChapterItem: also hoisted to module scope for the same reason ----
 type ChapterItemProps = {
   chapter: ChapterNode
   index: number
@@ -207,7 +201,6 @@ type ChapterItemProps = {
   draftTarget: DraftTarget | null
   draftTitle: string
   draftSlug: string
-  availableSlugs: string[] | undefined
   onDraftTitleChange: (value: string) => void
   onDraftSlugChange: (value: string) => void
   onConfirmDraft: () => void
@@ -234,7 +227,6 @@ const ChapterItem = ({
   draftTarget,
   draftTitle,
   draftSlug,
-  availableSlugs,
   onDraftTitleChange,
   onDraftSlugChange,
   onConfirmDraft,
@@ -299,7 +291,6 @@ const ChapterItem = ({
                   onUpdate(sectionKey, chapterId, { slug: localSlug })
                 }
                 className={css.slugInput}
-                disabled
               />
             </div>
             <div className={css.rightGroup}>
@@ -352,7 +343,6 @@ const ChapterItem = ({
                       draftTarget={draftTarget}
                       draftTitle={draftTitle}
                       draftSlug={draftSlug}
-                      availableSlugs={availableSlugs}
                       onDraftTitleChange={onDraftTitleChange}
                       onDraftSlugChange={onDraftSlugChange}
                       onConfirmDraft={onConfirmDraft}
@@ -367,7 +357,6 @@ const ChapterItem = ({
                     <DraftRow
                       draftTitle={draftTitle}
                       draftSlug={draftSlug}
-                      availableSlugs={availableSlugs}
                       onTitleChange={onDraftTitleChange}
                       onSlugChange={onDraftSlugChange}
                       onConfirm={onConfirmDraft}
@@ -528,6 +517,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     return result
   }
 
+  // Walks a section's tree and creates any isNew chapters via addDocument,
+  // returning the tree with real backend ids substituted in. Existing
+  // (already-persisted) chapters pass through untouched.
   const createPendingChapters = async (
     chapters: ChapterNode[],
     section: CollectionSection,
@@ -598,6 +590,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
 
     setIsSaving(true)
     try {
+      // Step 1: create any pending (isNew) chapters on the backend first,
+      // so they have real ids before we try to save ordering.
       const introResult = await createPendingChapters(
         chaptersBySection.intro,
         CollectionSection.Intro
@@ -633,6 +627,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       updateIndices(updatedSections.credit)
       setChaptersBySection(updatedSections)
 
+      // Step 2: save ordering/section placement for everything, now that
+      // every chapter (old and newly created) has a real id.
       const chapters: Dailp.ChapterOrderInput[] = [
         ...flattenChapters(updatedSections.intro, CollectionSection.Intro),
         ...flattenChapters(updatedSections.body, CollectionSection.Body),
@@ -828,20 +824,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     cancelDraft()
   }
 
-  const pendingChapterSlugs = new Set(
-    [
-      ...chaptersBySection.intro,
-      ...chaptersBySection.body,
-      ...chaptersBySection.credit,
-    ]
-      .filter((ch) => ch.isNew)
-      .map((ch) => ch.slug)
-  )
-
-  const availableSlugs = (slugData?.allChapterSlugs ?? [])
-    .map((s) => s.slug)
-    .filter((slug) => !pendingChapterSlugs.has(slug))
-
   return (
     <>
       <Sidebar
@@ -890,7 +872,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                               draftTarget={draftTarget}
                               draftTitle={draftTitle}
                               draftSlug={draftSlug}
-                              availableSlugs={availableSlugs}
                               onDraftTitleChange={setDraftTitle}
                               onDraftSlugChange={setDraftSlug}
                               onConfirmDraft={confirmDraft}
@@ -905,7 +886,6 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                             <DraftRow
                               draftTitle={draftTitle}
                               draftSlug={draftSlug}
-                              availableSlugs={availableSlugs}
                               onTitleChange={setDraftTitle}
                               onSlugChange={setDraftSlug}
                               onConfirm={confirmDraft}
@@ -932,7 +912,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       <form onSubmit={handleSave} className={css.saveRow}>
         <button
           type="submit"
-          disabled={isSaving || fetching}
+          disabled={isSaving || fetching || !!draftTarget}
           className={
             isSaving || fetching || draftTarget
               ? css.tocButton.neutral

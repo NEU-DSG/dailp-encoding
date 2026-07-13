@@ -1,5 +1,5 @@
 import React, { Fragment } from "react"
-import * as css from "../toc.css"
+import * as css from "../../toc.css"
 
 type PreviewChapter = {
   id?: string
