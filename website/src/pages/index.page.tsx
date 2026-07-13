@@ -55,15 +55,9 @@ const IndexPage = () => {
     (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
   )
 
-  // Assign how can toggle if collections are hidden and then filter them based on user
-  const canToggleCollections =
-    userRole === UserRole.Admin || userRole === UserRole.Editor
-
-  const canViewHiddenCollections =
-    canToggleCollections || userRole === UserRole.Contributor
-
+  // Determine which collections are visible to user
   const visibleCollections = dailp?.allEditedCollections.filter(
-    (c) => canViewHiddenCollections || !c.isHidden
+    (c) => !(userRole === UserRole.Reader && c.isHidden)
   )
 
   // Show loading state while determining user role
@@ -168,8 +162,6 @@ const IndexPage = () => {
                   buttonLabel="View the collection"
                   collectionId={collection.id}
                   isHidden={collection.isHidden}
-                  canToggle={canToggleCollections}
-                  canView={canViewHiddenCollections}
                 />
               ))}
             </ul>

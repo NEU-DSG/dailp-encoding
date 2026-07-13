@@ -2,6 +2,7 @@ import React from "react"
 import { BiHide } from "react-icons/bi/index"
 import { IoCheckmarkCircle } from "react-icons/io5/index"
 import { Group } from "reakit"
+import { UserRole, useUserRole } from "src/auth"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./collection-card.css"
 
@@ -12,10 +13,14 @@ export const CollectionCard = (props: {
   buttonLabel: string
   collectionId?: string
   isHidden?: boolean
-  canToggle?: boolean
-  canView?: boolean
 }) => {
   const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
+
+  const userRole = useUserRole()
+  const canToggleCollections =
+    userRole === UserRole.Admin || userRole === UserRole.Editor
+  const canViewHiddenCollections =
+    canToggleCollections || userRole === UserRole.Contributor
 
   const handleToggle = async () => {
     if (!props.collectionId) return
@@ -24,7 +29,7 @@ export const CollectionCard = (props: {
 
   return (
     <Group className={css.collectionCard}>
-      {props.canToggle && (
+      {canToggleCollections && (
         <button onClick={handleToggle} className={css.toggleButton}>
           {props.isHidden ? "Publish Collection" : "Hide Collection"}
         </button>
@@ -40,7 +45,7 @@ export const CollectionCard = (props: {
               props.header.text
             )}
           </h2>
-          {(props.canToggle || props.canView) && (
+          {canViewHiddenCollections && (
             <div>
               {props.isHidden ? (
                 <span className={css.hiddenBadge}>

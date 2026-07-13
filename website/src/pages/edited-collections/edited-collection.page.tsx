@@ -59,7 +59,9 @@ const EditedCollectionPage = () => {
     return (
       <CWKWLayout>
         <Helmet>
-          <meta name="robots" content="noindex,nofollow" />
+          {collection.isHidden && (
+            <meta name="robots" content="noindex,nofollow" />
+          )}
         </Helmet>
         <main className={util.paddedCenterColumn}>
           <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
@@ -75,7 +77,9 @@ const EditedCollectionPage = () => {
   return (
     <CWKWLayout>
       <Helmet>
-        <meta name="robots" content="noindex,nofollow" />
+        {collection.isHidden && (
+          <meta name="robots" content="noindex,nofollow" />
+        )}
       </Helmet>
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
