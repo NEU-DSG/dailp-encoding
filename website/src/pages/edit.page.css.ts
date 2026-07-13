@@ -42,11 +42,13 @@ export const editorPane = style({
 
 export const contentTextarea = style({
   width: "100%",
+  minHeight: "200px",
   border: "none",
   outline: "none",
   resize: "vertical",
   boxSizing: "border-box",
-  padding: "8px",
+  // Leave room at the bottom so the floating media button never sits over text.
+  padding: "8px 8px 48px",
 })
 
 export const mediaButton = style({
@@ -71,6 +73,7 @@ export const previewPane = style({
   border: "1px solid black",
   padding: "10px",
   width: "50%",
+  minHeight: "200px",
 })
 
 export const saveButton = style({
