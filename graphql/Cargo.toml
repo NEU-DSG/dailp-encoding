@@ -4,9 +4,18 @@ version = "0.2.1"
 authors = ["Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
+[lib]
+name = "dailp_graphql"
+path = "src/lib.rs"
+
 [[bin]]
 name = "dailp-graphql"
 path = "src/lambda.rs"
+
+[[bin]]
+name = "dailp-outbound"
+path = "src/outbound_lambda.rs"
+
 
 [[bin]]
 name = "dailp-graphql-local"

@@ -1,6 +1,5 @@
-mod query;
-mod service_integrations;
 mod outbound_lambda;
+mod query;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, EmptySubscription, Schema},
