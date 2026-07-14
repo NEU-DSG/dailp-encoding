@@ -38,6 +38,12 @@ async-graphql-tide = "4"
 tide = "0.16"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 jsonwebtoken = "8"
+# TODO this is a very old version; using this to resolve comptability
+# conflicts between the Rust toolchain version, our current Rust edition,
+# this dependency, and several other dependencies. We'll want to
+# do work to ensure our dependencies are reasonably up-to-date but that's
+# not the issue I'm solving at this moment.
+aws-sdk-lambda = "1.3.0"
 
 dailp = {path = "../types"}
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
