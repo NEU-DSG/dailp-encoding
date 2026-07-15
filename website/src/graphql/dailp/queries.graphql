@@ -769,6 +769,10 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+mutation UpdatePagePath($oldPath: String!, $newPath: String!) {
+  updatePagePath(oldPath: $oldPath, newPath: $newPath)
+}
+
 query AllPages {
   allPages {
     path

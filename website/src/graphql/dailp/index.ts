@@ -960,6 +960,12 @@ export type Mutation = {
   readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updateMenu: Menu
   readonly updatePage: Scalars["Boolean"]
+  /**
+   * Move an existing page from `old_path` to `new_path`.
+   * Used when publishing a page under a menu so its URL reflects the
+   * menu header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
+   */
+  readonly updatePagePath: Scalars["String"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
   /** Updates a dailp_user's information */
@@ -1050,6 +1056,11 @@ export type MutationUpdateMenuArgs = {
 
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdatePagePathArgs = {
+  newPath: Scalars["String"]
+  oldPath: Scalars["String"]
 }
 
 export type MutationUpdateParagraphArgs = {
@@ -3429,6 +3440,15 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type UpdatePagePathMutationVariables = Exact<{
+  oldPath: Scalars["String"]
+  newPath: Scalars["String"]
+}>
+
+export type UpdatePagePathMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updatePagePath">
+
 export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllPagesQuery = { readonly __typename?: "Query" } & {
@@ -4709,6 +4729,18 @@ export function useUpsertPageMutation() {
   return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
     UpsertPageDocument
   )
+}
+export const UpdatePagePathDocument = gql`
+  mutation UpdatePagePath($oldPath: String!, $newPath: String!) {
+    updatePagePath(oldPath: $oldPath, newPath: $newPath)
+  }
+`
+
+export function useUpdatePagePathMutation() {
+  return Urql.useMutation<
+    UpdatePagePathMutation,
+    UpdatePagePathMutationVariables
+  >(UpdatePagePathDocument)
 }
 export const AllPagesDocument = gql`
   query AllPages {

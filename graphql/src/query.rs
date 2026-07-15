@@ -971,6 +971,23 @@ impl Mutation {
             .await?)
     }
 
+    /// Move an existing page from `old_path` to `new_path`.
+    /// Used when publishing a page under a menu so its URL reflects the
+    /// menu header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_page_path(
+        &self,
+        context: &Context<'_>,
+        old_path: String,
+        new_path: String,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_page_path(&old_path, &new_path)
+            .await?)
+    }
+
     // dennis todo: should be admin, but admin accs not implemented yet
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
