@@ -1943,8 +1943,8 @@ impl Database {
 
     pub async fn remove_collection_chapter(&self, chapter_id: Uuid) -> Result<Uuid> {
         // Removes chapter index temporarily to be unassigned
-        query_file_scalar!("queries/remove_collection_chapter.sql", chapter_id)
-            .fetch_one(&self.client)
+        query_file!("queries/remove_collection_chapter.sql", chapter_id)
+            .execute(&self.client)
             .await?;
         Ok(chapter_id)
     }

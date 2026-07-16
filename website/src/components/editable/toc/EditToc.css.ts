@@ -2,7 +2,7 @@ import { style, styleVariants } from "@vanilla-extract/css"
 import { mediaQueries } from "src/style/constants"
 import { button } from "../../button.css"
 
-export const container = style({
+export const tocContainer = style({
   border: "1px solid #ddd",
   padding: 16,
   borderRadius: 8,
@@ -21,11 +21,6 @@ export const sectionsGrid = style({
   display: "grid",
   gridTemplateColumns: "1fr",
   gap: 16,
-  "@media": {
-    [mediaQueries.medium]: {
-      gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
-    },
-  },
 })
 
 export const sectionHeading = style({
@@ -79,11 +74,10 @@ export const chapterRow = styleVariants({
   ],
   draft: [
     chapterRowBase,
-    { border: "1px solid #28a745", background: "#f0fff4" },
+    { border: "1px solid #28a745", background: "#f0fff4" }, // Green for pending new
   ],
 })
 
-// Outer row: left group (identity/inputs) and right group (actions) pinned apart
 export const chapterRowContent = style({
   display: "flex",
   flexDirection: "column",
@@ -100,7 +94,8 @@ export const chapterRowContent = style({
   },
 })
 
-export const leftGroup = style({
+// Inputs for slug, title, dragable
+export const inputsOfRow = style({
   display: "flex",
   alignItems: "center",
   gap: 6,
@@ -110,7 +105,8 @@ export const leftGroup = style({
   width: "100%",
 })
 
-export const rightGroup = style({
+// Buttons for cancel and submit
+export const controlsOfRow = style({
   display: "flex",
   alignItems: "center",
   gap: 6,
@@ -156,6 +152,7 @@ export const inputBase = style({
   minWidth: 0,
   boxSizing: "border-box",
 })
+
 export const titleInput = style([
   inputBase,
   {
