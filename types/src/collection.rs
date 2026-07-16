@@ -28,6 +28,8 @@ pub struct EditedCollection {
     pub slug: String,
     /// Cover image URL
     pub thumbnail_url: Option<String>,
+    // Determines if this collection is hidden or not to the public
+    pub is_hidden: bool,
 }
 
 /// Input object for creating a new collection

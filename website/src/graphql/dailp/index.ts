@@ -700,6 +700,7 @@ export type EditedCollection = {
   readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
+  readonly isHidden: Scalars["Boolean"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
   /** Cover image URL */
@@ -995,6 +996,8 @@ export type Mutation = {
   readonly removeBookmark: AnnotatedDoc
   /** Removes the provided chapter id from a TOC by setting its index to -1 */
   readonly removeCollectionChapter: Scalars["UUID"]
+  /** Inverts associated collection's visiblity */
+  readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updateCollectionChapterOrder: Scalars["String"]
   /** Update a comment */
@@ -1075,6 +1078,10 @@ export type MutationRemoveBookmarkArgs = {
 
 export type MutationRemoveCollectionChapterArgs = {
   chapterId: Scalars["UUID"]
+}
+
+export type MutationToggleCollectionVisibilityArgs = {
+  collectionId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
