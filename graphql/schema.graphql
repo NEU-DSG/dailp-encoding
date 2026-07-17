@@ -1538,6 +1538,10 @@ type Query {
 	abbreviationIdFromShortName(shortName: String!): UUID!
 	menuBySlug(slug: String!): Menu!
 	"""
+	Retrieves the IIIF image source URL of a document
+	"""
+	iiifSourceForDocumentMetadata(documentId: UUID!): String
+	"""
 	Fetch all available subject headings.
 	"""
 	allSubjectHeadings: [SubjectHeading!]!
