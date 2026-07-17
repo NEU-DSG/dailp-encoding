@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useState } from "react"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -13,11 +13,30 @@ import * as css from "./toc.css"
 type TOCProps = {
   section: CollectionSection
   chapters: Chapter[]
+  isFiltering?: boolean // Prevent dups when searching similar titles to active chapter
+}
+
+// Filters through chapters including subchapters
+const filterChapters = (chapters: Chapter[], input: string): Chapter[] => {
+  const trimmedInput = input.toLowerCase().trim()
+  const filteredChapters: Chapter[] = []
+
+  // Add all chapters and children so they are filtered too
+  for (const chapter of chapters) {
+    filteredChapters.push(chapter)
+    if (chapter.children) filteredChapters.push(...chapter.children)
+  }
+
+  return filteredChapters.filter((ch) =>
+    ch.title.toLowerCase().includes(trimmedInput)
+  )
 }
 
 const CollectionTOC = () => {
   const chapters = useChapters()
   const { collectionSlug } = useRouteParams()
+
+  const [searchedChapter, setSearchedChapter] = useState("")
 
   if (!chapters || !collectionSlug) {
     return null
@@ -44,27 +63,61 @@ const CollectionTOC = () => {
     [introChapters, bodyChapters, creditChapters]
   )
 
+  const isUserFiltering = searchedChapter.trim().length > 0
+
   const collection = [
-    { section: CollectionSection.Intro, chapters: introChapters },
-    { section: CollectionSection.Body, chapters: bodyChapters },
-    { section: CollectionSection.Credit, chapters: creditChapters },
+    {
+      section: CollectionSection.Intro,
+      chapters: isUserFiltering
+        ? filterChapters(introChapters, searchedChapter)
+        : introChapters,
+    },
+    {
+      section: CollectionSection.Body,
+      chapters: isUserFiltering
+        ? filterChapters(bodyChapters, searchedChapter)
+        : bodyChapters,
+    },
+    {
+      section: CollectionSection.Credit,
+      chapters: isUserFiltering
+        ? filterChapters(creditChapters, searchedChapter)
+        : creditChapters,
+    },
   ]
 
   return (
     <>
+      <input
+        className={css.searchBar}
+        type="text"
+        placeholder="Search by Title..."
+        value={searchedChapter}
+        onChange={(e) => setSearchedChapter(e.target.value)}
+      />
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
             <h3 className={css.title}>{coll.section}</h3>
-            <TOC section={coll.section} chapters={coll.chapters} />
+            <TOC
+              section={coll.section}
+              chapters={coll.chapters}
+              isFiltering={isUserFiltering}
+            />
           </Fragment>
         ) : null
       )}
+      {isUserFiltering &&
+        collection.every((collection) => collection.chapters.length === 0) && (
+          <div className={css.noMatchTextContainer}>
+            <p className={css.noMatchText}>No matching chapters found</p>
+          </div>
+        )}
     </>
   )
 }
 
-const TOC = ({ section, chapters }: TOCProps) => {
+const TOC = ({ section, chapters, isFiltering = false }: TOCProps) => {
   const { collectionSlug } = useRouteParams()
   const { onSelect, isSelected, lastSelected } = useFunctions()
 
@@ -89,8 +142,12 @@ const TOC = ({ section, chapters }: TOCProps) => {
               {item.title}
             </Link>
 
-            {isSelected(item) && item.children ? (
-              <TOC section={section} chapters={item.children} />
+            {!isFiltering && isSelected(item) && item.children ? (
+              <TOC
+                section={section}
+                chapters={item.children}
+                isFiltering={isFiltering}
+              />
             ) : null}
           </li>
         ))}

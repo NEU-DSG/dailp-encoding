@@ -82,3 +82,23 @@ export const title = style([
     fontWeight: "bolder",
   },
 ])
+
+export const searchBar = style([
+  {
+    marginBottom: "15px",
+    width: "100%",
+  },
+])
+
+export const noMatchTextContainer = style([
+  {
+    display: "flex",
+    justifyContent: "center",
+  },
+])
+
+export const noMatchText = style([
+  {
+    color: colors.primaryText,
+  },
+])
