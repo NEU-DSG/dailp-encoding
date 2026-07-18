@@ -32,10 +32,20 @@ const DailpPage = (props: DailpPageProps) => (
 
 export const Page = DailpPage
 
+// export const DailpPageContents = (props: { path: string }) => {
+//   const [{ data, fetching }] = usePageByPathQuery({
+//     variables: { path: props.path },
+//   })
+
 export const DailpPageContents = (props: { path: string }) => {
+  console.log("props.path =", props.path)
+
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: props.path },
+    requestPolicy: "network-only",
   })
+
+  console.log("pageByPath =", JSON.stringify(data, null, 2))
 
   const [{ data: menuData }] = useMenuBySlugQuery({
     variables: { slug: "default-nav" },
@@ -182,11 +192,6 @@ export const DailpPageContents = (props: { path: string }) => {
       <>
         <header>
           <h1>{page.title}</h1>
-          {page.createdAt && (
-            <time dateTime={page.createdAt}>
-              {new Date(page.createdAt).toLocaleDateString()}
-            </time>
-          )}
           {/* dennis todo: should be admin in the future */}
           {userRole === UserRole.Editor && (
             <div>
@@ -212,6 +217,19 @@ export const DailpPageContents = (props: { path: string }) => {
       )}
       <header>
         <h1>{page.title}</h1>
+
+        {page.createdAt &&
+          (props.path.startsWith("/story/") ||
+            props.path.startsWith("/stories/") ||
+            props.path.startsWith("/spotlight/") ||
+            props.path.startsWith("/spotlights/")) && (
+            <time dateTime={page.createdAt}>
+              <b>
+                Published on {new Date(page.createdAt).toLocaleDateString()}
+              </b>
+            </time>
+          )}
+
         {/* dennis todo: should be admin in the future */}
         {
           /* dropdown & publish button */
