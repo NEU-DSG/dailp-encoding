@@ -23,6 +23,16 @@ export type Scalars = {
   /** A scalar that can represent any JSON value. */
   JSON: any
   /**
+   * ISO 8601 calendar date without timezone.
+   * Format: %Y-%m-%d
+   *
+   * # Examples
+   *
+   * * `1994-11-13`
+   * * `2000-02-24`
+   */
+  NaiveDate: any
+  /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
    * entities without requiring a central allocating authority.
@@ -1089,6 +1099,7 @@ export type NewPageInput = {
 export type Page = {
   readonly __typename?: "Page"
   readonly body: ReadonlyArray<ContentBlock>
+  readonly createdAt: Maybe<Scalars["NaiveDate"]>
   /**
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
@@ -3443,7 +3454,7 @@ export type PageByPathQueryVariables = Exact<{
 
 export type PageByPathQuery = { readonly __typename?: "Query" } & {
   readonly pageByPath: Maybe<
-    { readonly __typename?: "Page" } & Pick<Page, "title"> & {
+    { readonly __typename?: "Page" } & Pick<Page, "title" | "createdAt"> & {
         readonly body: ReadonlyArray<
           | ({ readonly __typename: "Gallery" } & Pick<Gallery, "mediaUrls">)
           | ({ readonly __typename: "Markdown" } & Pick<Markdown, "content">)
@@ -4739,6 +4750,7 @@ export const PageByPathDocument = gql`
           mediaUrls
         }
       }
+      createdAt
     }
   }
 `

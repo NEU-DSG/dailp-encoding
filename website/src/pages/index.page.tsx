@@ -51,8 +51,16 @@ const IndexPage = () => {
   const [{ data }] = Dailp.useAllPagesQuery()
 
   // Fetch stories
+  // const stories = data?.allPages?.filter(
+  //   (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
+  // )
+
   const stories = data?.allPages?.filter(
-    (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
+    (p) =>
+      p.path?.startsWith("/story/") ||
+      p.path?.startsWith("/stories/") ||
+      p.path?.startsWith("/spotlight/") ||
+      p.path?.startsWith("/spotlights/")
   )
 
   // Show loading state while determining user role

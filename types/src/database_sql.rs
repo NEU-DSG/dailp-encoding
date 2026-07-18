@@ -1598,6 +1598,7 @@ impl Database {
                 body: vec![ContentBlock::Markdown(Markdown {
                     content: page.content,
                 })],
+                created_at: page.created_at,
             })
             .collect())
     }
@@ -2676,6 +2677,7 @@ impl Database {
                 row.path.clone(),
                 row.title.clone(),
                 blocks,
+                row.created_at.clone(),
             )))
         } else {
             Ok(None)
