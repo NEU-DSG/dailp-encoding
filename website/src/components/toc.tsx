@@ -7,6 +7,11 @@ import {
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
+import {
+  NumberedChapter,
+  assignNumbers,
+  filterNumberedChapters,
+} from "src/utils/toc"
 import Link from "./link"
 import * as css from "./toc.css"
 
@@ -16,19 +21,26 @@ type TOCProps = {
   isFiltering?: boolean // Prevent dups when searching similar titles to active chapter
 }
 
-// Filters through chapters including subchapters
-const filterChapters = (chapters: Chapter[], input: string): Chapter[] => {
-  const trimmedInput = input.toLowerCase().trim()
-  const filteredChapters: Chapter[] = []
+// When a user is typing in a requested chapter, this takes over a section
+// and genrates the list of filtered chapters
+const FilteredTOC = ({ chapterTuple }: { chapterTuple: NumberedChapter[] }) => {
+  const { collectionSlug } = useRouteParams()
+  const { onSelect, lastSelected } = useFunctions()
 
-  // Add all chapters and children so they are filtered too
-  for (const chapter of chapters) {
-    filteredChapters.push(chapter)
-    if (chapter.children) filteredChapters.push(...chapter.children)
-  }
-
-  return filteredChapters.filter((ch) =>
-    ch.title.toLowerCase().includes(trimmedInput)
+  return (
+    <ul className={css.filteredList}>
+      {chapterTuple.map(([chapter, index]) => (
+        <li key={chapter.slug} className={css.filteredListItem}>
+          <Link
+            href={chapterRoute(collectionSlug!, chapter.slug)}
+            className={lastSelected(chapter) ? css.selectedLink : css.link}
+            onClick={() => onSelect(chapter)}
+          >
+            {index}. {chapter.title}
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -65,24 +77,28 @@ const CollectionTOC = () => {
 
   const isUserFiltering = searchedChapter.trim().length > 0
 
+  const tupleIntro = assignNumbers(introChapters, CollectionSection.Intro)
+  const tupleBody = assignNumbers(bodyChapters, CollectionSection.Body)
+  const tupleCredit = assignNumbers(creditChapters, CollectionSection.Credit)
+
   const collection = [
     {
       section: CollectionSection.Intro,
-      chapters: isUserFiltering
-        ? filterChapters(introChapters, searchedChapter)
-        : introChapters,
+      chapters: introChapters,
+      numbered: tupleIntro,
+      filtered: filterNumberedChapters(tupleIntro, searchedChapter),
     },
     {
       section: CollectionSection.Body,
-      chapters: isUserFiltering
-        ? filterChapters(bodyChapters, searchedChapter)
-        : bodyChapters,
+      chapters: bodyChapters,
+      numbered: tupleBody,
+      filtered: filterNumberedChapters(tupleBody, searchedChapter),
     },
     {
       section: CollectionSection.Credit,
-      chapters: isUserFiltering
-        ? filterChapters(creditChapters, searchedChapter)
-        : creditChapters,
+      chapters: creditChapters,
+      numbered: tupleCredit,
+      filtered: filterNumberedChapters(tupleCredit, searchedChapter),
     },
   ]
 
@@ -95,15 +111,26 @@ const CollectionTOC = () => {
         value={searchedChapter}
         onChange={(e) => setSearchedChapter(e.target.value)}
       />
-      {collection.map((coll, idx) =>
-        coll.chapters.length > 0 ? (
-          <Fragment key={idx}>
-            <h3 className={css.title}>{coll.section}</h3>
-            <TOC
-              section={coll.section}
-              chapters={coll.chapters}
-              isFiltering={isUserFiltering}
-            />
+      {collection.map((collection, index) =>
+        collection.chapters.length > 0 ? (
+          <Fragment key={index}>
+            {isUserFiltering ? (
+              collection.filtered.length > 0 ? (
+                <>
+                  <h3 className={css.title}>{collection.section}</h3>
+                  <FilteredTOC chapterTuple={collection.filtered} />
+                </>
+              ) : null
+            ) : (
+              <>
+                <h3 className={css.title}>{collection.section}</h3>
+                <TOC
+                  section={collection.section}
+                  chapters={collection.chapters}
+                  isFiltering={false}
+                />
+              </>
+            )}
           </Fragment>
         ) : null
       )}

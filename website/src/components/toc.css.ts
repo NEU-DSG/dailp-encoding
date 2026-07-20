@@ -83,6 +83,17 @@ export const title = style([
   },
 ])
 
+export const filteredList = style({
+  listStyle: "none",
+  padding: 0,
+  margin: 0,
+})
+
+export const filteredListItem = style({
+  listStyle: "none",
+  counterIncrement: "none",
+})
+
 export const searchBar = style([
   {
     marginBottom: "15px",
