@@ -90,6 +90,8 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
+              cp -f ${targetPackage}/bin/dailp-outbound $out/bootstrap
+              zip -j $out/dailp-outbound.zip $out/bootstrap
             '';
           };
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
