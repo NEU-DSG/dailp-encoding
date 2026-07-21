@@ -64,6 +64,13 @@ type GroupedOption = {
   }[]
 }
 
+const systemEnumToLabel: Record<Dailp.CherokeeOrthography, { label: string }> =
+  {
+    [Dailp.CherokeeOrthography.Learner]: { label: "Learner" },
+    [Dailp.CherokeeOrthography.Crg]: { label: "CRG" },
+    [Dailp.CherokeeOrthography.Taoc]: { label: "TAOC" },
+  }
+
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const WordPanel = (p: {
   panel: PanelType
@@ -118,16 +125,58 @@ export const WordPanel = (p: {
     </>
   )
 
-  const { cherokeeRepresentation } = usePreferences()
+  const preferences = usePreferences()
+  const { cherokeeRepresentation } = preferences
+
+  const systemSelector = (
+    <div style={{ display: "flex", gap: "12px", padding: "8px 0" }}>
+      {Object.entries(systemEnumToLabel).map(([key, details]) => {
+        const orthKey = key as Dailp.CherokeeOrthography
+        return (
+          <label
+            key={orthKey}
+            style={{ display: "flex", alignItems: "center", gap: "4px" }}
+          >
+            <input
+              type="radio"
+              name="system-preference-radio"
+              value={orthKey}
+              checked={cherokeeRepresentation === orthKey}
+              onChange={() => preferences.setCherokeeRepresentation(orthKey)}
+            />
+            {details.label}
+          </label>
+        )
+      })}
+    </div>
+  )
+
+  const systemSegments = p.word.segments.filter((s) => {
+    return s.system === cherokeeRepresentation
+  })
+
+  const hasSegmentsForOtherSystems =
+    systemSegments.length === 0 && p.word.segments.length > 0
 
   // Contains components rendering a word's segments and its english translation.
   const wordPartsContent = (
     <>
+      {systemSelector}
       {p.panel === PanelType.WordPanel ? (
-        <VerticalMorphemicSegmentation
-          cherokeeRepresentation={cherokeeRepresentation}
-          segments={p.word.segments}
-        />
+        hasSegmentsForOtherSystems ? (
+          <p style={{ fontStyle: "italic", color: "#666", padding: "8px 0" }}>
+            Word parts exist for this word in another system.
+          </p>
+        ) : systemSegments.length === 0 ? (
+          <p style={{ fontStyle: "italic", color: "#666", padding: "8px 0" }}>
+            No word parts exist for this word.
+          </p>
+        ) : (
+          <VerticalMorphemicSegmentation
+            cherokeeRepresentation={cherokeeRepresentation}
+            segments={systemSegments}
+          />
+        )
       ) : (
         <EditSegmentation segments={p.word.segments} options={p.options} />
       )}
@@ -237,6 +286,11 @@ const EditSegmentation = (p: {
   const currentWord = form.values.word as Dailp.FormFieldsFragment
   const currentSegments = currentWord.segments
 
+  const preferences = usePreferences()
+  const currentFilteredSegments = currentSegments.filter(
+    (s) => s.system === preferences.cherokeeRepresentation
+  )
+
   const onDragEnd = (result: DropResult) => {
     // dropped outside the list
     if (!result.destination) {
@@ -272,8 +326,8 @@ const EditSegmentation = (p: {
     })
   }
 
-  const deleteSegment = (index: number) => {
-    const updatedSegments = currentSegments.filter((_, i) => i !== index)
+  const deleteSegment = (segmentToDelete: typeof currentSegments[0]) => {
+    const updatedSegments = currentSegments.filter((s) => s !== segmentToDelete)
     form.update("word", {
       ...currentWord,
       segments: updatedSegments,
@@ -290,7 +344,7 @@ const EditSegmentation = (p: {
             className={css.tableContainer}
           >
             <tbody>
-              {currentSegments.map((segment, index) => (
+              {currentFilteredSegments.map((segment, index) => (
                 <Draggable
                   key={index}
                   draggableId={index.toString()}
@@ -333,7 +387,7 @@ const EditSegmentation = (p: {
                       </td>
                       <td style={{ padding: "0 10px" }}>
                         <button
-                          onClick={() => deleteSegment(index)}
+                          onClick={() => deleteSegment(segment)}
                           style={{
                             padding: "5px 10px",
                             borderRadius: "4px",

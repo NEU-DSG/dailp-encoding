@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.role as \"role: WordSegmentRole\"\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word\n",
+  "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.role as \"role: WordSegmentRole\",\n  abbreviation_system.short_name as system\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\n  left join abbreviation_system on abbreviation_system.id = word_segment.system_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word",
   "describe": {
     "columns": [
       {
@@ -43,6 +43,11 @@
             }
           }
         }
+      },
+      {
+        "ordinal": 6,
+        "name": "system",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -56,8 +61,9 @@
       false,
       true,
       false,
+      false,
       false
     ]
   },
-  "hash": "35acc71b364ed7efb64b5082a4a23c1424955963bbad243dba6269984a8f69c7"
+  "hash": "0e995da055ea3f3d54a9ee3945334094938fbf46116397007d05e628172e02ec"
 }

@@ -1742,6 +1742,10 @@ input UserUpdate {
 
 type WordSegment {
 	"""
+	Orthological representation system
+	"""
+	system: CherokeeOrthography
+	"""
 	Phonemic representation of the morpheme
 	"""
 	morpheme: String!

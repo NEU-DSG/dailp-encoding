@@ -801,23 +801,39 @@ impl Database {
         }
 
         let segments = word.segments.take().unwrap();
+
+        let system_name: Option<CherokeeOrthography> = segments.first().and_then(|s| s.system);
+        let system_str = match system_name {
+            Some(CherokeeOrthography::Taoc) => "TAOC",
+            Some(CherokeeOrthography::Crg) => "CRG",
+            Some(CherokeeOrthography::Learner) => "LEARNER",
+            _ => return Err(anyhow::anyhow!("Unsupported Cherokee orthography system")),
+        };
+
         // if word segmentation not present, return early.
         if segments.is_empty() {
             // Delete all existing segments since the new segments array is empty
-            query_file!("queries/delete_word_segments.sql", word.id)
-                .execute(&mut *tx)
-                .await?;
+            sqlx::query(include_str!(
+                "../queries/delete_word_segments_by_system.sql"
+            ))
+            .bind(word.id)
+            .bind(system_str)
+            .execute(&mut *tx)
+            .await?;
             tx.commit().await?;
             return Ok(word.id);
         }
 
         // Delete existing segments before upserting new ones
-        query_file!("queries/delete_word_segments.sql", word.id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query(include_str!(
+            "../queries/delete_word_segments_by_system.sql"
+        ))
+        .bind(word.id)
+        .bind(system_str)
+        .execute(&mut *tx)
+        .await?;
 
-        let system_name: Option<CherokeeOrthography> = segments[0].system;
-
+        let word_uuid = word.id;
         let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
             Vec<_>,
@@ -841,37 +857,56 @@ impl Database {
             .multiunzip();
 
         // Convert the given glosses if they have an internal for to add to the database.
-        let internal_glosses = query_file_scalar!(
-            "queries/find_internal_glosses.sql",
-            &*gloss,
-            match system_name {
-                Some(CherokeeOrthography::Taoc) => "TAOC",
-                _ =>
-                    return Err(anyhow::anyhow!(
-                        "Other Cherokee systems are currently not supported"
-                    )),
-            }
-        )
-        .fetch_all(&mut *tx)
-        .await?;
+        let internal_glosses =
+            query_file_scalar!("queries/find_internal_glosses.sql", &*gloss, system_str)
+                .fetch_all(&mut *tx)
+                .await?;
+
+        let unwrapped_glosses: Vec<String> =
+            internal_glosses.iter().filter_map(|g| g.clone()).collect();
 
         // Add any newly created local glosses into morpheme gloss table.
         query_file!(
             "queries/upsert_local_morpheme_glosses.sql",
             &*doc_id,
-            &*internal_glosses as _,
+            &*unwrapped_glosses as _,
         )
         .execute(&mut *tx)
         .await?;
 
+        for (g, r) in unwrapped_glosses.iter().zip(role.iter()) {
+            let abstract_id: Uuid =
+                sqlx::query_scalar(include_str!("../queries/upsert_morpheme_tag.sql"))
+                    .bind(g)
+                    .bind(r)
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+            sqlx::query(include_str!("../queries/upsert_morpheme_gloss.sql"))
+                .bind(document_id)
+                .bind(g)
+                .bind(None::<String>)
+                .bind(abstract_id)
+                .fetch_one(&mut *tx)
+                .await?;
+
+            let result = sqlx::query(include_str!("../queries/upsert_concrete_tag_by_system.sql"))
+                .bind(system_str)
+                .bind(abstract_id)
+                .bind(g)
+                .execute(&mut *tx)
+                .await?;
+        }
+
         query_file!(
-            "queries/upsert_many_word_segments.sql",
+            "queries/upsert_many_word_segments_with_system.sql",
             &*doc_id,
-            &*internal_glosses as _,
+            &*unwrapped_glosses as _,
             &*word_id,
             &*index,
             &*morpheme,
-            &*role as _
+            &*role as _,
+            system_str
         )
         .execute(&mut *tx)
         .await?;
@@ -2993,7 +3028,12 @@ impl Loader<PartsOfWord> for Database {
                 (
                     PartsOfWord(part.word_id),
                     WordSegment {
-                        system: None,
+                        system: match part.system.as_str() {
+                            "TAOC" => Some(CherokeeOrthography::Taoc),
+                            "CRG" => Some(CherokeeOrthography::Crg),
+                            "LEARNER" => Some(CherokeeOrthography::Learner),
+                            _ => None,
+                        },
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,

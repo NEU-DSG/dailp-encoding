@@ -1,5 +1,4 @@
 insert into word_segment (gloss_id, word_id, index_in_word, morpheme, role)
--- Fill in glosses that weren't inserted with their global match.
 select
   coalesce(inserted_gloss.id, global_gloss.id),
   word_id,

@@ -275,6 +275,7 @@ export const PanelLayout = (p: {
           role: Dailp.WordSegmentRole.Morpheme,
           previousSeparator: "-",
           matchingTag: null,
+          system: cherokeeRepresentation,
         }
 
         console.log("Adding new segment:", newSegment)

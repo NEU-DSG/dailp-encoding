@@ -80,43 +80,39 @@ export const FormProvider = (props: { children: ReactNode }) => {
         }
       }
 
-      if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
-        setIsEditing(false)
+      setIsEditing(false)
 
-        // Create a completely new word state
-        const wordUpdate: Dailp.AnnotatedFormUpdate = {
-          id: values.word["id"],
-          source: values.word["source"],
-          commentary: values.word["commentary"],
-          segments: values.word["segments"].map((segment) => ({
-            system: cherokeeRepresentation,
-            morpheme: segment.morpheme,
-            gloss: segment.gloss,
-            role: segment.role,
-          })),
-          romanizedSource: values.word["romanizedSource"],
-          englishGloss: Array.isArray(values.word["englishGloss"])
-            ? values.word["englishGloss"].join(" ")
-            : String(values.word["englishGloss"]),
-        }
-
-        console.log("Sending complete word update:", wordUpdate)
-
-        runUpdate({
-          word: wordUpdate,
-          morphemeSystem: cherokeeRepresentation,
-        }).then(({ data, error }) => {
-          if (error) {
-            console.log("Update error:", error)
-          } else if (data) {
-            console.log("Server response:", data.updateWord)
-            form.update("word", data.updateWord)
-          }
-          setConfirmRomanizedSourceDelete(false)
-        })
-      } else {
-        alert(settingsAlert)
+      // Create a completely new word state
+      const wordUpdate: Dailp.AnnotatedFormUpdate = {
+        id: values.word["id"],
+        source: values.word["source"],
+        commentary: values.word["commentary"],
+        segments: values.word["segments"].map((segment) => ({
+          system: cherokeeRepresentation,
+          morpheme: segment.morpheme,
+          gloss: segment.gloss,
+          role: segment.role,
+        })),
+        romanizedSource: values.word["romanizedSource"],
+        englishGloss: Array.isArray(values.word["englishGloss"])
+          ? values.word["englishGloss"].join(" ")
+          : String(values.word["englishGloss"]),
       }
+
+      console.log("Sending complete word update:", wordUpdate)
+
+      runUpdate({
+        word: wordUpdate,
+        morphemeSystem: cherokeeRepresentation,
+      }).then(({ data, error }) => {
+        if (error) {
+          console.log("Update error:", error)
+        } else if (data) {
+          console.log("Server response:", data.updateWord)
+          form.update("word", data.updateWord)
+        }
+        setConfirmRomanizedSourceDelete(false)
+      })
     },
   })
 

@@ -40,14 +40,15 @@ Generally used to display interlinear glossed text.
 
 Word segments are unique on the combination of `word_id` and `index_in_word`.
 
-| column          | type                      | description                                                                                                                                   |
-| --------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | `uuid`                    | Primary key                                                                                                                                   |
-| `word_id`       | `uuid -> word`            | Word this is a part of                                                                                                                        |
-| `index_in_word` | `bigint`                  | Position within the word                                                                                                                      |
-| `morpheme`      | `text`                    | Underlying phonemic representation of the morpheme                                                                                            |
-| `gloss_id`      | `uuid? -> morpheme_gloss` | English gloss which may be shared with other word segments                                                                                    |
-| `role`          | `word_segment_role`       | Role of the segment within the word, either `Morpheme`, `Clitic`, or `Modifier`. This usually determines the separator character used in IGT. |
+| column          | type                          | description                                                                                                                                   |
+| --------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `uuid`                        | Primary key                                                                                                                                   |
+| `word_id`       | `uuid -> word`                | Word this is a part of                                                                                                                        |
+| `index_in_word` | `bigint`                      | Position within the word                                                                                                                      |
+| `morpheme`      | `text`                        | Underlying phonemic representation of the morpheme                                                                                            |
+| `gloss_id`      | `uuid? -> morpheme_gloss`     | English gloss which may be shared with other word segments                                                                                    |
+| `role`          | `word_segment_role`           | Role of the segment within the word, either `Morpheme`, `Clitic`, or `Modifier`. This usually determines the separator character used in IGT. |
+| `system_id`     | `uuid -> abbreviation_system` |                                                                                                                                               |
 
 ## `morpheme_gloss`
 
