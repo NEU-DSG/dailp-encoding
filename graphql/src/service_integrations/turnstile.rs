@@ -34,6 +34,5 @@ pub async fn validate_token(token: String) -> Result<bool, anyhow::Error> {
 // we expect more service integrations soon for our backup strategy
 #[derive(Deserialize, Serialize)]
 pub struct OutboundRequest {
-    pub service: String,
     pub data: String,
 }

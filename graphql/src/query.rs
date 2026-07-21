@@ -1003,13 +1003,8 @@ impl Mutation {
             let result = client
                 .invoke()
                 .function_name(function_name)
-                // TODO get the payload right
                 .payload(aws_sdk_lambda::primitives::Blob::new(
-                    serde_json::to_string(&OutboundRequest {
-                        service: "hi".into(),
-                        data: "there".into(),
-                    })
-                    .unwrap(),
+                    serde_json::to_string(&OutboundRequest { data: token }).unwrap(),
                 ))
                 .send()
                 .await?;
