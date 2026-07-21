@@ -996,9 +996,13 @@ impl Mutation {
             use aws_sdk_lambda as lambda;
             let config = aws_config::load_from_env().await;
             let client = lambda::Client::new(&config);
+            let function_name = match std::env::var("OUTBOUND_LAMBDA_NAME") {
+                Ok(name) => name,
+                Err(_) => return Err("Failed to validate Turnstile token".into()),
+            };
             let result = client
                 .invoke()
-                .function_name("outbound-turnstile") // TODO confirm name
+                .function_name(function_name)
                 // TODO get the payload right
                 .payload(aws_sdk_lambda::primitives::Blob::new(
                     serde_json::to_string(&OutboundRequest {
