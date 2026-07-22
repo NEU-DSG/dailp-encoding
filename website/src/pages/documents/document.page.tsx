@@ -494,8 +494,10 @@ export const DocumentTitleHeader = (p: {
       </div>
       <div id="audio-and-recording-container">
         <div>
-          {/* only show document audio to non-editors , editors can see which ones are shown from checkmark*/}
-          {p.doc.editedAudio.length > 0 && role !== UserRole.Editor && (
+          {/* Each Role has their own view of the audio */}
+          {role === UserRole.Reader && p.doc.editedAudio.length > 0 && (
+            // Published audio only - official DAILP track and
+            // user-contributed audio that has been published by an editor.
             <>
               <h3>Document Audio:</h3>
               {p.doc.editedAudio.map((audio, index) => (
@@ -526,15 +528,35 @@ export const DocumentTitleHeader = (p: {
               ))}
             </>
           )}
-          {role === UserRole.Contributor && (
-            <>
-              <h3>User-contributed Audio:</h3>
-              {p.doc.userContributedAudio.map(
-                (audio, index) =>
-                  audio.recordedBy?.id === userId && (
+          {role === UserRole.Contributor &&
+            (() => {
+              // Includes the official DAILP track + published user-contributed audio + this user's own uploads
+              // No "show to readers" checkbox.
+              const ownUploads = p.doc.userContributedAudio.filter(
+                (a) => a.recordedBy?.id === userId
+              )
+              const seen = new Set<string>()
+              const contributorAudio = [
+                ...p.doc.editedAudio,
+                ...ownUploads,
+              ].filter((a) => {
+                if (!a.sliceId) return true
+                if (seen.has(a.sliceId)) return false
+                seen.add(a.sliceId)
+                return true
+              })
+              if (contributorAudio.length === 0) return null
+              return (
+                <>
+                  <h3>Document Audio:</h3>
+                  {contributorAudio.map((audio, index) => (
                     <div key={index}>
                       <AudioPlayer
-                        contributor={"you"}
+                        contributor={
+                          audio.recordedBy?.id === userId
+                            ? "you"
+                            : audio.recordedBy?.displayName
+                        }
                         recordedAt={
                           audio.recordedAt?.formattedDate
                             ? new Date(audio.recordedAt.formattedDate)
@@ -544,21 +566,36 @@ export const DocumentTitleHeader = (p: {
                         showProgress
                       />
                     </div>
-                  )
-              )}
-            </>
-          )}
-          {role === UserRole.Editor && (
-            <>
-              <h3>User-contributed Audio:</h3>
-              {p.doc.userContributedAudio.map((audio, index) => (
-                <div
-                  id={`user-contributed-document-audio-player-${index}`}
-                  className={css.documentAudioContainer}
-                  key={index}
-                >
-                  {role === UserRole.Editor && (
-                    <>
+                  ))}
+                </>
+              )
+            })()}
+          {role === UserRole.Editor &&
+            (() => {
+              // All user-contributed audio + the official DAILP track
+              // All items get the "Publish to readers" checkbox.
+              const userContributedSliceIds = new Set(
+                p.doc.userContributedAudio
+                  .map((a) => a.sliceId)
+                  .filter((id): id is string => !!id)
+              )
+              const ingestedOnly = p.doc.editedAudio.filter(
+                (a) => !a.sliceId || !userContributedSliceIds.has(a.sliceId)
+              )
+              const editorAudio = [
+                ...ingestedOnly,
+                ...p.doc.userContributedAudio,
+              ]
+              if (editorAudio.length === 0) return null
+              return (
+                <>
+                  <h3>Document Audio:</h3>
+                  {editorAudio.map((audio, index) => (
+                    <div
+                      id={`user-contributed-document-audio-player-${index}`}
+                      className={css.documentAudioContainer}
+                      key={index}
+                    >
                       <DocumentAudioWithCurate
                         contributor={
                           audio.recordedBy?.displayName ?? "Unknown Contributor"
@@ -578,12 +615,11 @@ export const DocumentTitleHeader = (p: {
                           </a>
                         </div>
                       )}
-                    </>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+                    </div>
+                  ))}
+                </>
+              )
+            })()}
           {(role === UserRole.Editor || role === UserRole.Contributor) && (
             <RecordDocumentAudioPanel document={p.doc} />
           )}

@@ -2777,7 +2777,7 @@ impl Loader<DocumentId> for Database {
                         parent_track: None,
                         annotations: None,
                         index: 0,
-                        include_in_edited_collection: true,
+                        include_in_edited_collection: item.include_audio_in_edited_collection,
                         edited_by: None,
                         recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
@@ -2854,8 +2854,7 @@ impl Loader<DocumentShortName> for Database {
                         parent_track: None,
                         annotations: None,
                         index: 0,
-                        // TODO: is this a bad default?
-                        include_in_edited_collection: true,
+                        include_in_edited_collection: item.include_audio_in_edited_collection,
                         edited_by: None,
                         recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
