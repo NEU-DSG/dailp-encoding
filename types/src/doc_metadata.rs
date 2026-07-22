@@ -252,3 +252,29 @@ impl From<&SpatialCoverage> for Uuid {
         s.id
     }
 }
+
+// Stores a key date associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
+pub struct KeyDate {
+    // UUID for the key date
+    pub id: Uuid,
+    // The date as a string (could be MM/DD/YYYY, month year, year etc.)
+    pub name: String,
+}
+
+// For updating key dates
+#[derive(async_graphql::InputObject, Debug)]
+pub struct KeyDateUpdate {
+    // UUID for the key date
+    pub id: Uuid,
+    // Name of the date
+    pub name: String,
+}
+
+// Converts KeyDate struct to corresponding Uuid
+impl From<&KeyDate> for Uuid {
+    fn from(k: &KeyDate) -> Self {
+        k.id
+    }
+}

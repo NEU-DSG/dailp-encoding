@@ -3569,6 +3569,31 @@ impl Loader<CreatorsForDocument> for Database {
     }
 }
 
+#[async_trait::async_trait]
+impl Loader<KeyDatesForDocument> for Database {
+    type Value = Vec<KeyDate>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[KeyDatesForDocument],
+    ) -> Result<HashMap<KeyDatesForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .key_dates_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
 /// A simplified comment type that is easier to pull out of the database
 struct BasicComment {
     pub id: Uuid,
@@ -3654,6 +3679,9 @@ pub struct SpatialCoverageForDocument(pub Uuid);
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct CreatorsForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct KeyDatesForDocument(pub Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

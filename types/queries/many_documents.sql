@@ -80,7 +80,7 @@ select
     join spatial_coverage sc on sc.id = dsc.spatial_coverage_id
     where dsc.document_id = d.id
   ) as spatial_coverage,
-  (
+  ( -- Creators
     select coalesce(
       jsonb_agg(
         jsonb_build_object(
@@ -93,7 +93,18 @@ select
     from document_creator dcr
     join creator cr on cr.id = dcr.creator_id
     where dcr.document_id = d.id
-  ) as creators
+  ) as creators,
+  ( -- Key Dates
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', kd.id,
+          'name', kd.name
+    )), '[]')
+    from document_key_date dkd
+    join key_date kd on kd.id = dkd.key_date_id
+    where dkd.document_id = d.id
+  ) as key_dates,
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
