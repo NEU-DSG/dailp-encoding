@@ -13,11 +13,14 @@ import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
 import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
+import * as css from "../../mode.css"
+import { IconButton } from "src/components"
+import { MdClose } from "react-icons/md"
 
 export type EditDocumentModalProps = {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: any) => Promise<{ ok: boolean; error?: string }>
   documentMetadata: Dailp.AnnotatedDoc
   initialCiteFormat?: string
 }
@@ -541,7 +544,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setIsEditing(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Format date for submission
@@ -641,6 +644,13 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <IconButton
+          className={css.closeButton}
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          <MdClose size={32} />
+        </IconButton>
         <h2 className={styles.title}>Editing Document Information</h2>
         <p className={styles.subtitle}>* indicates a required field</p>
 
@@ -752,7 +762,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
             approvedTags={[]}
             newTags={newContributors}
-            onAdd={() => {}}
+            onAdd={() => { }}
             onRemove={isEditing ? removeContributor : undefined}
             addButtonLabel="Add Contributor"
             customForm={
