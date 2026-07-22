@@ -1000,7 +1000,10 @@ impl Mutation {
             let client = lambda::Client::new(&config);
             let function_name = match std::env::var("OUTBOUND_LAMBDA_NAME") {
                 Ok(name) => name,
-                Err(_) => return Err("Failed to validate Turnstile token".into()),
+                Err(_) => {
+                    info!("Could not invoke Turnstile Lambda; lambda name is not set");
+                    return Err("Failed to validate Turnstile token".into());
+                }
             };
             info!(
                 "Invoking Lambda function {} to call Turnstile",
