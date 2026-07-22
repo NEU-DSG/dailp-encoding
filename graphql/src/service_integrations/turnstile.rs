@@ -18,7 +18,7 @@ pub async fn validate_token(token: String) -> Result<bool, anyhow::Error> {
         .send()
         .await?;
 
-    info!("Response recieved from SiteVerify API");
+    info!("Response received from SiteVerify API");
     debug!("Status Code: {}", response.status());
 
     let body = response.text().await?;
@@ -32,7 +32,7 @@ pub async fn validate_token(token: String) -> Result<bool, anyhow::Error> {
 
 // Even though a dedicated struct for inputs is overkill for now,
 // we expect more service integrations soon for our backup strategy
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct OutboundRequest {
     pub data: String,
 }

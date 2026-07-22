@@ -16,6 +16,7 @@ use dailp::{
     UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
+use log::info;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -988,7 +989,8 @@ impl Mutation {
         token: String,
     ) -> FieldResult<bool> {
         let deployment_context = std::env::var("TF_STAGE").unwrap_or("local".to_string());
-        if deployment_context == "local" {
+        info!("Validating Turnstile in context {}", deployment_context);
+        let response = if deployment_context == "local" {
             dailp_graphql::service_integrations::turnstile::validate_token(token)
                 .await
                 .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
@@ -1000,6 +1002,10 @@ impl Mutation {
                 Ok(name) => name,
                 Err(_) => return Err("Failed to validate Turnstile token".into()),
             };
+            info!(
+                "Invoking Lambda function {} to call Turnstile",
+                function_name
+            );
             let result = client
                 .invoke()
                 .function_name(function_name)
@@ -1008,6 +1014,7 @@ impl Mutation {
                 ))
                 .send()
                 .await?;
+            info!("Lambda function returned {:?}", result);
             // The Lambda:Invoke response only indicates control plane
             // errors via the Err variant. Errors coming from our code
             // (e.g. the outbound lambda got an error response from
@@ -1022,7 +1029,9 @@ impl Mutation {
             }
             let payload = result.payload.unwrap();
             serde_json::from_slice(payload.as_ref()).map_err(Into::into)
-        }
+        };
+        info!("Turnstile validation result: {:?}", response);
+        response
     }
 
     /// Adds a new subject heading to the global list.

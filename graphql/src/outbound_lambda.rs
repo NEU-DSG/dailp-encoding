@@ -11,7 +11,9 @@ type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
+    info!("Running outbound Turnstile handler");
     run(service_fn(handler)).await?;
+    info!("Done");
     Ok(())
 }
 
@@ -19,6 +21,9 @@ async fn main() -> Result<(), Error> {
 async fn handler(event: LambdaEvent<Value>) -> Result<bool, Error> {
     let payload = event.payload;
     let request: OutboundRequest = serde_json::from_value(payload)?;
+    info!("Handling outbound request: {:?}", request);
     let token = request.data;
-    validate_token(token).await.map_err(Into::into)
+    let response = validate_token(token).await.map_err(Into::into);
+    info!("Sending response: {:?}", response);
+    response
 }
