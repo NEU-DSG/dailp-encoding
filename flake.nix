@@ -1,6 +1,6 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -90,6 +90,8 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
+              cp -f ${targetPackage}/bin/dailp-outbound $out/bootstrap
+              zip -j $out/dailp-outbound.zip $out/bootstrap
             '';
           };
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
@@ -189,10 +191,10 @@
               nasm
               terraform
               rust-toolchain
-              nodejs_20
+              nodejs-18_x
               yarn
               act
-              postgresql
+              postgresql_14
               sqlx-cli
               sqlfluff
               (writers.writeBashBin "dev-check" ./check.sh)
@@ -224,7 +226,8 @@
                 cargo sqlx prepare -- -p dailp
               '')
             ] ++ lib.optionals stdenv.isDarwin [
-              apple-sdk
+              darwin.apple_sdk.frameworks.Security
+              darwin.apple_sdk.frameworks.SystemConfiguration
               libiconv
             ];
           };

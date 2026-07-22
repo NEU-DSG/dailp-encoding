@@ -963,6 +963,7 @@ export type Mutation = {
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
   readonly upsertPage: Scalars["String"]
+  /** Validates a token against CloudFlare Turnstile's SiteVerify API */
   readonly validateTurnstileToken: Scalars["Boolean"]
 }
 

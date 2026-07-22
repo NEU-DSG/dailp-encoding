@@ -8,14 +8,15 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, ApprovalStatus, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
+    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
-
+use log::info;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -25,6 +26,8 @@ use {
         ParagraphUpdate, WordsInDocument,
     },
 };
+
+use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
 /// Home for all read-only queries
 pub struct Query;
@@ -985,22 +988,53 @@ impl Mutation {
         context: &Context<'_>,
         token: String,
     ) -> FieldResult<bool> {
-        
         let deployment_context = std::env::var("TF_STAGE").unwrap_or("local".to_string());
-        if deployment_context == "local" {
-            let a = crate::service_integrations::turnstile::validate_token(token); 
-            todo!()
+        info!("Validating Turnstile in context {}", deployment_context);
+        let response = if deployment_context == "local" {
+            dailp_graphql::service_integrations::turnstile::validate_token(token)
+                .await
+                .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
         } else {
             use aws_sdk_lambda as lambda;
             let config = aws_config::load_from_env().await;
             let client = lambda::Client::new(&config);
+            let function_name = match std::env::var("OUTBOUND_LAMBDA_NAME") {
+                Ok(name) => name,
+                Err(_) => {
+                    info!("Could not invoke Turnstile Lambda; lambda name is not set");
+                    return Err("Failed to validate Turnstile token".into());
+                }
+            };
+            info!(
+                "Invoking Lambda function {} to call Turnstile",
+                function_name
+            );
             let result = client
                 .invoke()
-                .function_name(todo!()) // Outbound lambda function
-                .payload(todo!())
-                .send();
-            todo!()
-        }
+                .function_name(function_name)
+                .payload(aws_sdk_lambda::primitives::Blob::new(
+                    serde_json::to_string(&OutboundRequest { data: token }).unwrap(),
+                ))
+                .send()
+                .await?;
+            info!("Lambda function returned {:?}", result);
+            // The Lambda:Invoke response only indicates control plane
+            // errors via the Err variant. Errors coming from our code
+            // (e.g. the outbound lambda got an error response from
+            // Turnstile) get an Ok() variant, but put a value in the
+            // function_error field.
+            if let Some(error) = result.function_error {
+                return Err("Failed to validate Turnstile token".into());
+            }
+
+            if result.payload.is_none() {
+                return Err("Unexpected response from Turnstile invocation".into());
+            }
+            let payload = result.payload.unwrap();
+            serde_json::from_slice(payload.as_ref()).map_err(Into::into)
+        };
+        info!("Turnstile validation result: {:?}", response);
+        response
     }
 
     /// Adds a new subject heading to the global list.

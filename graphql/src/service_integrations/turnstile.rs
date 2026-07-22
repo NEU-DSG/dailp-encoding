@@ -1,6 +1,6 @@
-
 use log::{debug, info};
 use reqwest::{header, Client};
+use serde::{Deserialize, Serialize};
 
 pub async fn validate_token(token: String) -> Result<bool, anyhow::Error> {
     const TURNSTILE_API: &str = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -18,12 +18,21 @@ pub async fn validate_token(token: String) -> Result<bool, anyhow::Error> {
         .send()
         .await?;
 
-        info!("Response recieved from SiteVerify API");
-        debug!("Status Code: {}", response.status());
+    info!("Response received from SiteVerify API");
+    debug!("Status Code: {}", response.status());
 
-        let body = response.text().await?;
-        debug!("Body Content: {}", body);
-        let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
+    let body = response.text().await?;
+    debug!("Body Content: {}", body);
+    let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
 
-        Ok(body_json["success"].as_bool().unwrap())
+    body_json["success"].as_bool().ok_or(anyhow::Error::msg(
+        "success field not present in JSON response",
+    ))
+}
+
+// Even though a dedicated struct for inputs is overkill for now,
+// we expect more service integrations soon for our backup strategy
+#[derive(Deserialize, Serialize, Debug)]
+pub struct OutboundRequest {
+    pub data: String,
 }
