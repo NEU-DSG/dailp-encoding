@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Draggable, Droppable } from "react-beautiful-dnd"
 import { MdDragIndicator } from "react-icons/md/index"
-import { useEditToc } from "src/contexts/edit-toc-context"
+import { useEditToc } from "src/components/editable/toc/edit-toc-context"
 import type { ChapterNode, SectionKey } from "src/types/edit-toc"
 import { idOf } from "src/utils/edit-toc"
 import * as css from "./EditToc.css"

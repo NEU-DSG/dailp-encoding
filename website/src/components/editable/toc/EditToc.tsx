@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { DragDropContext, Droppable } from "react-beautiful-dnd"
 import ConfirmationPopup from "src/components/confirmation-popup"
+import { EditTocProvider } from "src/components/editable/toc/edit-toc-context"
 import Sidebar from "src/components/sidebar"
-import { EditTocProvider } from "src/contexts/edit-toc-context"
 import * as Dailp from "src/graphql/dailp"
 import { CollectionSection } from "src/graphql/dailp"
 import type {
