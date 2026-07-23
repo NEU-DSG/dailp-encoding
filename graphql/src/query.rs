@@ -16,8 +16,7 @@ use dailp::{
     UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
-use log::{debug, info};
-use reqwest::{header, Client};
+use log::info;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -27,6 +26,8 @@ use {
         ParagraphUpdate, WordsInDocument,
     },
 };
+
+use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
 /// Home for all read-only queries
 pub struct Query;
@@ -981,39 +982,30 @@ impl Mutation {
             .await?)
     }
 
+    /// Validates a token against CloudFlare Turnstile's SiteVerify API
     async fn validate_turnstile_token(
         &self,
         context: &Context<'_>,
         token: String,
     ) -> FieldResult<bool> {
-        // POST to SiteVerify API directly unless an override is provided. Used for AWS Infra testing
-        // let turnstile_api = std::env::var("TURNSTILE_API")
-        // .unwrap_or("https://challenges.cloudflare.com/turnstile/v0/siteverify".to_string());
-        let turnstile_api = "https://checkip.amazonaws.com";
-        let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
-        let params = [("secret", secret), ("response", token)];
-        let client = reqwest::Client::new();
-
-        info!("Sending POST to SiteVerify API");
-        debug!("Payload: {:?}", params);
-
-        // let response = client
-        //     .post(turnstile_api)
-        //     .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-        //     // .form(&params)
-        //     .send()
-        //     .await?;
-
-        let response = client.get(turnstile_api).send().await?;
-
-        info!("Response recieved from SiteVerify API");
-        debug!("Status Code: {}", response.status());
-
-        let body = response.text().await?;
-        debug!("Body Content: {}", body);
-        let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
-
-        Ok(body_json["success"].as_bool().unwrap())
+        let deployment_context = std::env::var("TF_STAGE").unwrap_or("local".to_string());
+        info!("Validating Turnstile in context {}", deployment_context);
+        let response = if deployment_context == "local" {
+            dailp_graphql::service_integrations::turnstile::validate_token(token)
+                .await
+                .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
+        } else {
+            // This is a temporary change to prevent us from attempting to run a Lambda that we will
+            // not be able to call. Once we have the necessary trust policy in place, we can revert
+            // the commit that introduces this special case. (See git blame)
+            info!(
+                "We are configured for non-local Turnstile invocation but we do not yet have \"
+                  permission to invoke the outbound lambda. Defaulting to false."
+            );
+            Ok(false)
+        };
+        info!("Turnstile validation result: {:?}", response);
+        response
     }
 
     /// Adds a new subject heading to the global list.

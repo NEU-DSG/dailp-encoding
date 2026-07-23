@@ -1315,6 +1315,9 @@ type Mutation {
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
+	"""
+	Validates a token against CloudFlare Turnstile's SiteVerify API
+	"""
 	validateTurnstileToken(token: String!): Boolean!
 	"""
 	Adds a new subject heading to the global list.
