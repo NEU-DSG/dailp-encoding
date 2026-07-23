@@ -76,6 +76,7 @@ export const FormProvider = (props: { children: any }) => {
           spatialCoverage: values.document["spatialCoverage"] ?? [],
           creators: values.document["creators"] ?? [],
           genre: values.document["genre"],
+          keyDates: null,
         },
       })
     },

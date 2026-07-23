@@ -13,7 +13,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
+use crate::doc_metadata::{Format, Genre, KeyDate, Keyword, Language, SpatialCoverage};
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -35,6 +35,7 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+
 // Explicitly import types from person.rs
 use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
@@ -184,6 +185,30 @@ impl Database {
         Ok(map)
     }
 
+    pub async fn key_dates_for_documents(
+        &self,
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<KeyDate>>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            KeyDateWithDocId,
+            "queries/get_key_dates_by_document_ids.sql",
+            &doc_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        let mut map: HashMap<Uuid, Vec<KeyDate>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(KeyDate {
+                    id: row.id,
+                    name: row.name,
+                });
+        }
+        Ok(map)
+    }
+
     pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
         let mut results = self.creators_for_documents(vec![doc_id]).await?;
         Ok(results.remove(&doc_id).unwrap_or_default())
@@ -212,6 +237,11 @@ impl Database {
         doc_id: Uuid,
     ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
         let mut results = self.spatial_coverage_for_documents(vec![doc_id]).await?;
+        Ok(results.remove(&doc_id).unwrap_or_default())
+    }
+
+    pub async fn key_dates_for_document(&self, doc_id: Uuid) -> Result<Vec<KeyDate>, sqlx::Error> {
+        let mut results = self.key_dates_for_documents(vec![doc_id]).await?;
         Ok(results.remove(&doc_id).unwrap_or_default())
     }
 
@@ -490,6 +520,7 @@ impl Database {
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
+                    key_dates_ids: Some(Vec::new()),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
@@ -634,6 +665,7 @@ impl Database {
                 creators_ids: Some(Vec::new()),
                 format_id: None.into(),
                 genre_id: None.into(),
+                key_dates_ids: Some(Vec::new()),
                 keywords_ids: Some(Vec::new()),
                 languages_ids: Some(Vec::new()),
                 order_index: 0,
@@ -1500,6 +1532,63 @@ impl Database {
             info!("Creators update completed");
         } else {
             info!("No creators to update");
+        }
+
+        info!("Updating key dates");
+        // Update key dates
+        if let MaybeUndefined::Value(key_dates) = &document.key_dates {
+            info!("Key dates to update: {:?}", key_dates);
+
+            // Delete all existing links
+            query_file!("queries/delete_document_key_dates.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            let mut key_date_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each key date
+            for key_date in key_dates {
+                // Check if key date with this name already exists
+                let existing_id: Option<Uuid> =
+                    query_file_scalar!("queries/get_key_date_id_by_name.sql", &key_date.name)
+                        .fetch_optional(&mut *tx)
+                        .await?;
+
+                let key_date_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing key date ID for {}: {}",
+                        key_date.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new key date: {:?}", key_date);
+                    let inserted_id: Uuid = query_file_scalar!(
+                        "queries/insert_key_date.sql",
+                        &key_date.id,
+                        &key_date.name
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+                    info!("Inserted key date with ID: {}", inserted_id);
+                    inserted_id
+                };
+
+                key_date_ids_to_link.push(key_date_id);
+            }
+
+            // Link all key dates to document
+            info!("Key date IDs to link: {:?}", key_date_ids_to_link);
+            query_file!(
+                "queries/insert_document_key_dates.sql",
+                document.id,
+                &key_date_ids_to_link[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            info!("Key dates update completed");
+        } else {
+            info!("No key dates to update");
         }
 
         info!("Committing transaction");
@@ -2809,6 +2898,7 @@ impl Loader<DocumentId> for Database {
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
+                    key_dates_ids: Some(Vec::new()),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,
@@ -2887,6 +2977,7 @@ impl Loader<DocumentShortName> for Database {
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
+                    key_dates_ids: Some(Vec::new()),
                     keywords_ids: Some(Vec::new()),
                     languages_ids: Some(Vec::new()),
                     order_index: 0,

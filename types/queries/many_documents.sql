@@ -104,7 +104,7 @@ select
     from document_key_date dkd
     join key_date kd on kd.id = dkd.key_date_id
     where dkd.document_id = d.id
-  ) as key_dates,
+  ) as key_dates
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id

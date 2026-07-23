@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Add a new key date to the database\ninsert into key_date (id, name)\nvalues ($1::uuid, $2)\nreturning id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "efd913efdc09b3303d4c23aafbb53614484814fc79d70cf4e50a31963de392a4"
+}

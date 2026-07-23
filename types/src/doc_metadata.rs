@@ -255,7 +255,6 @@ impl From<&SpatialCoverage> for Uuid {
 
 // Stores a key date associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
-#[graphql(complex)]
 pub struct KeyDate {
     // UUID for the key date
     pub id: Uuid,

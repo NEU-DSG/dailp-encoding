@@ -129,6 +129,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           spatialCoverage: changes.spatialCoverage,
           subjectHeadings: changes.subjectHeadings,
           writtenAt: writtenAtValue,
+          keyDates: changes.keyDates,
         },
       })
 
