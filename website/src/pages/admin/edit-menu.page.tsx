@@ -10,7 +10,7 @@ const EditMenuPage = () => {
 
   return (
     <>
-      <AuthGuard requiredRole={UserRole.Editor}>
+      <AuthGuard requiredRoles={[UserRole.Editor]}>
         <Layout>
           <main>
             <h1> Edit menu page</h1>
