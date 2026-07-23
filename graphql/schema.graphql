@@ -1,3 +1,37 @@
+"""
+Input for adding a new chapter to a collection
+"""
+input AddChapterInput {
+	"""
+	id
+	"""
+	id: UUID!
+	"""
+	The slug of the collection this chapter belongs to
+	"""
+	collectionSlug: String!
+	"""
+	The title of the chapter
+	"""
+	title: String!
+	"""
+	The slug of the chapter (used in the URL path)
+	"""
+	slug: String!
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection!
+	"""
+	Optional parent chapter ID if this is a subchapter (defaults to top-level)
+	"""
+	parentId: UUID
+	"""
+	Optional document ID to link this chapter to an existing document
+	"""
+	documentId: UUID
+}
+
 type AddDocumentPayload {
 	id: UUID!
 	title: String!
@@ -336,6 +370,46 @@ type AudioSlice {
 
 
 """
+Input for updating a single chapter's order
+"""
+input ChapterOrderInput {
+	"""
+	The id of the chapter
+	"""
+	id: UUID!
+	"""
+	The new index of this chapter within its parent (1-indexed)
+	"""
+	indexInParent: Int!
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection!
+}
+
+"""
+Struct of the chapter slug returned for parsing when editing a TOC
+"""
+type ChapterSlugInfo {
+	"""
+	UUID of the grabbed slug's document
+	"""
+	id: UUID!
+	"""
+	Title of the associated chapter
+	"""
+	title: String!
+	"""
+	Slug of this chapter
+	"""
+	slug: String!
+	"""
+	Related document ID for the chapter entry
+	"""
+	documentId: UUID
+}
+
+"""
 One representation of Cherokee phonology.
 There are several different writing systems for Cherokee phonology and we
 want to convert between them.
@@ -554,6 +628,7 @@ input CreateDocumentFromFormInput {
 	sourceName: String!
 	sourceUrl: String!
 	collectionId: UUID!
+	section: CollectionSection
 }
 
 """
@@ -1313,6 +1388,16 @@ type Mutation {
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertEditedCollection(input: UpsertChapterInput!): String!
+	updateCollectionChapterOrder(input: UpdateCollectionChapterOrderInput!): String!
+	"""
+	Adds the collection chapter to the TOC by updating index and chapter path, etc.
+	"""
+	addCollectionChapter(input: AddChapterInput!): UUID!
+	"""
+	Removes the provided chapter id from a TOC by setting its index to -1
+	"""
+	removeCollectionChapter(chapterId: UUID!): UUID!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
 	"""
@@ -1544,6 +1629,10 @@ type Query {
 	Fetch all available subject headings.
 	"""
 	allSubjectHeadings: [SubjectHeading!]!
+	"""
+	Returns a chapter slug info for all unassigned chapters in a given chatper
+	"""
+	allChapterSlugs(collectionSlug: String!): [ChapterSlugInfo!]!
 }
 
 """
@@ -1635,6 +1724,20 @@ entities without requiring a central allocating authority.
 scalar UUID
 
 """
+Input for bulk updating collection chapter order
+"""
+input UpdateCollectionChapterOrderInput {
+	"""
+	The slug of the collection
+	"""
+	collectionSlug: String!
+	"""
+	Ordered list of chapters with their new indices
+	"""
+	chapters: [ChapterOrderInput!]!
+}
+
+"""
 Update the contributor attribution for a document
 """
 input UpdateContributorAttribution {
@@ -1650,6 +1753,40 @@ input UpdateContributorAttribution {
 	A description of what the contributor did, like "translation" or "voice"
 	"""
 	contributionRole: String!
+}
+
+"""
+Input for upserting an edited collection
+"""
+input UpsertChapterInput {
+	"""
+	The id of the chapter
+	"""
+	id: UUID!
+	"""
+	The title of the collection
+	"""
+	title: String
+	"""
+	The slug of the collection
+	"""
+	slug: String
+	"""
+	Description of the collection
+	"""
+	description: String
+	"""
+	URL of the thumbnail image for the collection
+	"""
+	thumbnailUrl: String
+	"""
+	The section of the collection, Intro | Body | Credit
+	"""
+	section: CollectionSection
+	"""
+	The index of this chapter within its parent
+	"""
+	indexInParent: Int
 }
 
 """

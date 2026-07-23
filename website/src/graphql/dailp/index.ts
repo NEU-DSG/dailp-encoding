@@ -35,6 +35,24 @@ export type Scalars = {
   UUID: any
 }
 
+/** Input for adding a new chapter to a collection */
+export type AddChapterInput = {
+  /** The slug of the collection this chapter belongs to */
+  readonly collectionSlug: Scalars["String"]
+  /** Optional document ID to link this chapter to an existing document */
+  readonly documentId: InputMaybe<Scalars["UUID"]>
+  /** id */
+  readonly id: Scalars["UUID"]
+  /** Optional parent chapter ID if this is a subchapter (defaults to top-level) */
+  readonly parentId: InputMaybe<Scalars["UUID"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+  /** The slug of the chapter (used in the URL path) */
+  readonly slug: Scalars["String"]
+  /** The title of the chapter */
+  readonly title: Scalars["String"]
+}
+
 export type AddDocumentPayload = {
   readonly __typename?: "AddDocumentPayload"
   readonly chapterSlug: Scalars["String"]
@@ -288,6 +306,29 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Input for updating a single chapter's order */
+export type ChapterOrderInput = {
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The new index of this chapter within its parent (1-indexed) */
+  readonly indexInParent: Scalars["Int"]
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+}
+
+/** Struct of the chapter slug returned for parsing when editing a TOC */
+export type ChapterSlugInfo = {
+  readonly __typename?: "ChapterSlugInfo"
+  /** Related document ID for the chapter entry */
+  readonly documentId: Maybe<Scalars["UUID"]>
+  /** UUID of the grabbed slug's document */
+  readonly id: Scalars["UUID"]
+  /** Slug of this chapter */
+  readonly slug: Scalars["String"]
+  /** Title of the associated chapter */
+  readonly title: Scalars["String"]
+}
+
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -454,6 +495,7 @@ export type CreateDocumentFromFormInput = {
     ReadonlyArray<Scalars["String"]>
   >
   readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
+  readonly section: InputMaybe<CollectionSection>
   readonly sourceName: Scalars["String"]
   readonly sourceUrl: Scalars["String"]
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
@@ -913,6 +955,8 @@ export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
+  /** Adds the collection chapter to the TOC by updating index and chapter path, etc. */
+  readonly addCollectionChapter: Scalars["UUID"]
   /** Minimal mutation to add a document with only essential fields */
   readonly addDocument: AddDocumentPayload
   /**
@@ -950,9 +994,12 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  /** Removes the provided chapter id from a TOC by setting its index to -1 */
+  readonly removeCollectionChapter: Scalars["UUID"]
   /** Inverts associated collection's visiblity */
   readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
+  readonly updateCollectionChapterOrder: Scalars["String"]
   /** Update a comment */
   readonly updateComment: CommentParent
   /** Mutation for adding/changing contributor attributions */
@@ -965,6 +1012,7 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  readonly upsertEditedCollection: Scalars["String"]
   readonly upsertPage: Scalars["String"]
   /** Validates a token against CloudFlare Turnstile's SiteVerify API */
   readonly validateTurnstileToken: Scalars["Boolean"]
@@ -972,6 +1020,10 @@ export type Mutation = {
 
 export type MutationAddBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationAddCollectionChapterArgs = {
+  input: AddChapterInput
 }
 
 export type MutationAddDocumentArgs = {
@@ -1025,12 +1077,20 @@ export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
 }
 
+export type MutationRemoveCollectionChapterArgs = {
+  chapterId: Scalars["UUID"]
+}
+
 export type MutationToggleCollectionVisibilityArgs = {
   collectionId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateCollectionChapterOrderArgs = {
+  input: UpdateCollectionChapterOrderInput
 }
 
 export type MutationUpdateCommentArgs = {
@@ -1063,6 +1123,10 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUpsertEditedCollectionArgs = {
+  input: UpsertChapterInput
 }
 
 export type MutationUpsertPageArgs = {
@@ -1161,6 +1225,8 @@ export type PostCommentInput = {
 export type Query = {
   readonly __typename?: "Query"
   readonly abbreviationIdFromShortName: Scalars["UUID"]
+  /** Returns a chapter slug info for all unassigned chapters in a given chatper */
+  readonly allChapterSlugs: ReadonlyArray<ChapterSlugInfo>
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -1228,6 +1294,10 @@ export type Query = {
 
 export type QueryAbbreviationIdFromShortNameArgs = {
   shortName: Scalars["String"]
+}
+
+export type QueryAllChapterSlugsArgs = {
+  collectionSlug: Scalars["String"]
 }
 
 export type QueryAllTagsArgs = {
@@ -1359,6 +1429,14 @@ export type SubjectHeadingUpdate = {
   readonly name: Scalars["String"]
 }
 
+/** Input for bulk updating collection chapter order */
+export type UpdateCollectionChapterOrderInput = {
+  /** Ordered list of chapters with their new indices */
+  readonly chapters: ReadonlyArray<ChapterOrderInput>
+  /** The slug of the collection */
+  readonly collectionSlug: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1367,6 +1445,24 @@ export type UpdateContributorAttribution = {
   readonly contributorId: Scalars["UUID"]
   /** The document to perfom this operation on */
   readonly documentId: Scalars["UUID"]
+}
+
+/** Input for upserting an edited collection */
+export type UpsertChapterInput = {
+  /** Description of the collection */
+  readonly description: InputMaybe<Scalars["String"]>
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The index of this chapter within its parent */
+  readonly indexInParent: InputMaybe<Scalars["Int"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: InputMaybe<CollectionSection>
+  /** The slug of the collection */
+  readonly slug: InputMaybe<Scalars["String"]>
+  /** URL of the thumbnail image for the collection */
+  readonly thumbnailUrl: InputMaybe<Scalars["String"]>
+  /** The title of the collection */
+  readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -3362,6 +3458,22 @@ export type AddEditedCollectionMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "createEditedCollection">
 
+export type UpdateCollectionChapterOrderMutationVariables = Exact<{
+  input: UpdateCollectionChapterOrderInput
+}>
+
+export type UpdateCollectionChapterOrderMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateCollectionChapterOrder">
+
+export type RemoveCollectionChapterMutationVariables = Exact<{
+  chapterId: Scalars["UUID"]
+}>
+
+export type RemoveCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "removeCollectionChapter">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -3479,6 +3591,27 @@ export type MenuBySlugQuery = { readonly __typename?: "Query" } & {
       >
     }
 }
+
+export type AllChapterSlugsQueryVariables = Exact<{
+  collectionSlug: Scalars["String"]
+}>
+
+export type AllChapterSlugsQuery = { readonly __typename?: "Query" } & {
+  readonly allChapterSlugs: ReadonlyArray<
+    { readonly __typename?: "ChapterSlugInfo" } & Pick<
+      ChapterSlugInfo,
+      "id" | "title" | "slug" | "documentId"
+    >
+  >
+}
+
+export type AddCollectionChapterMutationVariables = Exact<{
+  input: AddChapterInput
+}>
+
+export type AddCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "addCollectionChapter">
 
 export type UpdateMenuMutationVariables = Exact<{
   menu: MenuUpdate
@@ -4620,6 +4753,32 @@ export function useAddEditedCollectionMutation() {
     AddEditedCollectionMutationVariables
   >(AddEditedCollectionDocument)
 }
+export const UpdateCollectionChapterOrderDocument = gql`
+  mutation UpdateCollectionChapterOrder(
+    $input: UpdateCollectionChapterOrderInput!
+  ) {
+    updateCollectionChapterOrder(input: $input)
+  }
+`
+
+export function useUpdateCollectionChapterOrderMutation() {
+  return Urql.useMutation<
+    UpdateCollectionChapterOrderMutation,
+    UpdateCollectionChapterOrderMutationVariables
+  >(UpdateCollectionChapterOrderDocument)
+}
+export const RemoveCollectionChapterDocument = gql`
+  mutation RemoveCollectionChapter($chapterId: UUID!) {
+    removeCollectionChapter(chapterId: $chapterId)
+  }
+`
+
+export function useRemoveCollectionChapterMutation() {
+  return Urql.useMutation<
+    RemoveCollectionChapterMutation,
+    RemoveCollectionChapterMutationVariables
+  >(RemoveCollectionChapterDocument)
+}
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {
     updateUser(user: $user) {
@@ -4777,6 +4936,37 @@ export function useMenuBySlugQuery(
     query: MenuBySlugDocument,
     ...options,
   })
+}
+export const AllChapterSlugsDocument = gql`
+  query AllChapterSlugs($collectionSlug: String!) {
+    allChapterSlugs(collectionSlug: $collectionSlug) {
+      id
+      title
+      slug
+      documentId
+    }
+  }
+`
+
+export function useAllChapterSlugsQuery(
+  options: Omit<Urql.UseQueryArgs<AllChapterSlugsQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllChapterSlugsQuery, AllChapterSlugsQueryVariables>({
+    query: AllChapterSlugsDocument,
+    ...options,
+  })
+}
+export const AddCollectionChapterDocument = gql`
+  mutation AddCollectionChapter($input: AddChapterInput!) {
+    addCollectionChapter(input: $input)
+  }
+`
+
+export function useAddCollectionChapterMutation() {
+  return Urql.useMutation<
+    AddCollectionChapterMutation,
+    AddCollectionChapterMutationVariables
+  >(AddCollectionChapterDocument)
 }
 export const UpdateMenuDocument = gql`
   mutation UpdateMenu($menu: MenuUpdate!) {

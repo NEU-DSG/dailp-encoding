@@ -1,4 +1,5 @@
 import React, { Fragment } from "react"
+import { UserRole, useUserRole } from "src/auth"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -16,6 +17,7 @@ type TOCProps = {
 }
 
 const CollectionTOC = () => {
+  const userRole = useUserRole()
   const chapters = useChapters()
   const { collectionSlug } = useRouteParams()
 
@@ -28,21 +30,23 @@ const CollectionTOC = () => {
   const creditChapters: Chapter[] = []
 
   // Filter the chapters by their section.
-  chapters.reduce(
-    function (result, curr, i) {
-      if (curr.section === CollectionSection.Intro) {
-        // i != 0 makes sure the landing page (first chapter) does not get added to the table of contents
-        result[0]?.push(curr)
-      } else if (curr.section === CollectionSection.Body) {
-        result[1]?.push(curr)
-      } else {
-        result[2]?.push(curr)
-      }
+  chapters
+    .filter((ch) => ch.indexInParent !== -1)
+    .reduce(
+      function (result, curr, i) {
+        if (curr.section === CollectionSection.Intro) {
+          // i != 0 makes sure the landing page (first chapter) does not get added to the table of contents
+          result[0]?.push(curr)
+        } else if (curr.section === CollectionSection.Body) {
+          result[1]?.push(curr)
+        } else {
+          result[2]?.push(curr)
+        }
 
-      return result
-    },
-    [introChapters, bodyChapters, creditChapters]
-  )
+        return result
+      },
+      [introChapters, bodyChapters, creditChapters]
+    )
 
   const collection = [
     { section: CollectionSection.Intro, chapters: introChapters },
@@ -50,8 +54,19 @@ const CollectionTOC = () => {
     { section: CollectionSection.Credit, chapters: creditChapters },
   ]
 
+  const canEditTOC = userRole === UserRole.Editor || userRole === UserRole.Admin
+
   return (
     <>
+      {canEditTOC && (
+        <a
+          href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
+          className={css.editTOCButton}
+        >
+          Edit TOC
+        </a>
+      )}
+
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
@@ -65,8 +80,15 @@ const CollectionTOC = () => {
 }
 
 const TOC = ({ section, chapters }: TOCProps) => {
-  const { collectionSlug } = useRouteParams()
+  const { collectionSlug, chapterSlug } = useRouteParams()
   const { onSelect, isSelected, lastSelected } = useFunctions()
+
+  // Returns if current route chapter is a subchapter with parent to fix issue with
+  // children not being displayed when active
+  const isActiveParent = (item: Chapter): boolean =>
+    !!item.children?.some(
+      (child) => child.slug === chapterSlug || isActiveParent(child)
+    )
 
   const listStyle =
     section === CollectionSection.Body
@@ -89,7 +111,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
               {item.title}
             </Link>
 
-            {isSelected(item) && item.children ? (
+            {(isSelected(item) || isActiveParent(item)) && item.children ? (
               <TOC section={section} chapters={item.children} />
             ) : null}
           </li>
