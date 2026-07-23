@@ -1,8 +1,15 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { flowRight } from "lodash-es"
 import { important, position } from "polished"
 import { button } from "src/components/button.css"
 import { rightButton } from "src/components/carousel.css"
+import {
+  annotationSection,
+  documentBlock,
+  inlineBlock,
+  wordGroup,
+  wordGroupInline,
+} from "src/segment.css"
 import {
   colors,
   fonts,
@@ -119,6 +126,7 @@ export const docTabPanel = style([
   {
     "@media": {
       [mediaQueries.medium]: paddingX(0),
+      [mediaQueries.print]: { display: "none" },
     },
     selectors: {
       "&:focus": {
@@ -128,7 +136,15 @@ export const docTabPanel = style([
   },
 ])
 
-export const imageTabPanel = style([std.fullWidth, { outline: "none" }])
+export const imageTabPanel = style([
+  std.fullWidth,
+  {
+    outline: "none",
+    "@media": {
+      [mediaQueries.print]: { display: "none" },
+    },
+  },
+])
 
 export const docHeader = style([
   std.fullWidth,
@@ -136,7 +152,7 @@ export const docHeader = style([
   paddingX(hspace.edge),
   {
     "@media": {
-      [mediaQueries.print]: paddingX(0),
+      [mediaQueries.print]: { display: "none" },
     },
   },
 ])
@@ -176,6 +192,7 @@ export const annotatedDocument = style({
   alignItems: "center",
   "@media": {
     [mediaQueries.medium]: paddingX(hspace.edge),
+    [mediaQueries.print]: { paddingBottom: vspace.double },
   },
 })
 
@@ -300,6 +317,9 @@ export const scrollTop = style({
   color: colors.secondaryContrast,
   outlineColor: colors.secondaryContrast,
   backgroundColor: colors.secondary,
+  "@media": {
+    [mediaQueries.print]: { display: "none" },
+  },
 })
 
 export const BookmarkButton = style([
@@ -336,3 +356,182 @@ export const noScrollTop = style({
   visibility: "hidden",
   opacity: 0,
 })
+
+export const printSectionHeading = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      fontFamily: `"Quattrocento", serif`,
+      fontSize: "1.158rem",
+      fontWeight: 700,
+      lineHeight: 1.2,
+      marginTop: vspace.one,
+      marginBottom: 0,
+      breakBefore: "avoid",
+      breakAfter: "avoid",
+    },
+  },
+})
+
+export const printSectionHeadingRule = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "418px",
+      borderTop: `1px solid ${colors.text}`,
+      marginTop: vspace.quarter,
+    },
+  },
+})
+
+export const printImageSource = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      fontFamily: "serif",
+      fontStyle: "normal",
+      fontWeight: 400,
+      fontSize: "14px",
+      lineHeight: 1.2,
+      width: "636px",
+      height: "17px",
+      textAlign: "center",
+      marginBottom: "16px",
+    },
+  },
+})
+
+export const printBodyContent = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      width: "100%",
+      marginTop: 0,
+      breakBefore: "avoid",
+    },
+  },
+})
+
+export const printPronunciationMode = style({})
+
+globalStyle(
+  `.${printBodyContent}.${printPronunciationMode} .${annotationSection.story}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        gridTemplateColumns: "repeat(3, 188px)",
+        columnGap: vspace.half,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent}.${printPronunciationMode} .${wordGroupInline} div`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        width: "188px",
+      },
+    },
+  }
+)
+
+export const printHideParagraphTranslation = style({
+  "@media": {
+    [mediaQueries.print]: { display: "block" },
+  },
+})
+
+globalStyle(`.${printHideParagraphTranslation} .${inlineBlock}`, {
+  "@media": {
+    [mediaQueries.print]: { display: "none" },
+  },
+})
+
+globalStyle(
+  `.${printBodyContent} .${wordGroup}, .${printBodyContent} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
+        paddingTop: 0,
+        paddingBottom: 0,
+        breakInside: "avoid",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${annotationSection.story} .${wordGroupInline}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "block",
+        marginRight: 0,
+        marginBottom: vspace.quarter,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${documentBlock.story}, .${printBodyContent} .${documentBlock.wordByWord}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        marginTop: vspace.quarter,
+        marginBottom: vspace.quarter,
+        paddingBottom: 0,
+        breakAfter: "avoid",
+        breakBefore: "avoid",
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${annotationSection.story}, .${printBodyContent} .${annotationSection.wordParts}`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 212px)",
+        columnGap: vspace.one,
+        rowGap: vspace.one,
+        marginBottom: 0,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${documentBlock.story}:first-child, .${printBodyContent} .${documentBlock.wordByWord}:first-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        borderBottom: `1px solid ${colors.text}`,
+      },
+    },
+  }
+)
+
+globalStyle(
+  `.${printBodyContent} .${wordGroup}:nth-child(3n+1):last-child, .${printBodyContent} .${wordGroupInline}:nth-child(3n+1):last-child`,
+  {
+    "@media": {
+      [mediaQueries.print]: {
+        breakAfter: "page",
+      },
+    },
+  }
+)
