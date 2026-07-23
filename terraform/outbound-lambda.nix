@@ -23,19 +23,5 @@ in {
     };
     tags = config.setup.global_tags // config.functions.tags;
   };
-
-  # Let the graphql lambda (which runs as lambda_exec) invoke this function.
-  resource.aws_iam_role_policy.invoke_outbound_turnstile = {
-    name = "invoke-outbound-turnstile";
-    role = "\${aws_iam_role.lambda_exec.id}";
-    policy = toJSON {
-      Version = "2012-10-17";
-      Statement = [{
-        Effect = "Allow";
-        Action = "lambda:InvokeFunction";
-        Resource = "\${aws_lambda_function.outbound_turnstile.arn}";
-      }];
-    };
-  };
 }
 

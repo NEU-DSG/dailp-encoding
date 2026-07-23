@@ -995,43 +995,14 @@ impl Mutation {
                 .await
                 .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
         } else {
-            use aws_sdk_lambda as lambda;
-            let config = aws_config::load_from_env().await;
-            let client = lambda::Client::new(&config);
-            let function_name = match std::env::var("OUTBOUND_LAMBDA_NAME") {
-                Ok(name) => name,
-                Err(_) => {
-                    info!("Could not invoke Turnstile Lambda; lambda name is not set");
-                    return Err("Failed to validate Turnstile token".into());
-                }
-            };
+            // This is a temporary change to prevent us from attempting to run a Lambda that we will
+            // not be able to call. Once we have the necessary trust policy in place, we can revert
+            // the commit that introduces this special case. (See git blame)
             info!(
-                "Invoking Lambda function {} to call Turnstile",
-                function_name
+                "We are configured for non-local Turnstile invocation but we do not yet have \"
+                  permission to invoke the outbound lambda. Defaulting to false."
             );
-            let result = client
-                .invoke()
-                .function_name(function_name)
-                .payload(aws_sdk_lambda::primitives::Blob::new(
-                    serde_json::to_string(&OutboundRequest { data: token }).unwrap(),
-                ))
-                .send()
-                .await?;
-            info!("Lambda function returned {:?}", result);
-            // The Lambda:Invoke response only indicates control plane
-            // errors via the Err variant. Errors coming from our code
-            // (e.g. the outbound lambda got an error response from
-            // Turnstile) get an Ok() variant, but put a value in the
-            // function_error field.
-            if let Some(error) = result.function_error {
-                return Err("Failed to validate Turnstile token".into());
-            }
-
-            if result.payload.is_none() {
-                return Err("Unexpected response from Turnstile invocation".into());
-            }
-            let payload = result.payload.unwrap();
-            serde_json::from_slice(payload.as_ref()).map_err(Into::into)
+            Ok(false)
         };
         info!("Turnstile validation result: {:?}", response);
         response
