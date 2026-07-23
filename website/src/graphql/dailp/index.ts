@@ -669,6 +669,42 @@ export type EditedCollection = {
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
 }
 
+/** A file in the shared asset library, pointing at an object in S3. */
+export type File = {
+  readonly __typename?: "File"
+  /** Folder holding this file, or null at the root of the library */
+  readonly folderId: Maybe<Scalars["UUID"]>
+  /** UUID for the file */
+  readonly id: Scalars["UUID"]
+  /** Display name of the file */
+  readonly name: Scalars["String"]
+  /** URL that the file's bytes are served from */
+  readonly s3Url: Scalars["String"]
+}
+
+/**
+ * A folder in the shared asset library. Folders form a tree; a folder with no
+ * parent sits at the root of the library.
+ */
+export type Folder = {
+  readonly __typename?: "Folder"
+  /** UUID for the folder */
+  readonly id: Scalars["UUID"]
+  /** Display name of the folder */
+  readonly name: Scalars["String"]
+  /** Folder this one sits inside, or null at the root of the library */
+  readonly parentId: Maybe<Scalars["UUID"]>
+}
+
+/** Everything directly inside a single folder (one level) like the unix `ls` command. */
+export type FolderContents = {
+  readonly __typename?: "FolderContents"
+  /** Files directly inside this folder */
+  readonly files: ReadonlyArray<File>
+  /** Subfolders directly inside this folder */
+  readonly folders: ReadonlyArray<Folder>
+}
+
 /** Stores the physical or digital medium associated with a document */
 export type Format = {
   readonly __typename?: "Format"
@@ -932,6 +968,13 @@ export type Mutation = {
    */
   readonly attachAudioToWord: AnnotatedForm
   readonly createEditedCollection: Scalars["String"]
+  /**
+   * Record a file that has already been uploaded to S3. A null `folderId`
+   * places it at the root.
+   */
+  readonly createFile: File
+  /** Create an asset-library folder. A null `parentId` places it at the root. */
+  readonly createFolder: Folder
   /** Adds a new subject heading to the global list. */
   readonly createSubjectHeading: SubjectHeading
   /** Decide if a piece of document audio should be included in edited collection */
@@ -946,10 +989,21 @@ export type Mutation = {
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
+  /** Move a file into another folder. A null `folderId` moves it to the root. */
+  readonly moveFile: File
+  /**
+   * Move a folder under a new parent. A null `parentId` moves it to the root.
+   * Descendants follow automatically since they reference the folder's id.
+   */
+  readonly moveFolder: Folder
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  /** Rename a file. */
+  readonly renameFile: File
+  /** Rename a folder. */
+  readonly renameFolder: Folder
   /** Inverts associated collection's visiblity */
   readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
@@ -989,6 +1043,17 @@ export type MutationCreateEditedCollectionArgs = {
   input: CreateEditedCollectionInput
 }
 
+export type MutationCreateFileArgs = {
+  folderId: InputMaybe<Scalars["UUID"]>
+  name: Scalars["String"]
+  s3Url: Scalars["String"]
+}
+
+export type MutationCreateFolderArgs = {
+  name: Scalars["String"]
+  parentId: InputMaybe<Scalars["UUID"]>
+}
+
 export type MutationCreateSubjectHeadingArgs = {
   name: Scalars["String"]
   status: ApprovalStatus
@@ -1016,12 +1081,32 @@ export type MutationInsertCustomMorphemeTagArgs = {
   title: Scalars["String"]
 }
 
+export type MutationMoveFileArgs = {
+  folderId: InputMaybe<Scalars["UUID"]>
+  id: Scalars["UUID"]
+}
+
+export type MutationMoveFolderArgs = {
+  id: Scalars["UUID"]
+  parentId: InputMaybe<Scalars["UUID"]>
+}
+
 export type MutationPostCommentArgs = {
   input: PostCommentInput
 }
 
 export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationRenameFileArgs = {
+  id: Scalars["UUID"]
+  name: Scalars["String"]
+}
+
+export type MutationRenameFolderArgs = {
+  id: Scalars["UUID"]
+  name: Scalars["String"]
 }
 
 export type MutationToggleCollectionVisibilityArgs = {
@@ -1183,6 +1268,11 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /**
+   * Everything directly inside an asset-library folder - subfolders and files
+   * One level deep. Pass a null `folderId` to list the root.
+   */
+  readonly folderContents: FolderContents
   /** Gets all dailp_user with their id, username, and role for now */
   readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
@@ -1256,6 +1346,10 @@ export type QueryDocumentByUuidArgs = {
 
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryFolderContentsArgs = {
+  folderId: InputMaybe<Scalars["UUID"]>
 }
 
 export type QueryMenuBySlugArgs = {
@@ -3514,6 +3608,110 @@ export type ValidateTurnstileTokenMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "validateTurnstileToken">
 
+export type FolderFieldsFragment = { readonly __typename?: "Folder" } & Pick<
+  Folder,
+  "id" | "parentId" | "name"
+>
+
+export type FileFieldsFragment = { readonly __typename?: "File" } & Pick<
+  File,
+  "id" | "folderId" | "s3Url" | "name"
+>
+
+export type FolderContentsQueryVariables = Exact<{
+  folderId: InputMaybe<Scalars["UUID"]>
+}>
+
+export type FolderContentsQuery = { readonly __typename?: "Query" } & {
+  readonly folderContents: { readonly __typename?: "FolderContents" } & {
+    readonly folders: ReadonlyArray<
+      { readonly __typename?: "Folder" } & Pick<
+        Folder,
+        "id" | "parentId" | "name"
+      >
+    >
+    readonly files: ReadonlyArray<
+      { readonly __typename?: "File" } & Pick<
+        File,
+        "id" | "folderId" | "s3Url" | "name"
+      >
+    >
+  }
+}
+
+export type CreateFolderMutationVariables = Exact<{
+  parentId: InputMaybe<Scalars["UUID"]>
+  name: Scalars["String"]
+}>
+
+export type CreateFolderMutation = { readonly __typename?: "Mutation" } & {
+  readonly createFolder: { readonly __typename?: "Folder" } & Pick<
+    Folder,
+    "id" | "parentId" | "name"
+  >
+}
+
+export type CreateFileMutationVariables = Exact<{
+  folderId: InputMaybe<Scalars["UUID"]>
+  name: Scalars["String"]
+  s3Url: Scalars["String"]
+}>
+
+export type CreateFileMutation = { readonly __typename?: "Mutation" } & {
+  readonly createFile: { readonly __typename?: "File" } & Pick<
+    File,
+    "id" | "folderId" | "s3Url" | "name"
+  >
+}
+
+export type RenameFolderMutationVariables = Exact<{
+  id: Scalars["UUID"]
+  name: Scalars["String"]
+}>
+
+export type RenameFolderMutation = { readonly __typename?: "Mutation" } & {
+  readonly renameFolder: { readonly __typename?: "Folder" } & Pick<
+    Folder,
+    "id" | "parentId" | "name"
+  >
+}
+
+export type RenameFileMutationVariables = Exact<{
+  id: Scalars["UUID"]
+  name: Scalars["String"]
+}>
+
+export type RenameFileMutation = { readonly __typename?: "Mutation" } & {
+  readonly renameFile: { readonly __typename?: "File" } & Pick<
+    File,
+    "id" | "folderId" | "s3Url" | "name"
+  >
+}
+
+export type MoveFolderMutationVariables = Exact<{
+  id: Scalars["UUID"]
+  parentId: InputMaybe<Scalars["UUID"]>
+}>
+
+export type MoveFolderMutation = { readonly __typename?: "Mutation" } & {
+  readonly moveFolder: { readonly __typename?: "Folder" } & Pick<
+    Folder,
+    "id" | "parentId" | "name"
+  >
+}
+
+export type MoveFileMutationVariables = Exact<{
+  id: Scalars["UUID"]
+  folderId: InputMaybe<Scalars["UUID"]>
+}>
+
+export type MoveFileMutation = { readonly __typename?: "Mutation" } & {
+  readonly moveFile: { readonly __typename?: "File" } & Pick<
+    File,
+    "id" | "folderId" | "s3Url" | "name"
+  >
+}
+
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -3728,6 +3926,21 @@ export const BookmarkedDocumentFragmentDoc = gql`
     bookmarkedOn {
       formattedDate
     }
+  }
+`
+export const FolderFieldsFragmentDoc = gql`
+  fragment FolderFields on Folder {
+    id
+    parentId
+    name
+  }
+`
+export const FileFieldsFragmentDoc = gql`
+  fragment FileFields on File {
+    id
+    folderId
+    s3Url
+    name
   }
 `
 export const CollectionsListingDocument = gql`
@@ -4811,4 +5024,111 @@ export function useValidateTurnstileTokenMutation() {
     ValidateTurnstileTokenMutation,
     ValidateTurnstileTokenMutationVariables
   >(ValidateTurnstileTokenDocument)
+}
+export const FolderContentsDocument = gql`
+  query FolderContents($folderId: UUID) {
+    folderContents(folderId: $folderId) {
+      folders {
+        ...FolderFields
+      }
+      files {
+        ...FileFields
+      }
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+  ${FileFieldsFragmentDoc}
+`
+
+export function useFolderContentsQuery(
+  options?: Omit<Urql.UseQueryArgs<FolderContentsQueryVariables>, "query">
+) {
+  return Urql.useQuery<FolderContentsQuery, FolderContentsQueryVariables>({
+    query: FolderContentsDocument,
+    ...options,
+  })
+}
+export const CreateFolderDocument = gql`
+  mutation CreateFolder($parentId: UUID, $name: String!) {
+    createFolder(parentId: $parentId, name: $name) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useCreateFolderMutation() {
+  return Urql.useMutation<CreateFolderMutation, CreateFolderMutationVariables>(
+    CreateFolderDocument
+  )
+}
+export const CreateFileDocument = gql`
+  mutation CreateFile($folderId: UUID, $name: String!, $s3Url: String!) {
+    createFile(folderId: $folderId, name: $name, s3Url: $s3Url) {
+      ...FileFields
+    }
+  }
+  ${FileFieldsFragmentDoc}
+`
+
+export function useCreateFileMutation() {
+  return Urql.useMutation<CreateFileMutation, CreateFileMutationVariables>(
+    CreateFileDocument
+  )
+}
+export const RenameFolderDocument = gql`
+  mutation RenameFolder($id: UUID!, $name: String!) {
+    renameFolder(id: $id, name: $name) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useRenameFolderMutation() {
+  return Urql.useMutation<RenameFolderMutation, RenameFolderMutationVariables>(
+    RenameFolderDocument
+  )
+}
+export const RenameFileDocument = gql`
+  mutation RenameFile($id: UUID!, $name: String!) {
+    renameFile(id: $id, name: $name) {
+      ...FileFields
+    }
+  }
+  ${FileFieldsFragmentDoc}
+`
+
+export function useRenameFileMutation() {
+  return Urql.useMutation<RenameFileMutation, RenameFileMutationVariables>(
+    RenameFileDocument
+  )
+}
+export const MoveFolderDocument = gql`
+  mutation MoveFolder($id: UUID!, $parentId: UUID) {
+    moveFolder(id: $id, parentId: $parentId) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useMoveFolderMutation() {
+  return Urql.useMutation<MoveFolderMutation, MoveFolderMutationVariables>(
+    MoveFolderDocument
+  )
+}
+export const MoveFileDocument = gql`
+  mutation MoveFile($id: UUID!, $folderId: UUID) {
+    moveFile(id: $id, folderId: $folderId) {
+      ...FileFields
+    }
+  }
+  ${FileFieldsFragmentDoc}
+`
+
+export function useMoveFileMutation() {
+  return Urql.useMutation<MoveFileMutation, MoveFileMutationVariables>(
+    MoveFileDocument
+  )
 }

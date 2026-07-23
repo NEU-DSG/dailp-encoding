@@ -1,6 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
+    asset_library::{File, Folder, FolderContents},
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
     collection,
@@ -418,6 +419,21 @@ impl Query {
         let db = context.data::<DataLoader<Database>>()?.loader();
 
         Ok(db.all_subject_headings().await?)
+    }
+
+    /// Everything directly inside an asset-library folder - subfolders and files
+    /// One level deep. Pass a null `folderId` to list the root.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn folder_contents(
+        &self,
+        context: &Context<'_>,
+        folder_id: Option<Uuid>,
+    ) -> FieldResult<FolderContents> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .list_folder_contents(folder_id)
+            .await?)
     }
 }
 
@@ -1046,6 +1062,99 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .toggle_collection_visibility(collection_id)
+            .await?)
+    }
+
+    /// Create an asset-library folder. A null `parentId` places it at the root.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn create_folder(
+        &self,
+        context: &Context<'_>,
+        parent_id: Option<Uuid>,
+        name: String,
+    ) -> FieldResult<Folder> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_folder(parent_id, &name)
+            .await?)
+    }
+
+    /// Record a file that has already been uploaded to S3. A null `folderId`
+    /// places it at the root.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn create_file(
+        &self,
+        context: &Context<'_>,
+        folder_id: Option<Uuid>,
+        name: String,
+        s3_url: String,
+    ) -> FieldResult<File> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_file(folder_id, &name, &s3_url)
+            .await?)
+    }
+
+    /// Rename a folder.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn rename_folder(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+        name: String,
+    ) -> FieldResult<Folder> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .rename_folder(id, &name)
+            .await?)
+    }
+
+    /// Rename a file.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn rename_file(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+        name: String,
+    ) -> FieldResult<File> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .rename_file(id, &name)
+            .await?)
+    }
+
+    /// Move a folder under a new parent. A null `parentId` moves it to the root.
+    /// Descendants follow automatically since they reference the folder's id.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn move_folder(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+        parent_id: Option<Uuid>,
+    ) -> FieldResult<Folder> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .move_folder(id, parent_id)
+            .await?)
+    }
+
+    /// Move a file into another folder. A null `folderId` moves it to the root.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn move_file(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+        folder_id: Option<Uuid>,
+    ) -> FieldResult<File> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .move_file(id, folder_id)
             .await?)
     }
 }

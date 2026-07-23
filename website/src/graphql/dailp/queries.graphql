@@ -824,3 +824,63 @@ mutation UpdateMenu($menu: MenuUpdate!) {
 mutation ValidateTurnstileToken($token: String!) {
   validateTurnstileToken(token: $token)
 }
+
+fragment FolderFields on Folder {
+  id
+  parentId
+  name
+}
+
+fragment FileFields on File {
+  id
+  folderId
+  s3Url
+  name
+}
+
+query FolderContents($folderId: UUID) {
+  folderContents(folderId: $folderId) {
+    folders {
+      ...FolderFields
+    }
+    files {
+      ...FileFields
+    }
+  }
+}
+
+mutation CreateFolder($parentId: UUID, $name: String!) {
+  createFolder(parentId: $parentId, name: $name) {
+    ...FolderFields
+  }
+}
+
+mutation CreateFile($folderId: UUID, $name: String!, $s3Url: String!) {
+  createFile(folderId: $folderId, name: $name, s3Url: $s3Url) {
+    ...FileFields
+  }
+}
+
+mutation RenameFolder($id: UUID!, $name: String!) {
+  renameFolder(id: $id, name: $name) {
+    ...FolderFields
+  }
+}
+
+mutation RenameFile($id: UUID!, $name: String!) {
+  renameFile(id: $id, name: $name) {
+    ...FileFields
+  }
+}
+
+mutation MoveFolder($id: UUID!, $parentId: UUID) {
+  moveFolder(id: $id, parentId: $parentId) {
+    ...FolderFields
+  }
+}
+
+mutation MoveFile($id: UUID!, $folderId: UUID) {
+  moveFile(id: $id, folderId: $folderId) {
+    ...FileFields
+  }
+}

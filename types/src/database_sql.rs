@@ -10,6 +10,7 @@ use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
+use crate::asset_library::{File, Folder, FolderContents};
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
@@ -696,6 +697,120 @@ impl Database {
                 .fetch_all(&self.client)
                 .await?,
         )
+    }
+
+    // --- Asset library: folders ---
+
+    /// Create a folder. `parent_id` of `None` places it at the root.
+    pub async fn insert_folder(&self, parent_id: Option<Uuid>, name: &str) -> Result<Folder> {
+        Ok(
+            query_file_as!(Folder, "queries/insert_folder.sql", parent_id, name)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    /// Rename a folder.
+    pub async fn rename_folder(&self, id: Uuid, name: &str) -> Result<Folder> {
+        Ok(
+            query_file_as!(Folder, "queries/rename_folder.sql", id, name)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    /// Move a folder under a new parent (`None` = root). Descendants ride along
+    /// unchanged since they reference this folder's unchanged id.
+    ///
+    /// Rejects moving a folder into itself or one of its own descendants, which
+    /// would detach that subtree from the root and create a cycle.
+    pub async fn move_folder(&self, id: Uuid, parent_id: Option<Uuid>) -> Result<Folder> {
+        if let Some(new_parent) = parent_id {
+            let would_cycle =
+                query_file_scalar!("queries/folder_subtree_contains.sql", id, new_parent)
+                    .fetch_one(&self.client)
+                    .await?;
+            if would_cycle {
+                return Err(anyhow::anyhow!(
+                    "Cannot move a folder into itself or one of its descendants"
+                ));
+            }
+        }
+        Ok(
+            query_file_as!(Folder, "queries/move_folder.sql", id, parent_id)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    /// Delete a folder. Errors if it still holds subfolders or files.
+    pub async fn delete_folder(&self, id: Uuid) -> Result<Folder> {
+        Ok(query_file_as!(Folder, "queries/delete_folder.sql", id)
+            .fetch_one(&self.client)
+            .await?)
+    }
+
+    /// Immediate subfolders of `parent_id` (`None` lists the root).
+    pub async fn list_folders(&self, parent_id: Option<Uuid>) -> Result<Vec<Folder>> {
+        Ok(
+            query_file_as!(Folder, "queries/list_folders.sql", parent_id)
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
+    // --- Asset library: files ---
+
+    /// Record a file that has already been uploaded to S3. `folder_id` of `None`
+    /// places it at the root.
+    pub async fn insert_file(
+        &self,
+        folder_id: Option<Uuid>,
+        name: &str,
+        s3_url: &str,
+    ) -> Result<File> {
+        Ok(
+            query_file_as!(File, "queries/insert_file.sql", folder_id, name, s3_url)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    /// Rename a file.
+    pub async fn rename_file(&self, id: Uuid, name: &str) -> Result<File> {
+        Ok(query_file_as!(File, "queries/rename_file.sql", id, name)
+            .fetch_one(&self.client)
+            .await?)
+    }
+
+    /// Move a file into another folder (`None` = root).
+    pub async fn move_file(&self, id: Uuid, folder_id: Option<Uuid>) -> Result<File> {
+        Ok(query_file_as!(File, "queries/move_file.sql", id, folder_id)
+            .fetch_one(&self.client)
+            .await?)
+    }
+
+    /// Delete a file.
+    pub async fn delete_file(&self, id: Uuid) -> Result<File> {
+        Ok(query_file_as!(File, "queries/delete_file.sql", id)
+            .fetch_one(&self.client)
+            .await?)
+    }
+
+    /// Files directly inside `folder_id` (`None` lists the root).
+    pub async fn list_files(&self, folder_id: Option<Uuid>) -> Result<Vec<File>> {
+        Ok(query_file_as!(File, "queries/list_files.sql", folder_id)
+            .fetch_all(&self.client)
+            .await?)
+    }
+
+    /// Everything directly inside a folder (`None` = root) - the library's `ls`.
+    /// Combines the subfolder and file listings into one `FolderContents`.
+    pub async fn list_folder_contents(&self, folder_id: Option<Uuid>) -> Result<FolderContents> {
+        Ok(FolderContents {
+            folders: self.list_folders(folder_id).await?,
+            files: self.list_files(folder_id).await?,
+        })
     }
 
     /// Ensure that a user exists in the database

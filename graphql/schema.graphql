@@ -886,6 +886,61 @@ type EditedCollection {
 	chapters: [CollectionChapter!]
 }
 
+"""
+A file in the shared asset library, pointing at an object in S3.
+"""
+type File {
+	"""
+	UUID for the file
+	"""
+	id: UUID!
+	"""
+	Folder holding this file, or null at the root of the library
+	"""
+	folderId: UUID
+	"""
+	URL that the file's bytes are served from
+	"""
+	s3Url: String!
+	"""
+	Display name of the file
+	"""
+	name: String!
+}
+
+
+"""
+A folder in the shared asset library. Folders form a tree; a folder with no
+parent sits at the root of the library.
+"""
+type Folder {
+	"""
+	UUID for the folder
+	"""
+	id: UUID!
+	"""
+	Folder this one sits inside, or null at the root of the library
+	"""
+	parentId: UUID
+	"""
+	Display name of the folder
+	"""
+	name: String!
+}
+
+"""
+Everything directly inside a single folder (one level) like the unix `ls` command.
+"""
+type FolderContents {
+	"""
+	Subfolders directly inside this folder
+	"""
+	folders: [Folder!]!
+	"""
+	Files directly inside this folder
+	"""
+	files: [File!]!
+}
 
 """
 Stores the physical or digital medium associated with a document
@@ -1324,6 +1379,32 @@ type Mutation {
 	Inverts associated collection's visiblity
 	"""
 	toggleCollectionVisibility(collectionId: UUID!): EditedCollection!
+	"""
+	Create an asset-library folder. A null `parentId` places it at the root.
+	"""
+	createFolder(parentId: UUID, name: String!): Folder!
+	"""
+	Record a file that has already been uploaded to S3. A null `folderId`
+	places it at the root.
+	"""
+	createFile(folderId: UUID, name: String!, s3Url: String!): File!
+	"""
+	Rename a folder.
+	"""
+	renameFolder(id: UUID!, name: String!): Folder!
+	"""
+	Rename a file.
+	"""
+	renameFile(id: UUID!, name: String!): File!
+	"""
+	Move a folder under a new parent. A null `parentId` moves it to the root.
+	Descendants follow automatically since they reference the folder's id.
+	"""
+	moveFolder(id: UUID!, parentId: UUID): Folder!
+	"""
+	Move a file into another folder. A null `folderId` moves it to the root.
+	"""
+	moveFile(id: UUID!, folderId: UUID): File!
 }
 
 """
@@ -1541,6 +1622,11 @@ type Query {
 	Fetch all available subject headings.
 	"""
 	allSubjectHeadings: [SubjectHeading!]!
+	"""
+	Everything directly inside an asset-library folder - subfolders and files
+	One level deep. Pass a null `folderId` to list the root.
+	"""
+	folderContents(folderId: UUID): FolderContents!
 }
 
 """
