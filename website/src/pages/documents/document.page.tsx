@@ -23,6 +23,7 @@ import { useUserId } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
+import { CollectionAuthGuard } from "src/components/collection-auth-guard"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
@@ -94,13 +95,15 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   }
 
   return (
-    <Layout>
-      <Helmet title={doc?.title} />
-      <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc} />
-        <TabSet doc={doc} />
-      </main>
-    </Layout>
+    <CollectionAuthGuard isHidden={false}>
+      <Layout>
+        <Helmet title={doc?.title} />
+        <main className={css.annotatedDocument}>
+          <DocumentTitleHeader doc={doc} />
+          <TabSet doc={doc} />
+        </main>
+      </Layout>
+    </CollectionAuthGuard>
   )
 }
 export const Page = AnnotatedDocumentPage

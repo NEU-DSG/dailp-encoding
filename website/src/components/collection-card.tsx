@@ -29,13 +29,20 @@ export const CollectionCard = (props: {
 
   return (
     <Group className={css.collectionCard}>
-      {canToggleCollections && (
-        <button onClick={handleToggle} className={css.toggleButton}>
-          {props.isHidden ? "Publish Collection" : "Hide Collection"}
-        </button>
-      )}
-      <img src={props.thumbnail} className={css.collectionCardImage} />
-
+      <div className={css.collectionCardImageContainer}>
+        <img src={props.thumbnail} className={css.collectionCardImage} />
+        {canToggleCollections && (
+          <button
+            onClick={handleToggle}
+            className={css.toggleButton}
+            aria-label={
+              props.isHidden ? "Publish collection" : "Hide collection"
+            }
+          >
+            {props.isHidden ? "Publish Collection" : "Hide Collection"}
+          </button>
+        )}
+      </div>
       <div className={css.cardContent}>
         <div className={css.titleWrapper}>
           <h2 className={css.collectionCardHeader}>

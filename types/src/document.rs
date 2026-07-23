@@ -333,6 +333,7 @@ impl AnnotatedDoc {
         let db = context.data::<DataLoader<Database>>()?.loader();
         Ok(db.document_contributor_audio(&self.meta.id.0).await?)
     }
+
 }
 
 /// Key to retrieve the pages of a document given a document ID

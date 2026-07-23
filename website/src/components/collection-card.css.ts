@@ -3,6 +3,7 @@ import { fonts, radii, space } from "src/style/constants"
 import { button } from "./button.css"
 
 export const collectionCard = style({
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   width: "25%",
@@ -22,6 +23,10 @@ export const cardContent = style({
   flexDirection: "column",
   flexGrow: 1,
   padding: "0px 20px 20px",
+})
+
+export const collectionCardImageContainer = style({
+  position: "relative",
 })
 
 export const collectionCardImage = style({
