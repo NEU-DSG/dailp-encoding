@@ -13,6 +13,7 @@ jobs:
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info

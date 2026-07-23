@@ -1014,6 +1014,7 @@ export type Mutation = {
   readonly updateWord: AnnotatedForm
   readonly upsertEditedCollection: Scalars["String"]
   readonly upsertPage: Scalars["String"]
+  /** Validates a token against CloudFlare Turnstile's SiteVerify API */
   readonly validateTurnstileToken: Scalars["Boolean"]
 }
 

@@ -30,7 +30,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-s1RPtyvDGJaX/BisLT+ifVfuhDT1nZkZ1NcK8sbwELM=";
+          sha256 = "sha256-SDu4snEWjuZU475PERvu+iO50Mi39KVjqCeJeNvpguU=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -90,6 +90,8 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
+              cp -f ${targetPackage}/bin/dailp-outbound $out/bootstrap
+              zip -j $out/dailp-outbound.zip $out/bootstrap
             '';
           };
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
