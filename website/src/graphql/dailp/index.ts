@@ -86,6 +86,8 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Key dates for this document */
+  readonly keyDates: ReadonlyArray<KeyDate>
   /** Key terms associated with a document */
   readonly keywords: ReadonlyArray<Keyword>
   /** The languages present in this document */
@@ -578,6 +580,8 @@ export type DocumentMetadataUpdate = {
   readonly genre: InputMaybe<GenreUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The key dates associated with the document */
+  readonly keyDates: InputMaybe<ReadonlyArray<KeyDateUpdate>>
   /** The key terms associated with the document */
   readonly keywords: InputMaybe<ReadonlyArray<KeywordUpdate>>
   /** The languages present in the document */
@@ -755,6 +759,17 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+export type KeyDate = {
+  readonly __typename?: "KeyDate"
+  readonly id: Scalars["UUID"]
+  readonly name: Scalars["String"]
+}
+
+export type KeyDateUpdate = {
+  readonly id: Scalars["UUID"]
+  readonly name: Scalars["String"]
 }
 
 /** Record to store a keyword associated with a document */
@@ -1956,6 +1971,9 @@ export type DocFormFieldsFragment = {
     readonly genre: Maybe<
       { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
+    readonly keyDates: ReadonlyArray<
+      { readonly __typename?: "KeyDate" } & Pick<KeyDate, "id" | "name">
+    >
   }
 
 export type AllSubjectHeadingsQueryVariables = Exact<{ [key: string]: never }>
@@ -2395,6 +2413,9 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
         >
         readonly creators: ReadonlyArray<
           { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+        >
+        readonly keyDates: ReadonlyArray<
+          { readonly __typename?: "KeyDate" } & Pick<KeyDate, "id" | "name">
         >
       }
   >
@@ -3624,6 +3645,10 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
+    keyDates {
+      id
+      name
+    }
   }
 `
 export const FormFieldsFragmentDoc = gql`
@@ -4086,6 +4111,10 @@ export const DocumentDetailsDocument = gql`
         status
       }
       creators {
+        id
+        name
+      }
+      keyDates {
         id
         name
       }
