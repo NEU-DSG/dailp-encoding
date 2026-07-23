@@ -1,7 +1,8 @@
 use log::error;
 
-mod cognito;
 mod query;
+
+use dailp_graphql::service_integrations::cognito;
 
 use {
     dailp::async_graphql::{
