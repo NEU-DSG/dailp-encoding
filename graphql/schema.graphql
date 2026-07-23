@@ -1011,7 +1011,7 @@ type ImageSource {
 
 
 """
-Record to store a key date associated with a document
+A scalar that can represent any JSON value.
 """
 scalar JSON
 
