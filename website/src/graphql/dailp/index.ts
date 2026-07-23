@@ -1970,6 +1970,9 @@ export type DocFormFieldsFragment = {
     readonly genre: Maybe<
       { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
+    readonly keyDates: ReadonlyArray<
+      { readonly __typename?: "KeyDate" } & Pick<KeyDate, "id" | "name">
+    >
   }
 
 export type AllSubjectHeadingsQueryVariables = Exact<{ [key: string]: never }>
@@ -2409,6 +2412,9 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
         >
         readonly creators: ReadonlyArray<
           { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+        >
+        readonly keyDates: ReadonlyArray<
+          { readonly __typename?: "KeyDate" } & Pick<KeyDate, "id" | "name">
         >
       }
   >
@@ -3638,6 +3644,10 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
+    keyDates {
+      id
+      name
+    }
   }
 `
 export const FormFieldsFragmentDoc = gql`
@@ -4100,6 +4110,10 @@ export const DocumentDetailsDocument = gql`
         status
       }
       creators {
+        id
+        name
+      }
+      keyDates {
         id
         name
       }
