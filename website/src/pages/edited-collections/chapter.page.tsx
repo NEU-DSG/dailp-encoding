@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import { CollectionAuthGuard } from "src/components/collection-auth-guard"
 import * as Dailp from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
@@ -13,14 +14,24 @@ import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
-  collectionSlug: string
-  chapterSlug: string
+  collectionSlug?: string
+  chapterSlug?: string
+  chapter?: Dailp.CollectionChapterQuery["chapter"]
 }) => {
+  const routeParams = useRouteParams()
+  const collectionSlug =
+    props.collectionSlug ??
+    (routeParams?.["collectionSlug"] as string | undefined)
+  const chapterSlug =
+    props.chapterSlug ?? (routeParams?.["chapterSlug"] as string | undefined)
+
+  // Query will use cache if data was prefetched in chapter.page.client.ts
   const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
     variables: {
-      collectionSlug: props.collectionSlug,
-      chapterSlug: props.chapterSlug,
+      collectionSlug: collectionSlug?.replaceAll("-", "_")!,
+      chapterSlug: chapterSlug?.replaceAll("-", "_")!,
     },
+    pause: !collectionSlug || !chapterSlug,
   })
   const [{ data: collectionData, fetching: collectionFetching }] =
     Dailp.useEditedCollectionQuery({
@@ -29,24 +40,39 @@ const ChapterPage = (props: {
 
   const dialog = useDialog()
 
-  const subchapters = useSubchapters(props.chapterSlug)
+  const subchapters = chapterSlug ? useSubchapters(chapterSlug) : undefined
 
-  const chapter = data?.chapter
+  // Use prefetched chapter from props for immediate render, otherwise use query result
+  // The query will read from cache if prefetched, avoiding duplicate network requests
+  const chapter = props.chapter ?? data?.chapter
+
+  if (!collectionSlug || !chapterSlug) {
+    return <>Loading...</>
+  }
 
   if (fetching) {
     return <>Loading...</>
   }
 
   if (error) {
-    return <>Error: {error.message}</>
+    return (
+      <CWKWLayout>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <h1>Error</h1>
+            <p>{error.message}</p>
+          </article>
+        </main>
+      </CWKWLayout>
+    )
   }
 
   if (!chapter) {
     return (
-      <>
-        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
-        {props.chapterSlug}
-      </>
+      <CWKWLayout>
+        Chapter not found for collection: {collectionSlug}, chapter:{" "}
+        {chapterSlug}
+      </CWKWLayout>
     )
   }
 
