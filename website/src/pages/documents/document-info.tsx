@@ -310,6 +310,13 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
+        <div className={styles.field}>
+          <div className={styles.label}>KEY DATES</div>
+          <div className={styles.value}>
+            {formatArray(docData.keyDates) || "Key Dates Not Yet Available."}
+          </div>
+        </div>
+
         <CitationField citation={citation} />
       </div>
     </div>

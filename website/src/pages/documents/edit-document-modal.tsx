@@ -999,7 +999,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           />
 
           <TagSelector
-            label="Key Dates"
+            label="Key Dates (dates used within the story)"
             selectedTags={selectedDates.map((k) => k.name)}
             newTags={newDates}
             onRemove={(index) => {
