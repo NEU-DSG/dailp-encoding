@@ -252,28 +252,3 @@ impl From<&SpatialCoverage> for Uuid {
         s.id
     }
 }
-
-// Stores a person associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
-pub struct AssociatedPerson {
-    // UUID for the person
-    pub id: Uuid,
-    // The person's name as a string
-    pub name: String,
-}
-
-// For updating people associated with a document
-#[derive(async_graphql::InputObject, Debug)]
-pub struct AssociatedPersonUpdate {
-    // UUID for the person
-    pub id: Uuid,
-    // Name of the person
-    pub name: String,
-}
-
-// Converts AssociatedPerson struct to corresponding Uuid
-impl From<&AssociatedPerson> for Uuid {
-    fn from(p: &AssociatedPerson) -> Self {
-        p.id
-    }
-}
