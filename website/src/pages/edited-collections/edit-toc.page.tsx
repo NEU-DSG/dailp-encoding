@@ -5,11 +5,10 @@ import { AuthGuard } from "src/components/auth-guard"
 import { EditableToc } from "src/components/editable/toc/EditToc"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { useLocation, useRouteParams } from "src/renderer/PageShell"
+import { useLocation } from "src/renderer/PageShell"
 
-const EditTocPage = () => {
+const EditTocPage = ({ collectionSlug }: { collectionSlug: string }) => {
   const location = useLocation()
-  const collectionSlug = location.search["collectionSlug"]
 
   const [{ data, fetching }, refetch] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug! },
@@ -19,7 +18,7 @@ const EditTocPage = () => {
     return <div>Collection slug not found</div>
   }
   return (
-    <AuthGuard requiredRole={UserRole.Editor}>
+    <AuthGuard requiredRoles={[UserRole.Editor]}>
       <Layout>
         <main>
           {data == undefined || data.editedCollection == null ? (

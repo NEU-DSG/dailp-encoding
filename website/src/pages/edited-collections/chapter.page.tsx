@@ -33,6 +33,11 @@ const ChapterPage = (props: {
     },
     pause: !collectionSlug || !chapterSlug,
   })
+
+  if (!props.collectionSlug) {
+    return <>Loading...</>
+  }
+
   const [{ data: collectionData, fetching: collectionFetching }] =
     Dailp.useEditedCollectionQuery({
       variables: { slug: props.collectionSlug },
@@ -97,9 +102,13 @@ const ChapterPage = (props: {
                     {chapter.breadcrumbs
                       .map((crumb) => (
                         <Link
-                          href={`${collectionRoute(props.collectionSlug)}/${
-                            crumb.slug
-                          }`}
+                          href={
+                            props.collectionSlug
+                              ? `${collectionRoute(props.collectionSlug)}/${
+                                  crumb.slug
+                                }`
+                              : ``
+                          }
                           key={crumb.slug}
                         >
                           {crumb.name}

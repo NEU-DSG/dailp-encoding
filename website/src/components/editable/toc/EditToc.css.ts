@@ -7,14 +7,26 @@ export const tocContainer = style({
   padding: 16,
   borderRadius: 8,
   boxSizing: "border-box",
-  width: "100%",
-  maxWidth: "100%",
-  overflowX: "hidden",
+  width: "95%",
+  maxWidth: "95%",
+})
+
+export const headerContainer = style({
+  position: "relative",
+  display: "inline-flex",
+  alignItems: "center",
+  marginBottom: 16,
 })
 
 export const collectionTitle = style({
-  marginTop: 0,
-  marginBottom: 16,
+  margin: 0,
+})
+
+export const editorContent = style({
+  width: "100%",
+  maxWidth: "100%",
+  overflowX: "hidden",
+  boxSizing: "border-box",
 })
 
 export const sectionsGrid = style({
