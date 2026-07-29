@@ -41,7 +41,6 @@ in {
       ]
     }
     '';
-    tags = config.setup.global_tags;
   };
 }
 
