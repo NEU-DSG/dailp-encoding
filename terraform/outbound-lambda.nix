@@ -23,5 +23,8 @@ in {
     };
     tags = config.setup.global_tags // config.functions.tags;
   };
+  resource.aws_iam_policy.invoke_outbound_turnstile = {
+    tags = config.setup.global_tags;
+  };
 }
 
