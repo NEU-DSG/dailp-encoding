@@ -25,8 +25,7 @@ in {
   };
 
   resource.aws_iam_policy.invoke_outbound_turnstile = {
-    policy = ''
-      {
+    policy = ''{
       "Version": "2012-10-17",
       "Statement": [
         {
