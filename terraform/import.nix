@@ -15,5 +15,9 @@ in {
       to = "module.bastion_host.aws_instance.default[0]";
       id = builtins.getEnv "BASTION_ID";
     }
+    {
+      to = "aws_iam_policy.invoke_outbound_turnstile";
+      id = arn:aws:iam::783177801354:policy/invoke-outbound-turnstile;
+    }
   ];
 }
