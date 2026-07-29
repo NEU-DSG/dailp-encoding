@@ -7,6 +7,7 @@ in {
       name = prefixName "lambda-execution";
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        "\${aws_iam_policy.invoke_outbound_turnstile.arn}"
       ];
       
       assume_role_policy = ''
