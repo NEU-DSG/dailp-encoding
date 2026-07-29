@@ -55,6 +55,11 @@ const IndexPage = () => {
     (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
   )
 
+  // Determine which collections are visible to user
+  const visibleCollections = dailp?.allEditedCollections.filter(
+    (c) => !(userRole === UserRole.Reader && c.isHidden)
+  )
+
   // Show loading state while determining user role
   if (userRole === undefined) {
     return (
@@ -141,9 +146,22 @@ const IndexPage = () => {
                 </button>
               </div>
             )}
-            <ul>
-              {dailp?.allEditedCollections.map((collection) => (
-                <Card
+            {visibleCollections?.length === 0 && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingTop: "50px",
+                }}
+              >
+                <p>Edited collections forthcoming, please check back soon.</p>
+              </div>
+            )}
+            <ul className={cardGroup}>
+              {visibleCollections?.map((collection) => (
+                <CollectionCard
+                  key={collection.slug}
                   thumbnail={collection.thumbnailUrl ?? cwkwLogo}
                   header={{
                     text: collection.title,
@@ -154,6 +172,9 @@ const IndexPage = () => {
                       ? collection.description
                       : "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                   }
+                  buttonLabel="View the collection"
+                  collectionId={collection.id}
+                  isHidden={collection.isHidden}
                 />
               ))}
             </ul>
