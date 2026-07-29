@@ -23,7 +23,25 @@ in {
     };
     tags = config.setup.global_tags // config.functions.tags;
   };
+
   resource.aws_iam_policy.invoke_outbound_turnstile = {
+    policy = ''
+      {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+            "Sid": "invokeoutboundturnstile",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeFunction"
+            ],
+            "Resource": [
+                "arn:aws:lambda:*:783177801354:function:dailp-*-outbound-turnstile*"
+            ]
+        }
+      ]
+    }
+    '';
     tags = config.setup.global_tags;
   };
 }
