@@ -23,5 +23,26 @@ in {
     };
     tags = config.setup.global_tags // config.functions.tags;
   };
+
+  resource.aws_iam_policy.invoke_outbound_turnstile = {
+    name = "invoke-outbound-turnstile";
+    description = "Allows our graphQL lambda function to invoke a lambda function that can integrate with services outside the VPC";
+    policy = ''{
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+            "Sid": "invokeoutboundturnstile",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:InvokeFunction"
+            ],
+            "Resource": [
+                "arn:aws:lambda:*:783177801354:function:dailp-*-outbound-turnstile*"
+            ]
+        }
+      ]
+    }
+    '';
+  };
 }
 
