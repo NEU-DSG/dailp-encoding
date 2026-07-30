@@ -8,12 +8,13 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage, TranslatedSection,
-    UpdateContributorAttribution, Uuid,
+    AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, ChapterSlugInfo, CollectionChapter, CollectionSection, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
+    Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
+    DocumentParagraph, PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage,
+    TranslatedSection, UpdateCollectionChapterOrderInput, UpdateContributorAttribution,
+    UpsertChapterInput, Uuid,
 };
 use itertools::{Itertools, Position};
 use log::info;
@@ -419,6 +420,19 @@ impl Query {
         let db = context.data::<DataLoader<Database>>()?.loader();
 
         Ok(db.all_subject_headings().await?)
+    }
+
+    /// Returns a chapter slug info for all unassigned chapters in a given chatper
+    async fn all_chapter_slugs(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+    ) -> FieldResult<Vec<ChapterSlugInfo>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_chapter_slugs(&collection_slug)
+            .await?)
     }
 }
 
@@ -871,8 +885,13 @@ impl Mutation {
             segments: Some(vec![page]),
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
+        let section = input.section.unwrap_or(CollectionSection::Body);
         let (document_id, _chapter_id) = database
-            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .insert_document_into_edited_collection(
+                annotated_doc.clone(),
+                input.collection_id,
+                section,
+            )
             .await?;
 
         // Update the annotated_doc with the correct document_id from the database
@@ -963,6 +982,66 @@ impl Mutation {
             .to_string())
     }
 
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn upsert_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: UpsertChapterInput,
+    ) -> FieldResult<String> {
+        let chapter_id = input.id;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_collection_chapter(input)
+            .await?;
+        Ok(chapter_id.to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_collection_chapter_order(
+        &self,
+        context: &Context<'_>,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> FieldResult<String> {
+        let collection_slug = input.collection_slug.clone();
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_collection_chapter_order(input)
+            .await?;
+        Ok(collection_slug)
+    }
+
+    /// Adds the collection chapter to the TOC by updating index and chapter path, etc.
+    async fn add_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        input: AddChapterInput,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_collection_chapter(input)
+            .await?)
+    }
+
+    /// Removes the provided chapter id from a TOC by setting its index to -1
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn remove_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        chapter_id: Uuid,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .remove_collection_chapter(chapter_id)
+            .await?)
+    }
+
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
         Ok(context
@@ -995,43 +1074,14 @@ impl Mutation {
                 .await
                 .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
         } else {
-            use aws_sdk_lambda as lambda;
-            let config = aws_config::load_from_env().await;
-            let client = lambda::Client::new(&config);
-            let function_name = match std::env::var("OUTBOUND_LAMBDA_NAME") {
-                Ok(name) => name,
-                Err(_) => {
-                    info!("Could not invoke Turnstile Lambda; lambda name is not set");
-                    return Err("Failed to validate Turnstile token".into());
-                }
-            };
+            // This is a temporary change to prevent us from attempting to run a Lambda that we will
+            // not be able to call. Once we have the necessary trust policy in place, we can revert
+            // the commit that introduces this special case. (See git blame)
             info!(
-                "Invoking Lambda function {} to call Turnstile",
-                function_name
+                "We are configured for non-local Turnstile invocation but we do not yet have \"
+                  permission to invoke the outbound lambda. Defaulting to false."
             );
-            let result = client
-                .invoke()
-                .function_name(function_name)
-                .payload(aws_sdk_lambda::primitives::Blob::new(
-                    serde_json::to_string(&OutboundRequest { data: token }).unwrap(),
-                ))
-                .send()
-                .await?;
-            info!("Lambda function returned {:?}", result);
-            // The Lambda:Invoke response only indicates control plane
-            // errors via the Err variant. Errors coming from our code
-            // (e.g. the outbound lambda got an error response from
-            // Turnstile) get an Ok() variant, but put a value in the
-            // function_error field.
-            if let Some(error) = result.function_error {
-                return Err("Failed to validate Turnstile token".into());
-            }
-
-            if result.payload.is_none() {
-                return Err("Unexpected response from Turnstile invocation".into());
-            }
-            let payload = result.payload.unwrap();
-            serde_json::from_slice(payload.as_ref()).map_err(Into::into)
+            Ok(false)
         };
         info!("Turnstile validation result: {:?}", response);
         response
@@ -1087,6 +1137,7 @@ pub struct CreateDocumentFromFormInput {
     pub source_name: String,
     pub source_url: String,
     pub collection_id: Uuid,
+    pub section: Option<CollectionSection>,
 }
 
 #[derive(async_graphql::SimpleObject)]
