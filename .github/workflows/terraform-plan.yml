@@ -56,4 +56,5 @@ jobs:
       - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
       - name: Report build artifacts
+        if: '!cancelled()'
         uses: actions/download-artifact@v5
