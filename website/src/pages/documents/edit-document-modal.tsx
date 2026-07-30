@@ -764,7 +764,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
             approvedTags={[]}
             newTags={newContributors}
-            onAdd={() => { }}
+            onAdd={() => {}}
             onRemove={isEditing ? removeContributor : undefined}
             addButtonLabel="Add Contributor"
             customForm={
