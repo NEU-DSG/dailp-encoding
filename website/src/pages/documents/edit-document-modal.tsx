@@ -155,6 +155,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [year, setYear] = useState<Number>()
 
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
+  // const [associatedPeople, setAssociatedPeople] = useState(documentMetadata.associatedPeople ?? [])
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
   const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
   const [spatialCoverage, setSpatialCoverage] = useState(
@@ -257,6 +258,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
   )
 
+  // const [associatedPeopleInput, setAssociatedPeopleInput] = useState(
+  //   documentMetadata.associatedPeople?.map((p) => p.name).join(", ") ?? ""
+  // )
+
   const [citation, setCitation] = useState("")
 
   // Initialize citation format from localStorage or default to "apa"
@@ -358,6 +363,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     subjectHeadings: Dailp.SubjectHeading[]
     languages: Dailp.Language[]
     spatialCoverages: Dailp.SpatialCoverage[]
+    // associatedPeople: Dailp.AssociatedPeople[]
   }>(null)
 
   useEffect(() => {
@@ -377,6 +383,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         subjectHeadings: [...subjectHeadings],
         languages: [...languages],
         spatialCoverages: [...spatialCoverage],
+        // associatedPeople: [...associatedPeople],
       })
     }
   }, [isOpen])
@@ -402,6 +409,8 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
+    // setAssociatedPeople(dm.associatedPeople ?? [])
+    // setAssociatedPeopleInput(dm.associatedPeople?.map((p) => p.name).join(", ") ?? "")
     setKeywords(dm.keywords ?? [])
     setLanguages(dm.languages ?? [])
     setSubjectHeadings(dm.subjectHeadings ?? [])
@@ -437,6 +446,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: [...(dm.subjectHeadings ?? [])],
       languages: [...(dm.languages ?? [])],
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
+      // associatedPeople: [...(dm.associatedPeople ?? [])],
     })
   }, [documentMetadata])
 
@@ -520,6 +530,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setFormat(backupState.format)
     //setPages(backupState.pages)
     setCreator(backupState.creator)
+    // setAssociatedPeople(backupState.associatedPeople)
     setKeywords(backupState.keywords)
     setLanguages(backupState.languages)
     setSubjectHeadings(backupState.subjectHeadings)
@@ -617,6 +628,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
+      // associatedPeople,
       citeFormat: citeFormat,
     }
 
@@ -752,7 +764,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             selectedTags={contributors.map((c) => `${c.name} (${c.role})`)}
             approvedTags={[]}
             newTags={newContributors}
-            onAdd={() => {}}
+            onAdd={() => { }}
             onRemove={isEditing ? removeContributor : undefined}
             addButtonLabel="Add Contributor"
             customForm={
@@ -943,6 +955,32 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
           />
+
+          {/* <div className={styles.fieldGroup}>
+            <label className={styles.label}>
+              Associated People (separate by ',' if multiple)
+            </label>
+            <input
+              type="text"
+              className={styles.input}
+              value={associatedPeopleInput}
+              onChange={(e) => setAssociatedPeopleInput(e.target.value)}
+              onBlur={(e) => {
+                // Parse and set associated people when user leaves the field
+                setAssociatedPeople(
+                  e.target.value
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter((c) => p.length > 0)
+                    .map((name) => ({
+                      id: uuidv4(),
+                      name,
+                    }))
+                )
+              }}
+              disabled={!isEditing}
+            />
+          </div> */}
 
           {/* Might need to pull the creator(s) from creator or contributors w/ author role */}
           <div className={styles.fullWidthGroup}>
