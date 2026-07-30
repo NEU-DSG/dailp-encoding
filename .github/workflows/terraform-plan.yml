@@ -57,4 +57,7 @@ jobs:
         run: nix run --impure -L .#tf-plan
       - name: Report build artifacts
         if: '!cancelled()'
-        uses: actions/download-artifact@v5
+        uses: actions/upload-artifact@v5
+        with:
+          path: *config.tf.json
+          name: terraform config
