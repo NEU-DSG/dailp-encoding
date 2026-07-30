@@ -186,6 +186,30 @@ impl Database {
         Ok(map)
     }
 
+    pub async fn associated_people_for_documents(
+        &self,
+        doc_ids: Vec<Uuid>,
+    ) -> Result<HashMap<Uuid, Vec<AssociatedPerson>>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            AssociatedPersonWithDocId,
+            "queries/get_associated_people_by_document_ids.sql",
+            &doc_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        let mut map: HashMap<Uuid, Vec<AssociatedPerson>> = HashMap::new();
+        for row in rows {
+            map.entry(row.document_id)
+                .or_insert_with(Vec::new)
+                .push(AssociatedPerson {
+                    id: row.id,
+                    name: row.name,
+                });
+        }
+        Ok(map)
+    }
+
     pub async fn creators_for_document(&self, doc_id: Uuid) -> Result<Vec<Creator>, sqlx::Error> {
         let mut results = self.creators_for_documents(vec![doc_id]).await?;
         Ok(results.remove(&doc_id).unwrap_or_default())
@@ -214,6 +238,14 @@ impl Database {
         doc_id: Uuid,
     ) -> Result<Vec<SpatialCoverage>, sqlx::Error> {
         let mut results = self.spatial_coverage_for_documents(vec![doc_id]).await?;
+        Ok(results.remove(&doc_id).unwrap_or_default())
+    }
+
+    pub async fn associated_people_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<AssociatedPerson>, sqlx::Error> {
+        let mut results = self.associated_people_for_documents(vec![doc_id]).await?;
         Ok(results.remove(&doc_id).unwrap_or_default())
     }
 
@@ -489,6 +521,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    associated_people_ids: Some(Vec::new()),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
@@ -648,6 +681,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
+                associated_people_ids: Some(Vec::new()),
                 creators_ids: Some(Vec::new()),
                 format_id: None.into(),
                 genre_id: None.into(),
@@ -1517,6 +1551,68 @@ impl Database {
             info!("Creators update completed");
         } else {
             info!("No creators to update");
+        }
+
+        info!("Updating associated people");
+        // Update associated people
+        if let MaybeUndefined::Value(associated_people) = &document.associated_people {
+            info!("Associated people to update: {:?}", associated_people);
+
+            // Delete all existing links
+            query_file!("queries/delete_document_associated_people.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            let mut associated_person_ids_to_link: Vec<Uuid> = Vec::new();
+
+            // Process each associated person
+            for associated_person in associated_people {
+                // Check if associated person with this name already exists
+                let existing_id: Option<Uuid> = query_file_scalar!(
+                    "queries/get_associated_person_id_by_name.sql",
+                    &associated_person.name
+                )
+                .fetch_optional(&mut *tx)
+                .await?;
+
+                let associated_person_id = if let Some(existing) = existing_id {
+                    info!(
+                        "Using existing associated person ID for {}: {}",
+                        associated_person.name, existing
+                    );
+                    existing
+                } else {
+                    info!("Inserting new associated person: {:?}", associated_person);
+                    let inserted_id: Uuid = query_file_scalar!(
+                        "queries/insert_associated_person.sql",
+                        &associated_person.id,
+                        &associated_person.name
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+                    info!("Inserted associated person with ID: {}", inserted_id);
+                    inserted_id
+                };
+
+                associated_person_ids_to_link.push(associated_person_id);
+            }
+
+            // Link all associated people to document
+            info!(
+                "Associated people IDs to link: {:?}",
+                associated_person_ids_to_link
+            );
+            query_file!(
+                "queries/insert_document_associated_people.sql",
+                document.id,
+                &associated_person_ids_to_link[..]
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            info!("Associated people update completed");
+        } else {
+            info!("No associated people to update");
         }
 
         info!("Committing transaction");
@@ -2989,6 +3085,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    associated_people_ids: Some(Vec::new()),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
@@ -3067,6 +3164,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    associated_people_ids: Some(Vec::new()),
                     creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
@@ -3752,6 +3850,31 @@ impl Loader<CreatorsForDocument> for Database {
     }
 }
 
+#[async_trait::async_trait]
+impl Loader<AssociatedPeopleForDocument> for Database {
+    type Value = Vec<AssociatedPerson>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[AssociatedPeopleForDocument],
+    ) -> Result<HashMap<AssociatedPeopleForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let results = self
+            .associated_people_for_documents(doc_ids)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(keys
+            .iter()
+            .map(|key| {
+                let value = results.get(&key.0).cloned().unwrap_or_default();
+                (*key, value)
+            })
+            .collect())
+    }
+}
+
 /// A simplified comment type that is easier to pull out of the database
 struct BasicComment {
     pub id: Uuid,
@@ -3837,6 +3960,9 @@ pub struct SpatialCoverageForDocument(pub Uuid);
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct CreatorsForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct AssociatedPeopleForDocument(pub Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
