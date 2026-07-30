@@ -136,6 +136,10 @@ type AnnotatedDoc {
 	"""
 	creators: [Creator!]!
 	"""
+	Key dates for this document
+	"""
+	keyDates: [KeyDate!]!
+	"""
 	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
@@ -813,6 +817,10 @@ input DocumentMetadataUpdate {
 	"""
 	writtenAt: DateInput
 	"""
+	The key dates associated with the document
+	"""
+	keyDates: [KeyDateUpdate!]
+	"""
 	The key terms associated with the document
 	"""
 	keywords: [KeywordUpdate!]
@@ -1081,6 +1089,16 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+type KeyDate {
+	id: UUID!
+	name: String!
+}
+
+input KeyDateUpdate {
+	id: UUID!
+	name: String!
+}
 
 """
 Record to store a keyword associated with a document
