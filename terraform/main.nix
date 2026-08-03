@@ -36,7 +36,7 @@ in {
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
-    version = "<= 5.72";
+    version = "<= 6.2";
   };
 
   # Setup AWS credentials depending on whether we are in the development or
