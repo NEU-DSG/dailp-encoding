@@ -63,12 +63,16 @@ in {
         lib.concatMap
         (e: [ "module.${e.id}_cors" "aws_api_gateway_integration.${e.id}" ])
         fun.endpoints) config.functions.functions;
+        rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
+    };
+    aws_api_gateway_stage.functions_api_stage = {
+      deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
       stage_name = config.setup.stage;
     };
   };
 
   config.output.functions_url = {
-    value = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
+    value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
   };
 }
