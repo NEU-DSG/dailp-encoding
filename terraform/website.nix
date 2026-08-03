@@ -16,16 +16,18 @@ in {
         }];
         Version = "2008-10-17";
       };
-      inline_policy = {
-        name = "Amplify";
-        policy = toJSON {
+    };
+
+    aws_iam_role_policy.amplify_role_policy = {
+      role = "\${aws_iam_role.amplify_role.id}";
+      name = "Amplify";
+      policy = toJSON {
           Statement = [{
             Effect = "Allow";
             Action = "amplify:*";
             Resource = "*";
           }];
         };
-      };
     };
 
     aws_amplify_app.dailp =
