@@ -1,1 +1,1 @@
-select page_id, title, content, path from page;
+select page_id, title, content, path, created_at from page;
