@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
+import { MoveHandler, NodeRendererProps, Tree, TreeApi } from "react-arborist"
 import { MdDragIndicator } from "react-icons/md/index"
 import ConfirmationPopup from "src/components/confirmation-popup"
 import {
@@ -17,6 +17,7 @@ import PreviewToc from "./preview-toc-content"
 export type ChapterNode = {
   id?: string // uuid of chapter or nothing for newly staged chapters
   clientId?: string // Id of the client's row
+  documentId?: string // uuid of the underlying document; needed to re-add a chapter after removing it (e.g. when reparenting)
   title: string
   slug: string
   section: CollectionSection
@@ -41,6 +42,9 @@ export type DraftTarget = {
   sectionKey: SectionKey
   parentId: string | null // id of parent or null if this isnt subchapter
 }
+
+// Max depth of chapter levels based on existing collections
+export const MAX_CHAPTER_LEVEL = 2
 
 // Returns the stable id for a chapter node, preferring the backend id
 export const idOf = (n: any): string => {
@@ -147,6 +151,71 @@ export const addChapterToSection = (
   })
 }
 
+// Removes target chapter by looking in nested chapter nodes
+export const removeNestedChapters = (
+  chapters: ChapterNode[],
+  chapterId: string
+): ChapterNode[] =>
+  chapters
+    .filter((ch) => idOf(ch) !== chapterId)
+    .map((ch) => ({
+      ...ch,
+      children: removeNestedChapters(ch.children, chapterId),
+    }))
+
+// Search for parent target id and then inserts chapter list into it
+export const insertChaptersIntoParent = (
+  chapters: ChapterNode[],
+  parentId: string,
+  newChapters: ChapterNode[],
+  index: number
+): ChapterNode[] =>
+  chapters.map((ch) => {
+    if (idOf(ch) === parentId) {
+      const children = [...ch.children]
+      children.splice(index, 0, ...newChapters)
+      return { ...ch, children }
+    }
+
+    return {
+      ...ch,
+      children: insertChaptersIntoParent(
+        ch.children,
+        parentId,
+        newChapters,
+        index
+      ),
+    }
+  })
+
+// Returns depthof chapter to prevent nesting of nesting
+export const maxChapterDepthBelow = (chapter: ChapterNode): number =>
+  chapter.children.length === 0
+    ? 0
+    : 1 + Math.max(...chapter.children.map(maxChapterDepthBelow))
+
+// Helper for ui to count the depth for the current height
+export const countChapterRows = (chapters: ChapterNode[]): number =>
+  chapters.reduce((sum, ch) => sum + 1 + countChapterRows(ch.children), 0)
+
+// Creates a map of chapters of ids to their parent id. Used to detect which
+// chapters changed parent between load and save.
+export const chaptersToParentIdMap = (
+  chapters: ChapterNode[],
+  parentId: string | null = null,
+  acc: Map<string, string | null> = new Map()
+): Map<string, string | null> => {
+  for (const chapter of chapters) {
+    if (chapter.id) {
+      acc.set(chapter.id, parentId)
+      chaptersToParentIdMap(chapter.children, chapter.id, acc)
+    } else {
+      chaptersToParentIdMap(chapter.children, parentId, acc)
+    }
+  }
+  return acc
+}
+
 // Creates a ChapterOrderInput array for backend to update from chapter section
 export const ChaptersToOrderInput = (
   chapters: ChapterNode[],
@@ -195,7 +264,7 @@ export const addPendingChapters = async (
     let current = chapter
 
     if (chapter.isNew && !chapter.id) {
-      // Only unassigned/existing chapters can be added so protetive case if not true
+      // Only unassigned / existing chapters can be added so protetive case if not true
       const existingChapter = slugData?.allChapterSlugs.find(
         (s) => s.slug === chapter.slug
       )
@@ -284,6 +353,7 @@ export const buildChaptersBySection = (
     const chapter: ChapterNode = {
       id: node.id,
       clientId: node.clientId,
+      documentId: node.documentId,
       title: node.title,
       slug: node.slug,
       section: node.section,
@@ -338,7 +408,7 @@ export const DraftRow = () => {
   } = useEditToc()
 
   return (
-    <li className={css.chapterRow.draft}>
+    <div className={css.chapterRow.draft}>
       <div className={css.chapterRowContent}>
         <div className={css.inputsOfRow}>
           <input
@@ -384,133 +454,101 @@ export const DraftRow = () => {
           </button>
         </div>
       </div>
-    </li>
+    </div>
   )
 }
 
-// In addition to the context, props for an existing chapter
-type ChapterItemProps = {
-  chapter: ChapterNode
-  index: number // Index in parent list
-  sectionKey: SectionKey
-  depth: number // Depth (either 0 for chapter or 1 for subchapter)
-}
-
-// Chapter row for already added chapters
-export const ChapterRow = ({
-  chapter,
-  index,
-  sectionKey,
-  depth,
-}: ChapterItemProps) => {
-  const { draftTarget, onOpenDraft, onRemove } = useEditToc()
+// Since now using arborist, this separate component to render a chapter node.
+// Node holds the data of the chapter node which is rendered as normal.
+// NOTE: aborist is used to address one feature of needing drag and drop into other
+// existing chapters to make subchapters. This was not suported by the existing dnd
+export const ArboristChapterNode = ({
+  node,
+  style,
+  dragHandle,
+}: NodeRendererProps<ChapterNode>) => {
+  const chapter = node.data
+  const { onOpenDraft, onRemove } = useEditToc()
 
   const chapterId = idOf(chapter)
-  const isTopLevel = depth === 0
+  const sectionKey = sectionToKey(chapter.section)
+  const isTopLevel = node.level === 0
+  const canAddSubchapter = node.level < MAX_CHAPTER_LEVEL
 
-  // if draft is in this chapter as subchapter
-  const hasDraftHere =
-    draftTarget?.sectionKey === sectionKey && draftTarget.parentId === chapterId
+  const rowClassName = [
+    chapter.isNew ? css.chapterRow.draft : css.chapterRow.default,
+    node.isSelected ? css.selectedRow : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  const contentClassName = [
+    css.chapterRowContent,
+    !isTopLevel ? css.nestedChapterContent : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
 
   return (
-    <Draggable key={chapterId} draggableId={chapterId} index={index}>
-      {(provided, snapshot) => (
-        <li
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          className={
-            chapter.isNew
-              ? css.chapterRow.draft
-              : snapshot.isDragging
-              ? css.chapterRow.dragging
-              : css.chapterRow.default
-          }
-        >
-          <div className={css.chapterRowContent} {...provided.dragHandleProps}>
-            <div className={css.inputsOfRow}>
-              <span className={css.dragHandle}>
-                <MdDragIndicator size={16} />
-              </span>
-              {!isTopLevel && <span className={css.nestedArrow}>↳</span>}
-              {chapter.isNew && <span className={css.newBadge}>NEW</span>}
-              <input
-                type="text"
-                placeholder="Title"
-                value={chapter.title}
-                className={css.titleInput}
-                disabled
-              />
-              <input
-                type="text"
-                placeholder="Slug"
-                value={chapter.slug.replace(/_/g, "-")}
-                className={css.slugInput}
-                disabled
-              />
-            </div>
-            <div className={css.controlsOfRow}>
-              {isTopLevel && (
-                <button
-                  type="button"
-                  onClick={() => onOpenDraft(sectionKey, chapterId)}
-                  className={css.tocButton.primary}
-                >
-                  + Add Subchapter
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() =>
-                  onRemove(
-                    sectionKey,
-                    chapterId,
-                    chapter.title,
-                    !!chapter.isNew
-                  )
-                }
-                className={
-                  chapter.isNew ? css.tocButton.neutral : css.tocButton.danger
-                }
-              >
-                {chapter.isNew ? "Remove" : "Delete"}
-              </button>
-            </div>
-          </div>
-          {(chapter.children.length > 0 || hasDraftHere) && (
-            <Droppable
-              droppableId={`${sectionKey}:${chapterId}`}
-              type={`${chapterId}`}
-              direction="vertical"
+    <div style={style} className={rowClassName}>
+      <div className={contentClassName}>
+        <div className={css.inputsOfRow}>
+          <span className={css.dragHandle} ref={dragHandle}>
+            <MdDragIndicator size={16} />
+          </span>
+          {!isTopLevel && (
+            <span
+              title={`Nested ${node.level + 1} levels deep`}
+              className={css.nestedBadge}
             >
-              {(dropProvided) => (
-                <ul
-                  ref={dropProvided.innerRef}
-                  {...dropProvided.droppableProps}
-                  className={css.nestedList}
-                >
-                  {chapter.children.map((child, childIndex) => (
-                    <ChapterRow
-                      key={idOf(child)}
-                      chapter={child}
-                      index={childIndex}
-                      sectionKey={sectionKey}
-                      depth={depth + 1}
-                    />
-                  ))}
-                  {dropProvided.placeholder}
-                  {hasDraftHere && <DraftRow />}
-                </ul>
-              )}
-            </Droppable>
+              ↳
+            </span>
           )}
-        </li>
-      )}
-    </Draggable>
+          {chapter.isNew && <span className={css.newBadge}>NEW</span>}
+          <input
+            type="text"
+            placeholder="Title"
+            value={chapter.title}
+            className={css.titleInput}
+            disabled
+          />
+          <input
+            type="text"
+            placeholder="Slug"
+            value={chapter.slug.replace(/_/g, "-")}
+            className={css.slugInput}
+            disabled
+          />
+        </div>
+        <div className={css.controlsOfRow}>
+          {canAddSubchapter && (
+            <button
+              type="button"
+              onClick={() => onOpenDraft(sectionKey, chapterId)}
+              className={css.tocButton.primary}
+            >
+              + Add Subchapter
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              onRemove(sectionKey, chapterId, chapter.title, !!chapter.isNew)
+            }
+            className={
+              chapter.isNew ? css.tocButton.neutral : css.tocButton.danger
+            }
+          >
+            {chapter.isNew ? "Remove" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
 export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
-  const normalizedSlug = collectionSlug.replace(/-/g, "_") // replaces _ with -
+  const normalizedSlug = collectionSlug.replace(/-/g, "_")
 
   const [{ data, fetching }, refetch] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug },
@@ -532,6 +570,11 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       credit: [],
     }
   )
+
+  // Snapshot of parent referenfces to be used to compare to upadte upon drag
+  // such that dragging chapters in and out can create/delete subchapters.
+  const originalParentRef = React.useRef<Map<string, string | null>>(new Map())
+
   const [draftTarget, setDraftTarget] = useState<DraftTarget | null>(null)
   const [draftTitle, setDraftTitle] = useState("")
   const [draftSlug, setDraftSlug] = useState("")
@@ -551,9 +594,16 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     .filter((slug) => !pendingChapterSlugs.has(slug))
 
   useEffect(() => {
-    if (collection?.chapters)
+    if (collection?.chapters) {
       // Build chapters if collection changes
-      setChaptersBySection(buildChaptersBySection(collection.chapters as any))
+      const built = buildChaptersBySection(collection.chapters as any)
+      setChaptersBySection(built)
+      originalParentRef.current = new Map([
+        ...chaptersToParentIdMap(built.intro),
+        ...chaptersToParentIdMap(built.body),
+        ...chaptersToParentIdMap(built.credit),
+      ])
+    }
   }, [collection])
 
   if (!collection) return null
@@ -623,57 +673,40 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     cancelDraft()
   }
 
-  // Upon drag and placed, update all indices after moving chapter
-  const handleDragEnd = (result: any) => {
-    const { source, destination, type } = result
-    if (!destination || source.droppableId !== destination.droppableId) return
+  // Handles the user movement and updates the order on each move
+  const handleMove =
+    (sectionKey: SectionKey): MoveHandler<ChapterNode> =>
+    ({ dragIds, parentId, index }) => {
+      // Guard against a chapter being dropped into itself.
+      if (parentId && dragIds.includes(parentId)) return
 
-    if (type === "SECTION_CHAPTERS") {
-      const sectionKey = source.droppableId as SectionKey
       setChaptersBySection((prev) => {
-        const newState = {
-          ...prev,
-          [sectionKey]: moveOneChapter(
-            prev[sectionKey],
-            source.index,
-            destination.index
-          ),
+        let chapters = prev[sectionKey]
+
+        const dragged: ChapterNode[] = []
+
+        // Accumulate all dragged chapers
+        for (const id of dragIds) {
+          const found = getChapterById(chapters, id)
+          if (found) dragged.push(found)
+          chapters = removeNestedChapters(chapters, id)
         }
+
+        if (dragged.length === 0) return prev
+
+        // Add capter into correct spot and update the new indices
+        chapters = parentId
+          ? insertChaptersIntoParent(chapters, parentId, dragged, index)
+          : [...chapters.slice(0, index), ...dragged, ...chapters.slice(index)]
+
+        const newState = { ...prev, [sectionKey]: chapters }
         updateSectionIndices(newState.intro)
         updateSectionIndices(newState.body)
         updateSectionIndices(newState.credit)
+
         return newState
       })
-      return
     }
-
-    const parentId = type
-    const sectionKey = source.droppableId.split(":")[0] as SectionKey
-
-    setChaptersBySection((prev) => {
-      const parent = getChapterById(prev[sectionKey], parentId)
-
-      if (!parent) return prev
-
-      const reordered = moveOneChapter(
-        parent.children,
-        source.index,
-        destination.index
-      )
-
-      const updatedSection = updateChildren(
-        prev[sectionKey],
-        parentId,
-        reordered
-      )
-
-      const newState = { ...prev, [sectionKey]: updatedSection }
-      updateSectionIndices(newState.intro)
-      updateSectionIndices(newState.body)
-      updateSectionIndices(newState.credit)
-      return newState
-    })
-  }
 
   // Removes a given chapter row or pending row
   const handleRemove = async (
@@ -685,7 +718,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     if (isNew) {
       setChaptersBySection((prev) => ({
         ...prev,
-        [section]: removeChapterFromSection(prev[section], id),
+        [section]: removeNestedChapters(prev[section], id),
       }))
       return
     }
@@ -705,7 +738,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     // Remove from frontend
     setChaptersBySection((prev) => ({
       ...prev,
-      [section]: removeChapterFromSection(prev[section], id),
+      [section]: removeNestedChapters(prev[section], id),
     }))
 
     // Delete from backend, reverting to inital state on error
@@ -738,6 +771,58 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
 
     setIsSaving(true)
     try {
+      // Track the current parents to then compare to new parents if a chapter
+      // was dragged into another chapter or out of one to then delete then readd.
+      const currentParents = new Map([
+        ...chaptersToParentIdMap(chaptersBySection.intro),
+        ...chaptersToParentIdMap(chaptersBySection.body),
+        ...chaptersToParentIdMap(chaptersBySection.credit),
+      ])
+
+      // For each chapter that was moved by dragging into new chapter, update its
+      // position by removing and then adding again
+      for (const [chapterId, newParentId] of currentParents) {
+        const hadOriginalParent = originalParentRef.current.has(chapterId)
+        const originalParentId =
+          originalParentRef.current.get(chapterId) ?? null
+
+        if (!hadOriginalParent || originalParentId === newParentId) continue
+
+        const chapter =
+          getChapterById(chaptersBySection.intro, chapterId) ||
+          getChapterById(chaptersBySection.body, chapterId) ||
+          getChapterById(chaptersBySection.credit, chapterId)
+
+        if (!chapter) continue
+
+        const removeResult = await removeChapter({ chapterId })
+        if (removeResult.error) {
+          setErrorMessage(
+            `Failed to move "${chapter.title}" to its new parent.`
+          )
+          return
+        }
+
+        const addResult = await addChapter({
+          input: {
+            id: chapterId,
+            collectionSlug: normalizedSlug,
+            title: chapter.title,
+            slug: chapter.slug,
+            section: chapter.section,
+            parentId: newParentId,
+            documentId: chapter.documentId ?? null,
+          },
+        })
+
+        if (addResult.error) {
+          setErrorMessage(
+            `Failed to move "${chapter.title}" to its new parent.`
+          )
+          return
+        }
+      }
+
       // For each sesction, add pending chapters or throw on fail
       const introResult = await addPendingChapters(
         chaptersBySection.intro,
@@ -842,71 +927,96 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       />
       <div className={css.tocContainer}>
         <div className={css.headerContainer}>
-          <h2>{collection.title}</h2>
+          <h2 className={css.collectionTitle}>{collection.title}</h2>
           <InfoTooltip content={addChapterInformation} />
         </div>
         <div className={css.editorContent}>
           {errorMessage && (
             <div className={css.errorBanner}>{errorMessage}</div>
           )}
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <div className={css.sectionsGrid}>
-              {(["intro", "body", "credit"] as const).map((sectionKey) => {
-                const sectionName =
-                  sectionKey === "intro"
-                    ? "Intro"
-                    : sectionKey === "body"
-                    ? "Body"
-                    : "Credit"
+          <div className={css.sectionsGrid}>
+            {(["intro", "body", "credit"] as const).map((sectionKey) => {
+              const sectionName =
+                sectionKey === "intro"
+                  ? "Intro"
+                  : sectionKey === "body"
+                  ? "Body"
+                  : "Credit"
 
-                const chapters = chaptersBySection[sectionKey]
+              const chapters = chaptersBySection[sectionKey]
 
-                const hasChapterDraftHere =
-                  draftTarget?.sectionKey === sectionKey &&
-                  draftTarget.parentId === null
+              const hasDraftInSection = draftTarget?.sectionKey === sectionKey
+              const draftParentChapter =
+                hasDraftInSection && draftTarget?.parentId
+                  ? getChapterById(chapters, draftTarget.parentId)
+                  : null
 
-                return (
-                  <div key={sectionKey}>
-                    <h3 className={css.sectionHeading}>{sectionName}</h3>
-                    <div className={css.sectionPanel}>
-                      <Droppable
-                        droppableId={sectionKey}
-                        type="SECTION_CHAPTERS"
-                        direction="vertical"
-                      >
-                        {(provided) => (
-                          <ul
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={css.chapterList}
-                          >
-                            {chapters.map((chapter, index) => (
-                              <ChapterRow
-                                key={idOf(chapter)}
-                                chapter={chapter}
-                                index={index}
-                                sectionKey={sectionKey}
-                                depth={0}
-                              />
-                            ))}
-                            {provided.placeholder}
-                            {hasChapterDraftHere && <DraftRow />}
-                          </ul>
-                        )}
-                      </Droppable>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => openDraft(sectionKey, null)}
-                      className={css.tocButton.primary}
+              // Arbitrary visual computations for start, min, max height based on visual testing
+              const ROW_HEIGHT = 64
+              const treeHeight = countChapterRows(chapters) * ROW_HEIGHT
+
+              return (
+                <div key={sectionKey}>
+                  <h3 className={css.sectionHeading}>{sectionName}</h3>
+                  <div className={css.sectionPanel}>
+                    {
+                      // Tree of chapter node used to render the new arborist nodes
+                    }
+                    <Tree<ChapterNode>
+                      data={chapters}
+                      onMove={handleMove(sectionKey)}
+                      onCreate={() => null}
+                      onRename={() => {}}
+                      onDelete={() => {}}
+                      idAccessor={(d) => idOf(d)}
+                      childrenAccessor="children"
+                      disableEdit
+                      disableDrop={({ parentNode, dragNodes }) => {
+                        const targetDepth = parentNode.level + 1
+                        return dragNodes.some(
+                          (n) =>
+                            targetDepth + maxChapterDepthBelow(n.data) >
+                            MAX_CHAPTER_LEVEL
+                        )
+                      }}
+                      width="100%"
+                      height={treeHeight}
+                      rowHeight={ROW_HEIGHT}
+                      indent={20}
+                      openByDefault
                     >
-                      + Add Chapter
-                    </button>
+                      {ArboristChapterNode}
+                    </Tree>
                   </div>
-                )
-              })}
-            </div>
-          </DragDropContext>
+                  {
+                    // Couldn't find way to use arborist and make "create new" nodes appear
+                    // bellow a chapter since it is just a visual node and instead renders
+                    // it at the bottom of the section.
+                    hasDraftInSection && (
+                      <div className={css.draftBox}>
+                        {draftParentChapter && (
+                          <p className={css.draftParentLabel}>
+                            Adding subchapter to:{" "}
+                            <strong>{draftParentChapter.title}</strong>
+                          </p>
+                        )}
+                        <ul className={css.chapterList}>
+                          <DraftRow />
+                        </ul>
+                      </div>
+                    )
+                  }
+                  <button
+                    type="button"
+                    onClick={() => openDraft(sectionKey, null)}
+                    className={css.tocButton.primary}
+                  >
+                    + Add Chapter
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
       <form onSubmit={handleSave} className={css.saveRow}>
