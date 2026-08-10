@@ -197,6 +197,7 @@
               postgresql_14
               sqlx-cli
               sqlfluff
+              bash
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
                 [ ! -d "$PGDATA" ] && initdb
