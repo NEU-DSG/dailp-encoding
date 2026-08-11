@@ -5,10 +5,6 @@ in {
   config.resource = {
     aws_iam_role.lambda_exec = {
       name = prefixName "lambda-execution";
-      managed_policy_arns = [
-        "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-      ];
-      
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
@@ -25,6 +21,14 @@ in {
         }
       '';
       lifecycle.prevent_destroy = false;
+    };
+
+    aws_iam_role_policy_attachments_exclusive.lambda_exec_policies = {
+      role_name = "\${aws_iam_role.lambda_exec.name}";
+      policy_arns = [
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        "arn:aws:iam::783177801354:policy/invoke-outbound-turnstile"
+      ];
     };
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
@@ -59,12 +63,16 @@ in {
         lib.concatMap
         (e: [ "module.${e.id}_cors" "aws_api_gateway_integration.${e.id}" ])
         fun.endpoints) config.functions.functions;
+        rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
+    };
+    aws_api_gateway_stage.functions_api_stage = {
+      deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
       stage_name = config.setup.stage;
     };
   };
 
   config.output.functions_url = {
-    value = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
+    value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
   };
 }
