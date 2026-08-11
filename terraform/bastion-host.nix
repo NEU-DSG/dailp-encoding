@@ -9,7 +9,7 @@
       "github.com/cloudposse/terraform-aws-ec2-bastion-server?ref=v0.31.1";
     enabled = true;
     instance_type = "t4g.micro";
-    
+
     # TODO Make this more flexible
     ami = if config.setup.stage == "prod" 
       then "ami-037d882b31eae26a2" 
@@ -38,7 +38,7 @@
       # config.setup.subnets.secondary
       # config.setup.subnets.tertiary
     ];
-    
+
     # Don't create a new security group for this server.
     security_group_enabled = false;
     # Use the existing one setup for database access.

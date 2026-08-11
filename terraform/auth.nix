@@ -5,7 +5,7 @@ in {
   config.resource = {
     # User Pool Setup
     aws_cognito_user_pool.main = {
-      name = "dailp-user-pool";
+      name = "bogus-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = false;  
@@ -36,11 +36,7 @@ in {
       supported_identity_providers = [ "COGNITO" ];
     };
     aws_cognito_user_pool_domain.main = {
-      domain = 
-      let
-        buildUri = prefixName "-";
-        cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
-      in cleanUri buildUri;
+      domain = "20260811-bogus-user-pool-domain";
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
 

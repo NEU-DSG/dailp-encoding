@@ -3,9 +3,7 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = let 
-        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-      in prefixName "media-storage";
+      bucket =  "20260811-bogus-media-storage-bucket";
       lifecycle.prevent_destroy = true;
     };
     aws_s3_bucket_cors_configuration.media_storage_cors = {
