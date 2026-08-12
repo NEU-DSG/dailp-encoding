@@ -56,16 +56,16 @@ export function RecordAudioContent({
   const [uploadedAudio, setUploadedAudio] = useState<File>()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (permissionStatus === MediaPermissionStatus.UNREQUESTED)
-      requestMediaPermissions()
-  }, [permissionStatus])
-
   // Local url to preview an uploaded file
   const uploadedAudioUrl = useMemo(
     () => uploadedAudio && window.URL.createObjectURL(uploadedAudio),
     [uploadedAudio]
   )
+
+  useEffect(() => {
+    if (permissionStatus === MediaPermissionStatus.UNREQUESTED)
+      requestMediaPermissions()
+  }, [permissionStatus])
 
   async function uploadAudioAndReset(data: Blob) {
     if (await uploadAudio(data)) {
@@ -94,6 +94,34 @@ export function RecordAudioContent({
     setUploadedAudio(file)
   }
 
+  const recordButton =
+    permissionStatus === MediaPermissionStatus.APPROVED ? (
+      <IconTextButton
+        icon={
+          recordingStatus?.isRecording ? (
+            <FaRegStopCircle />
+          ) : (
+            <RiRecordCircleFill color="#EB606E" />
+          )
+        }
+        onClick={() =>
+          recordingStatus?.isRecording ? stopRecording?.() : startRecording?.()
+        }
+        className={subtleButton}
+      >
+        {recordingStatus?.isRecording ? "Stop" : "Start"} recording
+      </IconTextButton>
+    ) : (
+      <CleanButton
+        className={subtleButton}
+        onClick={() => requestMediaPermissions()}
+      >
+        {permissionStatus === MediaPermissionStatus.PENDING_APPROVAL
+          ? "Waiting for permission..."
+          : "Enable microphone"}
+      </CleanButton>
+    )
+
   // Upload button if prop passed as true
   const uploadButton = allowFileUpload && (
     <>
@@ -115,8 +143,9 @@ export function RecordAudioContent({
       <div>
         <em>
           Your device or web browser does not support recording audio, but you
-          can still upload an audio file above.
+          can still upload an audio file.
         </em>
+        {uploadAudio}
       </div>
     ) : (
       <em>
@@ -125,39 +154,11 @@ export function RecordAudioContent({
       </em>
     )
 
-  if (permissionStatus !== MediaPermissionStatus.APPROVED)
-    return (
-      <>
-        <em>
-          {allowFileUpload
-            ? "Allow DAILP to use your microphone to record audio, or upload an audio file instead."
-            : "You need to allow DAILP to use your microphone in order to record audio."}
-        </em>
-        <CleanButton onClick={() => requestMediaPermissions()}>
-          Click here to grant permission.
-        </CleanButton>
-      </>
-    )
-
   return (
     <div>
-      {recordingStatus.lastRecording === undefined && !uploadedAudio ? (
+      {recordingStatus?.lastRecording === undefined && !uploadedAudio ? (
         <div className={contributeAudioOptions}>
-          <IconTextButton
-            icon={
-              recordingStatus.isRecording ? (
-                <FaRegStopCircle />
-              ) : (
-                <RiRecordCircleFill color={"#EB606E"} />
-              )
-            }
-            onClick={() =>
-              recordingStatus.isRecording ? stopRecording() : startRecording()
-            }
-            className={subtleButton}
-          >
-            {recordingStatus.isRecording ? "Stop" : "Start"} recording
-          </IconTextButton>
+          {recordButton}
           {uploadButton}
         </div>
       ) : (
@@ -166,7 +167,7 @@ export function RecordAudioContent({
             <SubtleButton
               onClick={() => {
                 uploadAudioAndReset(
-                  recordingStatus.lastRecording?.data ?? uploadedAudio!
+                  uploadedAudio ?? recordingStatus!.lastRecording!.data
                 )
               }}
             >
@@ -174,7 +175,7 @@ export function RecordAudioContent({
             </SubtleButton>
             <SubtleButton
               onClick={() => {
-                clearRecording()
+                clearRecording?.()
                 setUploadedAudio(undefined)
               }}
             >
@@ -182,7 +183,7 @@ export function RecordAudioContent({
             </SubtleButton>
           </div>
           <AudioPlayer
-            audioUrl={recordingStatus.lastRecording?.url ?? uploadedAudioUrl!}
+            audioUrl={uploadedAudioUrl ?? recordingStatus!.lastRecording!.url}
             showProgress
           />
         </>
