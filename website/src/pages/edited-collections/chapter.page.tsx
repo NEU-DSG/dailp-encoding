@@ -51,10 +51,6 @@ const ChapterPage = (props: {
   // The query will read from cache if prefetched, avoiding duplicate network requests
   const chapter = props.chapter ?? data?.chapter
 
-  if (!collectionSlug || !chapterSlug) {
-    return <>Loading...</>
-  }
-
   if (fetching) {
     return <>Loading...</>
   }

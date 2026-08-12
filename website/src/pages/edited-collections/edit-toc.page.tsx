@@ -18,7 +18,7 @@ const EditTocPage = ({ collectionSlug }: { collectionSlug: string }) => {
     return <div>Collection slug not found</div>
   }
   return (
-    <AuthGuard requiredRoles={[UserRole.Editor]}>
+    <AuthGuard requiredRoles={[UserRole.Editor, UserRole.Admin]}>
       <Layout>
         <main>
           {data == undefined || data.editedCollection == null ? (
