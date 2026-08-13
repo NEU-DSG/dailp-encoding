@@ -15,10 +15,10 @@
         max_age_seconds = 3600;
       };
     };
-    aws_s3_bucket_acl.media_storage = {
-      bucket = "$\{aws_s3_bucket.media_storage.id}";
-      acl = "private";
-    };
+    # aws_s3_bucket_acl.media_storage = {
+    #   bucket = "$\{aws_s3_bucket.media_storage.id}";
+    #   acl = "private";
+    # };
     aws_s3_bucket_versioning.media_storage_versioning = { 
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       versioning_configuration.status = "Enabled";
