@@ -23,11 +23,11 @@
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       versioning_configuration.status = "Enabled";
     };
-    aws_s3_bucket_logging.media_storage_logging = {
-      bucket = "$\{aws_s3_bucket.media_storage.id}";
-      target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/dailp-${config.setup.stage}-media-storage";
-    };
+    # aws_s3_bucket_logging.media_storage_logging = {
+    #   bucket = "$\{aws_s3_bucket.media_storage.id}";
+    #   target_bucket = config.setup.access_log_bucket;
+    #   target_prefix = "/dailp-${config.setup.stage}-media-storage";
+    # };
     aws_s3_bucket_server_side_encryption_configuration.media_storage_encryption = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       rule.apply_server_side_encryption_by_default.sse_algorithm = "AES256";
