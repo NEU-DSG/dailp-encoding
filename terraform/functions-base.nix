@@ -27,7 +27,9 @@ in {
       role_name = "\${aws_iam_role.lambda_exec.name}";
       policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-        "arn:aws:iam::783177801354:policy/invoke-outbound-turnstile"
+	# TODO we either need a definition of this or an input variable so we can
+	# define it in the baseline infra module
+        # "arn:aws:iam::783177801354:policy/invoke-outbound-turnstile"
       ];
     };
 
@@ -68,7 +70,8 @@ in {
     aws_api_gateway_stage.functions_api_stage = {
       deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
-      stage_name = config.setup.stage;
+      # TODO changing the stage name to get rid of a naming conflict
+      stage_name = "sarah-bogus-stage-name-fixme";
     };
   };
 

@@ -30,19 +30,19 @@ with lib; {
       } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
     };
-    aws_s3_bucket_acl.tf_state_bucket = {
-      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
-      acl = "private";
-    };
+    # aws_s3_bucket_acl.tf_state_bucket = {
+    #   bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+    #   acl = "private";
+    # };
     aws_s3_bucket_versioning.tf_state_bucket = { 
       bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
       versioning_configuration.status = "Enabled";
     };
-    aws_s3_bucket_logging.tf_state_bucket = {
-      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
-      target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/${config.setup.state.bucket}";
-    };
+    # aws_s3_bucket_logging.tf_state_bucket = {
+    #   bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+    #   target_bucket = config.setup.access_log_bucket;
+    #   target_prefix = "/${config.setup.state.bucket}";
+    # };
     aws_s3_bucket_server_side_encryption_configuration.tf_state_bucket = {
       bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
       rule.apply_server_side_encryption_by_default.sse_algorithm = "AES256";

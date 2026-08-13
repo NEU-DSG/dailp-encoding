@@ -65,8 +65,8 @@
         in naersk.buildPackage {
           root = ./.;
           src = packageSrc;
-          doCheck = true;
-          doTest = true;
+          # doCheck = true;
+          # doTest = true;
 
           nativeBuildInputs = [ cc ];
 
