@@ -30,7 +30,9 @@
     stage = config.setup.stage;
     name = "bastion";
 
-    key_name = "dailp-dev-2024";
+    # TODO need to figure out the best way to make this configurable
+    # without passing around secret key pairs.
+    # key_name = "dailp-dev-2024";
 
     assign_eip_address = true;
     associate_public_ip_address = false;
