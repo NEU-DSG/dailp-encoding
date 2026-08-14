@@ -1,4 +1,4 @@
-import * as styles from "./wjs-quick-nav.css"
+import * as styles from "./wjs-homepage.css"
 
 export const WJSQuickNav = () => {
   return (

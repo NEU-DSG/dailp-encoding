@@ -3,7 +3,7 @@ import { Button } from "reakit"
 import Link from "src/components/link"
 import * as styles from "../../components/homepage-header.css"
 import DefaultImage from "../assets/StoryoftheCherokeeIndian.jpg"
-import * as css from "./wjs-title-card.css"
+import * as css from "./wjs-homepage.css"
 
 export const WJSTitleCard = (props: {
   title?: string
