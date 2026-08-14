@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- Coutns the number of subchatpers and ignores unassigned chapters index -1\r\nselect count(*)\r\nfrom collection_chapter\r\nwhere collection_slug = $1\r\nand index_in_parent != -1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8b2a4164b8ebe80a961466c3b0b52bc9a3862e851222f5001a8538cb3632837c"
+}

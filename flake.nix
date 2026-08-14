@@ -179,6 +179,11 @@
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
+
+              if [ "$(uname)" = "Darwin" ]; then
+                export CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=/usr/bin/cc
+              fi
+
               git config --local core.hooksPath $PROJECT_ROOT/.git-hooks
               eval $(${direnv}/bin/direnv dotenv)
             '';

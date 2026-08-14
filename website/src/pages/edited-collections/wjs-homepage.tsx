@@ -3,12 +3,12 @@ import WJSTitleCard from "./wjs-title-card"
 
 export const WJSHomepage = () => {
   ;<div>
-    {/* add nav bar  */}
+    {/* add header  */}
 
     <WJSTitleCard
       button={{
         text: "Start Reading",
-        link: "", // TODO: add link
+        link: "/acknowledgements",
       }}
     />
 
