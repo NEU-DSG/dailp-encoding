@@ -155,7 +155,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   const [year, setYear] = useState<Number>()
 
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
-  // const [associatedPeople, setAssociatedPeople] = useState(documentMetadata.associatedPeople ?? [])
+  const [associatedPeople, setAssociatedPeople] = useState(
+    documentMetadata.associatedPeople ?? []
+  )
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
   const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
   const [spatialCoverage, setSpatialCoverage] = useState(
@@ -258,9 +260,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     documentMetadata.creators?.map((c) => c.name).join(", ") ?? ""
   )
 
-  // const [associatedPeopleInput, setAssociatedPeopleInput] = useState(
-  //   documentMetadata.associatedPeople?.map((p) => p.name).join(", ") ?? ""
-  // )
+  const [associatedPeopleInput, setAssociatedPeopleInput] = useState(
+    documentMetadata.associatedPeople?.map((p) => p.name).join(", ") ?? ""
+  )
 
   const [citation, setCitation] = useState("")
 
@@ -363,7 +365,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     subjectHeadings: Dailp.SubjectHeading[]
     languages: Dailp.Language[]
     spatialCoverages: Dailp.SpatialCoverage[]
-    // associatedPeople: Dailp.AssociatedPeople[]
+    associatedPeople: Dailp.AssociatedPerson[]
   }>(null)
 
   useEffect(() => {
@@ -383,7 +385,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         subjectHeadings: [...subjectHeadings],
         languages: [...languages],
         spatialCoverages: [...spatialCoverage],
-        // associatedPeople: [...associatedPeople],
+        associatedPeople: [...associatedPeople],
       })
     }
   }, [isOpen])
@@ -409,8 +411,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
-    // setAssociatedPeople(dm.associatedPeople ?? [])
-    // setAssociatedPeopleInput(dm.associatedPeople?.map((p) => p.name).join(", ") ?? "")
+    setAssociatedPeople(dm.associatedPeople ?? [])
+    setAssociatedPeopleInput(
+      dm.associatedPeople?.map((p) => p.name).join(", ") ?? ""
+    )
     setKeywords(dm.keywords ?? [])
     setLanguages(dm.languages ?? [])
     setSubjectHeadings(dm.subjectHeadings ?? [])
@@ -446,7 +450,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: [...(dm.subjectHeadings ?? [])],
       languages: [...(dm.languages ?? [])],
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
-      // associatedPeople: [...(dm.associatedPeople ?? [])],
+      associatedPeople: [...(dm.associatedPeople ?? [])],
     })
   }, [documentMetadata])
 
@@ -530,7 +534,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setFormat(backupState.format)
     //setPages(backupState.pages)
     setCreator(backupState.creator)
-    // setAssociatedPeople(backupState.associatedPeople)
+    setAssociatedPeople(backupState.associatedPeople)
     setKeywords(backupState.keywords)
     setLanguages(backupState.languages)
     setSubjectHeadings(backupState.subjectHeadings)
@@ -552,7 +556,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setIsEditing(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Format date for submission
@@ -599,7 +603,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       }
     })
 
-    // Languages to be submitted
+    // Spatial coverages to be submitted
     const spatialCoverageToSubmit = selectedSpatialCoverages.map((name) => {
       // Find existing spatial coverages by name to get id, otherwise generate new UUID
       const existing = spatialCoverage.find((sc) => sc.name === name)
@@ -609,6 +613,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
       }
     })
+
+    // Associated people to be submitted
+    const associatedPeopleToSubmit = associatedPeopleInput
+      .split(",")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0)
+      .map((name) => ({
+        id: uuidv4(),
+        name,
+      }))
 
     // Update local state for metadata
     // setKeywords(keywordsToSubmit)
@@ -628,7 +642,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
-      // associatedPeople,
+      associatedPeople: associatedPeopleToSubmit,
       citeFormat: citeFormat,
     }
 
@@ -956,7 +970,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             addButtonLabel="Add Spatial Coverage"
           />
 
-          {/* <div className={styles.fieldGroup}>
+          <div className={styles.fieldGroup}>
             <label className={styles.label}>
               Associated People (separate by ',' if multiple)
             </label>
@@ -965,22 +979,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               className={styles.input}
               value={associatedPeopleInput}
               onChange={(e) => setAssociatedPeopleInput(e.target.value)}
-              onBlur={(e) => {
-                // Parse and set associated people when user leaves the field
-                setAssociatedPeople(
-                  e.target.value
-                    .split(",")
-                    .map((p) => p.trim())
-                    .filter((c) => p.length > 0)
-                    .map((name) => ({
-                      id: uuidv4(),
-                      name,
-                    }))
-                )
-              }}
               disabled={!isEditing}
             />
-          </div> */}
+          </div>
 
           {/* Might need to pull the creator(s) from creator or contributors w/ author role */}
           <div className={styles.fullWidthGroup}>

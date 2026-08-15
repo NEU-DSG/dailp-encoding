@@ -129,6 +129,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           spatialCoverage: changes.spatialCoverage,
           subjectHeadings: changes.subjectHeadings,
           writtenAt: writtenAtValue,
+          associatedPeople: changes.associatedPeople,
         },
       })
 
@@ -309,12 +310,13 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         </div>
 
-        {/* <div className={styles.field}>
+        <div className={styles.field}>
           <div className={styles.label}>ASSOCIATED PEOPLE</div>
           <div className={styles.value}>
-            {formatArray(docData.associatedPeople) || "Associated People Not Yet Available."}
+            {formatArray(docData.associatedPeople) ||
+              "Associated People Not Yet Available."}
           </div>
-        </div> */}
+        </div>
 
         <CitationField citation={citation} />
       </div>
