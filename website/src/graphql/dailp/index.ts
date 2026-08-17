@@ -1701,7 +1701,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                     readonly recordedBy: Maybe<
                                       { readonly __typename?: "User" } & Pick<
                                         User,
-                                        "displayName"
+                                        "id" | "displayName"
                                       >
                                     >
                                     readonly recordedAt: Maybe<
@@ -1820,7 +1820,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
                         User,
-                        "displayName"
+                        "id" | "displayName"
                       >
                     >
                     readonly recordedAt: Maybe<
@@ -1903,7 +1903,7 @@ export type AudioSliceFieldsFragment = {
   | "includeInEditedCollection"
 > & {
     readonly recordedBy: Maybe<
-      { readonly __typename?: "User" } & Pick<User, "displayName">
+      { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
     >
     readonly recordedAt: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -2019,7 +2019,10 @@ export type ParagraphFormFieldsFragment = {
                 | "includeInEditedCollection"
               > & {
                   readonly recordedBy: Maybe<
-                    { readonly __typename?: "User" } & Pick<User, "displayName">
+                    { readonly __typename?: "User" } & Pick<
+                      User,
+                      "id" | "displayName"
+                    >
                   >
                   readonly recordedAt: Maybe<
                     { readonly __typename?: "Date" } & Pick<
@@ -2131,7 +2134,7 @@ export type FormFieldsFragment = {
         | "includeInEditedCollection"
       > & {
           readonly recordedBy: Maybe<
-            { readonly __typename?: "User" } & Pick<User, "displayName">
+            { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
           readonly recordedAt: Maybe<
             { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -2529,7 +2532,7 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
                         User,
-                        "displayName"
+                        "id" | "displayName"
                       >
                     >
                     readonly recordedAt: Maybe<
@@ -2914,7 +2917,10 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
           | "includeInEditedCollection"
         > & {
             readonly recordedBy: Maybe<
-              { readonly __typename?: "User" } & Pick<User, "displayName">
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
             >
             readonly recordedAt: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -3028,7 +3034,10 @@ export type CurateDocumentAudioMutation = {
           | "includeInEditedCollection"
         > & {
             readonly recordedBy: Maybe<
-              { readonly __typename?: "User" } & Pick<User, "displayName">
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
             >
             readonly recordedAt: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -3523,6 +3532,7 @@ export const AudioSliceFieldsFragmentDoc = gql`
     endTime
     includeInEditedCollection
     recordedBy {
+      id
       displayName
     }
     recordedAt {
@@ -3647,6 +3657,10 @@ export const FormFieldsFragmentDoc = gql`
     commentary
     ingestedAudioTrack {
       ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
     }
     editedAudio {
       ...AudioSliceFields

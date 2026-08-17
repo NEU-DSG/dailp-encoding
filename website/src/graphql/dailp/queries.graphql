@@ -108,6 +108,7 @@ fragment AudioSliceFields on AudioSlice {
   endTime
   includeInEditedCollection
   recordedBy {
+    id
     displayName
   }
   recordedAt {
@@ -219,6 +220,10 @@ fragment FormFields on AnnotatedForm {
   commentary
   ingestedAudioTrack {
     ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
   }
   editedAudio {
     ...AudioSliceFields

@@ -13,7 +13,11 @@ import {
   AiFillSound,
 } from "react-icons/ai/index"
 import { FiDownload } from "react-icons/fi/index"
-import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import {
+  IoBookmarks,
+  IoEllipsisHorizontalCircle,
+  IoLockClosed,
+} from "react-icons/io5/index"
 import {
   MdDragIndicator,
   MdNotes,
@@ -29,7 +33,10 @@ import { UserRole, useUserRole } from "./auth"
 import { AudioPlayer, Button } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
-import { EditWordAudio } from "./components/edit-word-audio"
+import {
+  EditWordAudio,
+  UnpublishedWordAudio,
+} from "./components/edit-word-audio"
 import { RecordWordAudioPanel } from "./components/edit-word-audio/record"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditWordFeature } from "./edit-word-feature"
@@ -85,8 +92,7 @@ export const WordPanel = (p: {
     p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
 
   // Word audios now display for editors and contributors' own audios in view mode
-  const displayAudios =
-    p.panel === PanelType.EditWordPanel ||
+  const canSeeUnpublishedAudio =
     role === UserRole.Editor ||
     role === UserRole.Admin ||
     role === UserRole.Contributor
@@ -164,12 +170,31 @@ export const WordPanel = (p: {
 
   return (
     <>
-      {(p.word.editedAudio.length > 0 || displayAudios) && (
+      {p.word.editedAudio.length > 0 && (
         <CollapsiblePanel
           title={"Audio"}
-          content={<EditWordAudio word={p.word} />}
+          content={
+            <EditWordAudio
+              word={p.word}
+              editable={p.panel === PanelType.EditWordPanel}
+            />
+          }
           icon={
             <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
+      {canSeeUnpublishedAudio && (
+        <CollapsiblePanel
+          title={"Unpublished Audios"}
+          content={
+            <UnpublishedWordAudio
+              word={p.word}
+              editable={p.panel === PanelType.EditWordPanel}
+            />
+          }
+          icon={
+            <IoLockClosed size={24} className={css.wordPanelButton.colpleft} />
           }
         />
       )}
@@ -186,6 +211,7 @@ export const WordPanel = (p: {
           />
         }
       />
+
       {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
       {(p.word.englishGloss.length > 0 ||
         p.panel === PanelType.EditWordPanel) && (
