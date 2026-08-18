@@ -13,6 +13,7 @@ jobs:
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
@@ -54,3 +55,9 @@ jobs:
           aws-region: us-east-1
       - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
+      - name: Report build artifacts
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v5
+        with:
+          path: config.tf.json
+          name: terraform-config
