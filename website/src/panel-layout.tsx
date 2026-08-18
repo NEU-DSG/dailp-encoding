@@ -292,7 +292,8 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      {token && // only show the option to leave a comment if the user is signed in
+      {!isEditing &&
+        token && // only show the option to leave a comment if the user is signed in
         (isCommenting ? (
           <SubtleButton
             type="button"
