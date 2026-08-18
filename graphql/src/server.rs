@@ -1,6 +1,5 @@
 use log::error;
 
-mod cognito;
 mod dailp_auth;
 mod email;
 mod query;
