@@ -17,7 +17,7 @@ import PreviewToc from "./preview-toc-content"
 export type ChapterNode = {
   id?: string // uuid of chapter or nothing for newly staged chapters
   clientId?: string // Id of the client's row
-  documentId?: string // uuid of the underlying document; needed to re-add a chapter after removing it (e.g. when reparenting)
+  documentId?: string // doc id of this chapter which is used for reordering
   title: string
   slug: string
   section: CollectionSection
