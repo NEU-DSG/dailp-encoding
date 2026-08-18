@@ -23,24 +23,30 @@ with lib; {
     aws_s3_bucket.tf_state_bucket = {
       # Generate a unique bucket name with the given prefix.
       bucket = config.setup.state.bucket;
-      acl = "private";
-      server_side_encryption_configuration.rule.apply_server_side_encryption_by_default =
-      {
-        sse_algorithm = "AES256";
-      };
-      versioning.enabled = true;
       tags = { 
         "Name" = "Terraform state storage";
         "Terraform" = "true";
         # "nu:function" = "storage>nu:application dailp-app";
       } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
-      logging = {
-        target_bucket = config.setup.access_log_bucket;
-        target_prefix = "/${config.setup.state.bucket}";
-      };
     };
-
+    aws_s3_bucket_acl.tf_state_bucket = {
+      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+      acl = "private";
+    };
+    aws_s3_bucket_versioning.tf_state_bucket = { 
+      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+      versioning_configuration.status = "Enabled";
+    };
+    aws_s3_bucket_logging.tf_state_bucket = {
+      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+      target_bucket = config.setup.access_log_bucket;
+      target_prefix = "/${config.setup.state.bucket}";
+    };
+    aws_s3_bucket_server_side_encryption_configuration.tf_state_bucket = {
+      bucket = "$\{aws_s3_bucket.tf_state_bucket.id}";
+      rule.apply_server_side_encryption_by_default.sse_algorithm = "AES256";
+    };
     aws_dynamodb_table.tf_lock_state = {
       name = config.setup.state.table;
       billing_mode = "PAY_PER_REQUEST";
