@@ -13,13 +13,14 @@ import { media, onHover } from "src/style/utils"
 
 export const card = style({
   width: "100%",
+  minWidth: 0,
   borderWidth: "1px",
   borderStyle: "solid",
   borderColor: "black",
   borderRadius: radii.medium,
   display: "grid",
-  gridTemplateColumns: "fit-content(20%) minmax(50px,5fr)",
-  gridTemplateRows: "fit-content(100%) fit-content(100%)",
+  gridTemplateColumns: "auto 1fr",
+  gridTemplateRows: "auto auto",
   columnGap: space.medium,
 })
 

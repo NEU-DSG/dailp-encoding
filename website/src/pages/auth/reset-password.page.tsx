@@ -203,6 +203,8 @@ import { centeredForm, secondaryButton } from "./user-auth.css"
 const ResetPasswordPage = () => {
   const { user } = useUser()
   const { resetPassword, changePassword } = useUser().operations
+  // const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  // const [turnstileToken, setTurnstileToken] = useState("")
 
   const resetForm = useFormState({
     values: { email: "" },
@@ -216,6 +218,18 @@ const ResetPasswordPage = () => {
     },
     onSubmit: (values) => {
       resetPassword(values.email)
+      // if (!turnstileToken) {
+      // throw { turnstileToken: "A turnstile token is required" }
+      // }
+      // validateTurnstileToken({
+      // token: turnstileToken,
+      // }).then((result) => {
+      // if (result.data?.validateTurnstileToken) {
+      // resetPassword(values.email)
+      // } else {
+      // throw { turnstileToken: "Invalid turnstile token" }
+      // }
+      // })
     },
   })
 
@@ -233,9 +247,33 @@ const ResetPasswordPage = () => {
       }
     },
     onSubmit: (values) => {
+      // if (!turnstileToken) {
+      //   throw { turnstileToken: "A turnstile token is required" }
+      // }
+      // validateTurnstileToken({
+      //   token: turnstileToken,
+      // }).then((result) => {
+      //   if (result.data?.validateTurnstileToken) {
       changePassword(values.verificationCode, values.newPassword)
+      //   } else {
+      //     throw { turnstileToken: "Invalid turnstile token" }
+      //   }
+      // })
     },
   })
+
+  // const [TurnstileClient, setTurnstileClient] =
+  //   useState<ForwardRefExoticComponent<
+  //     TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
+  //   > | null>(null)
+  // const [siteKey, setSiteKey] = useState<string | null>(null)
+
+  // useEffect(() => {
+  //   import("@marsidev/react-turnstile").then((m) => {
+  //     setTurnstileClient(m.Turnstile)
+  //     setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
+  //   })
+  // }, [])
 
   return (
     <>
@@ -245,6 +283,14 @@ const ResetPasswordPage = () => {
       ) : (
         <ChangePassword {...changeForm} />
       )}
+      {/* {TurnstileClient && siteKey && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <TurnstileClient
+            siteKey={siteKey}
+            onSuccess={(token) => setTurnstileToken(token)}
+          />
+        </div>
+      )} */}
     </>
   )
 }

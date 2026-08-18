@@ -5,6 +5,8 @@ mod dailp_auth;
 mod email;
 mod query;
 
+use dailp_graphql::service_integrations::cognito;
+
 use {
     dailp::async_graphql::{
         dataloader::DataLoader,

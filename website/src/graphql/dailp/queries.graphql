@@ -162,6 +162,21 @@ fragment DocFormFields on AnnotatedDoc {
   }
 }
 
+query AllSubjectHeadings {
+  allSubjectHeadings {
+    id
+    name
+    status
+  }
+}
+
+mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+  createSubjectHeading(name: $name, status: $status) {
+    id
+    name
+    status
+  }
+}
 fragment ParagraphFormFields on DocumentParagraph {
   __typename
   id
@@ -259,6 +274,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -267,6 +283,7 @@ query EditedCollection($slug: String!) {
     id
     title
     slug
+    isHidden
     chapters {
       id
       title
@@ -275,6 +292,14 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+  }
+}
+
+mutation ToggleCollectionVisibility($collectionId: UUID!) {
+  toggleCollectionVisibility(collectionId: $collectionId) {
+    id
+    slug
+    isHidden
   }
 }
 
@@ -705,6 +730,16 @@ mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
 }
 
+mutation UpdateCollectionChapterOrder(
+  $input: UpdateCollectionChapterOrderInput!
+) {
+  updateCollectionChapterOrder(input: $input)
+}
+
+mutation RemoveCollectionChapter($chapterId: UUID!) {
+  removeCollectionChapter(chapterId: $chapterId)
+}
+
 mutation updateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
@@ -774,7 +809,6 @@ query pageByPath($path: String!) {
     }
   }
 }
-
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
@@ -789,6 +823,19 @@ query MenuBySlug($slug: String!) {
       }
     }
   }
+}
+
+query AllChapterSlugs($collectionSlug: String!) {
+  allChapterSlugs(collectionSlug: $collectionSlug) {
+    id
+    title
+    slug
+    documentId
+  }
+}
+
+mutation AddCollectionChapter($input: AddChapterInput!) {
+  addCollectionChapter(input: $input)
 }
 
 mutation UpdateMenu($menu: MenuUpdate!) {

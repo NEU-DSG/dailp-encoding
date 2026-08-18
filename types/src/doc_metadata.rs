@@ -20,6 +20,15 @@ pub enum ApprovalStatus {
     Rejected,
 }
 
+// Convert from Option of Strings to ApprovalStatus
+impl From<Option<String>> for ApprovalStatus {
+    fn from(s: Option<String>) -> Self {
+        s.as_deref()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(ApprovalStatus::Pending)
+    }
+}
+
 /// Convert from string to ApprovalStatus
 impl FromStr for ApprovalStatus {
     type Err = ();
