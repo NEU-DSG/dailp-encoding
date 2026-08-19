@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function main() {
-    local log_location="$(pwd)/logs/"
+    local log_location="$(pwd)/backups/pg_dump/logs/"
     local destination="$(pwd)/backups/pg_dump/"
     # Parse inputs
     for i in "$@"; do
@@ -60,7 +60,7 @@ function create_backup() {
     local logfile
     local db_endpoint=$DATABASE_URL
     local db_password=$DATABASE_PASSWORD
-    local current_time="$(date -Iseconds)"
+    local current_time="$(date +%Y%m%d_%H%M%S%z)"
     local here=$(dirname "$0")
     local destination="./backups/pg_dump/"
     . $here/file_utils.sh
