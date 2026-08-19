@@ -12,7 +12,7 @@ export const tagsContainer = style({
   flexWrap: "wrap",
   alignItems: "flex-start",
   gap: "8px",
-  padding: "16px 35px",
+  padding: "12px",
   border: "1px solid #ccc",
   borderRadius: "4px",
   backgroundColor: "#f9f9f9",
