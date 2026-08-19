@@ -17,13 +17,15 @@ For now, all scripts follow the same Exit Code format:
 ## Environment Variables
 
 - `PGPASSWORD` -- read by `pg_export_to_csv.sh`. If set, its value is used to connect without an interactive prompt (unless `-w` forces one anyway). If unset and no connection string (`-c=`) is given, the script prompts for a password interactively.
+- `DATABASE_URL` -- read by `pg_dump_backup.sh`. Required: the connection endpoint passed directly to `pg_dump`.
+- `DATABASE_PASSWORD` -- read by `pg_dump_backup.sh`. Required: exported as `PGPASSWORD` for `pg_dump` to pick up (rather than passed as a command-line flag, so it never appears in `ps` output).
 
 ## Status at a Glance
 
 | Name | Type | Implemented? | Depends on |
 |---|---|---|---|
 | `pg_export_to_csv.sh` | Executable | Yes | File utilities, logging utilities |
-| `pg_dump_backup.sh` | Executable | No | File utilities, logging utilities |
+| `pg_dump_backup.sh` | Executable | Yes | File utilities, logging utilities |
 | `create_file` | Library (File utilities) | Yes | -- |
 | `create_logfile` | Library (Logging utilities) | Yes | File utilities |
 | `log_event` | Library (Logging utilities) | Yes | -- |
@@ -62,14 +64,30 @@ Errors (exit code 1 -- retryable once the underlying issue is fixed):
 - Missing required arguments, or unrecognized flags
 - One or more tables failed to export (reported once, after every table has been attempted -- other tables still get exported; see the run's logfile for which table(s) failed and why)
 
-### pg_dump_backup.sh [--help] [-l | --log_location] [-d | --destination]
+### pg_dump_backup.sh [--help] [-d | --destination] [-l | --log-location]
 
-Creates a file containing the results of pg_dump. By default, saves files to `./backups/pg_dump/`.
+Creates a file containing the results of pg_dump, in the custom (`-Fc`) archive format. By default, saves files to `./backups/pg_dump/`, alongside a `logs/` subfolder containing the run's logfile.
+
 Depends on: File utilities, logging utilities
+
+Requires `$DATABASE_URL` and `$DATABASE_PASSWORD` to be set in the environment (see "Environment Variables" above).
+
+Quick start:
+```sh
+DATABASE_URL=postgres://localhost:5432/dailp DATABASE_PASSWORD=secret ./pg_dump_backup.sh
+```
+
 Arguments:
 - --help: Shows command documentation
-- -l, --log-location: Folder to save logs to
-- -d, --destination: Folder to save dumpfile to
+- -d, --destination: Folder to save the dump file to. Default: `./backups/pg_dump/`
+- -l, --log-location: Folder to save logs to. Default: `./backups/pg_dump/logs/`
+
+Errors (exit code 1 -- retryable once the underlying issue is fixed):
+- `DATABASE_URL` or `DATABASE_PASSWORD` not set
+- Failed to create the dump file (e.g. destination not writable)
+- `pg_dump` itself failed (e.g. connection refused, authentication failure)
+- `pg_dump` produced an empty file
+- Missing required arguments, or unrecognized flags
 
 ## Library
 
