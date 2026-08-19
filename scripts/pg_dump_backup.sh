@@ -1,168 +1,207 @@
 #!/usr/bin/env bash
+#
+# pg_dump_backup.sh
+#
+# Connects to a PostgreSQL database and produces a single backup file
+# using the pg_dump utility, in the custom (-Fc) archive format. Every
+# success and failure along the way is recorded via log_utils.sh's
+# create_logfile / log_event functions.
+#
+# Requirements:
+#   - pg_dump (PostgreSQL client) must be installed and on PATH
+#   - log_utils.sh and file_utils.sh must sit alongside this script
+#
+# Usage (unix equals-separated style; named flags are alphabetized):
+#   ./pg_dump_backup.sh [-d=DESTINATION] [-l=LOG_LOCATION]
+#
+# Requires $DATABASE_URL (connection endpoint) and $DATABASE_PASSWORD
+# (database password) to be set in the environment.
+#
+# Examples:
+#   ./pg_dump_backup.sh
+#   ./pg_dump_backup.sh -d=./backups/pg_dump/ -l=./backups/pg_dump/logs/
+#
+set -euo pipefail
+# nounset (-u) is enabled: every variable in this file, and in the sourced
+# log_utils.sh / file_utils.sh, is either given an explicit default at
+# declaration or is guaranteed to be assigned before it's ever read. See
+# bash_standards.md, BASH-024.
 
+# file_utils.sh (create_file) and log_utils.sh (create_logfile,
+# log_event) must live next to this script. BASH_SOURCE (not $0) is used
+# so this resolves correctly even if this script is sourced or invoked in
+# an unusual way; see https://mywiki.wooledge.org/BashFAQ/028.
+source "$(dirname "${BASH_SOURCE[0]}")/file_utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/log_utils.sh"
+
+#######################################
+# Top-level program flow: parse arguments, set up logging, and produce a
+# pg_dump backup file.
+# Globals:
+#   None
+# Arguments:
+#   $@: raw command-line arguments.
+# Outputs:
+#   See the individual helper functions below.
+# Returns:
+#   Exits 0 on success; see create_backup for failure exit codes.
+#######################################
 function main() {
-    local log_location="$(pwd)/backups/pg_dump/logs/"
-    local destination="$(pwd)/backups/pg_dump/"
-    # Parse inputs
-    for i in "$@"; do
-        case $i in
-            --help)
-                info
-                shift
-                ;;
-            -l=* | --log-location=*)
-                log_location="${i#*=}"
-                shift
-                ;;
-            -d=* | --destination=*)
-                destination="${i#*=}"
-                shift
-                ;;
-        esac
-    done
-    if [[ "${directory}" == */ ]]; then
-        directory+="/"
-    fi
-    # log_location must be a directory
-    if [[ ! -d "${log_location}" ]]; then
-        mkdir -p "${log_location}"
-    fi
-    # destination must be a directory
-    if [[ ! -d "${destination}" ]]; then
-        mkdir -p "${destination}"
-    fi
+  local destination
+  destination="$(pwd)/backups/pg_dump/"
+  local log_location
+  log_location="$(pwd)/backups/pg_dump/logs/"
+  local arg
 
-    . $(dirname "$0")/log_utils.sh
+  for arg in "$@"; do
+    case "${arg}" in
+      --help)
+        usage
+        ;;
+      -d=* | --destination=*)
+        destination="${arg#*=}"
+        ;;
+      -l=* | --log-location=*)
+        log_location="${arg#*=}"
+        ;;
+      *)
+        echo "Error: unknown option '${arg}'" >&2
+        usage
+        ;;
+    esac
+  done
 
-    local logfile
-    create_logfile \
-        --reference=logfile \
-        --location=${log_location} \
-        "dailp_pg-dump"
-    log_event \
-        --file="${logfile}" \
-        --message="Hooking up logfile: ${logfile}" \
-        --status="INFO"
-    create_backup \
-        -l="${logfile}" \
-        -d="${destination}"
-    
-    local status=$?
+  # Normalize both paths to end in a trailing slash: create_backup below
+  # concatenates destination directly onto the dump filename, and
+  # create_logfile does the same for log_location internally.
+  if [[ "${destination}" != */ ]]; then
+    destination+="/"
+  fi
+  if [[ "${log_location}" != */ ]]; then
+    log_location+="/"
+  fi
 
-    log_event \
-        --file="${logfile}" \
-        --message="Exiting successfully." \
-        --status="INFO"
-    exit 0
+  mkdir -p "${log_location}"
+  mkdir -p "${destination}"
+
+  local logfile=""
+  create_logfile --location="${log_location}" --reference=logfile "dailp_pg-dump"
+  log_event -f="${logfile}" -m="Hooking up logfile: ${logfile}" -s="INFO"
+
+  create_backup --destination="${destination}" --logfile="${logfile}"
+
+  log_event -f="${logfile}" -m="Exiting successfully." -s="INFO"
 }
 
+#######################################
+# Print usage information and exit.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   Writes usage text to STDOUT (conventional for --help); the calling
+#   argument-parsing errors that invoke this write their own error first.
+# Returns:
+#   Always exits 1. This is a misuse signal (bad/missing arguments), so it
+#   always requires the invocation to be fixed -- never a runtime retry.
+#######################################
+function usage() {
+  cat <<EOF
+Usage: $0 [-d=DESTINATION] [-l=LOG_LOCATION]
+
+  -d=DESTINATION     Folder to save the dump file to (default: ./backups/pg_dump/)
+  -l=LOG_LOCATION    Folder to save logs to (default: ./backups/pg_dump/logs/)
+  --help             Show this help
+
+Requires \$DATABASE_URL and \$DATABASE_PASSWORD to be set in the environment.
+EOF
+  exit 1
+}
+
+#######################################
+# Connect to the target database and produce a single pg_dump backup file
+# in the custom (-Fc) archive format, verifying it was created and is
+# non-empty before returning.
+# Globals:
+#   DATABASE_URL       Database connection endpoint. Required.
+#   DATABASE_PASSWORD  Database password. Required; exported as
+#                      PGPASSWORD for pg_dump to pick up (rather than
+#                      passed as a command-line flag, so it never appears
+#                      in `ps` output), then unset again once pg_dump
+#                      returns.
+# Arguments:
+#   -d=PATH | --destination=PATH   Folder to save the dump file to.
+#   -l=PATH | --logfile=PATH       Logfile path.
+# Outputs:
+#   Logs INFO/ERROR events via log_event. Writes the dump file to
+#   --destination and echoes its path to STDOUT on success.
+# Returns:
+#   Exits 1 for every failure here -- a missing endpoint/password, a
+#   failed create_file, a failed pg_dump invocation, or an empty output
+#   file are all conditions an operator can retry after fixing the
+#   environment (credentials, connectivity, disk space), per BASH-027.
+#   Returns 0 on success.
+#######################################
 function create_backup() {
-    local logfile
-    local db_endpoint=$DATABASE_URL
-    local db_password=$DATABASE_PASSWORD
-    local current_time="$(date +%Y%m%d_%H%M%S%z)"
-    local here=$(dirname "$0")
-    local destination="./backups/pg_dump/"
-    . $here/file_utils.sh
-    . $here/log_utils.sh
-    for i in "$@"; do
-        case $i in
-            -p=* | --password=*)
-                shift
-                ;;
-            -l=* | --log=*)
-                logfile="${i#*=}"
-                shift
-                ;;
-            -d=* | --destination=*)
-                destination="${i#*=}"
-                shift
-                ;;
-            *)
-                db_endpoint="${i#*=}"
-                shift
-                ;;
-        esac
-    done
-    local dumpfile="${destination}dailp_${current_time}.dump"
-    # db_endpoint must exist
-    if [[ -z "${db_endpoint}" ]]; then
-        log_event \
-        --file="${logfile}" \
-        --message="Database endpoint not provided. Cannot connect to database.\
-            Please use \$DATABASE_URL or \`create_backup [endpoint]\`" \
-        --status="ERROR"
-        exit 2
-    fi
+  local destination=""
+  local logfile=""
+  local arg
 
-    # db_password must exist
-    if [[ -z "${db_password}" ]]; then
-        log_event \
-        --file="${logfile}" \
-        --message="Database password not provided. Cannot connect to database.\
-            Please use \$DATABASE_PASSWORD or \`create_backup --password=[endpoint]\`" \
-        --status="ERROR"
-        exit 2
-    fi
+  for arg in "$@"; do
+    case "${arg}" in
+      -d=* | --destination=*)
+        destination="${arg#*=}"
+        ;;
+      -l=* | --logfile=*)
+        logfile="${arg#*=}"
+        ;;
+    esac
+  done
 
-    log_event \
-        --file="${logfile}" \
-        --message="Creating pg_dump backup..." \
-        --status="INFO"
-    # Create file
-    create_file "${dumpfile}"
-    if [[ $? -ne 0 ]]; then 
-        log_event \
-        --file="${logfile}" \
-        --message="Failed to create file ${dumpfile}" \
-        --status="ERROR"
-        exit 2
-    fi
-    log_event \
-        -f="${logfile}" \
-        -m="...running pg_dump utility..." \
-        -s="INFO"
-    # Run pg_dump
-    pg_dump -Fc --file=$dumpfile $db_endpoint
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    log_event -f="${logfile}" \
+      -m="DATABASE_URL not set. Cannot connect to database." -s="ERROR"
+    exit 1
+  fi
 
-    local status=$?
-    if [[ $status -ne 0 ]]; then 
-        log_event \
-            -f="${logfile}" \
-            -m="pg_dump failed." \
-            -s="ERROR"
-        exit 2
-    fi
-    echo $dumpfile
-    # dumpfile must contain data
-    if [[ ! -s "${dumpfile}" ]]; then
-        log_event \
-            -f="${logfile}" \
-            -m="pg_dump produced empty file." \
-            -s="ERROR" \
-            -e="2"
-        exit 2
-    fi
-    return 0
-}
+  if [[ -z "${DATABASE_PASSWORD:-}" ]]; then
+    log_event -f="${logfile}" \
+      -m="DATABASE_PASSWORD not set. Cannot connect to database." -s="ERROR"
+    exit 1
+  fi
 
-function info() {
-    echo "Creates an export of database data using the pg_dump utility."
-    echo
-    echo "Syntax: pg_dump_backup [--help]"
-    echo
-    echo "Exit Status"
-    echo "0 = Success"
-    echo "1 = Retryable Failure"
-    echo "2 = Non-retryable failure"
-    exit 0
+  local current_time
+  current_time="$(date +%Y%m%d_%H%M%S%z)"
+  local dumpfile="${destination}dailp_${current_time}.dump"
+
+  log_event -f="${logfile}" -m="Creating pg_dump backup..." -s="INFO"
+
+  if ! create_file "${dumpfile}"; then
+    log_event -f="${logfile}" -m="Failed to create file ${dumpfile}" -s="ERROR"
+    exit 1
+  fi
+
+  log_event -f="${logfile}" -m="...running pg_dump utility..." -s="INFO"
+
+  # Export the password as PGPASSWORD (rather than a -p/--password flag)
+  # so it never appears in `ps` output; unset it again as soon as pg_dump
+  # returns, win or lose.
+  export PGPASSWORD="${DATABASE_PASSWORD}"
+  if ! pg_dump -Fc --file="${dumpfile}" "${DATABASE_URL}"; then
+    unset PGPASSWORD
+    log_event -f="${logfile}" -m="pg_dump failed." -s="ERROR"
+    exit 1
+  fi
+  unset PGPASSWORD
+
+  if [[ ! -s "${dumpfile}" ]]; then
+    log_event -f="${logfile}" -m="pg_dump produced empty file." -s="ERROR"
+    exit 1
+  fi
+
+  echo "${dumpfile}"
+  log_event -f="${logfile}" -m="Backup written to ${dumpfile}" -s="INFO"
 }
 
 main "$@"
-# The system shall execute pg_dump against the target RDS PostgreSQL instance from the EC2 host.
-# The script shall produce a single output file per run, named per the shared naming convention.
-# The script shall write output to the agreed local staging directory.
-# The script shall verify the dump file was created and is non-empty before signaling success.
-# The script shall exit with a distinct, documented exit code for: success, connection failure, pg_dump command failure, and disk-space/write failure.
-# The script shall not expose database credentials in logs, process listings (ps), or error output.
-
