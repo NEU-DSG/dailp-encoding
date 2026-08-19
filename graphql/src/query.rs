@@ -9,29 +9,35 @@ use dailp::auth::{
     RefreshTokenInput, RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput,
     SignupInput, UserGroup, UserInfo,
 };
+use dailp::collection::{
+    AddChapterInput, ChapterSlugInfo, CollectionChapter, CollectionSection,
+    CreateEditedCollectionInput, EditedCollection, UpdateCollectionChapterOrderInput,
+    UpsertChapterInput,
+};
 use dailp::comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput};
 use dailp::page::{NewPageInput, Page};
 use dailp::user::{self, User, UserUpdate};
 use dailp::{
-    collection, slugify_ltree, AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, CollectionChapter, Contributor, ContributorRole,
-    CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
-    UpdateCollectionChapterOrderInput, UpdateContributorAttribution, UpsertChapterInput, Uuid,
+    slugify_ltree, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, Contributor, ContributorRole, CurateDocumentAudioInput,
+    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    SubjectHeading, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 
 use dailp::{
-    AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-    EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
-    ParagraphUpdate, WordsInDocument,
+    AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, Menu,
+    MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
 };
 use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
 use itertools::{Itertools, Position};
 use log::{debug, info};
 use reqwest::{header, Client};
-/// Home for all read-only queries
+/// Home for all read-only queries.
+///
+/// [TODO] Use MergedObject to split this definition by applicaiton domain:
+/// https://async-graphql.github.io/async-graphql/en/merging_objects.html
 pub struct Query;
 
 #[async_graphql::Object]
