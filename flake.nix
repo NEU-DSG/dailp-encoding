@@ -198,6 +198,7 @@
               sqlx-cli
               sqlfluff
               bash
+              shellcheck
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
                 [ ! -d "$PGDATA" ] && initdb
