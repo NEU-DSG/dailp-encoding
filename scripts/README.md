@@ -1,102 +1,159 @@
 # Scripts
 
-> [!INFO] All scripts use the unix equals-separated variable convention (ie. `command -v=[value]`; not `command -v [value]`).
+> [!INFO] All scripts use the unix equals-separated variable convention (ie. `command -v=[value]`; not `command -v [value]`). Named arguments always precede positional/unnamed arguments at a call site.
+
+See [`bash_standards.md`](./bash_standards.md) for the full set of conventions these scripts follow (naming, `set -u` safety, exit-code policy, alphabetized named arguments, and more), with citations.
 
 For now, all scripts follow the same Exit Code format:
-
 0 = success,
-1 = retryable error,
-2 = fatal error.
+1 = retryable error (fix the environment/input and re-run the same command),
+2 = fatal error (the code itself needs to change before re-running would help).
+
+## Requirements
+
+- `bash` (all scripts use bash-specific features -- namerefs, `[[ ]]`, `set -u` -- and are not intended to run under `sh`/`dash`).
+- `psql`, the PostgreSQL command-line client, on `PATH` -- required by `pg_export_to_csv.sh` only.
+
+## Environment Variables
+
+- `PGPASSWORD` -- read by `pg_export_to_csv.sh`. If set, its value is used to connect without an interactive prompt (unless `-w` forces one anyway). If unset and no connection string (`-c=`) is given, the script prompts for a password interactively.
+
+## Status at a Glance
+
+| Name | Type | Implemented? | Depends on |
+|---|---|---|---|
+| `pg_export_to_csv.sh` | Executable | Yes | File utilities, logging utilities |
+| `pg_dump_backup.sh` | Executable | No | File utilities, logging utilities |
+| `create_file` | Library (File utilities) | Yes | -- |
+| `create_logfile` | Library (Logging utilities) | Yes | File utilities |
+| `log_event` | Library (Logging utilities) | Yes | -- |
 
 ## Executables
 
-### pg_dump_backup.sh [--help] [-l | --log_location] [-d | --destination]
+### pg_export_to_csv.sh [--help] [-c | --conn_string] [-d | --dbname] [-h | --host] [-o | --outdir] [-p | --port] [-s | --schema] [-U | --user] [-w]
 
-> [!WARNING] Not yet implemented.
-
-Creates a file containing the results of pg_dump. By default, saves files to `./backups/pg_dump/`.
+Connects to a PostgreSQL database and exports every table in a schema to its own CSV file. By default, saves files to `./<dbname>_csv_export_<timestamp>/`, alongside a `logs/` subfolder containing the run's logfile.
 
 Depends on: File utilities, logging utilities
 
+Quick start:
+```sh
+./pg_export_to_csv.sh -d=mydb -h=localhost -U=admin
+```
+
 Arguments:
 - --help: Shows command documentation
-- -l, --log-location: Folder to save logs to
-- -d, --destination: Folder to save dumpfile to
+- -c, --conn_string: Full connection string/URI. Alternative to providing -d/-h/-p/-U individually.
+- -d, --dbname: Database name. Required unless -c is given.
+- -h, --host: Database host (endpoint). Required unless -c is given.
+- -o, --outdir: Folder to save CSVs to. Default: `./<dbname>_csv_export_<timestamp>/`
+- -p, --port: Database port. Default: `5432`
+- -s, --schema: Schema to export. Default: `public`. Validated against `^[A-Za-z_][A-Za-z0-9_]*$` before use; invalid values are rejected before any query runs.
+- -U, --user: Database user. Required unless -c is given.
+- -w: Force an interactive password prompt, ignoring the `PGPASSWORD` environment variable.
 
-### csv_backup.sh [--help] [-l | --log_location] [-d | --destination]
+> [!NOTE] If `PGPASSWORD` is unset and `-w` is not passed, the script prompts interactively for a password.
 
-> [!WARNING] Not yet implemented.
+Errors (exit code 1 -- retryable once the underlying issue is fixed):
+- `psql` client not found on PATH
+- Could not connect to the database
+- Failed to fetch the table list for the schema
+- Invalid schema name
+- Missing required arguments, or unrecognized flags
+- One or more tables failed to export (reported once, after every table has been attempted -- other tables still get exported; see the run's logfile for which table(s) failed and why)
 
-Creates a file containing a CSV backup of database information. By default, saves files to `./backups/csv/`
+### pg_dump_backup.sh [--help] [-l | --log_location] [-d | --destination]
 
-Depends on: File utilities, logging utilites
-
+Creates a file containing the results of pg_dump. By default, saves files to `./backups/pg_dump/`.
+Depends on: File utilities, logging utilities
 Arguments:
 - --help: Shows command documentation
 - -l, --log-location: Folder to save logs to
 - -d, --destination: Folder to save dumpfile to
 
 ## Library
+
 ### File Utilities
-
 #### create_file [-h | --header] [-d | --directory] name
-
-> [!WARNING] Not yet implemented.
 
 Creates a file with the provided name in a specified location, if provided.
 Also adds header content, if provided, to the file upon its creation.
 
+Quick start:
+```sh
+create_file --header="hello" --directory="./out" "greeting.txt"
+```
+
 Arguments:
-- --help: Shows command documentation
-- -h, --header: Header content for this file, if any. Default: "".
-- -d, --directory: Folder to save file to. Default: './'
+- -h, --header: Header content for this file, if any. Default: `""`.
+- -d, --directory: Folder to save the file to, if any. Default: none -- the name is used as-is, relative to the current working directory.
 - name: a filename. May or may not contain a path. Required.
 
-Errors:
+Errors (exit code 1 -- returned to the caller, who can check the status and decide how to react):
+- File already exists (this also covers the case where the given `--directory` names an existing file rather than a directory)
 - Failed to create file
-- File contents not correctly initialized
+- File not correctly initialized
 
-Fatal errors:
-- File [name] not provided
-- File [name] already exists
-- [directory] already exists and is not a directory
+Fatal errors (exit code 2):
+- Filename not provided
 
 ### Logging Utilities
 Depends on: File utilities
 
-#### create_logfile [-l | --location] [-r|--reference] name
+#### create_logfile [-l | --location] [-r | --reference] name
 
-> [!WARNING] Not yet implemented.
+Creates a logfile at `[location | ./logs/]/[name]_<timestamp>.log`, where `<timestamp>` is an ISO-8601 timestamp with a UTC offset (e.g. `2026-08-11T18:04:17+00:00`), not the compact `YYYYMMDDTHHMMSSZ` form. See "Suggested Enhancements" below.
 
-Creates a logfile at [location | .]/[name]_YYYYMMDDTHHMMSSZ.log.
-Also passes final location to [reference] if provided; this is helpful for downstream use of `log_event`.
+Also passes the final location to `[reference]`, if provided; this is helpful for downstream use of `log_event`.
 
-Arguments:
-- -l, --location: Folder to save log to. Defaults to `./logs/`.
-- -r, --reference: a reference variable that will store the final log location once it is created. Optional.
-- name: The label for this logfile. Required.
-
-Fatal Errors: 
-- [reference] already has a value
-- [location] is not a directory
-
-#### log_event [-s | --status] [-m | --message] [-e | --exit_code] [-f | --file]
-
-> [!WARNING] Not yet implemented.
-
-Reports an event to stdout and a logfile [file], if provided.
-Events are added to stdout in the tabular format `time | status | trace | message`.
-Events are added to logfiles in the json format
-```json
-{timestamp:"[timestamp]",task:"[trace]",status:"[status]",message:"[message]",exitCode:"[exit_code]"},
+Quick start:
+```sh
+logfile=""
+create_logfile --location="./logs" --reference=logfile "my_task"
+log_event --file="${logfile}" --status="INFO" --message="Started"
 ```
 
 Arguments:
-- -s, --status: A status code: "TRACE", "DEBUG", "INFO", "WARN", "ERROR"
-- -m, --message: The message to print for this log line
-- -e, --exit_code: The exit code for the operation described in this log line, if any
-- -f, --file: The logfile to report to
+- -l, --location: Folder to save the log to. Defaults to `./logs/`.
+- -r, --reference: a reference variable that will store the final log location once it is created. Optional.
+- name: The label for this logfile. Required.
 
-Errors: 
-- [status] was not provided or is not a valid status code option
-- [message] was not provided
+Fatal Errors (exit code 2):
+- `name` was not provided
+- `[reference]` already has a value
+- `[location]` is not a directory
+- The logfile could not be initialized (the underlying `create_file` call failed)
+
+#### log_event [-s | --status] [-m | --message] [-e | --exit_code] [-f | --file]
+
+Reports an event to **stderr** and a logfile `[file]`, if provided.
+
+Events are written to stderr in the tabular format `time | status | trace | message`.
+Events are added to logfiles in the format:
+```json
+{timestamp:"[timestamp]",task:"[trace]",status:"[status]",message:"[message]",exitCode:[exit_code]},
+```
+> [!NOTE] `exitCode` is written unquoted (it's either a bare number or the literal `null`), unlike the other fields.
+
+Quick start:
+```sh
+log_event --status="INFO" --message="Job started"
+log_event --exit_code="1" --file="./run.log" --message="Job failed" --status="ERROR"
+```
+
+Arguments:
+- -s, --status: A status code: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` (case-insensitive)
+- -m, --message: The message to print for this log line
+- -e, --exit_code: The exit code for the operation described in this log line, if any. Default: none -- renders as `null` in the logfile.
+- -f, --file: The logfile to report to. Default: none -- the event is still written to stderr, just not to any file.
+
+Fatal Errors (exit code 2):
+- `[status]` was not provided or is not a valid status code option
+- `[message]` was not provided
+
+> [!NOTE] These are fatal, not retryable: every call site in this codebase passes `--status`/`--message` as hardcoded literals, so a failure here always means the *calling code* needs to be fixed, not the runtime environment or inputs.
+
+## Suggested Enhancements
+
+- **Consider a compact, colon-free timestamp for logfile names.** `create_logfile` currently uses `date -Iseconds` (e.g. `2026-08-11T18:04:17+00:00`), which is precise but includes colons and a `+`/`-` offset -- both of which are fine on Linux/macOS but can be awkward on other filesystems/tools. A format like `date +%Y%m%dT%H%M%SZ` (UTC, no colons) would be more portable and matches what this README originally specified. **Deferred for now** -- not yet implemented, kept here as a reminder.
+- **Implement automated linting with `shellcheck`.**
