@@ -55,3 +55,9 @@ jobs:
           aws-region: us-east-1
       - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
+      - name: Report build artifacts
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v5
+        with:
+          path: config.tf.json
+          name: terraform-config
