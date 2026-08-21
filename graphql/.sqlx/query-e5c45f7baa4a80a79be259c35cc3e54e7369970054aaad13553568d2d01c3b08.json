@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- get a paragraph by id\n-- since paragraphs always include an index within their parent document\n-- we have to count this paragraph's position in on the page\nwith all_paragraphs as (\n  select\n    id,\n    english_translation as translation,\n    ROW_NUMBER() OVER (order by character_range asc) as \"index\"\n  from paragraph\n  where page_id = (\n    select p_inner.page_id from paragraph p_inner where id = $1\n  )\n) \n\nselect\n  id,\n  translation,\n  COALESCE(index, 1) as \"index!\" -- unclear why we need to upcast this\nfrom all_paragraphs\nwhere id=$1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "translation",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "index!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "e5c45f7baa4a80a79be259c35cc3e54e7369970054aaad13553568d2d01c3b08"
+}

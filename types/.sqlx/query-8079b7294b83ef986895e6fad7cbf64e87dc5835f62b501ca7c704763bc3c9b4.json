@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- Grabs information required for ChapterSlugInfo of all unassinged slugs \r\n--- (chapters with a -1 index in collection_chapters)\r\nselect\r\n    id,\r\n    title,\r\n    slug,\r\n    document_id\r\nfrom collection_chapter\r\nwhere collection_slug = $1\r\nand index_in_parent = -1\r\norder by slug",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "document_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "8079b7294b83ef986895e6fad7cbf64e87dc5835f62b501ca7c704763bc3c9b4"
+}
