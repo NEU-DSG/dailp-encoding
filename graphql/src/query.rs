@@ -1,36 +1,43 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
+// Local accounts
+use crate::dailp_auth;
+// General auth tools
+use dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, InputType};
+use dailp::auth::{
+    AuthGuard, AuthResponse, GroupGuard, LoginInput, MessageResponse, NotGroupGuard,
+    RefreshTokenInput, RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput,
+    SignupInput, UserGroup, UserInfo,
+};
+use dailp::collection::{
+    AddChapterInput, ChapterSlugInfo, CollectionChapter, CollectionSection,
+    CreateEditedCollectionInput, EditedCollection, UpdateCollectionChapterOrderInput,
+    UpsertChapterInput,
+};
+use dailp::comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput};
+use dailp::page::{NewPageInput, Page};
+use dailp::user::{self, User, UserUpdate};
 use dailp::{
-    async_graphql::InputType,
-    auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
-    collection,
-    comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    page::{NewPageInput, Page},
-    slugify_ltree,
-    user::{User, UserUpdate},
-    AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
-    AttachAudioToWordInput, ChapterSlugInfo, CollectionChapter, CollectionSection, Contributor,
-    ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
-    Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
-    DocumentParagraph, PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage,
-    TranslatedSection, UpdateCollectionChapterOrderInput, UpdateContributorAttribution,
-    UpsertChapterInput, Uuid,
-};
-use itertools::{Itertools, Position};
-use log::info;
-
-use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
-    dailp::{
-        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
-        ParagraphUpdate, WordsInDocument,
-    },
+    slugify_ltree, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, Contributor, ContributorRole, CurateDocumentAudioInput,
+    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    SubjectHeading, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 
+use dailp::{
+    AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, Menu,
+    MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+};
 use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
-/// Home for all read-only queries
+use itertools::{Itertools, Position};
+use log::{debug, info};
+use reqwest::{header, Client};
+/// Home for all read-only queries.
+///
+/// [TODO] Use MergedObject to split this definition by applicaiton domain:
+/// https://async-graphql.github.io/async-graphql/en/merging_objects.html
 pub struct Query;
 
 #[async_graphql::Object]
@@ -1059,6 +1066,88 @@ impl Mutation {
             .loader()
             .update_menu(menu)
             .await?)
+    }
+
+    /// Sign up a new user with email and password (DAILP auth only)
+    async fn signup(
+        &self,
+        context: &Context<'_>,
+        input: SignupInput,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::signup(db, input).await?)
+    }
+
+    /// Login with email and password (DAILP auth only)
+    async fn login(&self, context: &Context<'_>, input: LoginInput) -> FieldResult<AuthResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::login(db, input).await?)
+    }
+
+    /// Refresh access token using refresh token (DAILP auth only)
+    async fn refresh_token(
+        &self,
+        context: &Context<'_>,
+        input: RefreshTokenInput,
+    ) -> FieldResult<RefreshTokenResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::refresh_token(db, input).await?)
+    }
+
+    /// Logout by revoking refresh token (DAILP auth only)
+    async fn logout(&self, context: &Context<'_>, refresh_token: String) -> FieldResult<bool> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::logout(db, refresh_token).await?)
+    }
+
+    /// Request a password reset email (DAILP auth only)
+    async fn request_password_reset(
+        &self,
+        context: &Context<'_>,
+        input: RequestPasswordResetInput,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::request_password_reset(db, input).await?)
+    }
+
+    /// Reset password using reset token (DAILP auth only)
+    async fn reset_password(
+        &self,
+        context: &Context<'_>,
+        input: ResetPasswordInput,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::reset_password(db, input).await?)
+    }
+
+    /// Verify email address using verification token (DAILP auth only)
+    async fn verify_email(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::verify_email(db, token).await?)
+    }
+
+    /// Resend verification email to user
+    async fn resend_verification_email(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::resend_verification_email(db, email).await?)
+    }
+
+    /// Resend password reset email to user
+    async fn resend_password_reset(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> FieldResult<MessageResponse> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(dailp_auth::resend_password_reset(db, email).await?)
     }
 
     /// Validates a token against CloudFlare Turnstile's SiteVerify API

@@ -6,7 +6,7 @@ import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { useCognitoUserGroups, useCredentials } from "./auth"
+import { useCredentials, useUserGroups } from "./auth"
 import { CommentAction, CommentPanel } from "./comment-panel"
 import { useCommentStateContext } from "./comment-state-context"
 import { Button, IconButton } from "./components"
@@ -69,7 +69,7 @@ export const PanelLayout = (p: {
   }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
 
   const token = useCredentials()
-  const userGroups = useCognitoUserGroups()
+  const userGroups = useUserGroups()
 
   // Get all global glosses / matching tags to display.
   const { cherokeeRepresentation } = usePreferences()

@@ -1,3 +1,5 @@
+mod dailp_auth;
+mod email;
 mod outbound_lambda;
 mod query;
 
