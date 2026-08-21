@@ -96,7 +96,7 @@ const approvedSpatialCoverages = [
   "Dubai, UAE",
 ]
 
-const approvedKeyDates = ["February 12, 1964"]
+const approvedKeyDates: string[] = []
 
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
