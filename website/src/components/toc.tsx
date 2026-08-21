@@ -7,7 +7,7 @@ import {
   useFunctions,
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
-import { chapterRoute } from "src/routes"
+import { chapterRoute, collectionRoute } from "src/routes"
 import Link from "./link"
 import * as css from "./toc.css"
 
@@ -60,7 +60,7 @@ const CollectionTOC = () => {
     <>
       {canEditTOC && (
         <a
-          href={`/collections/edit-toc?collectionSlug=${collectionSlug}`}
+          href={`${collectionRoute(collectionSlug)}/edit-toc`}
           className={css.editTOCButton}
         >
           Edit TOC

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react"
-import type { ChapterNode, DraftTarget, SectionKey } from "src/types/edit-toc"
+import { DraftTarget, SectionKey } from "./EditToc"
 
 // Decided to create a context for the rows due to massive props being unmanagable
 export type EditTocContextValue = {
