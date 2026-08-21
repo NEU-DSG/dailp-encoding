@@ -979,6 +979,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 </div>
               )
             }
+            tooltipInfo={TOOLTIP_TEXT.subjectHeadings}
           />
 
           <TagSelector
