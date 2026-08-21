@@ -311,9 +311,18 @@ query WordSearch($query: String!) {
     englishGloss
     index
     document {
+      title
       id
       slug
       isReference
+      collection {
+        name
+      }
+      editedCollection {
+        id
+        title
+        isHidden
+      }
     }
   }
 }

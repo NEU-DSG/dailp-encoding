@@ -696,6 +696,7 @@ impl Database {
         let results = query_file_as!(BasicWord, "queries/search_words_any_field.sql", like_query)
             .fetch_all(&self.client)
             .await?;
+
         Ok(results.into_iter().map(Into::into).collect())
     }
 
@@ -3628,6 +3629,41 @@ impl Loader<EditedCollectionDetails> for Database {
 }
 
 #[async_trait::async_trait]
+impl Loader<EditedCollectionForDocument> for Database {
+    type Value = EditedCollection;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[EditedCollectionForDocument],
+    ) -> Result<HashMap<EditedCollectionForDocument, Self::Value>, Self::Error> {
+        let doc_ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/collection_by_document_id.sql", &doc_ids)
+            .fetch_all(&self.client)
+            .await
+            .map_err(Arc::new)?;
+
+        Ok(items
+            .into_iter()
+            .map(|row| {
+                (
+                    EditedCollectionForDocument(row.document_id),
+                    EditedCollection {
+                        id: row.id,
+                        title: row.title,
+                        wordpress_menu_id: row.wordpress_menu_id,
+                        description: row.description,
+                        slug: row.slug,
+                        thumbnail_url: row.thumbnail_url,
+                        is_hidden: row.is_hidden,
+                    },
+                )
+            })
+            .collect())
+    }
+}
+
+#[async_trait::async_trait]
 impl Loader<KeywordsForDocument> for Database {
     type Value = Vec<Keyword>;
     type Error = Arc<sqlx::Error>;
@@ -3837,6 +3873,9 @@ pub struct SpatialCoverageForDocument(pub Uuid);
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct CreatorsForDocument(pub Uuid);
+
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
+pub struct EditedCollectionForDocument(pub Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
