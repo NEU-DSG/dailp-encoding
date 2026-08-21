@@ -1,3 +1,4 @@
+import { MdOutlineBookmark } from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { DropdownNavItem } from "./dropdown-nav-item"
