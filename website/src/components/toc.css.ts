@@ -2,6 +2,7 @@ import { globalStyle, style } from "@vanilla-extract/css"
 import { margin } from "polished"
 import { colors, hsize, hspace, vspace } from "src/style/constants"
 import { marginY, onHover, paddingX, paddingY } from "src/style/utils"
+import { button } from "./button.css"
 
 // Styles intro chapters.
 export const numberedOrderedList = style([
@@ -182,3 +183,11 @@ export const linkGroup = style({
   justifyContent: "space-between",
   flex: 1,
 })
+export const editTOCButton = style([
+  button,
+  {
+    display: "inline-block",
+    marginLeft: 0,
+    marginBottom: "15px",
+  },
+])
