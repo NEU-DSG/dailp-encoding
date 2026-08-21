@@ -120,6 +120,11 @@ impl WordSegment {
 
 #[async_graphql::Object]
 impl WordSegment {
+    /// Orhological system that this word segment belongs to (Learner, CRG, or TOAC)
+    async fn system(&self) -> Option<CherokeeOrthography> {
+        self.system
+    }
+
     /// Phonemic representation of the morpheme
     async fn morpheme(&self) -> Cow<'_, str> {
         self.get_morpheme()
