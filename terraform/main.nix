@@ -27,6 +27,7 @@ in {
     ./user-roles.nix
     ./bastion-host.nix
     ./import.nix
+    ./outbound-lambda.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -35,7 +36,7 @@ in {
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
-    version = "~> 4.30";
+    version = "<= 6.2";
   };
 
   # Setup AWS credentials depending on whether we are in the development or
@@ -79,6 +80,7 @@ in {
         DATABASE_URL =
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
         TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
+        OUTBOUND_LAMBDA_NAME = "\${aws_lambda_function.outbound_turnstile.function_name}";
       };
       endpoints = [
         {
