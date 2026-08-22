@@ -27,6 +27,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             spatial_coverage_ids: None,
             creators_ids: None,
             format_id: None,
+            associated_people_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -51,6 +52,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             spatial_coverage_ids: None,
             creators_ids: None,
             format_id: None,
+            associated_people_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -280,6 +282,7 @@ async fn insert_document_from_sheet(
         //.map(Contributor::new_author)
         //.collect(),
         spatial_coverage_ids: None,
+        associated_people_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,

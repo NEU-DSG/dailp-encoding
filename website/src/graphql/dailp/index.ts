@@ -64,6 +64,8 @@ export type AddDocumentPayload = {
 
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
+  /** People associated with this document */
+  readonly associatedPeople: ReadonlyArray<AssociatedPerson>
   /** When the document was bookmarked by the current user, if it was. */
   readonly bookmarkedOn: Maybe<Date>
   /** Collection chapters that contain this document. */
@@ -254,6 +256,17 @@ export enum ApprovalStatus {
   Approved = "APPROVED",
   Pending = "PENDING",
   Rejected = "REJECTED",
+}
+
+export type AssociatedPerson = {
+  readonly __typename?: "AssociatedPerson"
+  readonly id: Scalars["UUID"]
+  readonly name: Scalars["String"]
+}
+
+export type AssociatedPersonUpdate = {
+  readonly id: Scalars["UUID"]
+  readonly name: Scalars["String"]
 }
 
 /** Request to attach user-recorded audio to a document */
@@ -610,6 +623,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The people associated with a document */
+  readonly associatedPeople: InputMaybe<ReadonlyArray<AssociatedPersonUpdate>>
   /** The editors, translators, etc. of the document */
   readonly contributors: InputMaybe<ReadonlyArray<ContributorAttributionInput>>
   /** The creator(s) of the document */
@@ -2052,6 +2067,12 @@ export type DocFormFieldsFragment = {
     readonly genre: Maybe<
       { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
     >
+    readonly associatedPeople: ReadonlyArray<
+      { readonly __typename?: "AssociatedPerson" } & Pick<
+        AssociatedPerson,
+        "id" | "name"
+      >
+    >
   }
 
 export type AllSubjectHeadingsQueryVariables = Exact<{ [key: string]: never }>
@@ -2503,6 +2524,12 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
         >
         readonly creators: ReadonlyArray<
           { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+        >
+        readonly associatedPeople: ReadonlyArray<
+          { readonly __typename?: "AssociatedPerson" } & Pick<
+            AssociatedPerson,
+            "id" | "name"
+          >
         >
       }
   >
@@ -3769,6 +3796,10 @@ export const DocFormFieldsFragmentDoc = gql`
       id
       name
     }
+    associatedPeople {
+      id
+      name
+    }
   }
 `
 export const FormFieldsFragmentDoc = gql`
@@ -4249,6 +4280,10 @@ export const DocumentDetailsDocument = gql`
         status
       }
       creators {
+        id
+        name
+      }
+      associatedPeople {
         id
         name
       }
