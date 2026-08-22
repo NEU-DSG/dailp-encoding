@@ -1009,6 +1009,19 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
               className={styles.input}
               value={associatedPeopleInput}
               onChange={(e) => setAssociatedPeopleInput(e.target.value)}
+              onBlur={(e) => {
+                // Parse and set associated people when user leaves the field
+                setAssociatedPeople(
+                  e.target.value
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter((p) => p.length > 0)
+                    .map((name) => ({
+                      id: uuidv4(),
+                      name,
+                    }))
+                )
+              }}
               disabled={!isEditing}
             />
           </div>

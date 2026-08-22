@@ -1567,33 +1567,21 @@ impl Database {
 
             // Process each associated person
             for associated_person in associated_people {
-                // Check if associated person with this name already exists
-                let existing_id: Option<Uuid> = query_file_scalar!(
-                    "queries/get_associated_person_id_by_name.sql",
+                let associated_person_id: Uuid = query_file_scalar!(
+                    "queries/insert_associated_person.sql",
+                    &associated_person.id,
                     &associated_person.name
                 )
-                .fetch_optional(&mut *tx)
-                .await?;
-
-                let associated_person_id = if let Some(existing) = existing_id {
-                    info!(
-                        "Using existing associated person ID for {}: {}",
-                        associated_person.name, existing
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(|e| {
+                    log::error!(
+                        "Failed to upsert associated person '{}': {:?}",
+                        associated_person.name,
+                        e
                     );
-                    existing
-                } else {
-                    info!("Inserting new associated person: {:?}", associated_person);
-                    let inserted_id: Uuid = query_file_scalar!(
-                        "queries/insert_associated_person.sql",
-                        &associated_person.id,
-                        &associated_person.name
-                    )
-                    .fetch_one(&mut *tx)
-                    .await?;
-                    info!("Inserted associated person with ID: {}", inserted_id);
-                    inserted_id
-                };
-
+                    e
+                })?;
                 associated_person_ids_to_link.push(associated_person_id);
             }
 

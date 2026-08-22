@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Add a new associated person to the database\ninsert into associated_person (id, name)\nvalues ($1::uuid, $2)\nreturning id;",
+  "query": "-- Add a new associated person to the database\ninsert into associated_person (id, name)\nvalues ($1::uuid, $2)\non conflict (name) do update set name = excluded.name\nreturning id;",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       false
     ]
   },
-  "hash": "a6bcf6feb01bf5b9eef3286c791a31ecbfd0326015f85983b4ef760a490ef633"
+  "hash": "2c572e4e997b1a625ae4dcaa0593c7a665c6561464065311cab40fb28fcc465f"
 }
