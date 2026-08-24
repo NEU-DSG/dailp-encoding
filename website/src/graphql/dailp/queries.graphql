@@ -310,6 +310,10 @@ query WordSearch($query: String!) {
     romanizedSource(system: LEARNER)
     englishGloss
     index
+    position {
+      index
+      pageNumber
+    }
     document {
       title
       id

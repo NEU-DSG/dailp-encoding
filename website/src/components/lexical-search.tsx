@@ -3,6 +3,7 @@ import cx from "classnames"
 import QueryString from "query-string"
 import React, { useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
+import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md/index"
 import { Input } from "reakit"
 import { UserRole, useUserRole } from "src/auth"
 import * as Dailp from "src/graphql/dailp"
@@ -94,7 +95,12 @@ export const LexicalSearch = () => {
               className={css.filterButton}
               onClick={() => setFilterOpen((open) => !open)}
             >
-              Filter {filterOpen ? "▲" : "▼"}
+              Filter{" "}
+              {filterOpen ? (
+                <MdKeyboardArrowUp size={18} />
+              ) : (
+                <MdKeyboardArrowDown size={18} />
+              )}
             </button>
 
             {filterOpen && (
@@ -201,6 +207,7 @@ const Timeline = (p: {
       <div className={fullWidth}>
         <div className={boldWordRow}>
           <div style={{ width: "250px" }}>Document Title</div>
+          <div>Position</div>
           <div>Transcription</div>
           <div>Simple Phonetics</div>
           <div>Translation</div>
@@ -221,6 +228,10 @@ const Timeline = (p: {
                 )}
               </div>
             ) : null}
+            <div>
+              #{form.position.index}
+              {form.position.pageNumber && <> Pg. {form.position.pageNumber}</>}
+            </div>
             <div>{form.source}</div>
             <div>{form.romanizedSource}</div>
             <div>{form.englishGloss.join(", ")}</div>

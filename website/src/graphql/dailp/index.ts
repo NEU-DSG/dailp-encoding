@@ -2371,6 +2371,9 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
       | "englishGloss"
       | "index"
     > & {
+        readonly position: {
+          readonly __typename?: "PositionInDocument"
+        } & Pick<PositionInDocument, "index" | "pageNumber">
         readonly document: Maybe<
           { readonly __typename?: "AnnotatedDoc" } & Pick<
             AnnotatedDoc,
@@ -4121,6 +4124,10 @@ export const WordSearchDocument = gql`
       romanizedSource(system: LEARNER)
       englishGloss
       index
+      position {
+        index
+        pageNumber
+      }
       document {
         title
         id
