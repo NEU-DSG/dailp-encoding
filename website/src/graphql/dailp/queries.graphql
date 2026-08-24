@@ -310,10 +310,23 @@ query WordSearch($query: String!) {
     romanizedSource(system: LEARNER)
     englishGloss
     index
+    position {
+      index
+      pageNumber
+    }
     document {
+      title
       id
       slug
       isReference
+      collection {
+        name
+      }
+      editedCollection {
+        id
+        title
+        isHidden
+      }
     }
   }
 }
