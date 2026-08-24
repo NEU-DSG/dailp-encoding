@@ -57,7 +57,11 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     if (!iiifData?.iiifSourceForDocumentMetadata) return
 
     fetch(iiifData.iiifSourceForDocumentMetadata)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        return res.json()
+      })
       .then((info) => {
         const formats = info?.profile?.[1]?.formats
         if (Array.isArray(formats) && formats.length > 0) {
