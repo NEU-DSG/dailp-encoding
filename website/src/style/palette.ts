@@ -1,4 +1,4 @@
-// Add raw theme.css.ts and constants.ts values?
+// palette.ts
 
 export const palette = {
   colors: {
@@ -69,6 +69,9 @@ export const palette = {
     rem1_25: "1.25rem",
     rem1_3: "1.3rem",
     rem5: "5rem",
+
+    // Pt
+    pt11_5: "11.5pt",
   },
 
   fontWeights: {
@@ -104,8 +107,11 @@ export const palette = {
     none: 0,
 
     // Px
+    px1: "1px",
+    px2: "2px",
     px4: "4px",
     px8: "8px",
+    px15: "15px",
     px45: "45px",
     px999: "999px",
 
@@ -117,6 +123,7 @@ export const palette = {
     none: 0,
 
     px1: "1px",
+    px2: "2px",
     px4: "4px",
     px10: "10px",
   },
@@ -163,10 +170,14 @@ export const palette = {
     rem4: "4rem",
 
     // Ch
+    ch1: "1ch",
     ch4: "4ch",
+
+    // In
+    in0_75: "0.75in",
   },
 
-  // Grid, container widths
+  // Grid, container, button widths
   width: {
     none: 0,
 
@@ -180,6 +191,7 @@ export const palette = {
     pct100: "100%",
 
     // Vw
+    vw70: "70vw",
     vw90: "90vw",
     vw95: "95vw",
     vw100: "100vw",
@@ -190,12 +202,16 @@ export const palette = {
 
     // Rem
     rem4: "4rem",
+    rem4_5: "4.5rem",
+    rem6: "6rem",
     rem15_5: "15.5rem",
     rem16: "16rem",
     rem20: "20rem",
     rem25: "25rem",
     rem35: "35rem",
     rem45: "45rem",
+    rem41: "41rem",
+    rem50: "50rem",
 
     // Px
     px16: "16px",
@@ -224,6 +240,7 @@ export const palette = {
 
     // Percent
     pct40: "40%",
+    pct95: "95%",
     pct100: "100%",
 
     // Vh
@@ -274,9 +291,16 @@ export const palette = {
     t800: "800ms",
   },
 
+  transitionEasings: {
+    easeInOut: "ease-in-out",
+  },
+
   zIndices: {
     z1: 1,
+    z2: 2,
+    z3: 3,
     z10: 10,
+    z999: 999,
     z1000: 1000,
   },
 }
