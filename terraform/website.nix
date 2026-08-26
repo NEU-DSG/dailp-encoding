@@ -126,14 +126,14 @@ in {
       wait_for_verification = false;
     };
 
-    aws_amplify_webhook.current_stage = {
-      app_id = "\${aws_amplify_app.dailp.id}";
-      branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
-      description = "Build front-end environment";
-    };
+    # aws_amplify_webhook.current_stage = {
+    #   app_id = "\${aws_amplify_app.dailp.id}";
+    #   branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
+    #   description = "Build front-end environment";
+    # };
   };
 
-  config.output.amplify_webhook = {
-    value = "\${aws_amplify_webhook.current_stage.url}";
-  };
+  # config.output.amplify_webhook = {
+  #   value = "\${aws_amplify_webhook.current_stage.url}";
+  # };
 }
