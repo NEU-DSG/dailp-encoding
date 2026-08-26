@@ -50,7 +50,9 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     pause: !doc.id,
   })
 
-  const [iiifFormat, setIiifFormat] = useState<string>("")
+  const [iiifFormat, setIiifFormat] = useState<string>(
+    "Format Not Currently Available."
+  )
 
   // When URL is accessible, grab format type from IIIF url info.json
   useEffect(() => {
