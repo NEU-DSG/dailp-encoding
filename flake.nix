@@ -227,6 +227,15 @@
                 cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
               '')
+              (writers.writeBashBin "dev-pg-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/pg_dump_backup.sh
+                echo "See output in ./backups/pg_dump/"
+              '')
+              (writers.writeBashBin "dev-csv-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/export_db_to_csv.sh
+              '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               darwin.apple_sdk.frameworks.SystemConfiguration
