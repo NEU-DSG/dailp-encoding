@@ -989,6 +989,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly deletePage: Scalars["UUID"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
@@ -1061,6 +1062,10 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationDeletePageArgs = {
+  id: Scalars["UUID"]
 }
 
 export type MutationInsertCustomMorphemeTagArgs = {
@@ -3554,11 +3559,20 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type DeletePageMutationVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type DeletePageMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "deletePage"
+>
+
 export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllPagesQuery = { readonly __typename?: "Query" } & {
   readonly allPages: ReadonlyArray<
-    { readonly __typename?: "Page" } & Pick<Page, "path">
+    { readonly __typename?: "Page" } & Pick<Page, "id" | "title" | "path">
   >
 }
 
@@ -4900,9 +4914,22 @@ export function useUpsertPageMutation() {
     UpsertPageDocument
   )
 }
+export const DeletePageDocument = gql`
+  mutation DeletePage($id: UUID!) {
+    deletePage(id: $id)
+  }
+`
+
+export function useDeletePageMutation() {
+  return Urql.useMutation<DeletePageMutation, DeletePageMutationVariables>(
+    DeletePageDocument
+  )
+}
 export const AllPagesDocument = gql`
   query AllPages {
     allPages {
+      id
+      title
       path
     }
   }
