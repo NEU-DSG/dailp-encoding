@@ -1,6 +1,7 @@
 import { CognitoUser } from "amazon-cognito-identity-js"
-import { useState } from "react"
-import { useUser } from "src/auth"
+import { useMemo, useState } from "react"
+import { AuthUser, useUser } from "src/auth"
+import * as Dailp from "../../graphql/dailp"
 import { S3Uploader } from "../../utils/s3"
 
 type UploadAudioState = "ready" | "uploading" | "error"
@@ -47,10 +48,14 @@ export function useAudioUpload(
   return [uploadAudio, uploadAudioState, clearError] as const
 }
 
-export async function uploadContributorAudioToS3(
-  user: CognitoUser,
-  data: Blob
-) {
-  const uploader = new S3Uploader(user)
-  return uploader.uploadContributorAudio(data)
+export async function uploadContributorAudioToS3(user: AuthUser, data: Blob) {
+  if (user.type === "cognito") {
+    // Use direct S3 upload with Cognito credentials
+    const uploader = new S3Uploader(user.user)
+    return uploader.uploadContributorAudio(data)
+  } else {
+    return Promise.reject("S3 upload is only supported for Cognito users.")
+  }
+  // const uploader = new S3Uploader(user)
+  // return uploader.uploadContributorAudio(data)
 }

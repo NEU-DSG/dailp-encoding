@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Create a new user account and auto generates a display name based on the email. Can be changed later.\n-- Returns the user_id\ninsert into dailp_user (id, email, password_hash, email_verified, display_name, created_at)\nvalues (gen_random_uuid(), $1, $2, false, split_part($1, '@', 1), CURRENT_DATE)\nreturning id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c239a09998ef772576b6d67ab260923029975a19c4ec4732e77be40184675d49"
+}

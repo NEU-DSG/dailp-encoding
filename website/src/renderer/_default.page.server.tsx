@@ -120,6 +120,7 @@ const clientEnv = pick(process.env, [
   "TF_STAGE",
   "AWS_REGION",
   "CF_URL",
+  "AUTH_MODE",
   "TURNSTILE_SITE_KEY",
 ])
 
@@ -136,8 +137,9 @@ const baseScript = escapeInject`
       var global = window;
     }
     var process = ${clientProcess};
-    if (${skipConsoleLog}) {
-      console.log = function() {};
-    }
   </script>
 `
+
+// if (${skipConsoleLog}) {
+//       console.log = function(){};
+//     }

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert new token\ninsert into email_verification_tokens (user_id, token_hash, expires_at)\nvalues ($1, $2, $3)\nreturning id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ff08fde325d8f7cdd49167065279ac10c3eeeab354a2cf009892eb418d21f71e"
+}

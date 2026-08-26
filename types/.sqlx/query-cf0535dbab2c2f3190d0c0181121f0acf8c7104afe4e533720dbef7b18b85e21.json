@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Delete old unused tokens first\ndelete from password_reset_tokens \nwhere user_id = $1 and used = false;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cf0535dbab2c2f3190d0c0181121f0acf8c7104afe4e533720dbef7b18b85e21"
+}

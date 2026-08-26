@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Mark all refresh tokens for a user as revoked\n-- Used after password reset for security\nupdate refresh_tokens\nset revoked = true\nwhere user_id = $1;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a45eca483ed909b73890fc2b662d7746bf17a49fe2cc75de10703fd5a7164140"
+}
