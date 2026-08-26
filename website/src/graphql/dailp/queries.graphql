@@ -829,22 +829,53 @@ fragment FolderFields on Folder {
   id
   parentId
   name
+  path
+  createdAt
+  deletedAt
+  sizeBytes
 }
 
-fragment FileFields on File {
+fragment ImageFields on Image {
   id
   folderId
+  createdAt
+  deletedAt
+  uploadedBy
+  filename
+  mimeType
+  sizeBytes
+  width
+  height
+  altText
+  caption
   s3Url
-  name
+  scope
 }
 
-query FolderContents($folderId: UUID) {
-  folderContents(folderId: $folderId) {
+query FolderContents($path: String!) {
+  folderContents(path: $path) {
     folders {
       ...FolderFields
     }
-    files {
-      ...FileFields
+    images {
+      ...ImageFields
+    }
+  }
+}
+
+query FolderBreadcrumbs($path: String!) {
+  folderBreadcrumbs(path: $path) {
+    ...FolderFields
+  }
+}
+
+query ListTrash {
+  listTrash {
+    folders {
+      ...FolderFields
+    }
+    images {
+      ...ImageFields
     }
   }
 }
@@ -855,9 +886,9 @@ mutation CreateFolder($parentId: UUID, $name: String!) {
   }
 }
 
-mutation CreateFile($folderId: UUID, $name: String!, $s3Url: String!) {
-  createFile(folderId: $folderId, name: $name, s3Url: $s3Url) {
-    ...FileFields
+mutation CreateImage($image: NewImage!) {
+  createImage(image: $image) {
+    ...ImageFields
   }
 }
 
@@ -867,9 +898,9 @@ mutation RenameFolder($id: UUID!, $name: String!) {
   }
 }
 
-mutation RenameFile($id: UUID!, $name: String!) {
-  renameFile(id: $id, name: $name) {
-    ...FileFields
+mutation RenameImage($id: UUID!, $filename: String!) {
+  renameImage(id: $id, filename: $filename) {
+    ...ImageFields
   }
 }
 
@@ -879,8 +910,20 @@ mutation MoveFolder($id: UUID!, $parentId: UUID) {
   }
 }
 
-mutation MoveFile($id: UUID!, $folderId: UUID) {
-  moveFile(id: $id, folderId: $folderId) {
-    ...FileFields
+mutation MoveImage($id: UUID!, $folderId: UUID) {
+  moveImage(id: $id, folderId: $folderId) {
+    ...ImageFields
+  }
+}
+
+mutation DeleteFolder($id: UUID!) {
+  deleteFolder(id: $id) {
+    ...FolderFields
+  }
+}
+
+mutation DeleteImage($id: UUID!) {
+  deleteImage(id: $id) {
+    ...ImageFields
   }
 }

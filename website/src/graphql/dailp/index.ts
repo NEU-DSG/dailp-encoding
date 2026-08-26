@@ -23,6 +23,14 @@ export type Scalars = {
   /** A scalar that can represent any JSON value. */
   JSON: any
   /**
+   * ISO 8601 combined date and time without timezone.
+   *
+   * # Examples
+   *
+   * * `2015-07-01T08:59:60.123`,
+   */
+  NaiveDateTime: any
+  /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
    * entities without requiring a central allocating authority.
@@ -669,40 +677,35 @@ export type EditedCollection = {
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
 }
 
-/** A file in the shared asset library, pointing at an object in S3. */
-export type File = {
-  readonly __typename?: "File"
-  /** Folder holding this file, or null at the root of the library */
-  readonly folderId: Maybe<Scalars["UUID"]>
-  /** UUID for the file */
-  readonly id: Scalars["UUID"]
-  /** Display name of the file */
-  readonly name: Scalars["String"]
-  /** URL that the file's bytes are served from */
-  readonly s3Url: Scalars["String"]
-}
-
 /**
  * A folder in the shared asset library. Folders form a tree; a folder with no
  * parent sits at the root of the library.
  */
 export type Folder = {
   readonly __typename?: "Folder"
+  /** When this folder was created */
+  readonly createdAt: Scalars["NaiveDateTime"]
+  /** When this folder was soft-deleted, or null if it is still live */
+  readonly deletedAt: Maybe<Scalars["NaiveDateTime"]>
   /** UUID for the folder */
   readonly id: Scalars["UUID"]
   /** Display name of the folder */
   readonly name: Scalars["String"]
   /** Folder this one sits inside, or null at the root of the library */
   readonly parentId: Maybe<Scalars["UUID"]>
+  /** Slugified path from the root, e.g. "partners.logos". */
+  readonly path: Scalars["String"]
+  /** Total size of this folder's contents, in bytes */
+  readonly sizeBytes: Scalars["Int"]
 }
 
 /** Everything directly inside a single folder (one level) like the unix `ls` command. */
 export type FolderContents = {
   readonly __typename?: "FolderContents"
-  /** Files directly inside this folder */
-  readonly files: ReadonlyArray<File>
   /** Subfolders directly inside this folder */
   readonly folders: ReadonlyArray<Folder>
+  /** Images directly inside this folder */
+  readonly images: ReadonlyArray<Image>
 }
 
 /** Stores the physical or digital medium associated with a document */
@@ -785,6 +788,45 @@ export type IiifImages = {
   readonly source: ImageSource
   /** List of urls for all the images in this collection */
   readonly urls: ReadonlyArray<Scalars["String"]>
+}
+
+/** An image in the shared asset library, pointing at an object in S3. */
+export type Image = {
+  readonly __typename?: "Image"
+  /** Alternative text describing the image, for screen readers */
+  readonly altText: Maybe<Scalars["String"]>
+  /** Caption displayed alongside the image */
+  readonly caption: Maybe<Scalars["String"]>
+  /** When this image was created */
+  readonly createdAt: Scalars["NaiveDateTime"]
+  /** When this image was soft-deleted, or null if it is still live */
+  readonly deletedAt: Maybe<Scalars["NaiveDateTime"]>
+  /** Display name of the image */
+  readonly filename: Scalars["String"]
+  /** Folder holding this image, or null at the root of the library */
+  readonly folderId: Maybe<Scalars["UUID"]>
+  /** Pixel height of the image */
+  readonly height: Scalars["Int"]
+  /** UUID for the image */
+  readonly id: Scalars["UUID"]
+  /** MIME type of the underlying object, e.g. "image/png" */
+  readonly mimeType: Scalars["String"]
+  /** URL that the image's bytes are served from */
+  readonly s3Url: Scalars["String"]
+  /** Where this image is meant to be used */
+  readonly scope: ImageScope
+  /** Size of the underlying object, in bytes */
+  readonly sizeBytes: Scalars["Int"]
+  /** User who uploaded this image, if known */
+  readonly uploadedBy: Maybe<Scalars["UUID"]>
+  /** Pixel width of the image */
+  readonly width: Scalars["Int"]
+}
+
+/** Where an image is meant to be used across the site. */
+export enum ImageScope {
+  Collection = "COLLECTION",
+  Site = "SITE",
 }
 
 export type ImageSource = {
@@ -968,13 +1010,13 @@ export type Mutation = {
    */
   readonly attachAudioToWord: AnnotatedForm
   readonly createEditedCollection: Scalars["String"]
-  /**
-   * Record a file that has already been uploaded to S3. A null `folderId`
-   * places it at the root.
-   */
-  readonly createFile: File
   /** Create an asset-library folder. A null `parentId` places it at the root. */
   readonly createFolder: Folder
+  /**
+   * Record an image that has already been uploaded to S3. A null `folderId`
+   * places it at the root. The uploader is taken from the signed-in user.
+   */
+  readonly createImage: Image
   /** Adds a new subject heading to the global list. */
   readonly createSubjectHeading: SubjectHeading
   /** Decide if a piece of document audio should be included in edited collection */
@@ -988,22 +1030,29 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
-  readonly insertCustomMorphemeTag: Scalars["Boolean"]
-  /** Move a file into another folder. A null `folderId` moves it to the root. */
-  readonly moveFile: File
   /**
-   * Move a folder under a new parent. A null `parentId` moves it to the root.
-   * Descendants follow automatically since they reference the folder's id.
+   * Soft-delete a folder and its whole subtree (stamps `deleted_at` on the
+   * folder and all descendant folders and files; the rows stay for history).
+   */
+  readonly deleteFolder: Folder
+  /** Soft-delete an image (stamps `deleted_at`; the row stays for history). */
+  readonly deleteImage: Image
+  readonly insertCustomMorphemeTag: Scalars["Boolean"]
+  /**
+   * Move a folder under a new parent. Descendants follow automatically since
+   * they reference the folder's id. A null `parentId` moves it to the root.
    */
   readonly moveFolder: Folder
+  /** Move an image into another folder. A null `folderId` moves it to the root. */
+  readonly moveImage: Image
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
-  /** Rename a file. */
-  readonly renameFile: File
   /** Rename a folder. */
   readonly renameFolder: Folder
+  /** Rename an image. */
+  readonly renameImage: Image
   /** Inverts associated collection's visiblity */
   readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
@@ -1043,15 +1092,13 @@ export type MutationCreateEditedCollectionArgs = {
   input: CreateEditedCollectionInput
 }
 
-export type MutationCreateFileArgs = {
-  folderId: InputMaybe<Scalars["UUID"]>
-  name: Scalars["String"]
-  s3Url: Scalars["String"]
-}
-
 export type MutationCreateFolderArgs = {
   name: Scalars["String"]
   parentId: InputMaybe<Scalars["UUID"]>
+}
+
+export type MutationCreateImageArgs = {
+  image: NewImage
 }
 
 export type MutationCreateSubjectHeadingArgs = {
@@ -1075,20 +1122,28 @@ export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
 }
 
+export type MutationDeleteFolderArgs = {
+  id: Scalars["UUID"]
+}
+
+export type MutationDeleteImageArgs = {
+  id: Scalars["UUID"]
+}
+
 export type MutationInsertCustomMorphemeTagArgs = {
   system: Scalars["String"]
   tag: Scalars["String"]
   title: Scalars["String"]
 }
 
-export type MutationMoveFileArgs = {
-  folderId: InputMaybe<Scalars["UUID"]>
-  id: Scalars["UUID"]
-}
-
 export type MutationMoveFolderArgs = {
   id: Scalars["UUID"]
   parentId: InputMaybe<Scalars["UUID"]>
+}
+
+export type MutationMoveImageArgs = {
+  folderId: InputMaybe<Scalars["UUID"]>
+  id: Scalars["UUID"]
 }
 
 export type MutationPostCommentArgs = {
@@ -1099,14 +1154,14 @@ export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
 }
 
-export type MutationRenameFileArgs = {
+export type MutationRenameFolderArgs = {
   id: Scalars["UUID"]
   name: Scalars["String"]
 }
 
-export type MutationRenameFolderArgs = {
+export type MutationRenameImageArgs = {
+  filename: Scalars["String"]
   id: Scalars["UUID"]
-  name: Scalars["String"]
 }
 
 export type MutationToggleCollectionVisibilityArgs = {
@@ -1155,6 +1210,30 @@ export type MutationUpsertPageArgs = {
 
 export type MutationValidateTurnstileTokenArgs = {
   token: Scalars["String"]
+}
+
+/** Input for recording an image that has already been uploaded to S3. */
+export type NewImage = {
+  /** Alternative text describing the image, for screen readers */
+  readonly altText: InputMaybe<Scalars["String"]>
+  /** Caption displayed alongside the image */
+  readonly caption: InputMaybe<Scalars["String"]>
+  /** Display name of the image */
+  readonly filename: Scalars["String"]
+  /** Folder to place the image in, or null for the root */
+  readonly folderId: InputMaybe<Scalars["UUID"]>
+  /** Pixel height of the image */
+  readonly height: Scalars["Int"]
+  /** MIME type of the underlying object, e.g. "image/png" */
+  readonly mimeType: Scalars["String"]
+  /** URL the uploaded bytes live at */
+  readonly s3Url: Scalars["String"]
+  /** Where this image is meant to be used */
+  readonly scope: ImageScope
+  /** Size of the underlying object, in bytes */
+  readonly sizeBytes: Scalars["Int"]
+  /** Pixel width of the image */
+  readonly width: Scalars["Int"]
 }
 
 /** Input struct for a page. */
@@ -1269,10 +1348,23 @@ export type Query = {
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
   /**
-   * Everything directly inside an asset-library folder - subfolders and files
-   * One level deep. Pass a null `folderId` to list the root.
+   * The ancestor trail of a folder path, root first, including the folder
+   * itself. The empty string (the library root) has no trail.
+   */
+  readonly folderBreadcrumbs: ReadonlyArray<Folder>
+  /**
+   * Everything directly inside an asset-library folder - subfolders and images
+   * one level deep. `path` is a slugified folder path such as
+   * "partners.logos"; the empty string lists the root of the library.
    */
   readonly folderContents: FolderContents
+  /**
+   * Everything in the asset library's trash - the outermost soft-deleted
+   * folders and images. Anything inside a deleted folder is omitted, since
+   * restoring that folder restores its whole subtree and children cannot be
+   * restored on their own.
+   */
+  readonly listTrash: TrashContents
   /** Gets all dailp_user with their id, username, and role for now */
   readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
@@ -1348,8 +1440,12 @@ export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
+export type QueryFolderBreadcrumbsArgs = {
+  path: Scalars["String"]
+}
+
 export type QueryFolderContentsArgs = {
-  folderId: InputMaybe<Scalars["UUID"]>
+  path: Scalars["String"]
 }
 
 export type QueryMenuBySlugArgs = {
@@ -1450,6 +1546,19 @@ export type SubjectHeadingUpdate = {
   readonly id: Scalars["UUID"]
   /** Name of the subject heading */
   readonly name: Scalars["String"]
+}
+
+/**
+ * Everything currently in the trash: the outermost soft-deleted folders and
+ * images. Contents of a deleted folder are omitted, since restoring that folder
+ * restores everything inside it.
+ */
+export type TrashContents = {
+  readonly __typename?: "TrashContents"
+  /** Soft-deleted folders whose parent is the root or is still live */
+  readonly folders: ReadonlyArray<Folder>
+  /** Soft-deleted images whose folder is the root or is still live */
+  readonly images: ReadonlyArray<Image>
 }
 
 /** Update the contributor attribution for a document */
@@ -3610,16 +3719,29 @@ export type ValidateTurnstileTokenMutation = {
 
 export type FolderFieldsFragment = { readonly __typename?: "Folder" } & Pick<
   Folder,
-  "id" | "parentId" | "name"
+  "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt" | "sizeBytes"
 >
 
-export type FileFieldsFragment = { readonly __typename?: "File" } & Pick<
-  File,
-  "id" | "folderId" | "s3Url" | "name"
+export type ImageFieldsFragment = { readonly __typename?: "Image" } & Pick<
+  Image,
+  | "id"
+  | "folderId"
+  | "createdAt"
+  | "deletedAt"
+  | "uploadedBy"
+  | "filename"
+  | "mimeType"
+  | "sizeBytes"
+  | "width"
+  | "height"
+  | "altText"
+  | "caption"
+  | "s3Url"
+  | "scope"
 >
 
 export type FolderContentsQueryVariables = Exact<{
-  folderId: InputMaybe<Scalars["UUID"]>
+  path: Scalars["String"]
 }>
 
 export type FolderContentsQuery = { readonly __typename?: "Query" } & {
@@ -3627,13 +3749,89 @@ export type FolderContentsQuery = { readonly __typename?: "Query" } & {
     readonly folders: ReadonlyArray<
       { readonly __typename?: "Folder" } & Pick<
         Folder,
-        "id" | "parentId" | "name"
+        | "id"
+        | "parentId"
+        | "name"
+        | "path"
+        | "createdAt"
+        | "deletedAt"
+        | "sizeBytes"
       >
     >
-    readonly files: ReadonlyArray<
-      { readonly __typename?: "File" } & Pick<
-        File,
-        "id" | "folderId" | "s3Url" | "name"
+    readonly images: ReadonlyArray<
+      { readonly __typename?: "Image" } & Pick<
+        Image,
+        | "id"
+        | "folderId"
+        | "createdAt"
+        | "deletedAt"
+        | "uploadedBy"
+        | "filename"
+        | "mimeType"
+        | "sizeBytes"
+        | "width"
+        | "height"
+        | "altText"
+        | "caption"
+        | "s3Url"
+        | "scope"
+      >
+    >
+  }
+}
+
+export type FolderBreadcrumbsQueryVariables = Exact<{
+  path: Scalars["String"]
+}>
+
+export type FolderBreadcrumbsQuery = { readonly __typename?: "Query" } & {
+  readonly folderBreadcrumbs: ReadonlyArray<
+    { readonly __typename?: "Folder" } & Pick<
+      Folder,
+      | "id"
+      | "parentId"
+      | "name"
+      | "path"
+      | "createdAt"
+      | "deletedAt"
+      | "sizeBytes"
+    >
+  >
+}
+
+export type ListTrashQueryVariables = Exact<{ [key: string]: never }>
+
+export type ListTrashQuery = { readonly __typename?: "Query" } & {
+  readonly listTrash: { readonly __typename?: "TrashContents" } & {
+    readonly folders: ReadonlyArray<
+      { readonly __typename?: "Folder" } & Pick<
+        Folder,
+        | "id"
+        | "parentId"
+        | "name"
+        | "path"
+        | "createdAt"
+        | "deletedAt"
+        | "sizeBytes"
+      >
+    >
+    readonly images: ReadonlyArray<
+      { readonly __typename?: "Image" } & Pick<
+        Image,
+        | "id"
+        | "folderId"
+        | "createdAt"
+        | "deletedAt"
+        | "uploadedBy"
+        | "filename"
+        | "mimeType"
+        | "sizeBytes"
+        | "width"
+        | "height"
+        | "altText"
+        | "caption"
+        | "s3Url"
+        | "scope"
       >
     >
   }
@@ -3647,20 +3845,37 @@ export type CreateFolderMutationVariables = Exact<{
 export type CreateFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly createFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    "id" | "parentId" | "name"
+    | "id"
+    | "parentId"
+    | "name"
+    | "path"
+    | "createdAt"
+    | "deletedAt"
+    | "sizeBytes"
   >
 }
 
-export type CreateFileMutationVariables = Exact<{
-  folderId: InputMaybe<Scalars["UUID"]>
-  name: Scalars["String"]
-  s3Url: Scalars["String"]
+export type CreateImageMutationVariables = Exact<{
+  image: NewImage
 }>
 
-export type CreateFileMutation = { readonly __typename?: "Mutation" } & {
-  readonly createFile: { readonly __typename?: "File" } & Pick<
-    File,
-    "id" | "folderId" | "s3Url" | "name"
+export type CreateImageMutation = { readonly __typename?: "Mutation" } & {
+  readonly createImage: { readonly __typename?: "Image" } & Pick<
+    Image,
+    | "id"
+    | "folderId"
+    | "createdAt"
+    | "deletedAt"
+    | "uploadedBy"
+    | "filename"
+    | "mimeType"
+    | "sizeBytes"
+    | "width"
+    | "height"
+    | "altText"
+    | "caption"
+    | "s3Url"
+    | "scope"
   >
 }
 
@@ -3672,19 +3887,38 @@ export type RenameFolderMutationVariables = Exact<{
 export type RenameFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly renameFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    "id" | "parentId" | "name"
+    | "id"
+    | "parentId"
+    | "name"
+    | "path"
+    | "createdAt"
+    | "deletedAt"
+    | "sizeBytes"
   >
 }
 
-export type RenameFileMutationVariables = Exact<{
+export type RenameImageMutationVariables = Exact<{
   id: Scalars["UUID"]
-  name: Scalars["String"]
+  filename: Scalars["String"]
 }>
 
-export type RenameFileMutation = { readonly __typename?: "Mutation" } & {
-  readonly renameFile: { readonly __typename?: "File" } & Pick<
-    File,
-    "id" | "folderId" | "s3Url" | "name"
+export type RenameImageMutation = { readonly __typename?: "Mutation" } & {
+  readonly renameImage: { readonly __typename?: "Image" } & Pick<
+    Image,
+    | "id"
+    | "folderId"
+    | "createdAt"
+    | "deletedAt"
+    | "uploadedBy"
+    | "filename"
+    | "mimeType"
+    | "sizeBytes"
+    | "width"
+    | "height"
+    | "altText"
+    | "caption"
+    | "s3Url"
+    | "scope"
   >
 }
 
@@ -3696,19 +3930,79 @@ export type MoveFolderMutationVariables = Exact<{
 export type MoveFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly moveFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    "id" | "parentId" | "name"
+    | "id"
+    | "parentId"
+    | "name"
+    | "path"
+    | "createdAt"
+    | "deletedAt"
+    | "sizeBytes"
   >
 }
 
-export type MoveFileMutationVariables = Exact<{
+export type MoveImageMutationVariables = Exact<{
   id: Scalars["UUID"]
   folderId: InputMaybe<Scalars["UUID"]>
 }>
 
-export type MoveFileMutation = { readonly __typename?: "Mutation" } & {
-  readonly moveFile: { readonly __typename?: "File" } & Pick<
-    File,
-    "id" | "folderId" | "s3Url" | "name"
+export type MoveImageMutation = { readonly __typename?: "Mutation" } & {
+  readonly moveImage: { readonly __typename?: "Image" } & Pick<
+    Image,
+    | "id"
+    | "folderId"
+    | "createdAt"
+    | "deletedAt"
+    | "uploadedBy"
+    | "filename"
+    | "mimeType"
+    | "sizeBytes"
+    | "width"
+    | "height"
+    | "altText"
+    | "caption"
+    | "s3Url"
+    | "scope"
+  >
+}
+
+export type DeleteFolderMutationVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type DeleteFolderMutation = { readonly __typename?: "Mutation" } & {
+  readonly deleteFolder: { readonly __typename?: "Folder" } & Pick<
+    Folder,
+    | "id"
+    | "parentId"
+    | "name"
+    | "path"
+    | "createdAt"
+    | "deletedAt"
+    | "sizeBytes"
+  >
+}
+
+export type DeleteImageMutationVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type DeleteImageMutation = { readonly __typename?: "Mutation" } & {
+  readonly deleteImage: { readonly __typename?: "Image" } & Pick<
+    Image,
+    | "id"
+    | "folderId"
+    | "createdAt"
+    | "deletedAt"
+    | "uploadedBy"
+    | "filename"
+    | "mimeType"
+    | "sizeBytes"
+    | "width"
+    | "height"
+    | "altText"
+    | "caption"
+    | "s3Url"
+    | "scope"
   >
 }
 
@@ -3933,14 +4227,28 @@ export const FolderFieldsFragmentDoc = gql`
     id
     parentId
     name
+    path
+    createdAt
+    deletedAt
+    sizeBytes
   }
 `
-export const FileFieldsFragmentDoc = gql`
-  fragment FileFields on File {
+export const ImageFieldsFragmentDoc = gql`
+  fragment ImageFields on Image {
     id
     folderId
+    createdAt
+    deletedAt
+    uploadedBy
+    filename
+    mimeType
+    sizeBytes
+    width
+    height
+    altText
+    caption
     s3Url
-    name
+    scope
   }
 `
 export const CollectionsListingDocument = gql`
@@ -5026,25 +5334,64 @@ export function useValidateTurnstileTokenMutation() {
   >(ValidateTurnstileTokenDocument)
 }
 export const FolderContentsDocument = gql`
-  query FolderContents($folderId: UUID) {
-    folderContents(folderId: $folderId) {
+  query FolderContents($path: String!) {
+    folderContents(path: $path) {
       folders {
         ...FolderFields
       }
-      files {
-        ...FileFields
+      images {
+        ...ImageFields
       }
     }
   }
   ${FolderFieldsFragmentDoc}
-  ${FileFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
 `
 
 export function useFolderContentsQuery(
-  options?: Omit<Urql.UseQueryArgs<FolderContentsQueryVariables>, "query">
+  options: Omit<Urql.UseQueryArgs<FolderContentsQueryVariables>, "query">
 ) {
   return Urql.useQuery<FolderContentsQuery, FolderContentsQueryVariables>({
     query: FolderContentsDocument,
+    ...options,
+  })
+}
+export const FolderBreadcrumbsDocument = gql`
+  query FolderBreadcrumbs($path: String!) {
+    folderBreadcrumbs(path: $path) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useFolderBreadcrumbsQuery(
+  options: Omit<Urql.UseQueryArgs<FolderBreadcrumbsQueryVariables>, "query">
+) {
+  return Urql.useQuery<FolderBreadcrumbsQuery, FolderBreadcrumbsQueryVariables>(
+    { query: FolderBreadcrumbsDocument, ...options }
+  )
+}
+export const ListTrashDocument = gql`
+  query ListTrash {
+    listTrash {
+      folders {
+        ...FolderFields
+      }
+      images {
+        ...ImageFields
+      }
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useListTrashQuery(
+  options?: Omit<Urql.UseQueryArgs<ListTrashQueryVariables>, "query">
+) {
+  return Urql.useQuery<ListTrashQuery, ListTrashQueryVariables>({
+    query: ListTrashDocument,
     ...options,
   })
 }
@@ -5062,18 +5409,18 @@ export function useCreateFolderMutation() {
     CreateFolderDocument
   )
 }
-export const CreateFileDocument = gql`
-  mutation CreateFile($folderId: UUID, $name: String!, $s3Url: String!) {
-    createFile(folderId: $folderId, name: $name, s3Url: $s3Url) {
-      ...FileFields
+export const CreateImageDocument = gql`
+  mutation CreateImage($image: NewImage!) {
+    createImage(image: $image) {
+      ...ImageFields
     }
   }
-  ${FileFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
 `
 
-export function useCreateFileMutation() {
-  return Urql.useMutation<CreateFileMutation, CreateFileMutationVariables>(
-    CreateFileDocument
+export function useCreateImageMutation() {
+  return Urql.useMutation<CreateImageMutation, CreateImageMutationVariables>(
+    CreateImageDocument
   )
 }
 export const RenameFolderDocument = gql`
@@ -5090,18 +5437,18 @@ export function useRenameFolderMutation() {
     RenameFolderDocument
   )
 }
-export const RenameFileDocument = gql`
-  mutation RenameFile($id: UUID!, $name: String!) {
-    renameFile(id: $id, name: $name) {
-      ...FileFields
+export const RenameImageDocument = gql`
+  mutation RenameImage($id: UUID!, $filename: String!) {
+    renameImage(id: $id, filename: $filename) {
+      ...ImageFields
     }
   }
-  ${FileFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
 `
 
-export function useRenameFileMutation() {
-  return Urql.useMutation<RenameFileMutation, RenameFileMutationVariables>(
-    RenameFileDocument
+export function useRenameImageMutation() {
+  return Urql.useMutation<RenameImageMutation, RenameImageMutationVariables>(
+    RenameImageDocument
   )
 }
 export const MoveFolderDocument = gql`
@@ -5118,17 +5465,45 @@ export function useMoveFolderMutation() {
     MoveFolderDocument
   )
 }
-export const MoveFileDocument = gql`
-  mutation MoveFile($id: UUID!, $folderId: UUID) {
-    moveFile(id: $id, folderId: $folderId) {
-      ...FileFields
+export const MoveImageDocument = gql`
+  mutation MoveImage($id: UUID!, $folderId: UUID) {
+    moveImage(id: $id, folderId: $folderId) {
+      ...ImageFields
     }
   }
-  ${FileFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
 `
 
-export function useMoveFileMutation() {
-  return Urql.useMutation<MoveFileMutation, MoveFileMutationVariables>(
-    MoveFileDocument
+export function useMoveImageMutation() {
+  return Urql.useMutation<MoveImageMutation, MoveImageMutationVariables>(
+    MoveImageDocument
+  )
+}
+export const DeleteFolderDocument = gql`
+  mutation DeleteFolder($id: UUID!) {
+    deleteFolder(id: $id) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useDeleteFolderMutation() {
+  return Urql.useMutation<DeleteFolderMutation, DeleteFolderMutationVariables>(
+    DeleteFolderDocument
+  )
+}
+export const DeleteImageDocument = gql`
+  mutation DeleteImage($id: UUID!) {
+    deleteImage(id: $id) {
+      ...ImageFields
+    }
+  }
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useDeleteImageMutation() {
+  return Urql.useMutation<DeleteImageMutation, DeleteImageMutationVariables>(
+    DeleteImageDocument
   )
 }

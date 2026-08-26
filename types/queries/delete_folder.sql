@@ -1,6 +1,6 @@
--- Delete a folder. $1 id
--- Fails if the folder still holds subfolders or files: both foreign keys restrict
--- by default, so contents must be moved or deleted first.
-delete from folders
+-- Soft-delete a folder: stamp deleted_at rather than removing the row. $1 id
+update folders
+set deleted_at = now()
 where id = $1
-returning id, parent_id, name;
+returning id, parent_id, name, path::text as "path!", created_at, deleted_at,
+          size_bytes;

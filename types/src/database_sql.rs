@@ -10,7 +10,7 @@ use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
-use crate::asset_library::{File, Folder, FolderContents};
+use crate::asset_library::{Folder, FolderContents, Image, ImageScope, NewImage, TrashContents};
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
@@ -701,26 +701,52 @@ impl Database {
 
     // --- Asset library: folders ---
 
-    /// Create a folder. `parent_id` of `None` places it at the root.
+    /// Create a folder. `parent_id` of `None` places it at the root. The path is
+    /// the parent's path plus this folder's slug, built in SQL so the path and
+    /// `parent_id` are always written together.
     pub async fn insert_folder(&self, parent_id: Option<Uuid>, name: &str) -> Result<Folder> {
+        // Parsing here rejects a bad label before it reaches Postgres.
+        let slug = PgLTree::from_str(&crate::slugify_ltree(name))?;
         Ok(
-            query_file_as!(Folder, "queries/insert_folder.sql", parent_id, name)
+            query_file_as!(Folder, "queries/insert_folder.sql", parent_id, name, slug)
                 .fetch_one(&self.client)
                 .await?,
         )
     }
 
-    /// Rename a folder.
+    /// Rename a folder. The folder's own path label changes with it, so every
+    /// descendant's path is rebuilt on the new prefix in the same statement.
     pub async fn rename_folder(&self, id: Uuid, name: &str) -> Result<Folder> {
+        let slug = PgLTree::from_str(&crate::slugify_ltree(name))?;
         Ok(
-            query_file_as!(Folder, "queries/rename_folder.sql", id, name)
+            query_file_as!(Folder, "queries/rename_folder.sql", id, name, slug)
                 .fetch_one(&self.client)
                 .await?,
         )
     }
 
-    /// Move a folder under a new parent (`None` = root). Descendants ride along
-    /// unchanged since they reference this folder's unchanged id.
+    /// Look a live folder up by its path, e.g. "partners.logos".
+    pub async fn folder_by_path(&self, path: &str) -> Result<Option<Folder>> {
+        let path = PgLTree::from_str(path)?;
+        Ok(query_file_as!(Folder, "queries/folder_by_path.sql", path)
+            .fetch_optional(&self.client)
+            .await?)
+    }
+
+    /// The ancestor trail of the folder at `path`, root first, including the
+    /// folder itself.
+    pub async fn folder_breadcrumbs(&self, path: &str) -> Result<Vec<Folder>> {
+        let path = PgLTree::from_str(path)?;
+        Ok(
+            query_file_as!(Folder, "queries/folder_breadcrumbs.sql", path)
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
+    /// Move a folder under a new parent (`None` = root). `parent_id` changes on
+    /// the folder itself, and every path in the subtree is rebuilt on the
+    /// destination's prefix in the same statement.
     ///
     /// Rejects moving a folder into itself or one of its own descendants, which
     /// would detach that subtree from the root and create a cycle.
@@ -743,11 +769,33 @@ impl Database {
         )
     }
 
-    /// Delete a folder. Errors if it still holds subfolders or files.
+    /// Soft-delete a folder and its whole subtree by stamping `deleted_at`; the
+    /// rows stay for history. Returns the soft-deleted top folder. Already-deleted
+    /// descendants keep their original stamp.
     pub async fn delete_folder(&self, id: Uuid) -> Result<Folder> {
-        Ok(query_file_as!(Folder, "queries/delete_folder.sql", id)
-            .fetch_one(&self.client)
-            .await?)
+        let mut tx = self.client.begin().await?;
+
+        // Stamp the top folder first and grab it to return; the `deleted_at is
+        // null` guard below then skips it while stamping the descendants.
+        let folder = query_file_as!(Folder, "queries/delete_folder.sql", id)
+            .fetch_one(&mut *tx)
+            .await?;
+
+        let folder_ids: Vec<Uuid> = query_file_as!(Folder, "queries/folder_subtree.sql", id)
+            .fetch_all(&mut *tx)
+            .await?
+            .iter()
+            .map(|f| f.id)
+            .collect();
+        query_file!("queries/soft_delete_folders.sql", &folder_ids)
+            .execute(&mut *tx)
+            .await?;
+        query_file!("queries/soft_delete_images_in_folders.sql", &folder_ids)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(folder)
     }
 
     /// Immediate subfolders of `parent_id` (`None` lists the root).
@@ -759,57 +807,83 @@ impl Database {
         )
     }
 
-    // --- Asset library: files ---
+    // --- Asset library: images ---
 
-    /// Record a file that has already been uploaded to S3. `folder_id` of `None`
-    /// places it at the root.
-    pub async fn insert_file(
-        &self,
-        folder_id: Option<Uuid>,
-        name: &str,
-        s3_url: &str,
-    ) -> Result<File> {
+    /// Record an image that has already been uploaded to S3. `folder_id` of `None`
+    /// places it at the root. `uploaded_by` is the acting user, when known.
+    pub async fn insert_image(&self, image: NewImage, uploaded_by: Option<Uuid>) -> Result<Image> {
+        Ok(query_file_as!(
+            Image,
+            "queries/insert_image.sql",
+            image.folder_id,
+            image.filename,
+            image.mime_type,
+            image.size_bytes,
+            image.width,
+            image.height,
+            image.alt_text,
+            image.caption,
+            image.s3_url,
+            image.scope as _,
+            uploaded_by
+        )
+        .fetch_one(&self.client)
+        .await?)
+    }
+
+    /// Rename an image.
+    pub async fn rename_image(&self, id: Uuid, filename: &str) -> Result<Image> {
         Ok(
-            query_file_as!(File, "queries/insert_file.sql", folder_id, name, s3_url)
+            query_file_as!(Image, "queries/rename_image.sql", id, filename)
                 .fetch_one(&self.client)
                 .await?,
         )
     }
 
-    /// Rename a file.
-    pub async fn rename_file(&self, id: Uuid, name: &str) -> Result<File> {
-        Ok(query_file_as!(File, "queries/rename_file.sql", id, name)
+    /// Move an image into another folder (`None` = root) by re-assigning its
+    /// `folder_id`.
+    pub async fn move_image(&self, id: Uuid, folder_id: Option<Uuid>) -> Result<Image> {
+        Ok(
+            query_file_as!(Image, "queries/move_image.sql", id, folder_id)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    /// Soft-delete an image by stamping `deleted_at`; the row stays for history.
+    pub async fn delete_image(&self, id: Uuid) -> Result<Image> {
+        Ok(query_file_as!(Image, "queries/delete_image.sql", id)
             .fetch_one(&self.client)
             .await?)
     }
 
-    /// Move a file into another folder (`None` = root).
-    pub async fn move_file(&self, id: Uuid, folder_id: Option<Uuid>) -> Result<File> {
-        Ok(query_file_as!(File, "queries/move_file.sql", id, folder_id)
-            .fetch_one(&self.client)
-            .await?)
-    }
-
-    /// Delete a file.
-    pub async fn delete_file(&self, id: Uuid) -> Result<File> {
-        Ok(query_file_as!(File, "queries/delete_file.sql", id)
-            .fetch_one(&self.client)
-            .await?)
-    }
-
-    /// Files directly inside `folder_id` (`None` lists the root).
-    pub async fn list_files(&self, folder_id: Option<Uuid>) -> Result<Vec<File>> {
-        Ok(query_file_as!(File, "queries/list_files.sql", folder_id)
+    /// Images directly inside `folder_id` (`None` lists the root).
+    pub async fn list_images(&self, folder_id: Option<Uuid>) -> Result<Vec<Image>> {
+        Ok(query_file_as!(Image, "queries/list_images.sql", folder_id)
             .fetch_all(&self.client)
             .await?)
     }
 
     /// Everything directly inside a folder (`None` = root) - the library's `ls`.
-    /// Combines the subfolder and file listings into one `FolderContents`.
+    /// Combines the subfolder and image listings into one `FolderContents`.
     pub async fn list_folder_contents(&self, folder_id: Option<Uuid>) -> Result<FolderContents> {
         Ok(FolderContents {
             folders: self.list_folders(folder_id).await?,
-            files: self.list_files(folder_id).await?,
+            images: self.list_images(folder_id).await?,
+        })
+    }
+
+    /// Everything in the trash: the outermost soft-deleted folders and images.
+    /// Anything inside a deleted folder is omitted, since restoring that folder
+    /// restores its whole subtree and children cannot be restored on their own.
+    pub async fn list_trash(&self) -> Result<TrashContents> {
+        Ok(TrashContents {
+            folders: query_file_as!(Folder, "queries/trash_folders.sql")
+                .fetch_all(&self.client)
+                .await?,
+            images: query_file_as!(Image, "queries/trash_images.sql")
+                .fetch_all(&self.client)
+                .await?,
         })
     }
 

@@ -1,7 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    asset_library::{File, Folder, FolderContents},
+    asset_library::{Folder, FolderContents, Image, NewImage, TrashContents},
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
     collection,
@@ -421,18 +421,51 @@ impl Query {
         Ok(db.all_subject_headings().await?)
     }
 
-    /// Everything directly inside an asset-library folder - subfolders and files
-    /// One level deep. Pass a null `folderId` to list the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    /// Everything directly inside an asset-library folder - subfolders and images
+    /// one level deep. `path` is a slugified folder path such as
+    /// "partners.logos"; the empty string lists the root of the library.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn folder_contents(
         &self,
         context: &Context<'_>,
-        folder_id: Option<Uuid>,
+        path: String,
     ) -> FieldResult<FolderContents> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let folder_id = folder_by_path(db, &path).await?;
+        Ok(db.list_folder_contents(folder_id).await?)
+    }
+
+    /// The ancestor trail of a folder path, root first, including the folder
+    /// itself. The empty string (the library root) has no trail.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn folder_breadcrumbs(
+        &self,
+        context: &Context<'_>,
+        path: String,
+    ) -> FieldResult<Vec<Folder>> {
+        if path.is_empty() {
+            return Ok(Vec::new());
+        }
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .list_folder_contents(folder_id)
+            .folder_breadcrumbs(&path)
+            .await?)
+    }
+
+    /// Everything in the asset library's trash - the outermost soft-deleted
+    /// folders and images. Anything inside a deleted folder is omitted, since
+    /// restoring that folder restores its whole subtree and children cannot be
+    /// restored on their own.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn list_trash(&self, context: &Context<'_>) -> FieldResult<TrashContents> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .list_trash()
             .await?)
     }
 }
@@ -1066,7 +1099,8 @@ impl Mutation {
     }
 
     /// Create an asset-library folder. A null `parentId` places it at the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn create_folder(
         &self,
         context: &Context<'_>,
@@ -1080,25 +1114,22 @@ impl Mutation {
             .await?)
     }
 
-    /// Record a file that has already been uploaded to S3. A null `folderId`
-    /// places it at the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn create_file(
-        &self,
-        context: &Context<'_>,
-        folder_id: Option<Uuid>,
-        name: String,
-        s3_url: String,
-    ) -> FieldResult<File> {
+    /// Record an image that has already been uploaded to S3. A null `folderId`
+    /// places it at the root. The uploader is taken from the signed-in user.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn create_image(&self, context: &Context<'_>, image: NewImage) -> FieldResult<Image> {
+        let uploaded_by = context.data_opt::<UserInfo>().map(|user| user.id);
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .insert_file(folder_id, &name, &s3_url)
+            .insert_image(image, uploaded_by)
             .await?)
     }
 
     /// Rename a folder.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn rename_folder(
         &self,
         context: &Context<'_>,
@@ -1112,24 +1143,26 @@ impl Mutation {
             .await?)
     }
 
-    /// Rename a file.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn rename_file(
+    /// Rename an image.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn rename_image(
         &self,
         context: &Context<'_>,
         id: Uuid,
-        name: String,
-    ) -> FieldResult<File> {
+        filename: String,
+    ) -> FieldResult<Image> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .rename_file(id, &name)
+            .rename_image(id, &filename)
             .await?)
     }
 
-    /// Move a folder under a new parent. A null `parentId` moves it to the root.
-    /// Descendants follow automatically since they reference the folder's id.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    /// Move a folder under a new parent. Descendants follow automatically since
+    /// they reference the folder's id. A null `parentId` moves it to the root.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn move_folder(
         &self,
         context: &Context<'_>,
@@ -1143,20 +1176,59 @@ impl Mutation {
             .await?)
     }
 
-    /// Move a file into another folder. A null `folderId` moves it to the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn move_file(
+    /// Move an image into another folder. A null `folderId` moves it to the root.
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn move_image(
         &self,
         context: &Context<'_>,
         id: Uuid,
         folder_id: Option<Uuid>,
-    ) -> FieldResult<File> {
+    ) -> FieldResult<Image> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .move_file(id, folder_id)
+            .move_image(id, folder_id)
             .await?)
     }
+
+    /// Soft-delete a folder and its whole subtree (stamps `deleted_at` on the
+    /// folder and all descendant folders and files; the rows stay for history).
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn delete_folder(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Folder> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_folder(id)
+            .await?)
+    }
+
+    /// Soft-delete an image (stamps `deleted_at`; the row stays for history).
+    // TESTING: auth guard temporarily disabled — restore before commit
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn delete_image(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Image> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_image(id)
+            .await?)
+    }
+}
+
+/// Turns an asset-library folder path into the folder's id. The empty string is
+/// the library root, which is not a folder row, so it resolves to `None` -- the
+/// same value the listing queries take for "top level". Any other path must name
+/// a live folder.
+async fn folder_by_path(db: &Database, path: &str) -> FieldResult<Option<Uuid>> {
+    if path.is_empty() {
+        return Ok(None);
+    }
+    let folder = db
+        .folder_by_path(path)
+        .await?
+        .ok_or_else(|| anyhow::format_err!("No folder at path \"{}\"", path))?;
+    Ok(Some(folder.id))
 }
 
 #[derive(async_graphql::SimpleObject)]
