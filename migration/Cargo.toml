@@ -1,12 +1,16 @@
 [package]
 name = "dailp-migration"
 version = "0.3.0"
-authors = ["Shelby Snead <taylor@snead.xyz>"]
+authors = ["Naomi Trevino", "Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
 [[bin]]
 name = "dailp-migration"
 path = "src/main.rs"
+
+[[bin]]
+name = "migrate-to-xml"
+path = "src/migrate-to-xml.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -29,3 +33,6 @@ pretty_env_logger = "0.4"
 csv = "1.1"
 
 dailp = {path = "../types"}
+
+[dev-dependencies]
+roxmltree = "0.19"
