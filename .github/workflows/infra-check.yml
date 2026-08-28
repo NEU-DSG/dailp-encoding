@@ -21,6 +21,7 @@ jobs:
       deployment: false
     env:
       DATABASE_PASSWORD:  ${{ inputs.applyTo == 'Staging/UAT' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      BASTION_ID: ${{ (inputs.applyTo == 'Staging/UAT' && secrets.UAT_EC2_INSTANCE) || (inputs.applyTo == 'Production' && secrets.EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE}}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
