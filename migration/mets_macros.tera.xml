@@ -1,0 +1,47 @@
+{# Shared building blocks for collection.tera.xml and document.tera.xml. Import with
+   `{% import "mets_macros.tera.xml" as mets %}`. #}
+
+{# METS root opening tag used across all METS files #}
+{% macro mets_open(objid, label) %}
+<mets:mets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.loc.gov/METS/v2 https://github.com/mets/METS-schema/blob/main/v2/mets2.xsd"
+ xmlns:mets="http://www.loc.gov/METS/v2" OBJID="{{ objid }}"
+ LABEL="{{ label }}">
+{% endmacro mets_open %}
+
+{% macro mets_hdr(now) %}
+<mets:metsHdr CREATEDATE="{{ now }}">
+  <mets:agent ROLE="CREATOR" TYPE="OTHER">
+    <mets:name>DAILP</mets:name>
+    <mets:note>
+        This METS XML file was created by DAILP's backup automation software.
+    </mets:note>
+  </mets:agent>
+</mets:metsHdr>
+{% endmacro mets_hdr %}
+
+{% macro rights_md() %}
+<mets:md ID="DOCRIGHTS" USE="RIGHTS">
+  <mets:mdWrap MDTYPE="METSRights">
+    <mets:xmlData>
+      <rts:RightsDeclarationMD xmlns:rts="http://cosimo.stanford.edu/sdr/metsrights/" RIGHTSCATEGORY="COPYRIGHTED">
+        <rts:Context CONTEXTCLASS="Creative Commons Attribution NonCommercial 4.0 International">
+          <rts:Constraints CONSTRAINTTYPE="RE-USE">
+            <rts:ConstraintDescription>You must give appropriate credit, provide a link to the license, and indicate if changes were made. You
+              may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use. You may not use the material for commercial purposes.
+              You may not apply legal terms or technological measure that legally restrict others from doing anything the license permits.
+            </rts:ConstraintDescription>
+          </rts:Constraints>
+        </rts:Context>
+      </rts:RightsDeclarationMD>
+    </mets:xmlData>
+  </mets:mdWrap>
+</mets:md>
+{% endmacro rights_md %}
+
+{% macro file_entry(id, loctype, locref, mdid="") %}
+<mets:file ID="{{ id }}"{% if mdid %} MDID="{{ mdid }}"{% endif %}>
+  <mets:FLocat LOCTYPE="{{ loctype }}"
+    LOCREF="{{ locref }}" />
+</mets:file>
+{% endmacro file_entry %}

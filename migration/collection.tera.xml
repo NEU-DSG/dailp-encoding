@@ -1,0 +1,57 @@
+{%- import "mets_macros.tera.xml" as mets -%}
+<?xml version="1.0" encoding="UTF-8"?>
+{{ mets::mets_open(objid=collection_title, label=collection_label) }}
+<!-- HEADER-->
+{{ mets::mets_hdr(now=now) }}
+<mets:mdSec>
+  <mets:mdGrp USE="DESCRIPTIVE">
+    <mets:md ID="{{ collection_slug ~ '_dc' }}">
+      <mets:mdWrap MDTYPE="DC">
+        <mets:xmlData>
+          <dc:record xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">
+            <dc:title>{{ collection_title }}</dc:title>
+            {% for name in contributors -%}
+            <dc:contributor>{{ name }}</dc:contributor>
+            {% endfor -%}
+            <dc:citation>{{ citation }}</dc:citation>
+          </dc:record>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:md>
+  </mets:mdGrp>
+  <!--RIGHTS-->
+  <mets:mdGrp USE="RIGHTS">
+    {{ mets::rights_md() }}
+  </mets:mdGrp>
+</mets:mdSec>
+<mets:fileSec>
+  <mets:fileGrp USE="original">
+    {% for doc in documents -%}
+    {{ mets::file_entry(id=doc.slug ~ "_m", loctype="URL", locref=doc.audio_locref) }}
+    {% endfor -%}
+  </mets:fileGrp>
+  <mets:fileGrp USE="cloud backup">
+    {% for doc in documents -%}
+    {{ mets::file_entry(id=doc.slug ~ "_b", loctype="URL", locref="S3") }}
+    {% endfor -%}
+  </mets:fileGrp>
+  <mets:fileGrp USE="archival">
+    {% for doc in documents -%}
+    {{ mets::file_entry(id=doc.slug ~ "_a", loctype="SYSTEM", locref="FILE NAME.FORMAT EXTENSION") }}
+    {% endfor -%}
+  </mets:fileGrp>
+</mets:fileSec>
+<mets:structSec>
+    <!-- Map to put the mtpr in order. "METS pointers specify separate METS documents as containing the relevant file information for the <div> containing them.
+      This can be useful when encoding large collections of material (e.g., an entire journal run) to keep the size of each METS file in the set relatively small."-->
+    <mets:structMap TYPE="logical">
+      <mets:div TYPE="collection" LABEL="{{ collection_title }}">
+        {% for doc in documents -%}
+        <mets:div TYPE="document" LABEL="{{ doc.title }}">
+          <mets:mptr LOCTYPE="URL" LOCREF="{{ doc.mets_filename }}"/>
+        </mets:div>
+        {% endfor -%}
+      </mets:div>
+    </mets:structMap>
+</mets:structSec>
+</mets:mets>
