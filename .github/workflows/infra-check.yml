@@ -1,0 +1,39 @@
+name: Infrastructure Health Check
+
+on:
+  workflow_dispatch:
+    inputs: 
+      applyTo:
+        required: true
+        default: Development
+        type: choice
+        description: Which environment do you want to test against?
+        options:
+          - Development
+          - Staging/UAT
+          - Production
+jobs:
+  check_bastion:
+    name: Check Bastion EC2
+    runs-on: ubuntu-22.04
+    environment: 
+      name: ${{ inputs.applyTo == 'Production' && 'Production' || 'Development'}}
+      deployment: false
+    env:
+      DATABASE_PASSWORD:  ${{ inputs.applyTo == 'Staging/UAT' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      BASTION_ID: ${{ (inputs.applyTo == 'Staging/UAT' && secrets.UAT_EC2_INSTANCE) || (inputs.applyTo == 'Production' && secrets.EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE}}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Check Database Connection Path
+        run: | 
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          psql -c '\l'
+          jobs
