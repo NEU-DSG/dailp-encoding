@@ -114,17 +114,20 @@ in {
       };
     };
 
-    aws_amplify_domain_association.current_stage_domain = {
-      app_id = "\${aws_amplify_app.dailp.id}";
-      domain_name = let 
-        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
-      in "${subdomain}dailp.northeastern.edu";
-      sub_domain = {
-        branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
-        prefix = "";
-      };
-      wait_for_verification = false;
-    };
+    # TODO we need this to be configurable; hardcoded domains
+    # mean we can't spin up arbitrary test environments without already
+    # owning a real domaint.
+    # aws_amplify_domain_association.current_stage_domain = {
+    #   app_id = "\${aws_amplify_app.dailp.id}";
+    #   domain_name = let 
+    #     subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
+    #   in "${subdomain}dailp.northeastern.edu";
+    #   sub_domain = {
+    #     branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
+    #     prefix = "";
+    #   };
+    #   wait_for_verification = false;
+    # };
 
     aws_amplify_webhook.current_stage = {
       app_id = "\${aws_amplify_app.dailp.id}";

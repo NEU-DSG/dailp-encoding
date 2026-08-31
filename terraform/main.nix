@@ -54,8 +54,8 @@ in {
     state = let 
       prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
     in {
-      bucket = prefixName "terraform-state-bucket";
-      table = prefixName "terraform-state-locks";
+      bucket = "dailp-dev-sarahk-terraform-state-bucket";
+      table = "dailp-dev-sarahk-terraform-state-locks";
     };
     vpc = getEnv "AWS_VPC_ID";
     subnets = {

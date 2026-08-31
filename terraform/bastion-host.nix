@@ -9,13 +9,16 @@
       "github.com/cloudposse/terraform-aws-ec2-bastion-server?ref=v0.31.1";
     enabled = true;
     instance_type = "t4g.micro";
-    
-    # TODO Make this more flexible
-    ami = if config.setup.stage == "prod" 
-      then "ami-037d882b31eae26a2" 
-      else if config.setup.stage == "uat"
-      then "ami-03190fe20ef6b1419"
-      else "ami-0d1c8113ba7b8b12a";
+
+    # TODO: commenting out the ami as it doesn't appear to be available in my account.
+    # TBD what to do about this.
+    ami = "ami-02a162a9d90e36c35";
+    # # TODO Make this more flexible
+    # ami = if config.setup.stage == "prod" 
+    #   then "ami-037d882b31eae26a2" 
+    #   else if config.setup.stage == "uat"
+    #   then "ami-03190fe20ef6b1419"
+    #   else "ami-0d1c8113ba7b8b12a";
 
     # ami_filter = {
     #   name = [ "amzn2-ami-*-hvm-*-arm64-gp2" ]
@@ -27,7 +30,9 @@
     stage = config.setup.stage;
     name = "bastion";
 
-    key_name = "dailp-dev-2024";
+    # TODO need to figure out the best way to make this configurable
+    # without passing around secret key pairs.
+    # key_name = "dailp-dev-2024";
 
     assign_eip_address = true;
     associate_public_ip_address = false;
@@ -38,7 +43,7 @@
       # config.setup.subnets.secondary
       # config.setup.subnets.tertiary
     ];
-    
+
     # Don't create a new security group for this server.
     security_group_enabled = false;
     # Use the existing one setup for database access.

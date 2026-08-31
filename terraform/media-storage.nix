@@ -3,9 +3,7 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = let 
-        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-      in prefixName "media-storage";
+      bucket =  "20260811-bogus-media-storage-bucket";
       lifecycle.prevent_destroy = true;
     };
     aws_s3_bucket_cors_configuration.media_storage_cors = {
@@ -17,19 +15,19 @@
         max_age_seconds = 3600;
       };
     };
-    aws_s3_bucket_acl.media_storage = {
-      bucket = "$\{aws_s3_bucket.media_storage.id}";
-      acl = "private";
-    };
+    # aws_s3_bucket_acl.media_storage = {
+    #   bucket = "$\{aws_s3_bucket.media_storage.id}";
+    #   acl = "private";
+    # };
     aws_s3_bucket_versioning.media_storage_versioning = { 
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       versioning_configuration.status = "Enabled";
     };
-    aws_s3_bucket_logging.media_storage_logging = {
-      bucket = "$\{aws_s3_bucket.media_storage.id}";
-      target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/dailp-${config.setup.stage}-media-storage";
-    };
+    # aws_s3_bucket_logging.media_storage_logging = {
+    #   bucket = "$\{aws_s3_bucket.media_storage.id}";
+    #   target_bucket = config.setup.access_log_bucket;
+    #   target_prefix = "/dailp-${config.setup.stage}-media-storage";
+    # };
     aws_s3_bucket_server_side_encryption_configuration.media_storage_encryption = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       rule.apply_server_side_encryption_by_default.sse_algorithm = "AES256";

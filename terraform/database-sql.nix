@@ -39,7 +39,9 @@ in {
 
       publicly_accessible = false;
       multi_az = false;
-      availability_zone = config.servers.database.availability_zone;
+      # TODO: need to get this set properly, currently this points to e.g.
+      # "use1-az4" which is not accepted as a valid AZ.
+      # availability_zone = config.servers.database.availability_zone;
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
       final_snapshot_identifier = "${name}-primary-final-snapshot";
