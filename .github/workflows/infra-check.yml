@@ -16,7 +16,8 @@ jobs:
   check_bastion:
     name: Check Bastion EC2
     runs-on: ubuntu-22.04
-    environment: 
+    timeout-minutes: 10
+    environment:
       name: ${{ inputs.applyTo == 'Production' && 'Production' || 'Development'}}
       deployment: false
     env:
@@ -51,5 +52,12 @@ jobs:
           --target ${{ env.BASTION_ID }} \
           --document-name AWS-StartPortForwardingSessionToRemoteHost \
           --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          SSM_PID=$!
+          echo "Waiting for tunnel on localhost:5432..."
+          for i in $(seq 1 15); do
+            (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           psql "$DATABASE_URL" -c '\l'
+          kill $SSM_PID
