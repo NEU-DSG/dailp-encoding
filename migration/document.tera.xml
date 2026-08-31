@@ -10,11 +10,13 @@
   </mets:mdGrp>
   <!-- TECHNICAL-->
   <mets:mdGrp USE="TECHNICAL">
-    <mets:md ID="{{ collection_slug ~ '_' ~ document_slug ~ '_' ~ image_oid ~ '_a_tmd' }}"><!-- EXAMPLE IF WE WANT IT, COULD USE PREMIS INSTEAD, COULD REMOVE AND JUST KEEP CHECKSUM WITH THE FILES-->
+    {% for oid in page_image_oids -%}
+    <mets:md ID="{{ collection_slug ~ '_' ~ document_slug ~ '_' ~ oid ~ '_a_tmd' }}"><!-- EXAMPLE IF WE WANT IT, COULD USE PREMIS INSTEAD, COULD REMOVE AND JUST KEEP CHECKSUM WITH THE FILES-->
       <mets:mdWrap MIMETYPE="text/xml" MDTYPE="NISOIMG">
 
       </mets:mdWrap>
     </mets:md>
+    {% endfor -%}
   </mets:mdGrp>
   <!--RIGHTS-->
   <mets:mdGrp USE="RIGHTS">
@@ -25,28 +27,79 @@
 <mets:fileSec>
   <mets:fileGrp USE="original">
     <!-- Overall audio -->
+    {% if audio_url -%}
     {{ mets::file_entry(id=document_slug ~ "_m" ~ ext, loctype="URL", locref=audio_url) }}
-    <!-- Manuscript image-->
-    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ image_oid ~ "_m", loctype="URL", locref="https://collections.library.yale.edu/iiif/2/" ~ image_oid ~ "/full/max/0/default.jpg") }}
+    {% else -%}
+    <!-- No audio for {{ document_title }} -->
+    {% endif -%}
+    <!-- Manuscript image(s), one per page -->
+    {% for oid in page_image_oids -%}
+    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ oid ~ "_m", loctype="URL", locref="https://collections.library.yale.edu/iiif/2/" ~ oid ~ "/full/max/0/default.jpg") }}
+    {% endfor -%}
     <!-- TEI File -->
-    <!-- LOCREF is a placeholder pattern; update once the TEI-hosting URL scheme is finalized -->
-    {{ mets::file_entry(id=document_slug ~ "_tei_m", loctype="URL", locref="https://uat.dailp.northeastern.edu/documents/" ~ document_slug) }}
+    {{ mets::file_entry(id=document_slug ~ "_tei_m", loctype="URL", locref=dailp_base_url ~ "/documents/" ~ document_slug) }}
+    <!-- Manifest METS file -->
+    {{ mets::file_entry(id="manifest_m", loctype="URL", locref=dailp_base_url) }}
+    <!-- Collection METS file(s) this document belongs to -->
+    {% for coll in collections -%}
+    {{ mets::file_entry(id=coll.slug ~ "_collmets_m", loctype="URL", locref=dailp_base_url ~ "/collections/" ~ coll.slug) }}
+    {% endfor -%}
+    <!-- w4w Audio Files: only words with a recorded audio track get an entry -->
+    {% for word in words_with_audio -%}
+    {{ mets::file_entry(id=word.id ~ "_m", loctype="URL", locref=word.audio_url) }}
+    {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="cloud backup">
     <!-- Overall audio -->
-    {{ mets::file_entry(id=document_slug ~ "_b" ~ ext, loctype="URL", locref="S3") }}
-    <!-- Manuscript image-->
-    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ image_oid ~ "_b", loctype="URL", locref="S3") }}
+    {% if audio_url -%}
+    {{ mets::file_entry(id=document_slug ~ "_b" ~ ext, loctype="URL", locref=audio_url) }}
+    {% else -%}
+    <!-- No audio for {{ document_title }} -->
+    {% endif -%}
+    <!-- Manuscript image(s), one per page -->
+    {% for oid in page_image_oids -%}
+    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ oid ~ "_b", loctype="URL", locref=cf_url ~ "/" ~ oid ~ ".jpg") }}
+    {% endfor -%}
     <!-- TEI File -->
-    {{ mets::file_entry(id=document_slug ~ "_tei_b", loctype="URL", locref="S3") }}
+    {{ mets::file_entry(id=document_slug ~ "_tei_b", loctype="URL", locref=cf_url ~ "/" ~ tei_filename) }}
+    <!-- Manifest METS file -->
+    {{ mets::file_entry(id="manifest_b", loctype="URL", locref=cf_url ~ "/" ~ manifest_filename) }}
+    <!-- Collection METS file(s) this document belongs to -->
+    {% for coll in collections -%}
+    {{ mets::file_entry(id=coll.slug ~ "_collmets_b", loctype="URL", locref=cf_url ~ "/" ~ coll.mets_filename) }}
+    {% endfor -%}
+    <!-- w4w Audio Files -->
+    {% for word in words_with_audio -%}
+    {{ mets::file_entry(id=word.id ~ "_b", loctype="URL", locref=word.audio_url) }}
+    {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="archival">
+    <!-- This document file lives in documents/. Audio and images (once downloaded) live
+      in sibling directories, audio/ and images/; the manifest lives at the run root;
+      collection files live in the sibling collections/ directory; the TEI file lives
+      alongside this document's own METS file. -->
     <!-- Overall audio -->
-    {{ mets::file_entry(id=document_slug ~ "_a" ~ ext, loctype="SYSTEM", locref="FILE NAME.FORMAT EXTENSION") }}
-    <!-- Manuscript image-->
-    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ image_oid ~ "_a", loctype="SYSTEM", locref="FILE NAME.FORMAT EXTENSION", mdid=collection_slug ~ "_" ~ document_slug ~ "_" ~ image_oid ~ "_a_tmd") }}
+    {% if audio_url -%}
+    {{ mets::file_entry(id=document_slug ~ "_a" ~ ext, loctype="SYSTEM", locref="../audio/" ~ document_slug ~ ext) }}
+    {% else -%}
+    <!-- No audio for {{ document_title }} -->
+    {% endif -%}
+    <!-- Manuscript image(s), one per page -->
+    {% for oid in page_image_oids -%}
+    {{ mets::file_entry(id=collection_slug ~ "_" ~ document_slug ~ "_" ~ oid ~ "_a", loctype="SYSTEM", locref="../images/" ~ oid ~ ".jpg", mdid=collection_slug ~ "_" ~ document_slug ~ "_" ~ oid ~ "_a_tmd") }}
+    {% endfor -%}
     <!-- TEI File -->
-    {{ mets::file_entry(id=document_slug ~ "_tei_a", loctype="SYSTEM", locref="FILE NAME.FORMAT EXTENSION") }}
+    {{ mets::file_entry(id=document_slug ~ "_tei_a", loctype="SYSTEM", locref="./" ~ tei_filename) }}
+    <!-- Manifest METS file -->
+    {{ mets::file_entry(id="manifest_a", loctype="SYSTEM", locref="../" ~ manifest_filename) }}
+    <!-- Collection METS file(s) this document belongs to -->
+    {% for coll in collections -%}
+    {{ mets::file_entry(id=coll.slug ~ "_collmets_a", loctype="SYSTEM", locref="../collections/" ~ coll.mets_filename) }}
+    {% endfor -%}
+    <!-- w4w Audio Files -->
+    {% for word in words_with_audio -%}
+    {{ mets::file_entry(id=word.id ~ "_a", loctype="SYSTEM", locref="../audio/" ~ word.id ~ word.ext) }}
+    {% endfor -%}
   </mets:fileGrp>
 </mets:fileSec>
 <mets:structSec>
@@ -57,14 +110,27 @@
               <!-- If we want to directly link to lines in the TEI for each word, we should be able to. You would have to add a location for the lines in the TEI files under each word, then do a div with a <par> (for parallel) to
                 collocate redundant copies in this structural map-->
               <mets:par>
-                <mets:area FILEID="{{ collection_slug ~ '_' ~ document_slug ~ '_' ~ image_oid ~ '_m' }}"/>
+                {% for oid in page_image_oids -%}
+                <mets:area FILEID="{{ collection_slug ~ '_' ~ document_slug ~ '_' ~ oid ~ '_m' }}"/>
+                {% endfor -%}
                 <mets:area FILEID="{{ document_slug ~ '_tei_m' }}"/>
+                {% if audio_url -%}
                 <mets:area FILEID="{{ document_slug ~ '_m' ~ ext }}"/>
+                {% endif -%}
               </mets:par>
             </mets:fptr>
         </mets:div>
-        <!-- Word-by-word content (audio/TEI segments per word) is generated by the
-             separate TEI pipeline and intentionally omitted here. -->
+        {% if words_with_audio -%}
+        <mets:div TYPE="document" LABEL="{{ document_title ~ ' Word Content' }}">
+          {% for word in words_with_audio -%}
+          <mets:div TYPE="word" LABEL="{{ word.id }}">
+            <mets:fptr FILEID="{{ word.id ~ '_m' }}"/>
+            <mets:fptr FILEID="{{ word.id ~ '_b' }}"/>
+            <mets:fptr FILEID="{{ word.id ~ '_a' }}"/>
+          </mets:div>
+          {% endfor -%}
+        </mets:div>
+        {% endif -%}
       </mets:div>
   </mets:structMap>
 </mets:structSec>
