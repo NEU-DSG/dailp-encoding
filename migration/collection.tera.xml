@@ -19,6 +19,13 @@
       </mets:mdWrap>
     </mets:md>
   </mets:mdGrp>
+  <!-- TECHNICAL-->
+  <mets:mdGrp USE="TECHNICAL">
+    <mets:md ID="{{ collection_slug ~ '_tmd' }}"><!-- Placeholder: no technical metadata is defined for collections yet. -->
+      <mets:mdWrap MDTYPE="OTHER">
+      </mets:mdWrap>
+    </mets:md>
+  </mets:mdGrp>
   <!--RIGHTS-->
   <mets:mdGrp USE="RIGHTS">
     {{ mets::rights_md() }}
@@ -27,17 +34,31 @@
 <mets:fileSec>
   <mets:fileGrp USE="original">
     {% for doc in documents -%}
+    {% if doc.audio_locref -%}
     {{ mets::file_entry(id=doc.slug ~ "_m", loctype="URL", locref=doc.audio_locref) }}
+    {% else -%}
+    <!-- No audio for {{ doc.title }} -->
+    {% endif -%}
     {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="cloud backup">
     {% for doc in documents -%}
-    {{ mets::file_entry(id=doc.slug ~ "_b", loctype="URL", locref="S3") }}
+    {% if doc.audio_locref -%}
+    {{ mets::file_entry(id=doc.slug ~ "_b", loctype="URL", locref=doc.audio_locref) }}
+    {% else -%}
+    <!-- No audio for {{ doc.title }} -->
+    {% endif -%}
     {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="archival">
+    <!-- This collection file lives in collections/; audio downloads (once
+      implemented) live one level up, in audio/. -->
     {% for doc in documents -%}
-    {{ mets::file_entry(id=doc.slug ~ "_a", loctype="SYSTEM", locref="FILE NAME.FORMAT EXTENSION") }}
+    {% if doc.audio_locref -%}
+    {{ mets::file_entry(id=doc.slug ~ "_a", loctype="SYSTEM", locref="../audio/" ~ doc.slug ~ doc.ext) }}
+    {% else -%}
+    <!-- No audio for {{ doc.title }} -->
+    {% endif -%}
     {% endfor -%}
   </mets:fileGrp>
 </mets:fileSec>
@@ -48,7 +69,8 @@
       <mets:div TYPE="collection" LABEL="{{ collection_title }}">
         {% for doc in documents -%}
         <mets:div TYPE="document" LABEL="{{ doc.title }}">
-          <mets:mptr LOCTYPE="URL" LOCREF="{{ doc.mets_filename }}"/>
+          <!-- Documents live in documents/, a sibling of this file's collections/. -->
+          <mets:mptr LOCTYPE="URL" LOCREF="../documents/{{ doc.mets_filename }}"/>
         </mets:div>
         {% endfor -%}
       </mets:div>
