@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useEffect, useRef } from "react"
 import { UserRole, useUserRole } from "src/auth"
 import { CollectionSection } from "src/graphql/dailp"
 import {
@@ -98,11 +98,26 @@ const TOC = ({ section, chapters }: TOCProps) => {
   const listItemStyle =
     section === CollectionSection.Body ? css.listItem : css.numberedListItem
 
+  // Center TOC on selected page
+  const selectedRef = useRef<HTMLLIElement>(null)
+
+  useEffect(() => {
+    if (selectedRef.current) {
+      selectedRef.current.scrollIntoView({
+        block: "center",
+      })
+    }
+  }, [chapters])
+
   return (
     <>
       <ol className={listStyle}>
         {chapters.map((item) => (
-          <li key={item.slug} className={listItemStyle}>
+          <li
+            key={item.slug}
+            className={listItemStyle}
+            ref={lastSelected(item) ? selectedRef : undefined}
+          >
             <Link
               href={chapterRoute(collectionSlug!, item.slug)}
               className={lastSelected(item) ? css.selectedLink : css.link}
