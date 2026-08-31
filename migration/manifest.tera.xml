@@ -1,0 +1,63 @@
+{%- import "mets_macros.tera.xml" as mets -%}
+<?xml version="1.0" encoding="UTF-8"?>
+{{ mets::mets_open(objid="DAILP-Backup-Manifest", label="DAILP XML Backup Manifest") }}
+<!-- HEADER-->
+{{ mets::mets_hdr(now=now) }}
+<mets:mdSec>
+  <mets:mdGrp USE="DESCRIPTIVE">
+    <mets:md ID="dailp_manifest_dc">
+      <mets:mdWrap MDTYPE="DC">
+        <mets:xmlData>
+          <dc:record xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/">
+            <dc:title>DAILP XML Backup Manifest</dc:title>
+          </dc:record>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:md>
+  </mets:mdGrp>
+  <!-- TECHNICAL-->
+  <mets:mdGrp USE="TECHNICAL">
+    <mets:md ID="dailp_manifest_tmd"><!-- Placeholder: no technical metadata is defined for the manifest itself yet. -->
+      <mets:mdWrap MDTYPE="OTHER">
+      </mets:mdWrap>
+    </mets:md>
+  </mets:mdGrp>
+  <!--RIGHTS-->
+  <mets:mdGrp USE="RIGHTS">
+    {{ mets::rights_md() }}
+  </mets:mdGrp>
+</mets:mdSec>
+<mets:fileSec>
+  <mets:fileGrp USE="original">
+    {% for c in collections -%}
+    {{ mets::file_entry(id=c.slug ~ "_m", loctype="URL", locref=dailp_base_url ~ "/collections/" ~ c.slug) }}
+    {% endfor -%}
+  </mets:fileGrp>
+  <mets:fileGrp USE="cloud backup">
+    {% for c in collections -%}
+    {{ mets::file_entry(id=c.slug ~ "_b", loctype="URL", locref=cf_url ~ "/" ~ c.mets_filename) }}
+    {% endfor -%}
+  </mets:fileGrp>
+  <mets:fileGrp USE="archival">
+    <!-- The manifest lives at the run root; each collection file lives one level down,
+      in collections/. -->
+    {% for c in collections -%}
+    {{ mets::file_entry(id=c.slug ~ "_a", loctype="SYSTEM", locref="./collections/" ~ c.mets_filename) }}
+    {% endfor -%}
+  </mets:fileGrp>
+</mets:fileSec>
+<mets:structSec>
+    <!-- Map to put the mtpr in order. See collection.tera.xml for the same pattern one
+      level down (collection -> document); a manifest -> collection mptr keeps this file
+      small regardless of how many collections DAILP eventually has. -->
+    <mets:structMap TYPE="logical">
+      <mets:div TYPE="manifest" LABEL="DAILP XML Backup Manifest">
+        {% for c in collections -%}
+        <mets:div TYPE="collection" LABEL="{{ c.title }}">
+          <mets:mptr LOCTYPE="URL" LOCREF="./collections/{{ c.mets_filename }}"/>
+        </mets:div>
+        {% endfor -%}
+      </mets:div>
+    </mets:structMap>
+</mets:structSec>
+</mets:mets>
