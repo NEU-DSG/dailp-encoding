@@ -41,7 +41,6 @@
 
 {% macro file_entry(id, loctype, locref, mdid="") %}
 <mets:file ID="{{ id }}"{% if mdid %} MDID="{{ mdid }}"{% endif %}>
-  <mets:FLocat LOCTYPE="{{ loctype }}"
-    LOCREF="{{ locref }}" />
+  <mets:FLocat LOCTYPE="{{ loctype }}" LOCREF="{{ locref }}" />
 </mets:file>
 {% endmacro file_entry %}
