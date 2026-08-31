@@ -2,8 +2,10 @@ import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
+import { FiInfo } from "react-icons/fi/index"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
+import { InfoTooltip } from "src/components/info-tooltip"
 import * as Dailp from "src/graphql/dailp"
 import { KeyDate } from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
@@ -50,6 +52,22 @@ export const formatMap: Record<string, string> = {
 // Get citation format display name
 function getDisplayName(code: string) {
   return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
+}
+
+// Tool tips for metadata types
+const TOOLTIP_TEXT = {
+  date: "Date that the physical resource we are translated here was created.",
+  docType:
+    "Distinguishes resources by describing the nature of this resource's content. Please use format and genre for more information.",
+  format: "File type for this digital version of the resource.",
+  contributors:
+    "People who work to create the resources on the site, labelled by the types of contributions they made.",
+  keywords:
+    "Main words that represent this resource’s content. This helps to improve searching on our site, but can also be a good place to gain context for the resource.",
+  subjectHeadings:
+    "Topic or main concept of this resource’s content, including Indigenous knowledge practices.",
+  spatialCoverage:
+    "Locations, dates, and/or time periods that appear throughout this resource.",
 }
 
 // Reusable approved tags lists
@@ -267,6 +285,33 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
   const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
+
+  // Query IIIF link for format type of this document
+  const [{ data: iiifData }] = Dailp.useIiifSourceForDocumentMetadataQuery({
+    variables: { documentId: documentMetadata.id },
+    pause: !documentMetadata.id,
+  })
+  const [iiifFormat, setIiifFormat] = useState<string>("")
+
+  // When URL is accessible, grab format type from IIIF url info.json
+  useEffect(() => {
+    if (!iiifData?.iiifSourceForDocumentMetadata) return
+
+    fetch(iiifData.iiifSourceForDocumentMetadata)
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        return res.json()
+      })
+      .then((info) => {
+        const formats = info?.profile?.[1]?.formats
+        if (Array.isArray(formats) && formats.length > 0) {
+          setIiifFormat(formats[0])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [iiifData])
+
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
@@ -436,7 +481,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setDate(dateObj)
 
     setTitle(dm.title ?? "")
-    setFormat(dm.format?.name ?? "")
+    setFormat(dm.format?.name ?? iiifFormat ?? "")
     setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
@@ -478,7 +523,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
       keyDates: [...(dm.keyDates ?? [])],
     })
-  }, [documentMetadata])
+  }, [documentMetadata, iiifFormat])
 
   const addContributor = (
     name: string,
@@ -713,7 +758,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
 
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Date Created</label>
+              <label className={styles.label}>
+                Date Created <InfoTooltip content={TOOLTIP_TEXT.date} />
+              </label>
               <DatePicker
                 onChange={(newDate: any) => setDate(newDate)}
                 value={date}
@@ -741,7 +788,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Document Type</label>
+              <label className={styles.label}>
+                Document Type <InfoTooltip content={TOOLTIP_TEXT.docType} />
+              </label>
               <input
                 type="text"
                 className={styles.input}
@@ -752,7 +801,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
 
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Format</label>
+              <label className={styles.label}>
+                Format <InfoTooltip content={TOOLTIP_TEXT.format} />
+              </label>
               <input
                 type="text"
                 className={styles.input}
@@ -862,6 +913,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 </div>
               ) : null
             }
+            tooltipInfo={TOOLTIP_TEXT.contributors}
           />
 
           {/* <div className={styles.fullWidthGroup}>
@@ -895,36 +947,38 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onAdd={(tagName) => addKeyword(tagName)}
             onRemove={removeKeyword}
             addButtonLabel="Add Pre-existing Keywords"
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                marginBottom: "12px",
-                alignItems: "center",
-              }}
-            >
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Enter keyword..."
-                value={freeKeyword}
-                onChange={(e) => setFreeKeyword(e.target.value)}
-              />
-              <button
-                type="button"
-                className={styles.addTagButton}
-                onClick={() => {
-                  if (freeKeyword.trim()) {
-                    addKeyword(freeKeyword.trim())
-                    setFreeKeyword("")
-                  }
+            tooltipInfo={TOOLTIP_TEXT.keywords}
+            customForm={
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "12px",
+                  alignItems: "center",
                 }}
               >
-                Add Keyword
-              </button>
-            </div>
-          </TagSelector>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Enter keyword..."
+                  value={freeKeyword}
+                  onChange={(e) => setFreeKeyword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.addTagButton}
+                  onClick={() => {
+                    if (freeKeyword.trim()) {
+                      addKeyword(freeKeyword.trim())
+                      setFreeKeyword("")
+                    }
+                  }}
+                >
+                  Add Keyword
+                </button>
+              </div>
+            }
+          />
 
           <TagSelector
             label="Subject Headings"
@@ -1006,6 +1060,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 </div>
               )
             }
+            tooltipInfo={TOOLTIP_TEXT.subjectHeadings}
           />
 
           <TagSelector
@@ -1026,6 +1081,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onAdd={isEditing ? addCoverage : undefined}
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
+            tooltipInfo={TOOLTIP_TEXT.spatialCoverage}
           />
 
           <TagSelector
