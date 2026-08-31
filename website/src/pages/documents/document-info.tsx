@@ -173,9 +173,21 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       })
 
       await reexecuteQuery({ requestPolicy: "network-only" })
+
+      setMessage({
+        type: "success",
+        message: "Document metadata updated successfully.",
+      })
+
       setIsEditing(false)
     } catch (error) {
       console.error("Failed to update document:", error)
+
+      setMessage({
+        type: "error",
+        message: "Failed to update document metadata.",
+      })
+
       setIsEditing(false)
     }
   }
