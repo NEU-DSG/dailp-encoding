@@ -8,7 +8,7 @@ import {
   radii,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { marginY, paddingX, paddingY } from "src/style/utils"
 import { std } from "src/style/utils.css"
 

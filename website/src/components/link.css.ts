@@ -1,5 +1,5 @@
 import { createVar, fallbackVar, style } from "@vanilla-extract/css"
-import { colors, mediaQueries } from "src/style/constants"
+import { colors, mediaQueries } from "src/style/design-tokens"
 import { media, onHover } from "src/style/utils"
 
 export const linkColor = createVar()

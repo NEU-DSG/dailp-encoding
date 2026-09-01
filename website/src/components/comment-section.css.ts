@@ -10,7 +10,7 @@ import {
   tagColors,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { marginX, marginY, paddingX, paddingY } from "src/style/utils"
 
 const wordShared = style([

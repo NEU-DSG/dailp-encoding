@@ -6,7 +6,7 @@ import {
   layers,
   mediaQueries,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { marginY, media, paddingX } from "src/style/utils"
 import {
   centeredColumn,
