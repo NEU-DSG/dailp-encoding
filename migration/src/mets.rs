@@ -1,5 +1,5 @@
 //! Generates METS (Metadata Encoding & Transmission Standard) XML backup manifests
-//! describing an [`dailp::EditedCollection`] and its member [`dailp::AnnotatedDoc`]s.
+//! describing every [`dailp::EditedCollection`] and their member [`dailp::AnnotatedDoc`]s.
 //!
 //! Three Tera templates drive this:
 //! - `migration/manifest.tera.xml` renders one manifest file per run, listing every
@@ -11,27 +11,32 @@
 //! directly in its METS file; the word-for-word translation/analysis content itself is
 //! encoded in a separate TEI XML file, rendered from `migration/translation.tera.xml` by
 //! the sibling [`crate::tei`] module and written alongside this document's METS file.
-//! Full multi-collection linkage is also out of scope for now — see the doc comment on
-//! [`generate_mets_for_collection`].
+//! Every run processes every collection handed to [`generate_mets_bundle`] (today, every
+//! [`dailp::EditedCollection`] in the database -- see `migrate-to-xml.rs`'s `main`); see
+//! that function's doc comment for how a document belonging to more than one collection
+//! in the same run is handled.
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context as _, Result};
 use dailp::async_graphql::dataloader::Loader;
-use dailp::{AnnotatedDoc, ChaptersInCollection, Database, DocumentId, EditedCollectionDetails};
+use dailp::{
+    AnnotatedDoc, ChaptersInCollection, CollectionChapter, Database, DocumentId, EditedCollection,
+};
 use log::{info, warn};
 use serde::Serialize;
 
 use crate::checksum::sha256_hex;
 
-/// Generates a full backup bundle for one collection into a fresh, timestamped run
-/// directory, `<workspace root>/backups/xml/dailp/dailp-<timestamp>/`:
-/// - `manifest.mets.xml` — lists the collection(s) processed in this run.
+/// Generates a full backup bundle for every collection in `collections` into a fresh,
+/// timestamped run directory, `<workspace root>/backups/xml/dailp/dailp-<timestamp>/`:
+/// - `manifest.mets.xml` — lists every collection processed in this run.
 /// - `collections/<collection title>.mets.xml` — one per collection processed.
 /// - `documents/<document title>.mets.xml` and `documents/<document title>.tei.xml` —
-///   one METS/TEI pair per member document, sharing a filename stem (see
-///   `CollectionDocumentEntry.file_stem`).
+///   one METS/TEI pair per *unique* member document (a document belonging to more than
+///   one collection in this run is still only written once — see below), sharing a
+///   filename stem (see `CollectionDocumentEntry.file_stem`).
 /// - `images/` — each document's manuscript page images, downloaded from their real IIIF
 ///   source and named `{document_slug}_{iiif_oid}.jpg` — see
 ///   [`crate::images::download_page_images`].
@@ -41,9 +46,10 @@ use crate::checksum::sha256_hex;
 ///   [`crate::audio_backup::download_words_with_audio`] for the exact filename convention.
 /// - `editorial/<heading>/<page title>.{md,html}` — standalone site pages (not owned by
 ///   any edited collection), grouped by their top-level site-nav heading — see
-///   [`crate::editorial::export_site_pages`].
+///   [`crate::editorial::export_site_pages`]. Exported once for the whole run, not once
+///   per collection.
 /// - `collections/editorial/<collection>_<section>_<chapter>.{md,html}` — editorial
-///   content for this collection's chapters that are backed by a `page` row (rather than,
+///   content for each collection's chapters that are backed by a `page` row (rather than,
 ///   or in addition to, an `AnnotatedDoc`) — see
 ///   [`crate::editorial::export_collection_chapters`].
 ///
@@ -56,15 +62,28 @@ use crate::checksum::sha256_hex;
 /// elsewhere in this crate (`edited_collection.rs`, `main.rs`) and in
 /// `terraform/website.nix`.
 ///
-/// Known limitation: a document's METS file lists the collection(s) it belongs to as
-/// just the collection processed in this run, since there's no `CollectionsForDocument`
-/// reverse-lookup loader yet (mirroring `ChaptersInCollection` in
-/// `types/src/database_sql.rs`), and this function itself only ever processes one
-/// hardcoded collection per invocation (see the TODO in `migrate-to-xml.rs`). The
-/// manifest file has the same limitation: it lists only the collection(s) processed in
-/// this run, not every collection in the database.
-pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) -> Result<()> {
-    info!("Generating METS backups for collection \"{collection_slug}\"");
+/// A document that's a chapter of more than one collection in `collections` is still
+/// written exactly once (its audio downloaded once, its `.mets.xml`/`.tei.xml` rendered
+/// once) -- see `document_entries` below. `DocumentMetsContext.collections` lists every
+/// collection in this run that actually contains it, aggregated in memory across every
+/// collection's chapters (`doc_collections` below); no `CollectionsForDocument`
+/// reverse-lookup loader is needed for that, since every collection's chapters are already
+/// loaded before any document is rendered. Two fields that only make sense relative to a
+/// single collection's own chapter order -- `DocumentMetsContext.collection_slug` (used
+/// only to build page-image `xml:id`s) and the document's TEI file's prev/next navigation
+/// links -- use the document's "home" collection instead: the first collection in
+/// `collections` (in slice order) whose chapters contain it (`home_collection` below).
+/// This is a deliberate simplification, not a full fix: a document shared by several
+/// collections gets one navigation chain and one `collection_slug`, not one per owning
+/// collection. There's still no `CollectionsForDocument` loader (document -> every
+/// collection it belongs to, globally, across runs) -- moot today since every collection
+/// in the database is always passed in, but would matter again if a future caller passes
+/// only a subset.
+pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection]) -> Result<()> {
+    info!(
+        "Generating METS backups for {} collection(s)",
+        collections.len()
+    );
 
     let now = dailp::chrono::Utc::now();
     let created_at = now.format(CREATEDATE_FORMAT).to_string();
@@ -75,54 +94,61 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
     )?;
     let dailp_base_url = dailp_base_url();
 
-    let collection_key = EditedCollectionDetails(collection_slug.to_owned());
-    let collection = Loader::load(db, &[collection_key.clone()])
-        .await
-        .map_err(|e| anyhow::anyhow!("Failed to load collection {collection_slug}: {e}"))?
-        .remove(&collection_key)
-        .ok_or_else(|| anyhow::anyhow!("No collection found with slug {collection_slug}"))?;
-    info!("Loaded collection \"{}\"", collection.title);
-
-    let chapters_key = ChaptersInCollection(collection_slug.to_owned());
-    let chapters = Loader::load(db, &[chapters_key.clone()])
-        .await
-        .map_err(|e| anyhow::anyhow!("Failed to load chapters for {collection_slug}: {e}"))?
-        .remove(&chapters_key)
-        .unwrap_or_default();
-    info!(
-        "Loaded {} chapter(s) for \"{}\"",
-        chapters.len(),
-        collection.title
-    );
-
-    // Chapters without a document_id are Intro/Credit sections with no AnnotatedDoc of
-    // their own; word/paragraph-level TEI content is out of scope here regardless.
-    let document_ids: Vec<DocumentId> = chapters
+    // Batch-load every collection's chapters in one call -- `ChaptersInCollection`'s query
+    // already does `where ... = any($1)` and groups results by collection slug, so
+    // covering an arbitrary number of collections needs no new SQL/loader.
+    let chapter_keys: Vec<ChaptersInCollection> = collections
         .iter()
-        .filter_map(|chapter| chapter.document_id)
+        .map(|c| ChaptersInCollection(c.slug.clone()))
         .collect();
-
-    let mut documents_by_id: HashMap<DocumentId, AnnotatedDoc> = Loader::load(db, &document_ids)
-        .await
-        .map_err(|e| anyhow::anyhow!("Failed to load documents for {collection_slug}: {e}"))?;
-
-    if documents_by_id.len() < document_ids.len() {
-        warn!(
-            "{} chapter(s) in \"{}\" reference a document_id that couldn't be loaded; they'll be skipped",
-            document_ids.len() - documents_by_id.len(),
+    let mut chapters_by_slug: HashMap<ChaptersInCollection, Vec<CollectionChapter>> =
+        Loader::load(db, &chapter_keys)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to load collection chapters: {e}"))?;
+    // Indexed the same way as `collections` (and, later, `collection_results`/
+    // `collection_refs`), so a collection's index into `collections` can be used to look
+    // up its chapters/ref/rendered-result throughout this function.
+    let chapters_by_collection: Vec<Vec<CollectionChapter>> = collections
+        .iter()
+        .map(|c| {
+            chapters_by_slug
+                .remove(&ChaptersInCollection(c.slug.clone()))
+                .unwrap_or_default()
+        })
+        .collect();
+    for (collection, chapters) in collections.iter().zip(chapters_by_collection.iter()) {
+        info!(
+            "Loaded {} chapter(s) for \"{}\"",
+            chapters.len(),
             collection.title
         );
     }
 
-    // Preserve the chapters' order (already sorted by the collection_chapters query).
-    let documents: Vec<AnnotatedDoc> = document_ids
+    // Chapters without a document_id are Intro/Credit sections with no AnnotatedDoc of
+    // their own; word/paragraph-level TEI content is out of scope here regardless. Union
+    // every collection's document ids -- a document shared by more than one collection
+    // appears once in this set -- and batch-load every `AnnotatedDoc` in one call, so a
+    // shared document is only ever fetched once.
+    let document_ids: Vec<DocumentId> = chapters_by_collection
         .iter()
-        .filter_map(|id| documents_by_id.remove(id))
+        .flatten()
+        .filter_map(|chapter| chapter.document_id)
+        .collect::<HashSet<_>>()
+        .into_iter()
         .collect();
+    let documents_by_id: HashMap<DocumentId, AnnotatedDoc> = Loader::load(db, &document_ids)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to load documents: {e}"))?;
+    if documents_by_id.len() < document_ids.len() {
+        warn!(
+            "{} document_id(s) referenced by a chapter couldn't be loaded; they'll be skipped",
+            document_ids.len() - documents_by_id.len()
+        );
+    }
     info!(
-        "Loaded {} member document(s) for \"{}\"",
-        documents.len(),
-        collection.title
+        "Loaded {} unique member document(s) across {} collection(s)",
+        documents_by_id.len(),
+        collections.len()
     );
 
     // Every file produced by this run lives under one fresh, timestamped directory, so
@@ -146,8 +172,10 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
         std::fs::create_dir_all(dir)
             .with_context(|| format!("Failed to create directory {}", dir.display()))?;
     }
-    // Standalone site pages (not owned by this or any other collection) grouped by their
-    // top-level site-nav heading. Referenced from the manifest file below.
+    // Standalone site pages (not owned by any collection) grouped by their top-level
+    // site-nav heading. Referenced from the manifest file below. Exported once for the
+    // whole run (not once per collection), since it's the same set of pages regardless of
+    // how many collections this run processes.
     //
     // TODO
     // Goal: Only reference, from manifest.mets.xml, the site pages that are actually
@@ -160,25 +188,334 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
     // (omit entirely vs. still export to disk but leave unlinked from any manifest), plus
     // a new `editorial.tera.xml` template + context struct.
     let site_pages = crate::editorial::export_site_pages(db, &editorial_dir).await?;
-    // This collection's chapters that are backed by a `page` row rather than (or in
-    // addition to) an `AnnotatedDoc`. Referenced from this collection's own METS file
-    // below.
-    let collection_editorial_pages = crate::editorial::export_collection_chapters(
-        db,
-        &collection,
-        &chapters,
-        &collections_editorial_dir,
-    )
-    .await?;
 
     // Shared across every image/audio download this run makes, so connections/TLS sessions
     // are reused rather than re-established per file -- mirrors `audio.rs`'s `Client::new()`.
     let http_client = reqwest::Client::new();
 
+    // Build each unique document's `CollectionDocumentEntry` exactly once -- its audio is
+    // downloaded once regardless of how many collections it belongs to in this run, so
+    // every collection/document file that references it agrees on
+    // file_stem/checksum/archival_locref.
+    let mut document_entries: HashMap<DocumentId, CollectionDocumentEntry> = HashMap::new();
+    for (&id, doc) in &documents_by_id {
+        let entry = build_document_entry(&http_client, doc, &audio_dir).await;
+        document_entries.insert(id, entry);
+    }
+
+    let collection_run_ctx = CollectionRunContext {
+        created_at: created_at.clone(),
+        cf_url: cf_url.clone(),
+        dailp_base_url: dailp_base_url.clone(),
+        collections_dir: collections_dir.clone(),
+        collections_editorial_dir,
+    };
+
+    // Render+write each collection's own METS file, consuming the shared document entries
+    // built above rather than downloading/deriving them itself.
+    let mut collection_results = Vec::with_capacity(collections.len());
+    for (collection, chapters) in collections.iter().zip(chapters_by_collection.iter()) {
+        let result = render_one_collection(
+            db,
+            collection,
+            chapters,
+            &documents_by_id,
+            &document_entries,
+            &collection_run_ctx,
+        )
+        .await?;
+        collection_results.push(result);
+    }
+
+    // Collection(s) referenced from the manifest, and (aggregated below) from each
+    // document's fileSec -- every collection processed this run, not just one.
+    let collection_refs: Vec<CollectionRef> = collection_results
+        .iter()
+        .map(|r| r.collection_ref.clone())
+        .collect();
+
+    let manifest_filename = "manifest.mets.xml".to_owned();
+    let manifest_ctx = ManifestMetsContext {
+        now: created_at.clone(),
+        cf_url: cf_url.clone(),
+        dailp_base_url: dailp_base_url.clone(),
+        collections: collection_refs.clone(),
+        site_pages: editorial_page_refs(&site_pages, &dailp_base_url, &cf_url),
+    };
+    let manifest_xml = render_manifest_mets(&manifest_ctx)?;
+    // Computed before writing (from the same `String` about to be written) rather than
+    // read back off disk, so every document's METS file (rendered further down, in this
+    // same run) can reference exactly what's on disk.
+    let manifest_checksum = sha256_hex(manifest_xml.as_bytes());
+    let manifest_path = run_root.join(&manifest_filename);
+    std::fs::write(&manifest_path, manifest_xml)
+        .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
+    info!("Wrote manifest METS file to {}", manifest_path.display());
+
+    // Aggregate document -> owning-collection(s) membership, and each document's "home"
+    // collection (the first, in `collections` order, whose chapters contain it) -- see the
+    // doc comment above for why `collection_slug`/TEI navigation need a single "home"
+    // rather than the full membership list. No new DB loader needed: every collection's
+    // chapters were already loaded above. `unique_document_order` also gets its
+    // first-seen order here, so every unique document is rendered exactly once, in a
+    // deterministic order, below.
+    let mut doc_collections: HashMap<DocumentId, Vec<CollectionRef>> = HashMap::new();
+    let mut home_collection: HashMap<DocumentId, usize> = HashMap::new();
+    let mut unique_document_order: Vec<DocumentId> = Vec::new();
+    for (i, chapters) in chapters_by_collection.iter().enumerate() {
+        for chapter in chapters {
+            let Some(doc_id) = chapter.document_id else {
+                continue;
+            };
+            if !documents_by_id.contains_key(&doc_id) {
+                continue;
+            }
+            let refs = doc_collections.entry(doc_id).or_default();
+            if !refs.iter().any(|r| r.slug == collection_refs[i].slug) {
+                refs.push(collection_refs[i].clone());
+            }
+            home_collection.entry(doc_id).or_insert_with(|| {
+                unique_document_order.push(doc_id);
+                i
+            });
+        }
+    }
+
+    let document_run_ctx = DocumentRunContext {
+        created_at,
+        cf_url,
+        dailp_base_url,
+        manifest_filename,
+        manifest_checksum,
+        documents_dir,
+        audio_dir,
+        images_dir,
+    };
+
+    // Collected alongside each document's METS/TEI files so `validate_tei_bundle` (run
+    // once, after this loop, over every unique document) can confirm both files agree with
+    // each other and with what's actually on disk, rather than just trusting the in-memory
+    // data used to write them.
+    let mut tei_validation_entries = Vec::new();
+
+    for doc_id in &unique_document_order {
+        let doc = &documents_by_id[doc_id];
+        let entry = &document_entries[doc_id];
+        let owning_collections = doc_collections.remove(doc_id).unwrap_or_default();
+        let home = &collection_results[home_collection[doc_id]];
+
+        if let Some(validation_entry) = render_one_document(
+            db,
+            doc,
+            entry,
+            owning_collections,
+            &home.collection_title,
+            &home.ordered_document_entries,
+            &document_run_ctx,
+            &http_client,
+        )
+        .await?
+        {
+            tei_validation_entries.push(validation_entry);
+        }
+    }
+
+    // Read each collection's just-written METS file back off disk and confirm every
+    // document reference in it actually resolves, rather than just trusting the in-memory
+    // data used to produce it — see `validate_document_references`.
+    for result in &collection_results {
+        validate_document_references(
+            &result.collection_path,
+            &collections_dir,
+            &result.expected_document_filenames,
+        )?;
+    }
+
+    // Likewise, confirm each unique document's TEI file actually exists where its METS
+    // file says it does, and that the two files agree on cross-references -- run once for
+    // the whole bundle, not once per collection.
+    validate_tei_bundle(&document_run_ctx.documents_dir, &tei_validation_entries)?;
+
+    info!(
+        "Finished generating METS backups in {}: 1 manifest file + {} collection file(s) + {} unique document file(s)",
+        run_root.display(),
+        collections.len(),
+        unique_document_order.len()
+    );
+
+    Ok(())
+}
+
+/// Values shared by every collection rendered in one run, bundled together so
+/// [`render_one_collection`] doesn't need a long parameter list of its own.
+struct CollectionRunContext {
+    created_at: String,
+    cf_url: String,
+    dailp_base_url: String,
+    collections_dir: PathBuf,
+    collections_editorial_dir: PathBuf,
+}
+
+/// Values shared by every document rendered in one run -- built once, right after the
+/// manifest is written (since `manifest_filename`/`manifest_checksum` need the manifest to
+/// already exist), and passed to every [`render_one_document`] call.
+struct DocumentRunContext {
+    created_at: String,
+    cf_url: String,
+    dailp_base_url: String,
+    manifest_filename: String,
+    manifest_checksum: String,
+    documents_dir: PathBuf,
+    audio_dir: PathBuf,
+    images_dir: PathBuf,
+}
+
+/// The result of rendering one collection's own METS file -- everything the run-level
+/// caller in [`generate_mets_bundle`] needs afterward to build the manifest, aggregate
+/// document membership, pick a shared document's "home" collection, and validate
+/// references.
+struct CollectionRenderResult {
+    collection_ref: CollectionRef,
+    /// Already XML-escaped -- reused as-is for a "home" shared document's TEI
+    /// `collection_title` (see [`crate::tei::render_document_tei`]).
+    collection_title: String,
+    /// This collection's own chapter-order document entries -- reused for a "home" shared
+    /// document's TEI prev/next navigation (see [`render_one_document`]).
+    ordered_document_entries: Vec<CollectionDocumentEntry>,
+    /// Path to the just-written collection METS file, for `validate_document_references`.
+    collection_path: PathBuf,
+    /// Filenames `validate_document_references` expects this collection's file to
+    /// reference, in this collection's own chapter order.
+    expected_document_filenames: Vec<String>,
+}
+
+/// Builds one document's shared [`CollectionDocumentEntry`] -- its overall audio download,
+/// and every filename/checksum/locref every collection file and the document's own
+/// METS/TEI file that reference it will use. Called once per unique document (see
+/// [`generate_mets_bundle`]), not once per collection it happens to belong to, so a shared
+/// document's audio is only ever downloaded once.
+async fn build_document_entry(
+    http_client: &reqwest::Client,
+    doc: &AnnotatedDoc,
+    audio_dir: &Path,
+) -> CollectionDocumentEntry {
+    // Every filename this document gets in the bundle (`.mets.xml`, `.tei.xml`, its
+    // audio subdirectory, ...) shares this one stem, so they're guaranteed to stay
+    // siblings with matching names. Computed once here rather than separately wherever
+    // each filename is built, so `mets_filename` and `tei_filename` can't drift apart.
+    let file_stem = sanitize_for_path(&doc.meta.title);
+
+    // `None`/empty when the document has no linked audio recording at all, OR when it
+    // does but downloading it failed after retries -- both cases collapse identically
+    // here so every fileGrp (not just archival) falls back to a `<!-- No audio for
+    // ... -->` comment instead of a `file` entry with nothing real to reference. See
+    // `audio_backup`'s module doc comment for why a failed download is treated this way.
+    let (audio_locref, ext, archival_locref, checksum) = match &doc.meta.audio_recording {
+        Some(audio) => {
+            let document_audio_dir = audio_dir.join(&file_stem);
+            match crate::audio_backup::download_document_audio(
+                http_client,
+                &audio.resource_url,
+                &document_audio_dir,
+                &file_stem,
+            )
+            .await
+            {
+                Ok(downloaded) => (
+                    Some(escape_xml(&audio.resource_url)),
+                    file_extension(&audio.resource_url),
+                    Some(downloaded.archival_locref),
+                    Some(downloaded.checksum),
+                ),
+                Err(e) => {
+                    warn!(
+                        "Failed to download document audio for \"{}\" after retries: {e:#}. \
+                         Treating this document as if it has no audio.",
+                        doc.meta.title
+                    );
+                    (None, String::new(), None, None)
+                }
+            }
+        }
+        None => (None, String::new(), None, None),
+    };
+
+    CollectionDocumentEntry {
+        title: escape_xml(&doc.meta.title),
+        // Slugified from the document's *title* (not its compact internal
+        // `short_name`, e.g. "ms108") so that every ID referencing this document
+        // across the bundle is human-readable. Mirrors
+        // `DocumentMetsContext.document_slug` below, so a document's own METS
+        // file and its entry here use the same slug. Note: two documents that
+        // happen to share a title would collide here; there's no uniqueness
+        // check for that today. Used only for `xml:id`/`OBJID` attributes, never
+        // for filenames -- see `file_stem`.
+        slug: dailp::slugify(&doc.meta.title),
+        ext,
+        audio_locref,
+        archival_locref,
+        checksum,
+        // Lives in this run's `documents/` directory; the timestamp that used to
+        // disambiguate this filename now lives in the run directory's own name
+        // instead (`dailp-<timestamp>/`).
+        mets_filename: format!("{file_stem}.mets.xml"),
+        file_stem,
+    }
+}
+
+/// Renders and writes one collection's own METS file (`collections/<title>.mets.xml`),
+/// plus its collection-owned editorial chapters. Looks up each chapter's document in the
+/// already-built `document_entries`/`documents_by_id` (shared across every collection in
+/// this run, built once by [`generate_mets_bundle`]) rather than downloading/deriving them
+/// itself.
+async fn render_one_collection(
+    db: &Database,
+    collection: &EditedCollection,
+    chapters: &[CollectionChapter],
+    documents_by_id: &HashMap<DocumentId, AnnotatedDoc>,
+    document_entries: &HashMap<DocumentId, CollectionDocumentEntry>,
+    run: &CollectionRunContext,
+) -> Result<CollectionRenderResult> {
+    info!("Rendering collection \"{}\"", collection.title);
+
+    // Preserve the chapters' own order (already sorted by the collection_chapters query),
+    // skipping any document_id that couldn't be loaded (already warned about in
+    // `generate_mets_bundle`) and de-duplicating a document_id chaptered more than once
+    // within this same collection -- mirroring the effect the single-collection version of
+    // this function used to get for free by removing each document from a shared map as it
+    // was consumed.
+    let mut seen = HashSet::new();
+    let ordered_document_ids: Vec<DocumentId> = chapters
+        .iter()
+        .filter_map(|chapter| chapter.document_id)
+        .filter(|id| documents_by_id.contains_key(id))
+        .filter(|id| seen.insert(*id))
+        .collect();
+    let collection_documents: Vec<CollectionDocumentEntry> = ordered_document_ids
+        .iter()
+        .filter_map(|id| document_entries.get(id).cloned())
+        .collect();
+    info!(
+        "\"{}\" has {} member document(s) in this run",
+        collection.title,
+        collection_documents.len()
+    );
+
+    let collection_editorial_pages = crate::editorial::export_collection_chapters(
+        db,
+        collection,
+        chapters,
+        &run.collections_editorial_dir,
+    )
+    .await?;
+
     // Aggregate distinct contributor names across all member documents, in first-seen
     // order, since EditedCollection itself has no contributors field.
     let mut contributors = Vec::new();
-    for doc in &documents {
+    for id in &ordered_document_ids {
+        let Some(doc) = documents_by_id.get(id) else {
+            continue;
+        };
         for contributor in doc.meta.contributors.iter().flatten() {
             if !contributors.contains(&contributor.name) {
                 contributors.push(contributor.name.clone());
@@ -192,84 +529,15 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
         contributors.join(", ")
     );
 
-    let mut collection_documents: Vec<CollectionDocumentEntry> =
-        Vec::with_capacity(documents.len());
-    for doc in &documents {
-        // Every filename this document gets in the bundle (`.mets.xml`, `.tei.xml`, its
-        // audio subdirectory, ...) shares this one stem, so they're guaranteed to stay
-        // siblings with matching names. Computed once here rather than separately wherever
-        // each filename is built, so `mets_filename` and `tei_filename` can't drift apart.
-        let file_stem = sanitize_for_path(&doc.meta.title);
-
-        // `None`/empty when the document has no linked audio recording at all, OR when it
-        // does but downloading it failed after retries -- both cases collapse identically
-        // here so every fileGrp (not just archival) falls back to a `<!-- No audio for
-        // ... -->` comment instead of a `file` entry with nothing real to reference. See
-        // `audio_backup`'s module doc comment for why a failed download is treated this way.
-        let (audio_locref, ext, archival_locref, checksum) = match &doc.meta.audio_recording {
-            Some(audio) => {
-                let document_audio_dir = audio_dir.join(&file_stem);
-                match crate::audio_backup::download_document_audio(
-                    &http_client,
-                    &audio.resource_url,
-                    &document_audio_dir,
-                    &file_stem,
-                )
-                .await
-                {
-                    Ok(downloaded) => (
-                        Some(escape_xml(&audio.resource_url)),
-                        file_extension(&audio.resource_url),
-                        Some(downloaded.archival_locref),
-                        Some(downloaded.checksum),
-                    ),
-                    Err(e) => {
-                        warn!(
-                            "Failed to download document audio for \"{}\" after retries: {e:#}. \
-                             Treating this document as if it has no audio.",
-                            doc.meta.title
-                        );
-                        (None, String::new(), None, None)
-                    }
-                }
-            }
-            None => (None, String::new(), None, None),
-        };
-
-        collection_documents.push(CollectionDocumentEntry {
-            title: escape_xml(&doc.meta.title),
-            // Slugified from the document's *title* (not its compact internal
-            // `short_name`, e.g. "ms108") so that every ID referencing this document
-            // across the bundle is human-readable. Mirrors
-            // `DocumentMetsContext.document_slug` below, so a document's own METS
-            // file and its entry here use the same slug. Note: two documents that
-            // happen to share a title would collide here; there's no uniqueness
-            // check for that today. Used only for `xml:id`/`OBJID` attributes, never
-            // for filenames -- see `file_stem`.
-            slug: dailp::slugify(&doc.meta.title),
-            ext,
-            audio_locref,
-            archival_locref,
-            checksum,
-            // Lives in this run's `documents/` directory; the timestamp that used to
-            // disambiguate this filename now lives in the run directory's own name
-            // instead (`dailp-<timestamp>/`).
-            mets_filename: format!("{file_stem}.mets.xml"),
-            file_stem,
-        });
-    }
-
-    let collection_mets_filename = format!("{}.mets.xml", sanitize_for_path(&collection.title));
-
-    // `collections/editorial/` is a direct sibling of this collection's own METS file
-    // (both live in `collections/`), and `editorial/` is a direct sibling of the manifest
-    // (both live at the run root), so the same "./editorial/<relative_path>" archival
-    // locref shape works for both -- see `editorial_page_refs`.
-    let editorial_pages =
-        editorial_page_refs(&collection_editorial_pages, &dailp_base_url, &cf_url);
+    let collection_title_escaped = escape_xml(&collection.title);
+    let editorial_pages = editorial_page_refs(
+        &collection_editorial_pages,
+        &run.dailp_base_url,
+        &run.cf_url,
+    );
 
     let collection_ctx = CollectionMetsContext {
-        collection_title: escape_xml(&collection.title),
+        collection_title: collection_title_escaped.clone(),
         collection_label: escape_xml(
             collection
                 .description
@@ -277,8 +545,8 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
                 .unwrap_or(&collection.title),
         ),
         collection_slug: collection.slug.clone(),
-        cf_url: cf_url.clone(),
-        now: created_at.clone(),
+        cf_url: run.cf_url.clone(),
+        now: run.created_at.clone(),
         contributors: contributors.iter().map(|name| escape_xml(name)).collect(),
         citation: escape_xml(&citation),
         documents: collection_documents.clone(),
@@ -287,11 +555,12 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
 
     let collection_xml = render_collection_mets(&collection_ctx)?;
     // Computed before writing (from the same `String` about to be written) rather than
-    // read back off disk, so this document's METS/TEI files -- rendered later in this same
-    // run, before the collection file's bytes could ever change -- can reference exactly
-    // what's on disk.
+    // read back off disk, so this collection's document files -- rendered later in this
+    // same run, before the collection file's bytes could ever change -- can reference
+    // exactly what's on disk.
     let collection_checksum = sha256_hex(collection_xml.as_bytes());
-    let collection_path = collections_dir.join(&collection_mets_filename);
+    let collection_mets_filename = format!("{}.mets.xml", sanitize_for_path(&collection.title));
+    let collection_path = run.collections_dir.join(&collection_mets_filename);
     std::fs::write(&collection_path, collection_xml)
         .with_context(|| format!("Failed to write {}", collection_path.display()))?;
     info!(
@@ -299,117 +568,123 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
         collection_path.display()
     );
 
-    // Collection(s) referenced from the manifest and from each document's fileSec. Only
-    // the collection processed in this run today — see the doc comment above.
-    let collection_refs = vec![CollectionRef {
-        slug: collection.slug.clone(),
-        title: escape_xml(&collection.title),
-        mets_filename: collection_mets_filename,
-        checksum: collection_checksum,
-    }];
-
-    let manifest_filename = "manifest.mets.xml".to_owned();
-    let manifest_ctx = ManifestMetsContext {
-        now: created_at.clone(),
-        cf_url: cf_url.clone(),
-        dailp_base_url: dailp_base_url.clone(),
-        collections: collection_refs.clone(),
-        site_pages: editorial_page_refs(&site_pages, &dailp_base_url, &cf_url),
-    };
-    let manifest_xml = render_manifest_mets(&manifest_ctx)?;
-    // Same reasoning as `collection_checksum` above -- computed from the in-memory string
-    // this run is about to write, so it's available for every document's METS file
-    // (rendered further down, in this same run) to reference.
-    let manifest_checksum = sha256_hex(manifest_xml.as_bytes());
-    let manifest_path = run_root.join(&manifest_filename);
-    std::fs::write(&manifest_path, manifest_xml)
-        .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
-    info!("Wrote manifest METS file to {}", manifest_path.display());
-
-    // Collected alongside each document's METS/TEI files so `validate_tei_bundle` (run
-    // once, after this loop) can confirm both files agree with each other and with what's
-    // actually on disk, rather than just trusting the in-memory data used to write them.
-    let mut tei_validation_entries = Vec::new();
-
-    for (i, (doc, entry)) in documents
+    let expected_document_filenames = collection_documents
         .iter()
-        .zip(collection_documents.iter())
-        .enumerate()
-    {
-        // Loaded once per document and shared by `document_page_images`, `words_with_audio`,
-        // and the TEI render below, rather than each of them separately querying
-        // `PagesInDocument`/`ParagraphsInPage`/`WordsInParagraph` -- see
-        // `tei::load_document_pages`.
-        let pages = crate::tei::load_document_pages(db, doc).await?;
+        .map(|entry| entry.mets_filename.clone())
+        .collect();
 
-        // Documents with no real linguistic content (no page/paragraph loaded at all, or
-        // every paragraph has neither a translation nor any real words -- see
-        // `tei::has_linguistic_content`) get no TEI file -- there'd be nothing but an
-        // empty header in it. Bare source with no translation yet still counts, since a
-        // document can be transcribed before it's translated. `document.tera.xml`
-        // renders a "<!-- No TEI file; ... -->" comment in every place a TEI reference
-        // would otherwise appear when this is `None`, mirroring how it already handles
-        // documents with no `audio_url`.
-        let tei_filename = crate::tei::has_linguistic_content(&pages)
-            .then(|| format!("{}.tei.xml", entry.file_stem));
+    Ok(CollectionRenderResult {
+        collection_ref: CollectionRef {
+            slug: collection.slug.clone(),
+            title: collection_title_escaped.clone(),
+            mets_filename: collection_mets_filename,
+            checksum: collection_checksum,
+        },
+        collection_title: collection_title_escaped,
+        ordered_document_entries: collection_documents,
+        collection_path,
+        expected_document_filenames,
+    })
+}
 
-        // Reuse `entry.slug` (computed above from the document's title) rather than
-        // re-deriving it, so a document's own METS file and its entry in the collection
-        // file are guaranteed to agree.
-        let document_slug = entry.slug.clone();
+/// Renders and writes one document's own METS file (and, if it has any linguistic
+/// content, its TEI file) into `run.documents_dir`. Called once per unique document (see
+/// [`generate_mets_bundle`]) with `owning_collections` already aggregated across every
+/// collection in this run that the document belongs to; `home_collection_title`/
+/// `home_collection_documents` are its "home" collection's own (already-escaped) title and
+/// chapter-order document list, used for the `collection_slug` field and TEI navigation --
+/// see the doc comment on [`generate_mets_bundle`] for why those need a single "home"
+/// collection rather than the full `owning_collections` list. Returns the
+/// [`TeiValidationEntry`] to pass to `validate_tei_bundle`, or `None` if this document has
+/// no linguistic content (so no TEI file was written).
+async fn render_one_document(
+    db: &Database,
+    doc: &AnnotatedDoc,
+    entry: &CollectionDocumentEntry,
+    owning_collections: Vec<CollectionRef>,
+    home_collection_title: &str,
+    home_collection_documents: &[CollectionDocumentEntry],
+    run: &DocumentRunContext,
+    http_client: &reqwest::Client,
+) -> Result<Option<TeiValidationEntry>> {
+    // Loaded once per document and shared by `document_page_images`, `words_with_audio`,
+    // and the TEI render below, rather than each of them separately querying
+    // `PagesInDocument`/`ParagraphsInPage`/`WordsInParagraph` -- see
+    // `tei::load_document_pages`.
+    let pages = crate::tei::load_document_pages(db, doc).await?;
 
-        // Downloads each page's manuscript image (resolving its real IIIF source URL
-        // along the way) into this run's `images/` directory, named
-        // `{document_slug}_{oid}.jpg`. See `document_page_images`.
-        let page_images =
-            document_page_images(&http_client, db, &pages, &document_slug, &images_dir).await?;
+    // Documents with no real linguistic content (no page/paragraph loaded at all, or
+    // every paragraph has neither a translation nor any real words -- see
+    // `tei::has_linguistic_content`) get no TEI file -- there'd be nothing but an
+    // empty header in it. Bare source with no translation yet still counts, since a
+    // document can be transcribed before it's translated. `document.tera.xml`
+    // renders a "<!-- No TEI file; ... -->" comment in every place a TEI reference
+    // would otherwise appear when this is `None`, mirroring how it already handles
+    // documents with no `audio_url`.
+    let tei_filename_candidate =
+        crate::tei::has_linguistic_content(&pages).then(|| format!("{}.tei.xml", entry.file_stem));
 
-        // Downloads this document's word-for-word audio into the same per-document
-        // audio subdirectory its overall audio (if any) was already downloaded into above
-        // -- see `words_with_audio`.
-        let document_audio_dir = audio_dir.join(&entry.file_stem);
-        let words_with_audio =
-            words_with_audio(&http_client, &pages, &document_audio_dir, &entry.file_stem).await?;
+    // Reuse `entry.slug` (computed once, when this document's shared entry was built)
+    // rather than re-deriving it, so a document's own METS file and its entry in every
+    // collection file that references it are guaranteed to agree.
+    let document_slug = entry.slug.clone();
 
-        // The TEI file is this document's actual word-for-word content; it's rendered and
-        // written *before* this document's own METS file below (reversed from write
-        // order in an earlier version of this function) so the METS file's DESCRIPTIVE
-        // `mdRef`/TEI `file_entry` references can carry the TEI file's own checksum --
-        // see `DocumentMetsContext.tei_checksum`.
-        //
-        // Maps each word's id to its archived audio filename, so the TEI file's per-word
-        // `<ptr type="audio">` (see `tei_macros.tera.xml`) references exactly the same file
-        // this document's own METS file does -- see `DocumentMetsContext.words_with_audio`.
-        let word_audio_locrefs: HashMap<String, String> = words_with_audio
-            .iter()
-            .map(|word| (word.id.clone(), word.archival_locref.clone()))
-            .collect();
-        let tei_checksum = if let Some(tei_filename) = &tei_filename {
-            // Links back to this document's own METS file, plus its neighbors' (in
-            // collection order), for navigation -- see `tei::DocumentNavigation`. Built
-            // from filenames only (no content), so it's available before this document's
-            // own METS file has been rendered.
+    // Downloads each page's manuscript image (resolving its real IIIF source URL
+    // along the way) into this run's `images/` directory, named
+    // `{document_slug}_{oid}.jpg`. See `document_page_images`.
+    let page_images =
+        document_page_images(http_client, db, &pages, &document_slug, &run.images_dir).await?;
+
+    // Downloads this document's word-for-word audio into the same per-document
+    // audio subdirectory its overall audio (if any) was already downloaded into above
+    // -- see `words_with_audio`.
+    let document_audio_dir = run.audio_dir.join(&entry.file_stem);
+    let words_with_audio =
+        words_with_audio(http_client, &pages, &document_audio_dir, &entry.file_stem).await?;
+
+    // The TEI file is this document's actual word-for-word content; it's rendered and
+    // written *before* this document's own METS file below (reversed from write
+    // order in an earlier version of this function) so the METS file's DESCRIPTIVE
+    // `mdRef`/TEI `file_entry` references can carry the TEI file's own checksum --
+    // see `DocumentMetsContext.tei_checksum`.
+    //
+    // Maps each word's id to its archived audio filename, so the TEI file's per-word
+    // `<ptr type="audio">` (see `tei_macros.tera.xml`) references exactly the same file
+    // this document's own METS file does -- see `DocumentMetsContext.words_with_audio`.
+    let word_audio_locrefs: HashMap<String, String> = words_with_audio
+        .iter()
+        .map(|word| (word.id.clone(), word.archival_locref.clone()))
+        .collect();
+    let (tei_filename, tei_checksum, validation_entry) =
+        if let Some(filename) = tei_filename_candidate {
+            // Links back to this document's own METS file, plus its neighbors' in its
+            // home collection's own chapter order, for navigation -- see
+            // `tei::DocumentNavigation`. Built from filenames only (no content), so it's
+            // available before this document's own METS file has been rendered.
+            let position = home_collection_documents
+                .iter()
+                .position(|d| d.file_stem == entry.file_stem);
             let navigation = crate::tei::DocumentNavigation {
                 mets_filename: entry.mets_filename.clone(),
-                prev_mets_filename: i
-                    .checked_sub(1)
-                    .map(|prev| collection_documents[prev].mets_filename.clone()),
-                next_mets_filename: collection_documents
-                    .get(i + 1)
+                prev_mets_filename: position
+                    .and_then(|i| i.checked_sub(1))
+                    .map(|prev| home_collection_documents[prev].mets_filename.clone()),
+                next_mets_filename: position
+                    .and_then(|i| home_collection_documents.get(i + 1))
                     .map(|next| next.mets_filename.clone()),
             };
             let tei_xml = crate::tei::render_document_tei(
                 db,
                 &pages,
                 doc,
-                &collection_ctx.collection_title,
+                home_collection_title,
                 &navigation,
                 entry.archival_locref.as_deref(),
                 &word_audio_locrefs,
             )
             .await?;
             let checksum = sha256_hex(tei_xml.as_bytes());
-            let tei_path = documents_dir.join(tei_filename);
+            let tei_path = run.documents_dir.join(&filename);
             std::fs::write(&tei_path, tei_xml)
                 .with_context(|| format!("Failed to write {}", tei_path.display()))?;
             info!(
@@ -418,94 +693,74 @@ pub async fn generate_mets_for_collection(db: &Database, collection_slug: &str) 
                 tei_path.display()
             );
 
-            tei_validation_entries.push(TeiValidationEntry {
+            let validation_entry = TeiValidationEntry {
                 mets_filename: entry.mets_filename.clone(),
-                tei_filename: tei_filename.clone(),
+                tei_filename: filename.clone(),
                 word_ids: words_with_audio
                     .iter()
                     .map(|word| word.id.clone())
                     .collect(),
-            });
+            };
 
-            Some(checksum)
+            (Some(filename), Some(checksum), Some(validation_entry))
         } else {
             info!(
                 "Skipping TEI file for \"{}\": no linguistic content present during export",
                 doc.meta.title
             );
-            None
+            (None, None, None)
         };
 
-        let document_ctx = DocumentMetsContext {
-            document_title: escape_xml(&doc.meta.title),
-            now: created_at.clone(),
-            // `collection.slug` is the collection's own compact identifier (e.g.
-            // "willie_jumper_stories"), unrelated to how document slugs are derived.
-            collection_slug: collection.slug.clone(),
-            document_slug: document_slug.clone(),
-            cf_url: cf_url.clone(),
-            dailp_base_url: dailp_base_url.clone(),
-            manifest_filename: manifest_filename.clone(),
-            manifest_checksum: manifest_checksum.clone(),
-            collections: collection_refs.clone(),
-            // Shares `entry.file_stem` with `entry.mets_filename` (`{file_stem}.mets.xml`)
-            // so this document's METS and TEI files are true siblings with matching
-            // names, rather than deriving this from `document_slug` (which would give it
-            // a different stem than its own METS file — see `CollectionDocumentEntry`).
-            // `None` when this document has no linguistic content -- see above.
-            tei_filename: tei_filename.clone(),
-            tei_checksum,
-            // `entry.audio_locref` is already XML-escaped above.
-            audio_url: entry.audio_locref.clone(),
-            ext: entry.ext.clone(),
-            archival_locref: entry.archival_locref.clone(),
-            checksum: entry.checksum.clone(),
-            // `doc.meta.page_images` is never populated by the `Loader<DocumentId>` this
-            // function loads documents through (nor by any other loader in the codebase
-            // -- it's legacy/dead), so page images come from the freshly-loaded `pages`
-            // instead. See `document_page_images` (called above).
-            page_images,
-            words_with_audio,
-        };
+    // The first (in run processing order) collection this document belongs to -- used
+    // only to build page-image `xml:id`s in `document.tera.xml`, unrelated to how document
+    // slugs are derived. See `DocumentMetsContext.collections` for this document's full
+    // membership in this run.
+    let collection_slug = owning_collections
+        .first()
+        .map(|c| c.slug.clone())
+        .unwrap_or_default();
 
-        let document_xml = render_document_mets(&document_ctx)?;
-        let document_path = documents_dir.join(&entry.mets_filename);
-        std::fs::write(&document_path, document_xml)
-            .with_context(|| format!("Failed to write {}", document_path.display()))?;
-        info!(
-            "Wrote document METS file for \"{}\" to {}",
-            doc.meta.title,
-            document_path.display()
-        );
-    }
+    let document_ctx = DocumentMetsContext {
+        document_title: escape_xml(&doc.meta.title),
+        now: run.created_at.clone(),
+        collection_slug,
+        document_slug: document_slug.clone(),
+        cf_url: run.cf_url.clone(),
+        dailp_base_url: run.dailp_base_url.clone(),
+        manifest_filename: run.manifest_filename.clone(),
+        manifest_checksum: run.manifest_checksum.clone(),
+        collections: owning_collections,
+        // Shares `entry.file_stem` with `entry.mets_filename` (`{file_stem}.mets.xml`)
+        // so this document's METS and TEI files are true siblings with matching
+        // names, rather than deriving this from `document_slug` (which would give it
+        // a different stem than its own METS file — see `CollectionDocumentEntry`).
+        // `None` when this document has no linguistic content -- see above.
+        tei_filename,
+        tei_checksum,
+        // `entry.audio_locref` is already XML-escaped above.
+        audio_url: entry.audio_locref.clone(),
+        ext: entry.ext.clone(),
+        archival_locref: entry.archival_locref.clone(),
+        checksum: entry.checksum.clone(),
+        // `doc.meta.page_images` is never populated by the `Loader<DocumentId>` this
+        // function loads documents through (nor by any other loader in the codebase
+        // -- it's legacy/dead), so page images come from the freshly-loaded `pages`
+        // instead. See `document_page_images` (called above).
+        page_images,
+        words_with_audio,
+    };
 
-    // Read the collection METS file back off disk and confirm every document reference
-    // in it actually resolves, rather than just trusting the in-memory data used to
-    // produce it — see `validate_document_references`.
-    let expected_document_filenames: Vec<String> = collection_documents
-        .iter()
-        .map(|entry| entry.mets_filename.clone())
-        .collect();
-    validate_document_references(
-        &collection_path,
-        &collections_dir,
-        &expected_document_filenames,
-    )?;
-
-    // Likewise, confirm each document's TEI file actually exists where its METS file
-    // says it does, and that the two files agree on cross-references (word ids that
-    // have audio in the METS structSec must exist as `xml:id`s in the TEI file, and
-    // every internal `corresp`/`target` in the TEI file must resolve within it).
-    validate_tei_bundle(&documents_dir, &tei_validation_entries)?;
-
+    let document_xml = render_document_mets(&document_ctx)?;
+    let document_path = run.documents_dir.join(&entry.mets_filename);
+    std::fs::write(&document_path, document_xml)
+        .with_context(|| format!("Failed to write {}", document_path.display()))?;
     info!(
-        "Finished generating METS backups for \"{}\" in {}: 1 manifest file + 1 collection file + {} document file(s)",
-        collection.title,
-        run_root.display(),
-        documents.len()
+        "Wrote document METS file for \"{}\" to {}",
+        doc.meta.title,
+        document_path.display()
     );
 
-    Ok(())
+    Ok(validation_entry)
 }
 
 /// Parses a just-written collection METS file back off disk and confirms every document
@@ -700,7 +955,7 @@ fn validate_tei_bundle(documents_dir: &Path, entries: &[TeiValidationEntry]) -> 
 /// the workspace root (via `CARGO_MANIFEST_DIR`, set at compile time to this crate's
 /// directory) rather than the current working directory, so output lands in the same
 /// place regardless of where the binary is invoked from. Each run gets its own
-/// `dailp-<timestamp>` subdirectory here (see [`generate_mets_for_collection`]);
+/// `dailp-<timestamp>` subdirectory here (see [`generate_mets_bundle`]);
 /// `logs/` (see [`logs_dir`]) is the one thing that lives directly under this directory.
 fn output_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -851,9 +1106,10 @@ struct CollectionDocumentEntry {
     /// from (`collections/`, for this collection's own METS file, and `documents/`, for
     /// the document's own METS/TEI files -- both are one level below the run root, same as
     /// `audio/`, so the same `"../audio/..."` prefix works for both). `Some` iff
-    /// `audio_locref` is `Some`. Computed once (see `generate_mets_for_collection`) and
-    /// shared with `DocumentMetsContext.archival_locref` so a document's own METS file and
-    /// its entry in the collection file can't disagree about where its audio lives.
+    /// `audio_locref` is `Some`. Computed once per unique document (see
+    /// `build_document_entry`) and shared with `DocumentMetsContext.archival_locref` so a
+    /// document's own METS file and every collection file referencing it can't disagree
+    /// about where its audio lives.
     archival_locref: Option<String>,
     /// SHA-256 checksum (see `crate::checksum`) of the audio file referenced above --
     /// `Some` iff `archival_locref` is `Some`. The same downloaded bytes are referenced
@@ -934,6 +1190,10 @@ struct WordAudioEntry {
 struct DocumentMetsContext {
     document_title: String,
     now: String,
+    /// The slug of this document's "home" collection -- the first collection (in this
+    /// run's processing order) whose chapters contain it, per `render_one_document`. Used
+    /// only to build page-image `xml:id`s in `document.tera.xml`; not a complete
+    /// membership indicator -- see `collections` below for that.
     collection_slug: String,
     document_slug: String,
     cf_url: String,
@@ -942,12 +1202,14 @@ struct DocumentMetsContext {
     /// directory up from this document (`../manifest.mets.xml`).
     manifest_filename: String,
     /// SHA-256 checksum (see `crate::checksum`) of the manifest METS file's own rendered
-    /// content, computed in `generate_mets_for_collection` right after it's rendered (and
-    /// before this document's own METS file is), since the manifest is written before the
+    /// content, computed in `generate_mets_bundle` right after it's rendered (and before
+    /// any document's own METS file is), since the manifest is written before the
     /// per-document loop runs.
     manifest_checksum: String,
-    /// Collection(s) this document belongs to. Just the collection processed in this
-    /// run today — see the doc comment on `generate_mets_for_collection`.
+    /// Every collection in this run's export set that this document is actually a
+    /// chapter of, aggregated across all collections processed this run (`doc_collections`
+    /// in `generate_mets_bundle`) -- not just the collection this document happened to be
+    /// discovered through.
     collections: Vec<CollectionRef>,
     /// Filename of this document's TEI file (see `tei::render_document_tei`), written
     /// alongside this document's own METS file in the run's `documents/` directory.
@@ -1010,7 +1272,7 @@ async fn document_page_images(
 /// Downloads a document's word-for-word audio (see
 /// [`crate::audio_backup::download_words_with_audio`]) into `document_audio_dir` and adapts
 /// the result into the `Serialize`-able shape `document.tera.xml` (and, via the map built in
-/// `generate_mets_for_collection`, the TEI template) renders. Mirrors `document_page_images`
+/// `render_one_document`, the TEI template) renders. Mirrors `document_page_images`
 /// just above. Words whose download fails are omitted entirely, mirroring how words with no
 /// recorded audio at all are already omitted -- see `audio_backup::download_words_with_audio`.
 async fn words_with_audio(

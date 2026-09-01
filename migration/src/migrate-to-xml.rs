@@ -27,11 +27,16 @@ async fn main() -> Result<()> {
 
     let db = Database::connect(Some(1))?;
 
-    // TODO
-    // Goal: Expand mets generation to export all collections
-    // Deferred because: testing convenience
     log::info!("Generating METS backup files...");
-    mets::generate_mets_for_collection(&db, "willie_jumper_stories").await?;
+    let mut collections = db
+        .all_edited_collections()
+        .await
+        .context("Failed to load edited collections")?;
+    // `edited_collections.sql` has no ORDER BY, so sort here to keep manifest ordering
+    // (and the "home collection" tie-break for documents shared by more than one
+    // collection -- see `mets::generate_mets_bundle`) stable from run to run.
+    collections.sort_by(|a, b| a.slug.cmp(&b.slug));
+    mets::generate_mets_bundle(&db, &collections).await?;
 
     Ok(())
 }

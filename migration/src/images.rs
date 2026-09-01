@@ -1,5 +1,5 @@
 //! Downloads each document's manuscript page images from their real IIIF image server into
-//! this run's `images/` directory (see [`crate::mets::generate_mets_for_collection`]),
+//! this run's `images/` directory (see [`crate::mets::render_one_document`]),
 //! named `{document_slug}_page{page_number}_{iiif_oid}.jpg`. Extension is always `.jpg`
 //! since this pipeline always requests IIIF's `default.jpg` rendering, matching the
 //! convention already established in `types/src/iiif.rs` (`Manifest::from_document`).

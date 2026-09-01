@@ -1,5 +1,6 @@
 //! Downloads a document's overall audio and its word-for-word audio (see
-//! [`crate::mets::generate_mets_for_collection`]) into this run's `audio/<file_stem>/`
+//! [`crate::mets::build_document_entry`]/[`crate::mets::render_one_document`]) into this
+//! run's `audio/<file_stem>/`
 //! directory, named per the conventions in [`document_audio_filename`]/[`word_audio_filename`].
 //! Mirrors `images.rs`'s shape (its own small `fetch_with_retry` is duplicated here rather
 //! than shared, to avoid merge-conflict surface with concurrent image-download work landing
@@ -9,7 +10,7 @@
 //! had audio at all" -- see the doc comments on [`download_document_audio`]/
 //! [`download_words_with_audio`]. For a document, this means its overall audio disappears
 //! from *every* fileGrp (original/cloud backup/archival), not just the archival one, since
-//! the caller (`mets::generate_mets_for_collection`) collapses `audio_locref`/`ext` back to
+//! the caller (`mets::build_document_entry`) collapses `audio_locref`/`ext` back to
 //! `None`/empty alongside `archival_locref` on failure -- a deliberate simplification, not
 //! an oversight: a transient network blip will make the backup's "original"/"cloud backup"
 //! references disappear too, even though the original external URL may still be perfectly
@@ -85,7 +86,7 @@ fn word_audio_filename(word_index: i64, simple_phonetics: Option<&str>, audio_ur
 
 /// Downloads `resource_url` into `document_audio_dir` (creating it if needed), named per
 /// [`document_audio_filename`]. On persistent failure (after retries), returns `Err` -- the
-/// caller (`mets::generate_mets_for_collection`) is responsible for logging a warning and
+/// caller (`mets::build_document_entry`) is responsible for logging a warning and
 /// falling back to "no audio" for this document, exactly mirroring what already happens
 /// when `audio_recording` is `None` in the first place.
 pub(crate) async fn download_document_audio(

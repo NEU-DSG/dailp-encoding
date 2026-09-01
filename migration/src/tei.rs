@@ -4,7 +4,7 @@
 //! This is the companion content the `mets` module's document METS files defer to --
 //! METS carries file *references* (audio, images, and a pointer to this file), while all
 //! actual word/paragraph-level content lives here. [`render_document_tei`] is called once
-//! per document from [`crate::mets::generate_mets_for_collection`], and its output is
+//! per document from [`crate::mets::render_one_document`], and its output is
 //! written alongside that document's own METS file (same `documents/` directory, same
 //! filename stem -- see `CollectionDocumentEntry.file_stem` in the `mets` module).
 //!
@@ -264,7 +264,7 @@ pub(crate) fn has_linguistic_content(pages: &[LoadedPage]) -> bool {
 /// writing a `.tei.xml` file) when it's `false`.
 ///
 /// `document_audio_archival_locref`/`word_audio_archival_locrefs` are the same archived
-/// audio paths `mets::generate_mets_for_collection` already computed for this document's
+/// audio paths `mets::build_document_entry` already computed for this document's
 /// METS file (`mets::CollectionDocumentEntry.archival_locref`/`mets::WordAudioEntry`,
 /// keyed by word id) -- passed in rather than recomputed here, so the METS and TEI files
 /// can't disagree about where a document's/word's audio lives.
@@ -574,7 +574,7 @@ mod tests {
     /// directly as a [`TeiDocumentContext`] (bypassing `build_pages`/`load_document_pages`
     /// and their `Database` dependency) so template rendering can be tested without a
     /// real DB connection, mirroring how `mets.rs`'s own tests hand-build a
-    /// `DocumentMetsContext` rather than going through `generate_mets_for_collection`.
+    /// `DocumentMetsContext` rather than going through `generate_mets_bundle`.
     fn sample_context() -> TeiDocumentContext {
         let mut resolved = HashMap::new();
         let word_id = Uuid::from_u128(1);

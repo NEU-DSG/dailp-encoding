@@ -1,7 +1,7 @@
 //! Exports "editorial" content -- human-authored page bodies stored in DAILP's `page`
 //! table -- at both the collection level and the site level, into this run's
 //! `collections/editorial/` and `editorial/` directories respectively (see
-//! [`crate::mets::generate_mets_for_collection`]).
+//! [`crate::mets::render_one_collection`] and [`crate::mets::generate_mets_bundle`]).
 //!
 //! The `page` table has no column distinguishing "this page is an edited collection's
 //! chapter content" from "this is a standalone site page," and no column recording
