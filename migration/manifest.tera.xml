@@ -32,17 +32,32 @@
     {% for c in collections -%}
     {{ mets::file_entry(id=c.slug ~ "_m", loctype="URL", locref=dailp_base_url ~ "/collections/" ~ c.slug) }}
     {% endfor -%}
+    <!-- Site-level pages: standalone pages not owned by any edited collection. No
+      checksum here: this locref is this content's live, rendered webpage, not a
+      byte-for-byte copy of the exported file below.
+      TODO: only list pages here that are actually reachable from the site's nav menu,
+      and move this loop into an editorial/-owned manifest file instead. See the TODO
+      on `mets::generate_mets_for_collection`'s `site_pages` binding. -->
+    {% for page in site_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_m", loctype="URL", locref=page.original_locref) }}
+    {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="cloud backup">
     {% for c in collections -%}
-    {{ mets::file_entry(id=c.slug ~ "_b", loctype="URL", locref=cf_url ~ "/" ~ c.mets_filename) }}
+    {{ mets::file_entry(id=c.slug ~ "_b", loctype="URL", locref=cf_url ~ "/" ~ c.mets_filename, checksum=c.checksum) }}
+    {% endfor -%}
+    {% for page in site_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_b", loctype="URL", locref=page.cloud_locref, checksum=page.checksum) }}
     {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="archival">
     <!-- The manifest lives at the run root; each collection file lives one level down,
-      in collections/. -->
+      in collections/, and each site page lives one level down, in editorial/. -->
     {% for c in collections -%}
-    {{ mets::file_entry(id=c.slug ~ "_a", loctype="SYSTEM", locref="./collections/" ~ c.mets_filename) }}
+    {{ mets::file_entry(id=c.slug ~ "_a", loctype="SYSTEM", locref="./collections/" ~ c.mets_filename, checksum=c.checksum) }}
+    {% endfor -%}
+    {% for page in site_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_a", loctype="SYSTEM", locref=page.archival_locref, checksum=page.checksum) }}
     {% endfor -%}
   </mets:fileGrp>
 </mets:fileSec>
@@ -55,6 +70,13 @@
         {% for c in collections -%}
         <mets:div TYPE="collection" LABEL="{{ c.title }}">
           <mets:mptr LOCTYPE="URL" LOCREF="./collections/{{ c.mets_filename }}"/>
+        </mets:div>
+        {% endfor -%}
+        {% for page in site_pages -%}
+        <mets:div TYPE="site page" LABEL="{{ page.title }}">
+          <mets:fptr FILEID="{{ page.id ~ '_m' }}"/>
+          <mets:fptr FILEID="{{ page.id ~ '_b' }}"/>
+          <mets:fptr FILEID="{{ page.id ~ '_a' }}"/>
         </mets:div>
         {% endfor -%}
       </mets:div>

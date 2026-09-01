@@ -1,7 +1,13 @@
 //! Generates METS XML backup manifests for DAILP's edited collections and their member
-//! documents. See the `mets` module for the actual template rendering and file writing.
+//! documents. See the `mets` module for the actual template rendering and file writing,
+//! and the `tei` module for each document's companion TEI file.
 
+mod audio_backup;
+mod checksum;
+mod editorial;
+mod images;
 mod mets;
+mod tei;
 
 use std::fs::File;
 use std::io::Write;

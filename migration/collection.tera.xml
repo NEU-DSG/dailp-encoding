@@ -35,30 +35,43 @@
   <mets:fileGrp USE="original">
     {% for doc in documents -%}
     {% if doc.audio_locref -%}
-    {{ mets::file_entry(id=doc.slug ~ "_m", loctype="URL", locref=doc.audio_locref) }}
+    {{ mets::file_entry(id=doc.slug ~ "_m", loctype="URL", locref=doc.audio_locref, checksum=doc.checksum) }}
     {% else -%}
     <!-- No audio for {{ doc.title }} -->
     {% endif -%}
+    {% endfor -%}
+    <!-- Editorial pages: chapters backed by a `page` row rather than an AnnotatedDoc.
+      No checksum here: this locref is this content's live, rendered webpage, not a
+      byte-for-byte copy of the exported file below. -->
+    {% for page in editorial_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_m", loctype="URL", locref=page.original_locref) }}
     {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="cloud backup">
     {% for doc in documents -%}
     {% if doc.audio_locref -%}
-    {{ mets::file_entry(id=doc.slug ~ "_b", loctype="URL", locref=doc.audio_locref) }}
+    {{ mets::file_entry(id=doc.slug ~ "_b", loctype="URL", locref=doc.audio_locref, checksum=doc.checksum) }}
     {% else -%}
     <!-- No audio for {{ doc.title }} -->
     {% endif -%}
     {% endfor -%}
+    {% for page in editorial_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_b", loctype="URL", locref=page.cloud_locref, checksum=page.checksum) }}
+    {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="archival">
-    <!-- This collection file lives in collections/; audio downloads (once
-      implemented) live one level up, in audio/. -->
+    <!-- This collection file lives in collections/; downloaded audio lives one level up,
+      in audio/<document file_stem>/. Editorial pages live one level down, in
+      collections/editorial/. -->
     {% for doc in documents -%}
     {% if doc.audio_locref -%}
-    {{ mets::file_entry(id=doc.slug ~ "_a", loctype="SYSTEM", locref="../audio/" ~ doc.slug ~ doc.ext) }}
+    {{ mets::file_entry(id=doc.slug ~ "_a", loctype="SYSTEM", locref=doc.archival_locref, checksum=doc.checksum) }}
     {% else -%}
     <!-- No audio for {{ doc.title }} -->
     {% endif -%}
+    {% endfor -%}
+    {% for page in editorial_pages -%}
+    {{ mets::file_entry(id=page.id ~ "_a", loctype="SYSTEM", locref=page.archival_locref, checksum=page.checksum) }}
     {% endfor -%}
   </mets:fileGrp>
 </mets:fileSec>
@@ -71,6 +84,13 @@
         <mets:div TYPE="document" LABEL="{{ doc.title }}">
           <!-- Documents live in documents/, a sibling of this file's collections/. -->
           <mets:mptr LOCTYPE="URL" LOCREF="../documents/{{ doc.mets_filename }}"/>
+        </mets:div>
+        {% endfor -%}
+        {% for page in editorial_pages -%}
+        <mets:div TYPE="editorial page" LABEL="{{ page.title }}">
+          <mets:fptr FILEID="{{ page.id ~ '_m' }}"/>
+          <mets:fptr FILEID="{{ page.id ~ '_b' }}"/>
+          <mets:fptr FILEID="{{ page.id ~ '_a' }}"/>
         </mets:div>
         {% endfor -%}
       </mets:div>

@@ -15,7 +15,10 @@
 {% endmacro any_segment %}
 
 {% macro word(segment) %}
-  <w xml:id="{{segment.id}}" lemmaRef="lex:id">
+  <w xml:id="{{segment.id}}">
+    {% if segment.audioFilename %}
+      <ptr type="audio" target="{{segment.audioFilename}}"/>
+    {% endif %}
     {% if segment.simplePhonetics or segment.phonemic or segment.morphemicSegmentation or segment.morphemicGloss or segment.englishGloss %}
       <choice>
         <orig>{{segment.source}}</orig>

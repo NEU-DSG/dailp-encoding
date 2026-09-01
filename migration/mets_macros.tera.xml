@@ -39,8 +39,23 @@
 </mets:md>
 {% endmacro rights_md %}
 
-{% macro file_entry(id, loctype, locref, mdid="") %}
-<mets:file ID="{{ id }}"{% if mdid %} MDID="{{ mdid }}"{% endif %}>
+{# `checksum`, when given, is rendered as CHECKSUM/CHECKSUMTYPE (SHA-256 -- the only
+   algorithm this pipeline computes, see `crate::checksum`) -- see mets2.xsd's `file`
+   attribute group. Omitted for locrefs that don't point at a byte-for-byte copy of a file
+   this pipeline wrote (e.g. a live rendered webpage), since there's nothing to check it
+   against.
+   TODO: every call site of this macro across the templates in this crate builds `id` with
+   a terse "_m"/"_b"/"_a" suffix (original/cloud backup/archival) -- see the TODO on
+   `mets::EditorialPageRef.id` for why that's deferred rather than fixed here. #}
+{% macro file_entry(id, loctype, locref, checksum="") %}
+<mets:file ID="{{ id }}"{% if checksum %} CHECKSUM="{{ checksum }}" CHECKSUMTYPE="SHA-256"{% endif %}>
   <mets:FLocat LOCTYPE="{{ loctype }}" LOCREF="{{ locref }}" />
 </mets:file>
 {% endmacro file_entry %}
+
+{# A pointer to metadata that lives in an external file (as opposed to `md`/`mdWrap`,
+   which embeds metadata inline). Used for the DESCRIPTIVE mdGrp, which points at a
+   document's TEI file rather than duplicating its content. #}
+{% macro md_ref(id, loctype, locref, mdtype, othermdtype="", checksum="") %}
+<mets:mdRef ID="{{ id }}" LOCTYPE="{{ loctype }}" LOCREF="{{ locref }}" MDTYPE="{{ mdtype }}"{% if othermdtype %} OTHERMDTYPE="{{ othermdtype }}"{% endif %}{% if checksum %} CHECKSUM="{{ checksum }}" CHECKSUMTYPE="SHA-256"{% endif %}/>
+{% endmacro md_ref %}
