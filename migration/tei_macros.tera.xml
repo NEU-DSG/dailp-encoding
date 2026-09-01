@@ -1,0 +1,54 @@
+{# -*- mode: web; -*- #}
+{# Shared building blocks for translation.tera.xml. Import with
+   `{% import "tei_macros.tera.xml" as macros %}`. Mirrors each segment/word context
+   built in `migration/src/tei.rs` -- see that module for the exact field shapes. #}
+
+{# `AnnotatedSeg` (the real Rust enum this mirrors) only has `Word` and `LineBreak`
+   variants today; page breaks are handled per-page by the caller instead (one `<pb/>`
+   per `TeiPageContext`), not as a segment type. #}
+{% macro any_segment(segment) %}
+  {% if segment.type == "LineBreak" %}
+    <lb n="{{segment.index}}"/>
+  {% elif segment.type == "Word" %}
+    {{ self::word(segment=segment) }}
+  {% endif %}
+{% endmacro any_segment %}
+
+{% macro word(segment) %}
+  <w xml:id="{{segment.id}}" lemmaRef="lex:id">
+    {% if segment.simplePhonetics or segment.phonemic or segment.morphemicSegmentation or segment.morphemicGloss or segment.englishGloss %}
+      <choice>
+        <orig>{{segment.source}}</orig>
+        {% if segment.normalizedSource %}
+          <seg type="normalized_source">{{segment.normalizedSource}}</seg>
+        {% endif %}
+        {% if segment.simplePhonetics %}
+          <seg type="simple_phonetics">{{segment.simplePhonetics}}</seg>
+        {% endif %}
+        {% if segment.phonemic %}
+          <seg type="phonemic_form">{{segment.phonemic}}</seg>
+        {% endif %}
+        {% if segment.morphemicSegmentation %}
+          <seg type="morphemic_segmentation">{{segment.morphemicSegmentation}}</seg>
+        {% endif %}
+        {% if segment.morphemicGloss %}
+          <seg type="morphemic_gloss">{{segment.morphemicGloss}}</seg>
+        {% endif %}
+        {% if segment.englishGloss %}
+          <seg type="gloss">{{segment.englishGloss | join(sep=", ")}}</seg>
+        {% endif %}
+      </choice>
+    {% else %}
+      {{segment.source}}
+    {% endif %}
+  </w>
+{% endmacro word %}
+
+{# Commentary is included for some words to capture extra information or uncertainty.
+   Called once per top-level segment in a paragraph's `source` list (segments are flat,
+   not nested, so no recursion into child parts is needed). #}
+{% macro commentary(segment) %}
+  {% if segment.type == "Word" and segment.commentary %}
+    <note target="#{{segment.id}}">{{segment.commentary}}</note>
+  {% endif %}
+{% endmacro commentary %}

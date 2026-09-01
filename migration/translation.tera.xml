@@ -1,0 +1,84 @@
+{# -*- mode: web; -*- #}
+{% import "tei_macros.tera.xml" as macros %}
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>{{ title }}</title>
+      </titleStmt>
+        <sourceDesc>
+          <p>{{collection}}</p>
+        </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef matchPattern="" replacementPattern="" ident="lex">
+          <p>This prefix resolves references to the lexical data source.</p>
+        </prefixDef>
+      </listPrefixDef>
+    </encodingDesc>
+    <profileDesc>
+      {% if people %}
+        <particDesc>
+          {% for person in people %}
+            <person xml:id="{{person.name | slugify}}">
+              <persName>{{person.name}}</persName>
+            </person>
+          {% endfor %}
+        </particDesc>
+      {% endif %}
+    </profileDesc>
+  </teiHeader>
+
+  <text>
+    <group>
+      {# One page/paragraph structure per `TeiPageContext`/`TeiParagraphContext` (see
+        `migration/src/tei.rs`), matching the real `AnnotatedDoc.segments: Vec<TranslatedPage>`
+        shape: a whole-paragraph translation paired with its flat sequence of
+        word/line-break segments, rather than the finer per-block alignment this template
+        used to assume (which no real struct ever provided). #}
+      <text type="source" xml:lang="chr">
+        <body>
+          {% for page in pages %}
+            <pb n="{{page.index}}"/>
+            {% for paragraph in page.paragraphs %}
+              <ab xml:id="{{paragraph.id}}" corresp="#{{paragraph.id}}_trans">
+                {% for segment in paragraph.source %}
+                  {{ macros::any_segment(segment=segment) }}
+                {% endfor %}
+              </ab>
+            {% endfor %}
+          {% endfor %}
+        </body>
+      </text>
+
+      <text type="translation" xml:lang="en">
+        <body>
+          {% for page in pages %}
+            {% for paragraph in page.paragraphs %}
+              {% if paragraph.translation %}
+                <ab xml:id="{{paragraph.id}}_trans">
+                  <seg>{{paragraph.translation}}</seg>
+                </ab>
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </body>
+      </text>
+    </group>
+  </text>
+
+  {# Commentary is included for some words to capture extra information or uncertainty. #}
+  <standOff>
+    <d:noteBlock>
+      {% for page in pages %}
+        {% for paragraph in page.paragraphs %}
+          {% for segment in paragraph.source %}
+            {{ macros::commentary(segment=segment) }}
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    </d:noteBlock>
+  </standOff>
+</TEI>
