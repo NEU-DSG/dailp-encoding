@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { colors } from "src/style/constants"
+import { colors } from "src/style/design-tokens"
 
 export const container = style({
   position: "relative",
