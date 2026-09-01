@@ -1449,16 +1449,19 @@ dependencies = [
  "dailp",
  "dotenv",
  "futures",
+ "hex",
  "itertools",
  "lazy_static",
  "log",
  "pretty_env_logger",
+ "quick-xml",
  "rayon",
  "regex",
  "reqwest",
  "roxmltree",
  "serde",
  "serde_json",
+ "sha2 0.10.8",
  "tera",
  "tokio",
 ]
@@ -3278,6 +3281,15 @@ name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
+
+[[package]]
+name = "quick-xml"
+version = "0.36.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7649a7b4df05aed9ea7ec6f628c67c9953a43869b8bc50929569b2999d443fe"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "quote"

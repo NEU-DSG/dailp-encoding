@@ -33,5 +33,7 @@ pretty_env_logger = "0.4"
 csv = "1.1"
 roxmltree = "0.19"
 quick-xml = "0.36"
+sha2 = "0.10"
+hex = "0.4"
 
 dailp = {path = "../types"}
