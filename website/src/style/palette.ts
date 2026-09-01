@@ -61,6 +61,7 @@ export const palette = {
     lagoonBlue: "#4A90E2",
     solitudeBlue: "#e8f2ff",
     crystalBlue: "#c6ddff",
+    lightBlue: "#C3E0EE",
 
     // Brown
     cocoaBrown: "#5C3A37",
@@ -79,10 +80,12 @@ export const palette = {
     // Orange
     goldOrange: "#E6B469",
     lightPeachAlpha80: rgba(247, 238, 237, 0.8),
+    bisqueOrange: "#F0D6C1",
 
     // Green
     retroGreen: "#28a745",
     honeydewGreen: "#f0fff4",
+    apostleGreen: "#C3EEDE",
 
     // Pink
     blushPink: "#ffebee",
