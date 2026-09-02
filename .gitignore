@@ -19,6 +19,8 @@ target/
 .direnv/
 .mongo/
 *.tfstate
+vite.config.ts.timestamp*
+/yarn.lock
 
 public/
 
