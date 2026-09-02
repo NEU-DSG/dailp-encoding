@@ -197,8 +197,13 @@
               postgresql_14
               sqlx-cli
               sqlfluff
+              bash
+              shellcheck
+              awscli2
+              curl
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
                 [ ! -d "$PGDATA" ] && initdb
                 postgres -D $PGDATA -c unix_socket_directories=/tmp
               '')
@@ -224,6 +229,30 @@
               (writers.writeBashBin "dev-generate-types" ''
                 cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
+              '')
+              (writers.writeBashBin "dev-pg-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/pg_dump_backup.sh
+                echo "See output in ./backups/pg_dump/"
+              '')
+              (writers.writeBashBin "dev-csv-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/export_db_to_csv.sh
+              '')
+              (writers.writeBashBin "mock-database" ''
+                DATABASE_URL=postgres://localhost:5432/test
+                if [[ -n `psql -Atqc '\list test' postgres` ]]; then
+                  echo "Found leftover test database. Cleaning up..."
+                  dropdb test -f
+                fi
+                createdb test
+                dev-migrate-schema
+              '')
+              (writers.writeBashBin "dev-csv-restore" ''
+                $PROJECT_ROOT/scripts/src/import_db_from_csv.sh $@
+              '')
+              (writers.writeBashBin "dev-pg-restore" ''
+                $PROJECT_ROOT/scripts/src/pg_restore_backup.sh $@
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
