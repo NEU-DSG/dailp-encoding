@@ -2,6 +2,7 @@
 //! inverse of the `migrate-to-xml` binary. See `migration/import-from-xml.md` for the
 //! full design, processing order, and known limitations.
 
+mod backup_paths;
 mod checksum;
 mod editorial_import;
 mod mets_import;
@@ -10,7 +11,7 @@ mod xml_util;
 
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Parser;
 use dailp::Database;
 use mets_import::{find_latest_bundle, import_bundle, ImportOptions};
@@ -19,7 +20,7 @@ use mets_import::{find_latest_bundle, import_bundle, ImportOptions};
 #[derive(Parser)]
 struct Args {
     /// Path to a `dailp-<timestamp>` run directory. Defaults to the most recently
-    /// generated run under `<workspace>/backups/xml/dailp`.
+    /// generated run under ./backups/xml/dailp/.
     bundle: Option<PathBuf>,
 
     /// Parse and checksum-verify the bundle only; never connects to a database.
@@ -56,13 +57,11 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .context("migration crate has no parent directory")?
-        .to_owned();
     let bundle = match args.bundle {
         Some(path) => path,
-        None => find_latest_bundle(&workspace_root)?,
+        // Resolved against the current directory, matching where `migrate-to-xml` writes
+        // by default -- see `backup_paths` for why this can't be a compile-time path.
+        None => find_latest_bundle(&backup_paths::backup_root(None)?)?,
     };
 
     let opts = ImportOptions {

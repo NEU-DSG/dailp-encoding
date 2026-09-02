@@ -30,7 +30,9 @@ use serde::Serialize;
 use crate::checksum::sha256_hex;
 
 /// Generates a full backup bundle for every collection in `collections` into a fresh,
-/// timestamped run directory, `<workspace root>/backups/xml/dailp/dailp-<timestamp>/`:
+/// timestamped run directory, `<output_root>/dailp-<timestamp>/` (`output_root` being the
+/// `-o=`/`--outdir=` directory resolved by [`crate::backup_paths::backup_root`] -- by
+/// default `./backups/xml/dailp`, relative to the invoking directory):
 /// - `manifest.mets.xml` — lists every collection processed in this run.
 /// - `collections/<collection title>.mets.xml` — one per collection processed.
 /// - `documents/<document title>.mets.xml` and `documents/<document title>.tei.xml` —
@@ -54,7 +56,8 @@ use crate::checksum::sha256_hex;
 ///   [`crate::editorial::export_collection_chapters`].
 ///
 /// `logs/` (see [`logs_dir`]) sits alongside the `dailp-<timestamp>` run directories,
-/// not inside any one of them, since logs span runs.
+/// not inside any one of them, since logs span runs -- unless `-l=`/`--log-location=`
+/// moves it elsewhere entirely.
 ///
 /// Requires the `CF_URL` env var to be set (see `audio.rs`'s use of the same variable),
 /// used for `cloud backup` file locations, and reads `TF_STAGE` (defaulting to
@@ -79,7 +82,14 @@ use crate::checksum::sha256_hex;
 /// collection it belongs to, globally, across runs) -- moot today since every collection
 /// in the database is always passed in, but would matter again if a future caller passes
 /// only a subset.
-pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection]) -> Result<()> {
+///
+/// `output_root` is the directory that run directories are created under, already resolved
+/// by the caller (see `crate::backup_paths`).
+pub async fn generate_mets_bundle(
+    db: &Database,
+    collections: &[EditedCollection],
+    output_root: &Path,
+) -> Result<()> {
     info!(
         "Generating METS backups for {} collection(s)",
         collections.len()
@@ -154,7 +164,7 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
     // Every file produced by this run lives under one fresh, timestamped directory, so
     // a run's collection/document/manifest files, its downloaded page images/audio, and
     // its editorial content are all found together.
-    let run_root = output_root().join(format!("dailp-{file_timestamp}"));
+    let run_root = output_root.join(format!("dailp-{file_timestamp}"));
     let collections_dir = run_root.join("collections");
     let documents_dir = run_root.join("documents");
     let audio_dir = run_root.join("audio");
@@ -1003,23 +1013,17 @@ fn validate_tei_bundle(documents_dir: &Path, entries: &[TeiValidationEntry]) -> 
     }
 }
 
-/// Returns the directory that backup XML files are written under. Resolved relative to
-/// the workspace root (via `CARGO_MANIFEST_DIR`, set at compile time to this crate's
-/// directory) rather than the current working directory, so output lands in the same
-/// place regardless of where the binary is invoked from. Each run gets its own
-/// `dailp-<timestamp>` subdirectory here (see [`generate_mets_bundle`]);
-/// `logs/` (see [`logs_dir`]) is the one thing that lives directly under this directory.
-fn output_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("migration crate should live directly under the workspace root")
-        .join("backups/xml/dailp")
-}
-
-/// Returns the directory that this program's log files are written under
-/// (`<output_root>/logs`).
-pub fn logs_dir() -> PathBuf {
-    output_root().join("logs")
+/// Returns the directory this program's log files are written under: the
+/// `-l=`/`--log-location=` value when one was passed, else `logs/` under `output_root`
+/// (wherever `-o=`/`--outdir=` resolved to -- see [`crate::backup_paths::backup_root`]).
+///
+/// Once passed explicitly, the log location is fully independent of `--outdir`, matching
+/// `scripts/src/export_db_to_csv.sh`'s `-l=` convention: a fixed folder, not something
+/// nested inside each run's own output directory. Lives here rather than in
+/// [`crate::backup_paths`] because only this binary writes logfiles -- `import-from-xml`
+/// logs to the terminal only.
+pub fn logs_dir(log_location: Option<PathBuf>, output_root: &Path) -> PathBuf {
+    log_location.unwrap_or_else(|| output_root.join("logs"))
 }
 
 /// Format used for the human-readable `CREATEDATE` attribute in the rendered METS,
@@ -2171,19 +2175,6 @@ mod tests {
     }
 
     #[test]
-    fn output_root_resolves_to_workspace_root_backups_dir() {
-        let root = output_root();
-        assert!(root.ends_with("backups/xml/dailp"));
-        // The workspace root is the migration crate's parent directory, and should
-        // contain the workspace-level Cargo.toml regardless of the test's CWD.
-        let workspace_root = root
-            .ancestors()
-            .find(|dir| dir.join("Cargo.toml").is_file() && dir.join("migration").is_dir())
-            .expect("should find the workspace root above the output directory");
-        assert!(workspace_root.join("types").is_dir());
-    }
-
-    #[test]
     fn file_extension_handles_urls_and_placeholders() {
         assert_eq!(file_extension("https://example.com/audio.mp3"), ".mp3");
         assert_eq!(file_extension("S3"), "");
@@ -2261,5 +2252,19 @@ mod tests {
         std::env::set_var("TF_STAGE", "uat");
         assert_eq!(dailp_base_url(), "https://uat.dailp.northeastern.edu");
         std::env::remove_var("TF_STAGE");
+    }
+
+    #[test]
+    fn logs_dir_defaults_beside_the_run_directories() {
+        let output_root = Path::new("/repo/backups/xml/dailp");
+        assert_eq!(
+            logs_dir(None, output_root),
+            PathBuf::from("/repo/backups/xml/dailp/logs")
+        );
+        // `-l=` moves the logs without moving the bundle.
+        assert_eq!(
+            logs_dir(Some(PathBuf::from("/var/log/dailp")), output_root),
+            PathBuf::from("/var/log/dailp")
+        );
     }
 }
