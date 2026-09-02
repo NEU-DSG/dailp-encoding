@@ -21,6 +21,7 @@ target/
 *.tfstate
 vite.config.ts.timestamp*
 /yarn.lock
+/backups
 
 public/
 

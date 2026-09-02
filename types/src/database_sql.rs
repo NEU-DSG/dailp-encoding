@@ -545,6 +545,29 @@ impl Database {
         Ok((collection.slug).to_string())
     }
 
+    /// Fills in the `description`/`thumbnail_url` columns [`Self::upsert_collection`]'s
+    /// query leaves untouched, as an additive follow-up call rather than a change to that
+    /// query (which would also affect its existing Sheets-import caller). `None` leaves
+    /// the existing column value alone rather than clearing it. Used by the XML-backup
+    /// importer, which can recover a collection's description (but not its
+    /// `thumbnail_url`) from the exported bundle -- see `migration/import-from-xml.md`.
+    pub async fn set_edited_collection_metadata(
+        &self,
+        slug: &str,
+        description: Option<&str>,
+        thumbnail_url: Option<&str>,
+    ) -> Result<()> {
+        query_file!(
+            "queries/set_edited_collection_metadata.sql",
+            slug,
+            description,
+            thumbnail_url
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
     pub async fn insert_all_chapters(
         &self,
         chapters: Vec<raw::CollectionChapter>,
@@ -2508,6 +2531,17 @@ impl Database {
         Ok(
             query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
                 .fetch_optional(&self.client)
+                .await?,
+        )
+    }
+
+    /// Every document's `short_name` in a given `document_group`. Used by the XML-backup
+    /// importer's pre-flight collision scan and post-import row-count sanity check --
+    /// nothing else needed "documents in this group."
+    pub async fn document_short_names_in_group(&self, group_id: Uuid) -> Result<Vec<String>> {
+        Ok(
+            query_file_scalar!("queries/document_short_names_in_group.sql", group_id)
+                .fetch_all(&self.client)
                 .await?,
         )
     }
