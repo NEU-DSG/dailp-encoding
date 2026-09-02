@@ -40,6 +40,15 @@ pub(crate) struct DownloadedDocumentAudio {
     pub(crate) checksum: String,
 }
 
+/// The result of [`download_words_with_audio`]: every word whose download succeeded,
+/// plus a human-readable line for every word whose download failed -- so callers can
+/// surface those failures in an end-of-run summary instead of only the per-word
+/// `warn!` already logged when each one happens.
+pub(crate) struct DownloadedWordAudioResult {
+    pub(crate) downloaded: Vec<DownloadedWordAudio>,
+    pub(crate) failures: Vec<String>,
+}
+
 /// One word's archived audio file, plus the fields `document.tera.xml`'s word fileGrps
 /// need. Only produced for words whose download actually succeeded -- see
 /// [`download_words_with_audio`].
@@ -159,10 +168,11 @@ fn word_audio_candidates(pages: &[LoadedPage]) -> Vec<WordAudioCandidate> {
 
 /// Downloads every word-with-audio candidate in `pages`, writing successes into
 /// `document_audio_dir` named per [`word_audio_filename`]. Words whose download fails after
-/// retries are logged as a warning and OMITTED from the returned `Vec` entirely -- from the
+/// retries are logged as a warning and OMITTED from `downloaded` entirely -- from the
 /// METS/TEI templates' point of view this is indistinguishable from that word never having
 /// had audio in the first place (no `file` entry, no `structSec` `div`, no TEI
-/// `<ptr type="audio">`).
+/// `<ptr type="audio">`). Each such failure also gets a line in the returned `failures`,
+/// so `mets::generate_mets_bundle` can fold it into its end-of-run summary.
 ///
 /// Returns `Err` only for fatal/environmental failures (e.g. can't create
 /// `document_audio_dir`), never for an individual word's download failure.
@@ -171,10 +181,13 @@ pub(crate) async fn download_words_with_audio(
     pages: &[LoadedPage],
     document_audio_dir: &Path,
     file_stem: &str,
-) -> Result<Vec<DownloadedWordAudio>> {
+) -> Result<DownloadedWordAudioResult> {
     let candidates = word_audio_candidates(pages);
     if candidates.is_empty() {
-        return Ok(Vec::new());
+        return Ok(DownloadedWordAudioResult {
+            downloaded: Vec::new(),
+            failures: Vec::new(),
+        });
     }
     std::fs::create_dir_all(document_audio_dir).with_context(|| {
         format!(
@@ -185,6 +198,7 @@ pub(crate) async fn download_words_with_audio(
 
     let total = candidates.len();
     let mut downloaded = Vec::with_capacity(total);
+    let mut failures = Vec::new();
     for candidate in candidates {
         let filename = word_audio_filename(
             candidate.word_index,
@@ -202,6 +216,12 @@ pub(crate) async fn download_words_with_audio(
                         path.display(),
                         candidate.id
                     );
+                    failures.push(format!(
+                        "word \"{}\" ({}): failed to write {}: {e:#}",
+                        candidate.id,
+                        candidate.audio_url,
+                        path.display()
+                    ));
                     continue;
                 }
                 downloaded.push(DownloadedWordAudio {
@@ -218,6 +238,10 @@ pub(crate) async fn download_words_with_audio(
                      Treating it as if it had no audio.",
                     candidate.id, candidate.audio_url
                 );
+                failures.push(format!(
+                    "word \"{}\" ({}): {e:#}",
+                    candidate.id, candidate.audio_url
+                ));
             }
         }
     }
@@ -227,7 +251,10 @@ pub(crate) async fn download_words_with_audio(
         downloaded.len(),
         document_audio_dir.display()
     );
-    Ok(downloaded)
+    Ok(DownloadedWordAudioResult {
+        downloaded,
+        failures,
+    })
 }
 
 /// Number of attempts `fetch_with_retry` makes before giving up.

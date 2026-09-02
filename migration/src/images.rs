@@ -1,6 +1,7 @@
 //! Downloads each document's manuscript page images from their real IIIF image server into
 //! this run's `images/` directory (see [`crate::mets::render_one_document`]),
-//! named `{document_slug}_page{page_number}_{iiif_oid}.jpg`. Extension is always `.jpg`
+//! named `{document_slug}_page{page_number}_{iiif_oid}.jpg` (`iiif_oid` run through
+//! [`sanitize_for_path`], since some real oids embed a `/`). Extension is always `.jpg`
 //! since this pipeline always requests IIIF's `default.jpg` rendering, matching the
 //! convention already established in `types/src/iiif.rs` (`Manifest::from_document`).
 //!
@@ -8,7 +9,9 @@
 //! one IIIF oid (messy but real source metadata, not a bug in this pipeline) -- see
 //! [`split_oids`]. Requesting a joined oid list as if it were one oid produces an invalid
 //! IIIF path and a 500 from the image server, so each oid in the list is downloaded (and
-//! named) as its own separate image instead.
+//! named) as its own separate image instead. Some sources also nest an oid in a path (e.g.
+//! `"StoryOfTheSequoyah/WJ22--StoryOfTheSequoyah-pg1"`), valid for the IIIF request itself
+//! but not for a flat local filename -- see [`sanitize_for_path`]'s use below.
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -21,6 +24,7 @@ use log::{info, warn};
 use tokio::time::sleep;
 
 use crate::checksum::sha256_hex;
+use crate::mets::sanitize_for_path;
 use crate::tei::LoadedPage;
 
 /// A manuscript page image, downloaded into this run's `images/` directory and carrying
@@ -97,7 +101,7 @@ pub(crate) async fn download_page_images(
             )
         })?;
         let image_url = format!("{}/{}/full/max/0/default.jpg", source.url, oid);
-        let filename = format!("{document_slug}_page{page_number}_{oid}.jpg");
+        let filename = image_filename(document_slug, &page_number, &oid);
         let path = images_dir.join(&filename);
 
         info!(
@@ -157,6 +161,20 @@ fn page_image_refs(pages: &[LoadedPage]) -> Vec<PageImageRef> {
                 })
         })
         .collect()
+}
+
+/// Builds the local, archival filename a page image is downloaded to under `images_dir`:
+/// `{document_slug}_page{page_number}_{oid}.jpg`, with `oid` run through
+/// [`sanitize_for_path`]. `oid` is a real remote IIIF identifier, not a filesystem name --
+/// some sources nest it in a path (e.g. `"StoryOfTheSequoyah/WJ22--StoryOfTheSequoyah-pg1"`),
+/// which is fine for the IIIF request itself (see `download_page_images`'s `image_url`) but
+/// would otherwise smuggle a `/` into what's meant to be a flat filename, making
+/// `std::fs::write` fail (or silently nest documents' images into subdirectories).
+fn image_filename(document_slug: &str, page_number: &str, oid: &str) -> String {
+    format!(
+        "{document_slug}_page{page_number}_{}.jpg",
+        sanitize_for_path(oid)
+    )
 }
 
 /// Splits a `DocumentPage.image.oid` string on commas into individual IIIF oids, trimming
@@ -317,5 +335,28 @@ mod tests {
         assert_eq!(split_oids("15532353"), vec!["15532353".to_owned()]);
         assert_eq!(split_oids(""), Vec::<String>::new());
         assert_eq!(split_oids(" , "), Vec::<String>::new());
+    }
+
+    #[test]
+    fn image_filename_sanitizes_an_oid_that_embeds_a_path_separator() {
+        // Real, messy source metadata: some sources' oid nests a `/`, valid for the IIIF
+        // request itself but not for what's meant to be a flat filename under `images_dir`
+        // -- see this crate's `mets::sanitize_for_path`.
+        assert_eq!(
+            image_filename(
+                "story-of-the-sequoyah",
+                "1",
+                "StoryOfTheSequoyah/WJ22--StoryOfTheSequoyah-pg1"
+            ),
+            "story-of-the-sequoyah_page1_StoryOfTheSequoyahWJ22--StoryOfTheSequoyah-pg1.jpg"
+        );
+    }
+
+    #[test]
+    fn image_filename_leaves_an_ordinary_numeric_oid_untouched() {
+        assert_eq!(
+            image_filename("story-of-millie-pigeon", "1", "15532353"),
+            "story-of-millie-pigeon_page1_15532353.jpg"
+        );
     }
 }

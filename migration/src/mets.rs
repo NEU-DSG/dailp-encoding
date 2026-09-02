@@ -193,6 +193,12 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
     // are reused rather than re-established per file -- mirrors `audio.rs`'s `Client::new()`.
     let http_client = reqwest::Client::new();
 
+    // Every audio download failure this run, document-level and per-word alike --
+    // already logged as its own `warn!` where it happens, collected here too so
+    // they can *also* appear in one impossible-to-miss summary at the very end,
+    // instead of only among however many other lines this run logs.
+    let mut audio_failures: Vec<String> = Vec::new();
+
     // Build each unique document's `CollectionDocumentEntry` exactly once -- its audio is
     // downloaded once regardless of how many collections it belongs to in this run, so
     // every collection/document file that references it agrees on
@@ -200,6 +206,9 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
     let mut document_entries: HashMap<DocumentId, CollectionDocumentEntry> = HashMap::new();
     for (&id, doc) in &documents_by_id {
         let entry = build_document_entry(&http_client, doc, &audio_dir).await;
+        if let Some(failure) = &entry.audio_download_failure {
+            audio_failures.push(failure.clone());
+        }
         document_entries.insert(id, entry);
     }
 
@@ -304,7 +313,7 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
         let owning_collections = doc_collections.remove(doc_id).unwrap_or_default();
         let home = &collection_results[home_collection[doc_id]];
 
-        if let Some(validation_entry) = render_one_document(
+        let rendered = render_one_document(
             db,
             doc,
             entry,
@@ -314,10 +323,11 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
             &document_run_ctx,
             &http_client,
         )
-        .await?
-        {
+        .await?;
+        if let Some(validation_entry) = rendered.validation_entry {
             tei_validation_entries.push(validation_entry);
         }
+        audio_failures.extend(rendered.audio_failures);
     }
 
     // Read each collection's just-written METS file back off disk and confirm every
@@ -342,6 +352,19 @@ pub async fn generate_mets_bundle(db: &Database, collections: &[EditedCollection
         collections.len(),
         unique_document_order.len()
     );
+
+    // Every individual failure above was already logged as its own `warn!` when it
+    // happened; this one final summary exists so none of them can get lost among
+    // however many other lines (mostly `info!`) this run produced -- see
+    // `CollectionDocumentEntry.audio_download_failure`/`RenderedDocument.audio_failures`.
+    if !audio_failures.is_empty() {
+        warn!(
+            "{} audio download failure(s) this run (each falls back to no audio; see \
+             warnings above for detail):\n  - {}",
+            audio_failures.len(),
+            audio_failures.join("\n  - ")
+        );
+    }
 
     Ok(())
 }
@@ -410,35 +433,46 @@ async fn build_document_entry(
     // here so every fileGrp (not just archival) falls back to a `<!-- No audio for
     // ... -->` comment instead of a `file` entry with nothing real to reference. See
     // `audio_backup`'s module doc comment for why a failed download is treated this way.
-    let (audio_locref, ext, archival_locref, checksum) = match &doc.meta.audio_recording {
-        Some(audio) => {
-            let document_audio_dir = audio_dir.join(&file_stem);
-            match crate::audio_backup::download_document_audio(
-                http_client,
-                &audio.resource_url,
-                &document_audio_dir,
-                &file_stem,
-            )
-            .await
-            {
-                Ok(downloaded) => (
-                    Some(escape_xml(&audio.resource_url)),
-                    file_extension(&audio.resource_url),
-                    Some(downloaded.archival_locref),
-                    Some(downloaded.checksum),
-                ),
-                Err(e) => {
-                    warn!(
-                        "Failed to download document audio for \"{}\" after retries: {e:#}. \
-                         Treating this document as if it has no audio.",
-                        doc.meta.title
-                    );
-                    (None, String::new(), None, None)
+    // `audio_download_failure` distinguishes the two cases for `generate_mets_bundle`'s
+    // end-of-run summary, even though rendering itself can't (and shouldn't) tell them
+    // apart.
+    let (audio_locref, ext, archival_locref, checksum, audio_download_failure) =
+        match &doc.meta.audio_recording {
+            Some(audio) => {
+                let document_audio_dir = audio_dir.join(&file_stem);
+                match crate::audio_backup::download_document_audio(
+                    http_client,
+                    &audio.resource_url,
+                    &document_audio_dir,
+                    &file_stem,
+                )
+                .await
+                {
+                    Ok(downloaded) => (
+                        Some(escape_xml(&audio.resource_url)),
+                        file_extension(&audio.resource_url),
+                        Some(downloaded.archival_locref),
+                        Some(downloaded.checksum),
+                        None,
+                    ),
+                    Err(e) => {
+                        warn!(
+                            "Failed to download document audio for \"{}\" after retries: {e:#}. \
+                             Treating this document as if it has no audio.",
+                            doc.meta.title
+                        );
+                        (
+                            None,
+                            String::new(),
+                            None,
+                            None,
+                            Some(format!("document \"{}\": {e:#}", doc.meta.title)),
+                        )
+                    }
                 }
             }
-        }
-        None => (None, String::new(), None, None),
-    };
+            None => (None, String::new(), None, None, None),
+        };
 
     CollectionDocumentEntry {
         title: escape_xml(&doc.meta.title),
@@ -455,6 +489,7 @@ async fn build_document_entry(
         audio_locref,
         archival_locref,
         checksum,
+        audio_download_failure,
         // Lives in this run's `documents/` directory; the timestamp that used to
         // disambiguate this filename now lives in the run directory's own name
         // instead (`dailp-<timestamp>/`).
@@ -594,9 +629,11 @@ async fn render_one_collection(
 /// `home_collection_documents` are its "home" collection's own (already-escaped) title and
 /// chapter-order document list, used for the `collection_slug` field and TEI navigation --
 /// see the doc comment on [`generate_mets_bundle`] for why those need a single "home"
-/// collection rather than the full `owning_collections` list. Returns the
-/// [`TeiValidationEntry`] to pass to `validate_tei_bundle`, or `None` if this document has
-/// no linguistic content (so no TEI file was written).
+/// collection rather than the full `owning_collections` list. Returns a
+/// [`RenderedDocument`] carrying the [`TeiValidationEntry`] to pass to
+/// `validate_tei_bundle` (`None` if this document has no linguistic content, so no TEI
+/// file was written) plus this document's own word-audio download failures, for
+/// `generate_mets_bundle`'s end-of-run summary.
 async fn render_one_document(
     db: &Database,
     doc: &AnnotatedDoc,
@@ -606,7 +643,7 @@ async fn render_one_document(
     home_collection_documents: &[CollectionDocumentEntry],
     run: &DocumentRunContext,
     http_client: &reqwest::Client,
-) -> Result<Option<TeiValidationEntry>> {
+) -> Result<RenderedDocument> {
     // Loaded once per document and shared by `document_page_images`, `words_with_audio`,
     // and the TEI render below, rather than each of them separately querying
     // `PagesInDocument`/`ParagraphsInPage`/`WordsInParagraph` -- see
@@ -639,8 +676,10 @@ async fn render_one_document(
     // audio subdirectory its overall audio (if any) was already downloaded into above
     // -- see `words_with_audio`.
     let document_audio_dir = run.audio_dir.join(&entry.file_stem);
-    let words_with_audio =
-        words_with_audio(http_client, &pages, &document_audio_dir, &entry.file_stem).await?;
+    let WordsWithAudioResult {
+        entries: words_with_audio,
+        failures: audio_failures,
+    } = words_with_audio(http_client, &pages, &document_audio_dir, &entry.file_stem).await?;
 
     // The TEI file is this document's actual word-for-word content; it's rendered and
     // written *before* this document's own METS file below (reversed from write
@@ -760,7 +799,20 @@ async fn render_one_document(
         document_path.display()
     );
 
-    Ok(validation_entry)
+    Ok(RenderedDocument {
+        validation_entry,
+        audio_failures,
+    })
+}
+
+/// The result of [`render_one_document`] -- see its doc comment.
+struct RenderedDocument {
+    validation_entry: Option<TeiValidationEntry>,
+    /// One line per word whose audio failed to download for this document (see
+    /// [`WordsWithAudioResult`]). Does *not* include a document-level overall-audio
+    /// failure -- that's read directly off `CollectionDocumentEntry.audio_download_failure`
+    /// by `generate_mets_bundle`, since it's already known before this function runs.
+    audio_failures: Vec<String>,
 }
 
 /// Parses a just-written collection METS file back off disk and confirms every document
@@ -1116,6 +1168,13 @@ struct CollectionDocumentEntry {
     /// from every fileGrp (original/cloud backup/archival) across the bundle, so this one
     /// checksum covers all of them.
     checksum: Option<String>,
+    /// `Some(<detail>)` iff this document had audio configured but the download failed
+    /// after retries -- distinct from simply having no audio at all, even though
+    /// `audio_locref`/`archival_locref`/`checksum` above collapse both cases identically
+    /// for rendering. Only consumed by `generate_mets_bundle`'s end-of-run summary of
+    /// audio download failures, never by a template -- skipped from serialization.
+    #[serde(skip)]
+    audio_download_failure: Option<String>,
     /// Filename (not a path) of the corresponding document-level METS file, written to
     /// this run's `documents/` directory — a sibling of `collections/`, where the
     /// collection file referencing it lives.
@@ -1269,6 +1328,14 @@ async fn document_page_images(
         .collect())
 }
 
+/// The result of [`words_with_audio`]: every word's rendered entry, plus one line per
+/// word whose download failed (see [`crate::audio_backup::DownloadedWordAudioResult`]),
+/// for `render_one_document`/`generate_mets_bundle`'s end-of-run summary.
+struct WordsWithAudioResult {
+    entries: Vec<WordAudioEntry>,
+    failures: Vec<String>,
+}
+
 /// Downloads a document's word-for-word audio (see
 /// [`crate::audio_backup::download_words_with_audio`]) into `document_audio_dir` and adapts
 /// the result into the `Serialize`-able shape `document.tera.xml` (and, via the map built in
@@ -1280,24 +1347,28 @@ async fn words_with_audio(
     pages: &[crate::tei::LoadedPage],
     document_audio_dir: &Path,
     file_stem: &str,
-) -> Result<Vec<WordAudioEntry>> {
-    let downloaded = crate::audio_backup::download_words_with_audio(
+) -> Result<WordsWithAudioResult> {
+    let result = crate::audio_backup::download_words_with_audio(
         client,
         pages,
         document_audio_dir,
         file_stem,
     )
     .await?;
-    Ok(downloaded
-        .into_iter()
-        .map(|w| WordAudioEntry {
-            id: w.id,
-            audio_url: w.audio_url,
-            ext: w.ext,
-            archival_locref: w.archival_locref,
-            checksum: w.checksum,
-        })
-        .collect())
+    Ok(WordsWithAudioResult {
+        entries: result
+            .downloaded
+            .into_iter()
+            .map(|w| WordAudioEntry {
+                id: w.id,
+                audio_url: w.audio_url,
+                ext: w.ext,
+                archival_locref: w.archival_locref,
+                checksum: w.checksum,
+            })
+            .collect(),
+        failures: result.failures,
+    })
 }
 
 /// Builds the DAILP website's base URL for the current deployment stage, matching the
@@ -1534,6 +1605,7 @@ mod tests {
                             .to_owned(),
                     ),
                     checksum: Some("doc1checksum".to_owned()),
+                    audio_download_failure: None,
                     mets_filename: "Story-of-Millie-Pigeon.mets.xml".to_owned(),
                     file_stem: "Story-of-Millie-Pigeon".to_owned(),
                 },
@@ -1544,6 +1616,7 @@ mod tests {
                     ext: String::new(),
                     archival_locref: None,
                     checksum: None,
+                    audio_download_failure: None,
                     mets_filename: "Story-of-the-Old-Timer.mets.xml".to_owned(),
                     file_stem: "Story-of-the-Old-Timer".to_owned(),
                 },
