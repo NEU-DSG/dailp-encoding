@@ -12,6 +12,10 @@ path = "src/main.rs"
 name = "migrate-to-xml"
 path = "src/migrate-to-xml.rs"
 
+[[bin]]
+name = "import-from-xml"
+path = "src/import-from-xml.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -35,5 +39,6 @@ roxmltree = "0.19"
 quick-xml = "0.36"
 sha2 = "0.10"
 hex = "0.4"
+clap = { version = "4", features = ["derive"] }
 
 dailp = {path = "../types"}
