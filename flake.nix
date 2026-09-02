@@ -125,6 +125,85 @@
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
         '';
+        # The bastion has no public IP and no open SSH ingress rule, so both
+        # of these tunnel SSH over an SSM Session Manager port-forwarding
+        # session instead of connecting directly.
+        #
+        # Requires:
+        #   BASTION_ID      - the bastion's EC2 instance id
+        #                     (e.g. `nix run --impure .#tf-output bastion_id`)
+        #   BASTION_SSH_KEY - path to the local `dailp-dev-2024` private key
+        bastionTunnel = ''
+          echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..."
+          aws ssm start-session \
+            --target "$BASTION_ID" \
+            --document-name AWS-StartPortForwardingSession \
+            --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" &
+          ssm_pid=$!
+          trap 'kill $ssm_pid 2>/dev/null' EXIT
+
+          echo "Waiting for tunnel to come up..."
+          for _ in $(seq 1 10); do
+            if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
+              exec 3<&-
+              exec 3>&-
+              break
+            fi
+            sleep 1
+          done
+        '';
+        # Copies a local file or directory onto the dev bastion host.
+        #
+        # Usage: copy-to-bastion <local-path> [remote-path]
+        # `remote-path` defaults to the ec2-user home directory.
+        copyToBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: copy-to-bastion <local-path> [remote-path]" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the dailp-dev-2024 private key}"
+
+          local_path="$1"
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          remote_path="''${2:-/home/$ssh_user/}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..."
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path"
+
+          echo "Done."
+        '';
+        # Runs a command on the dev bastion host over the same kind of SSM
+        # tunnel as copy-to-bastion.
+        #
+        # Usage: run-on-bastion <remote-command>
+        runOnBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: run-on-bastion <remote-command>" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the dailp-dev-2024 private key}"
+
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Running command on $ssh_user@localhost via port $local_port..."
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            -p "$local_port" -i "$BASTION_SSH_KEY" "$ssh_user@localhost" -- "$@"
+        '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
         nixConfig = {
@@ -142,6 +221,15 @@
           drv = hostPackage;
           exePath = "/bin/dailp-migration";
         };
+
+        apps.migrate-to-xml = inputs.utils.lib.mkApp {
+          drv = hostPackage;
+          exePath = "/bin/migrate-to-xml";
+        };
+
+        apps.copy-to-bastion = mkBashApp "copy-to-bastion" copyToBastionScript;
+
+        apps.run-on-bastion = mkBashApp "run-on-bastion" runOnBastionScript;
 
         apps.migrate-schema = mkBashApp "migrate-schema" ''
           cd types

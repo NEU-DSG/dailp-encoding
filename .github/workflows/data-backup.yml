@@ -1,0 +1,96 @@
+name: Data Backup
+on:
+  workflow_dispatch:
+jobs:
+  backup:
+    name: Back up data to S3
+    runs-on: ubuntu-22.04
+    # workflow_dispatch has no branches filter, so this enforces "main only" at the job level.
+    if: github.ref == 'refs/heads/main'
+    environment: Development
+    env:
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: dev
+      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      BASTION_IP: ${{ secrets.DEV_BASTION_IP }}
+      BASTION_SSH_KEY: ${{ github.workspace }}/.bastion-ssh-key.pem
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-21.11
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v12
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Write bastion SSH key
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.DEV_BASTION_SSH_KEY }}" > "$BASTION_SSH_KEY"
+      - name: Build project
+        run: |
+          nix build --impure -L
+          nix run --impure -L .#tf-init
+      - name: Generate XML backup bundle
+        run: |
+          echo "Retrieving terraform outputs..."
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          SSM_PID=$!
+          echo "Waiting for tunnel on localhost:5432..."
+          for i in $(seq 1 15); do
+            (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          echo "Generating METS/TEI backup bundle..."
+          nix run --impure -L .#migrate-to-xml
+          kill $SSM_PID
+          BUNDLE_DIR=$(ls -1t backups/xml/dailp | grep '^dailp-' | head -n1)
+          if [ -z "$BUNDLE_DIR" ]; then
+            echo "No backup bundle directory found under backups/xml/dailp" >&2
+            exit 1
+          fi
+          echo "Generated bundle: $BUNDLE_DIR"
+          echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+      - name: Copy backup scripts to bastion
+        run: nix run --impure -L .#copy-to-bastion -- ./scripts /home/ec2-user/
+      - name: Copy backup bundle to bastion
+        run: |
+          nix run --impure -L .#run-on-bastion -- "mkdir -p /home/ec2-user/backup"
+          nix run --impure -L .#copy-to-bastion -- ./backups/xml/dailp/$BUNDLE_DIR /home/ec2-user/backup/
+      - name: Upload backup to S3 from bastion
+        run: |
+          nix run --impure -L .#run-on-bastion -- \
+            "TF_STAGE=dev bash /home/ec2-user/scripts/src/upload_to_s3.sh -r -b=dailp-dev-media-storage -p=xml-backups/$BUNDLE_DIR /home/ec2-user/backup/$BUNDLE_DIR"
+      - name: Clean up bastion SSH key
+        if: always()
+        run: rm -f "$BASTION_SSH_KEY"
