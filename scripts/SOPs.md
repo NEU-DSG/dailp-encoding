@@ -11,7 +11,9 @@ gets recovered.
 
 ### Prerequisites
 
-- A running PostgreSQL instance, reachable from the machine running the backup.
+- A running PostgreSQL instance, reachable from the machine running the backup. A non-local
+  database is not reachable directly -- see [`../terraform/sop.md`](../terraform/sop.md) for how to
+  open the SSM tunnel that puts it on `localhost:5432`.
 - Write permissions on the local filesystem destination (defaults to `./backups/`).
 - `bash`, `pg_dump`, and `psql` on `PATH` -- all provided automatically inside the project's `nix
   develop` shell.
