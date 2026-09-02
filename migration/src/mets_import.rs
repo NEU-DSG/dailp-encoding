@@ -78,13 +78,12 @@ struct ImportedDocument {
     title: String,
 }
 
-/// Finds the most recently generated `dailp-<timestamp>` run directory under
-/// `<workspace>/backups/xml/dailp`, mirroring `crate::mets`'s own `output_root()`.
-/// Lexicographic order matches chronological order, since the export side's
-/// `FILENAME_TIMESTAMP_FORMAT` ("%Y%m%dT%H%M%S") sorts that way.
-pub fn find_latest_bundle(workspace_root: &Path) -> Result<PathBuf> {
-    let root = workspace_root.join("backups/xml/dailp");
-    let mut runs: Vec<PathBuf> = std::fs::read_dir(&root)
+/// Finds the most recently generated `dailp-<timestamp>` run directory under `root`, the
+/// already-resolved backup root (see `crate::backup_paths`). Lexicographic order matches
+/// chronological order, since the export side's `FILENAME_TIMESTAMP_FORMAT`
+/// ("%Y%m%dT%H%M%S") sorts that way.
+pub fn find_latest_bundle(root: &Path) -> Result<PathBuf> {
+    let mut runs: Vec<PathBuf> = std::fs::read_dir(root)
         .with_context(|| format!("Failed to read {}", root.display()))?
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.path())

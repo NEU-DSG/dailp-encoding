@@ -26,6 +26,10 @@ jobs:
       BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
       BASTION_IP: ${{ secrets.DEV_BASTION_IP }}
       BASTION_SSH_KEY: ${{ github.workspace }}/.bastion-ssh-key.pem
+      # Where `migrate-to-xml -o=` writes this run's bundle, and where the steps below
+      # look for it. Passed explicitly rather than relying on the tool's cwd-relative
+      # default, so the location stays correct if a step ever gains a `working-directory`.
+      BUNDLE_ROOT: ${{ github.workspace }}/backups/xml/dailp
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -72,11 +76,11 @@ jobs:
           done
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           echo "Generating METS/TEI backup bundle..."
-          nix run --impure -L .#migrate-to-xml
+          nix run --impure -L .#migrate-to-xml -- -o="$BUNDLE_ROOT"
           kill $SSM_PID
-          BUNDLE_DIR=$(ls -1t backups/xml/dailp | grep '^dailp-' | head -n1)
+          BUNDLE_DIR=$(ls -1t "$BUNDLE_ROOT" | grep '^dailp-' | head -n1)
           if [ -z "$BUNDLE_DIR" ]; then
-            echo "No backup bundle directory found under backups/xml/dailp" >&2
+            echo "No backup bundle directory found under $BUNDLE_ROOT" >&2
             exit 1
           fi
           echo "Generated bundle: $BUNDLE_DIR"
@@ -86,7 +90,7 @@ jobs:
       - name: Copy backup bundle to bastion
         run: |
           nix run --impure -L .#run-on-bastion -- "mkdir -p /home/ec2-user/backup"
-          nix run --impure -L .#copy-to-bastion -- ./backups/xml/dailp/$BUNDLE_DIR /home/ec2-user/backup/
+          nix run --impure -L .#copy-to-bastion -- "$BUNDLE_ROOT/$BUNDLE_DIR" /home/ec2-user/backup/
       - name: Upload backup to S3 from bastion
         run: |
           nix run --impure -L .#run-on-bastion -- \
