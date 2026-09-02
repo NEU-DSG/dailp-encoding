@@ -125,6 +125,7 @@
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
         '';
+        awsCli = "${pkgs.awscli2}/bin/aws";
         # The bastion has no public IP and no open SSH ingress rule, so both
         # of these tunnel SSH over an SSM Session Manager port-forwarding
         # session instead of connecting directly.
@@ -132,10 +133,29 @@
         # Requires:
         #   BASTION_ID      - the bastion's EC2 instance id
         #                     (e.g. `nix run --impure .#tf-output bastion_id`)
-        #   BASTION_SSH_KEY - path to the local `dailp-dev-2024` private key
+        #   BASTION_SSH_KEY - path to the local bastion private key
         bastionTunnel = ''
+          # `aws ssm start-session` locates session-manager-plugin by searching
+          # PATH at runtime, so interpolating the aws binary is not enough on
+          # its own, the plugin has to be on PATH too.
+          export PATH=${pkgs.ssm-session-manager-plugin}/bin:$PATH
+
+          # For port forwarding the plugin binds a Unix-domain multiplexer
+          # socket at $TMPDIR/<digits>_session_manager_plugin_mux.sock, whose
+          # basename is 42 characters. Darwin caps sockaddr_un.sun_path at 104
+          # bytes (103 usable), and `nix develop` points TMPDIR at a ~65-char
+          # /var/folders/.../nix-shell.XXXXXX directory -- 108 in total, so
+          # bind() fails with EINVAL, surfacing as "bind: invalid argument".
+          # Plain shell sessions don't use this socket, which is why only the
+          # port-forwarding documents are affected.
+          tmp_dir="''${TMPDIR:-/tmp}"
+          if [ "''${#tmp_dir}" -gt 40 ]; then
+            tmp_dir=/tmp
+          fi
+          export TMPDIR="$tmp_dir"
+
           echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..."
-          aws ssm start-session \
+          ${awsCli} ssm start-session \
             --target "$BASTION_ID" \
             --document-name AWS-StartPortForwardingSession \
             --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" &
@@ -143,14 +163,26 @@
           trap 'kill $ssm_pid 2>/dev/null' EXIT
 
           echo "Waiting for tunnel to come up..."
-          for _ in $(seq 1 10); do
+          tunnel_up=
+          for _ in $(seq 1 15); do
             if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
               exec 3<&-
               exec 3>&-
+              tunnel_up=1
               break
             fi
             sleep 1
           done
+
+          # Without this the tunnel failure falls through to a bare
+          # "Connection refused" from ssh/scp, which reads like a bad key.
+          if [ -z "$tunnel_up" ]; then
+            echo "SSM tunnel to $BASTION_ID never came up on local port $local_port." >&2
+            echo "Check that the instance is SSM-registered:" >&2
+            echo "  aws ssm describe-instance-information --filters \"Key=InstanceIds,Values=$BASTION_ID\"" >&2
+            echo "and that local port $local_port is free (override with BASTION_LOCAL_PORT)." >&2
+            exit 1
+          fi
         '';
         # Copies a local file or directory onto the dev bastion host.
         #
@@ -165,7 +197,7 @@
           fi
 
           : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
-          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the dailp-dev-2024 private key}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
 
           local_path="$1"
           ssh_user="''${BASTION_SSH_USER:-ec2-user}"
@@ -175,7 +207,7 @@
           ${bastionTunnel}
 
           echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..."
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          ${pkgs.openssh}/bin/scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path"
 
           echo "Done."
@@ -193,7 +225,7 @@
           fi
 
           : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
-          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the dailp-dev-2024 private key}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
 
           ssh_user="''${BASTION_SSH_USER:-ec2-user}"
           local_port="''${BASTION_LOCAL_PORT:-2222}"
@@ -201,7 +233,7 @@
           ${bastionTunnel}
 
           echo "Running command on $ssh_user@localhost via port $local_port..."
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          ${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             -p "$local_port" -i "$BASTION_SSH_KEY" "$ssh_user@localhost" -- "$@"
         '';
       in rec {
@@ -288,6 +320,7 @@
               bash
               shellcheck
               awscli2
+              ssm-session-manager-plugin
               curl
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''

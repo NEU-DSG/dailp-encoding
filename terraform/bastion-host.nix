@@ -51,5 +51,20 @@
     tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };
 
+  # Note: this is always empty. The module computes
+  # `eip_enabled = associate_public_ip_address && assign_eip_address`, and we
+  # set associate_public_ip_address = false above, so no EIP is created and
+  # `public_ip` falls through to "". The bastion is reached over SSM, not by IP
+  # -- see the copy-to-bastion / run-on-bastion apps in flake.nix.
   config.output.bastion_ip = { value = "\${module.bastion_host.public_ip}"; };
+
+  # Referenced by flake.nix's bastion apps as
+  # `nix run --impure .#tf-output bastion_id`. Only resolves after an apply,
+  # and note import.nix reads BASTION_ID from the environment, so you need the
+  # id before terraform can tell it to you -- this is for confirmation, not
+  # discovery. To look it up cold:
+  #   aws ec2 describe-instances \
+  #     --filters Name=tag:Name,Values=dailp-<stage>-bastion \
+  #     --query 'Reservations[].Instances[].InstanceId'
+  config.output.bastion_id = { value = "\${module.bastion_host.instance_id}"; };
 }
