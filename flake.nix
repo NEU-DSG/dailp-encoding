@@ -230,7 +230,6 @@
                 cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
               '')
-
               (writers.writeBashBin "dev-pg-dump" ''
                 export DATABASE_URL=postgres://localhost:5432/dailp
                 $PROJECT_ROOT/scripts/src/pg_dump_backup.sh
