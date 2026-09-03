@@ -18,7 +18,7 @@ use roxmltree::{Document, Node};
 use crate::checksum::sha256_hex;
 use crate::editorial_import;
 use crate::tei_import;
-use crate::xml_util::{children_named, descendant, descendants_named};
+use crate::xml_util::{children_named, descendant, descendants_named, text_content};
 
 /// The `document_group` every restored document is assigned to, since a document's
 /// original group is never rendered anywhere in the bundle -- see
@@ -318,7 +318,9 @@ pub async fn import_bundle(
     let mut imported_documents: HashMap<String, ImportedDocument> = HashMap::new();
     for (filename, parsed) in parsed_documents {
         let title = parsed.title.clone();
-        let short_name = dailp::slugify(&title);
+        // Taken from the bundle, not re-derived from `title`: `short_name` is a `unique`
+        // column and titles aren't unique -- see `ParsedDocumentFile::short_name`.
+        let short_name = parsed.short_name.clone();
         match import_one_document(db, parsed, &short_name, restored_group_id).await {
             Ok(document_id) => {
                 imported_documents.insert(
@@ -450,8 +452,11 @@ async fn precheck_no_collisions(
             .into_iter()
             .collect();
         for parsed in documents.values() {
-            let short_name = dailp::slugify(&parsed.title);
-            if existing_short_names.contains(&short_name) {
+            // Must match what the write pass above actually inserts, or this pre-flight
+            // scan checks a short_name nothing will ever use -- see
+            // `ParsedDocumentFile::short_name`.
+            let short_name = &parsed.short_name;
+            if existing_short_names.contains(short_name) {
                 collisions.push(format!(
                     "document \"{}\" (short_name {short_name:?})",
                     parsed.title
@@ -673,6 +678,19 @@ fn parse_collection_file(xml: &str) -> Result<ParsedCollectionFile> {
 
 pub(crate) struct ParsedDocumentFile {
     pub(crate) title: String,
+    /// This document's original `document.short_name`, read from the descriptive
+    /// `dc:identifier` the export writes (see `migration/document.tera.xml`).
+    ///
+    /// Restored verbatim rather than re-derived from `title`, because `short_name` is a
+    /// `unique` column and titles are *not* unique -- DAILP has two documents both titled
+    /// "Funeral notice for a child of Lawani", and slugifying the title for both makes the
+    /// second import fail on the unique constraint. See `mets::document_file_stem`.
+    ///
+    /// Falls back to `OBJID` for bundles exported before `dc:identifier` existed, so older
+    /// backups stay importable. That fallback yields the document's exported slug rather
+    /// than its true `short_name`, which is still unique (so the import succeeds) but not
+    /// byte-identical to the original.
+    pub(crate) short_name: String,
     pub(crate) tei_filename: Option<String>,
     tei_checksum: Option<String>,
     /// Already parsed (not just read as a raw string) by the time `import_bundle`'s
@@ -707,6 +725,13 @@ fn parse_document_file(xml: &str) -> Result<ParsedDocumentFile> {
         .attribute("OBJID")
         .context("Document missing OBJID")?
         .to_owned();
+    // See `ParsedDocumentFile::short_name` for why this is read rather than re-derived
+    // from `title`, and why `OBJID` is an acceptable fallback for pre-`dc:identifier`
+    // bundles.
+    let short_name = descendant(root, "identifier")
+        .map(text_content)
+        .filter(|id| !id.is_empty())
+        .unwrap_or_else(|| document_slug.clone());
 
     let tei_filename = descendant(root, "mdRef")
         .filter(|r| r.attribute("OTHERMDTYPE") == Some("TEI"))
@@ -756,6 +781,7 @@ fn parse_document_file(xml: &str) -> Result<ParsedDocumentFile> {
 
     Ok(ParsedDocumentFile {
         title,
+        short_name,
         tei_filename,
         tei_checksum,
         tei: None,
@@ -1286,6 +1312,39 @@ mod tests {
             parsed.word_audio_urls.get("w1").map(String::as_str),
             Some("https://example.com/audio/w1.mp3")
         );
+    }
+
+    #[test]
+    fn parses_short_name_from_dc_identifier() {
+        // The export writes `short_name` here precisely because it can't be recovered from
+        // anything else in the file -- OBJID and every filename are title-derived, and
+        // titles aren't unique. See `ParsedDocumentFile::short_name`.
+        let xml = SAMPLE_DOCUMENT.replace(
+            r#"<mets:mdGrp USE="DESCRIPTIVE">"#,
+            r#"<mets:mdGrp USE="DESCRIPTIVE">
+      <mets:md ID="story-of-millie-pigeon_dc">
+        <mets:mdWrap MDTYPE="DC">
+          <mets:xmlData>
+            <dc:record xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <dc:title>Story of Millie Pigeon</dc:title>
+              <dc:identifier>wj03</dc:identifier>
+            </dc:record>
+          </mets:xmlData>
+        </mets:mdWrap>
+      </mets:md>"#,
+        );
+        let parsed = parse_document_file(&xml).expect("should parse");
+        assert_eq!(parsed.short_name, "wj03");
+    }
+
+    #[test]
+    fn short_name_falls_back_to_objid_for_bundles_without_dc_identifier() {
+        // Bundles exported before `dc:identifier` existed must stay importable. OBJID is
+        // itself unique per document, so the import still succeeds -- it just doesn't
+        // recover the document's original short_name. `SAMPLE_DOCUMENT` has no
+        // `dc:identifier`, which is exactly the pre-change shape.
+        let parsed = parse_document_file(SAMPLE_DOCUMENT).expect("should parse");
+        assert_eq!(parsed.short_name, "story-of-millie-pigeon");
     }
 
     #[test]
