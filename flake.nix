@@ -126,6 +126,20 @@
           ${tf} init -upgrade
         '';
         awsCli = "${pkgs.awscli2}/bin/aws";
+        # ServerAlive* is the only thing that detects a dropped SSM session.
+        # ssh/scp connect to a local port owned by session-manager-plugin, not
+        # to the bastion, so the kernel's TCP keepalives are answered by that
+        # local process and stay happy long after the remote leg is gone --
+        # leaving a transfer blocked forever on bytes that never arrive.
+        # The values match the remedy documented in terraform/docs/runbook.md.
+        sshCommonOpts = builtins.concatStringsSep " " [
+          "-o StrictHostKeyChecking=no"
+          "-o UserKnownHostsFile=/dev/null"
+          "-o BatchMode=yes"
+          "-o ConnectTimeout=15"
+          "-o ServerAliveInterval=60"
+          "-o ServerAliveCountMax=10"
+        ];
         # The bastion has no public IP and no open SSH ingress rule, so both
         # of these tunnel SSH over an SSM Session Manager port-forwarding
         # session instead of connecting directly.
@@ -154,7 +168,10 @@
           fi
           export TMPDIR="$tmp_dir"
 
-          echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..."
+          # Progress messages go to stderr throughout, so that the stdout of
+          # `run-on-bastion` is exactly the remote command's stdout and stays
+          # safe to capture in a `$(...)`.
+          echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..." >&2
           ${awsCli} ssm start-session \
             --target "$BASTION_ID" \
             --document-name AWS-StartPortForwardingSession \
@@ -162,7 +179,7 @@
           ssm_pid=$!
           trap 'kill $ssm_pid 2>/dev/null' EXIT
 
-          echo "Waiting for tunnel to come up..."
+          echo "Waiting for tunnel to come up..." >&2
           tunnel_up=
           for _ in $(seq 1 15); do
             if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
@@ -206,11 +223,37 @@
 
           ${bastionTunnel}
 
-          echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..."
-          ${pkgs.openssh}/bin/scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path"
+          echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..." >&2
+          copy_start=$SECONDS
+          ${pkgs.openssh}/bin/scp ${sshCommonOpts} \
+            -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path" &
+          scp_pid=$!
 
-          echo "Done."
+          # scp hides its progress meter whenever stdout is not a TTY, which it
+          # never is in CI, so emit our own liveness signal instead. Without
+          # this a large bundle looks identical to a hung transfer.
+          #
+          # Poll every second but report every 15, so that a short copy is not
+          # padded out to the reporting interval.
+          next_report=15
+          while kill -0 "$scp_pid" 2>/dev/null; do
+            sleep 1
+            if [ "$((SECONDS - copy_start))" -ge "$next_report" ]; then
+              echo "  ... still copying ($((SECONDS - copy_start))s elapsed)" >&2
+              next_report=$((next_report + 15))
+            fi
+          done
+
+          # `set -e` does not reliably propagate a background job's status, so
+          # check `wait` explicitly.
+          if ! wait "$scp_pid"; then
+            echo "scp failed after $((SECONDS - copy_start))s." >&2
+            echo "If it stopped mid-transfer with no error of its own, the SSM session" >&2
+            echo "dropped; see the 'Transfer dies partway' row in terraform/docs/runbook.md." >&2
+            exit 1
+          fi
+
+          echo "Copy completed in $((SECONDS - copy_start))s." >&2
         '';
         # Runs a command on the dev bastion host over the same kind of SSM
         # tunnel as copy-to-bastion.
@@ -232,8 +275,8 @@
 
           ${bastionTunnel}
 
-          echo "Running command on $ssh_user@localhost via port $local_port..."
-          ${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          echo "Running command on $ssh_user@localhost via port $local_port..." >&2
+          ${pkgs.openssh}/bin/ssh ${sshCommonOpts} \
             -p "$local_port" -i "$BASTION_SSH_KEY" "$ssh_user@localhost" -- "$@"
         '';
       in rec {
