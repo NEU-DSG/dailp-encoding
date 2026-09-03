@@ -35,10 +35,11 @@ use crate::checksum::sha256_hex;
 /// default `./backups/xml/dailp`, relative to the invoking directory):
 /// - `manifest.mets.xml` — lists every collection processed in this run.
 /// - `collections/<collection title>.mets.xml` — one per collection processed.
-/// - `documents/<document title>.mets.xml` and `documents/<document title>.tei.xml` —
-///   one METS/TEI pair per *unique* member document (a document belonging to more than
-///   one collection in this run is still only written once — see below), sharing a
-///   filename stem (see `CollectionDocumentEntry.file_stem`).
+/// - `documents/<document title>-<short_name>.mets.xml` and
+///   `documents/<document title>-<short_name>.tei.xml` — one METS/TEI pair per *unique*
+///   member document (a document belonging to more than one collection in this run is
+///   still only written once — see below), sharing a filename stem (see
+///   [`document_file_stem`] for why the `short_name` suffix is there).
 /// - `images/` — each document's manuscript page images, downloaded from their real IIIF
 ///   source and named `{document_slug}_{iiif_oid}.jpg` — see
 ///   [`crate::images::download_page_images`].
@@ -208,6 +209,15 @@ pub async fn generate_mets_bundle(
     // they can *also* appear in one impossible-to-miss summary at the very end,
     // instead of only among however many other lines this run logs.
     let mut audio_failures: Vec<String> = Vec::new();
+
+    // Confirm no two documents in this run want the same filename or the same `xml:id`
+    // before any of them are written (or, more expensively, before their audio is
+    // downloaded below) -- see `ensure_document_names_are_unique`.
+    let naming_inputs: Vec<(&str, &str)> = documents_by_id
+        .values()
+        .map(|doc| (doc.meta.title.as_str(), doc.meta.short_name.as_str()))
+        .collect();
+    ensure_document_names_are_unique(&naming_inputs)?;
 
     // Build each unique document's `CollectionDocumentEntry` exactly once -- its audio is
     // downloaded once regardless of how many collections it belongs to in this run, so
@@ -422,6 +432,68 @@ struct CollectionRenderResult {
     expected_document_filenames: Vec<String>,
 }
 
+/// Confirms no two documents in this run resolve to the same [`document_file_stem`] or the
+/// same [`document_slug`], failing the whole run if any pair does.
+///
+/// Both names already end in the document's `short_name`, which is `not null unique` in the
+/// database, so this should never fire. It exists because concatenating a non-injective
+/// title stem with a unique suffix isn't *provably* injective (a title ending `-y` paired
+/// with short_name `z` could in principle meet a title ending `-y-z`), and because the rest
+/// of the bundle relies on both being unique: a duplicate stem means one document's
+/// `.mets.xml`/`.tei.xml`/audio silently overwrites another's, and a duplicate slug means
+/// duplicate `file@ID`s in one collection file plus overwritten page images.
+///
+/// Checked up front, so a violation is reported once with both offending documents named --
+/// rather than surfacing later, and far more obliquely, as `validate_document_references`
+/// reporting a legitimate `mptr` as an unknown filename.
+///
+/// Takes `(title, short_name)` pairs rather than the caller's `HashMap<DocumentId,
+/// AnnotatedDoc>` so it's a pure function over the only two fields it actually reads.
+/// Documents are visited in `short_name` order so the message is identical run to run (the
+/// caller's map is a `HashMap`, whose iteration order isn't stable).
+fn ensure_document_names_are_unique(documents: &[(&str, &str)]) -> Result<()> {
+    let mut documents = documents.to_vec();
+    documents.sort_by_key(|(_, short_name)| *short_name);
+
+    // name -> the short_name of the first document that claimed it, so a collision can name
+    // *both* documents involved rather than just the one that tripped over it.
+    let mut stems: HashMap<String, &str> = HashMap::new();
+    let mut slugs: HashMap<String, &str> = HashMap::new();
+    let mut errors = Vec::new();
+
+    for (title, short_name) in documents {
+        let stem = document_file_stem(title, short_name);
+        // The colliding value is named rather than the title, because the two documents
+        // needn't share a title to get here -- `sanitize_for_path` deletes characters, so
+        // different titles can land on one stem.
+        if let Some(other) = stems.insert(stem.clone(), short_name) {
+            errors.push(format!(
+                "documents {other:?} and {short_name:?} (the latter titled {title:?}) both \
+                 resolve to filename stem {stem:?}, so one would silently overwrite the \
+                 other's .mets.xml/.tei.xml and share its audio directory"
+            ));
+        }
+        let slug = document_slug(title, short_name);
+        if let Some(other) = slugs.insert(slug.clone(), short_name) {
+            errors.push(format!(
+                "documents {other:?} and {short_name:?} (the latter titled {title:?}) both \
+                 resolve to xml:id slug {slug:?}, which would emit duplicate file@IDs into \
+                 one collection METS file and overwrite each other's page images"
+            ));
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "Document names aren't unique across this run, even after disambiguating by \
+             short_name:\n- {}",
+            errors.join("\n- ")
+        )
+    }
+}
+
 /// Builds one document's shared [`CollectionDocumentEntry`] -- its overall audio download,
 /// and every filename/checksum/locref every collection file and the document's own
 /// METS/TEI file that reference it will use. Called once per unique document (see
@@ -436,7 +508,9 @@ async fn build_document_entry(
     // audio subdirectory, ...) shares this one stem, so they're guaranteed to stay
     // siblings with matching names. Computed once here rather than separately wherever
     // each filename is built, so `mets_filename` and `tei_filename` can't drift apart.
-    let file_stem = sanitize_for_path(&doc.meta.title);
+    // Derived from the title *and* the document's unique `short_name` -- titles alone
+    // collide; see `document_file_stem`.
+    let file_stem = document_file_stem(&doc.meta.title, &doc.meta.short_name);
 
     // `None`/empty when the document has no linked audio recording at all, OR when it
     // does but downloading it failed after retries -- both cases collapse identically
@@ -485,16 +559,16 @@ async fn build_document_entry(
         };
 
     CollectionDocumentEntry {
+        document_id: doc.meta.id,
         title: escape_xml(&doc.meta.title),
-        // Slugified from the document's *title* (not its compact internal
-        // `short_name`, e.g. "ms108") so that every ID referencing this document
-        // across the bundle is human-readable. Mirrors
-        // `DocumentMetsContext.document_slug` below, so a document's own METS
-        // file and its entry here use the same slug. Note: two documents that
-        // happen to share a title would collide here; there's no uniqueness
-        // check for that today. Used only for `xml:id`/`OBJID` attributes, never
-        // for filenames -- see `file_stem`.
-        slug: dailp::slugify(&doc.meta.title),
+        // Led by the slugified *title* (not just the compact internal `short_name`, e.g.
+        // "ms108") so that every ID referencing this document across the bundle is
+        // human-readable, then suffixed with `short_name` so two same-titled documents
+        // can't emit duplicate IDs into one collection file -- see `document_slug`.
+        // Mirrors `DocumentMetsContext.document_slug` below, so a document's own METS file
+        // and its entry here use the same slug. Used only for `xml:id`/`OBJID` attributes,
+        // never for filenames -- see `file_stem`.
+        slug: document_slug(&doc.meta.title, &doc.meta.short_name),
         ext,
         audio_locref,
         archival_locref,
@@ -710,9 +784,16 @@ async fn render_one_document(
             // home collection's own chapter order, for navigation -- see
             // `tei::DocumentNavigation`. Built from filenames only (no content), so it's
             // available before this document's own METS file has been rendered.
+            //
+            // Located by the document's own id, not by its `file_stem`: stems used to be
+            // title-derived, so two same-titled documents shared one and *both* resolved
+            // to whichever appeared first, handing the second document the first's
+            // neighbors. `document_file_stem` now makes stems unique too, but matching on
+            // identity rather than on a derived name is what actually makes this correct
+            // -- don't "simplify" it back to comparing names.
             let position = home_collection_documents
                 .iter()
-                .position(|d| d.file_stem == entry.file_stem);
+                .position(|d| d.document_id == entry.document_id);
             let navigation = crate::tei::DocumentNavigation {
                 mets_filename: entry.mets_filename.clone(),
                 prev_mets_filename: position
@@ -774,6 +855,7 @@ async fn render_one_document(
         now: run.created_at.clone(),
         collection_slug,
         document_slug: document_slug.clone(),
+        short_name: escape_xml(&doc.meta.short_name),
         cf_url: run.cf_url.clone(),
         dailp_base_url: run.dailp_base_url.clone(),
         manifest_filename: run.manifest_filename.clone(),
@@ -856,10 +938,17 @@ fn validate_document_references(
         )
     })?;
 
-    let mut remaining: HashSet<&str> = expected_document_filenames
-        .iter()
-        .map(String::as_str)
-        .collect();
+    // A count per expected filename rather than a set: `expected_document_filenames` is a
+    // `Vec`, so collecting it into a `HashSet` silently collapsed a filename listed twice
+    // into one entry, turning what should be a multiset comparison into a set comparison.
+    // That made a genuine duplicate get blamed on the wrong side -- the second, perfectly
+    // legitimate div read as an "unknown" filename while the expected side looked fully
+    // satisfied. `document_file_stem` should keep duplicates from ever reaching here; this
+    // is the check that says so out loud instead of quietly tolerating them.
+    let mut remaining: HashMap<&str, usize> = HashMap::new();
+    for filename in expected_document_filenames {
+        *remaining.entry(filename.as_str()).or_default() += 1;
+    }
     let mut errors = Vec::new();
 
     for div in tree
@@ -884,11 +973,12 @@ fn validate_document_references(
             ));
             continue;
         };
-        if !remaining.remove(filename) {
-            errors.push(format!(
+        match remaining.get_mut(filename) {
+            Some(count) if *count > 0 => *count -= 1,
+            _ => errors.push(format!(
                 "document \"{label}\"'s mptr LOCREF \"{locref}\" doesn't match any expected \
                  document filename (unknown, or already referenced by another div)"
-            ));
+            )),
         }
         let referenced_path = collections_dir.join(locref);
         if !referenced_path.is_file() {
@@ -899,9 +989,25 @@ fn validate_document_references(
         }
     }
 
-    for missing in remaining {
+    // Sorted so this part of the message is identical run to run, rather than following
+    // `HashMap` iteration order.
+    let mut unreferenced: Vec<(&str, usize)> = remaining
+        .into_iter()
+        .filter(|(_, count)| *count > 0)
+        .collect();
+    unreferenced.sort_unstable();
+    for (missing, count) in unreferenced {
+        // The count only ever exceeds 1 when the *expected* list itself named a file more
+        // than once, which `ensure_document_names_are_unique` already rules out -- spelled
+        // out anyway so the number isn't silently dropped if it ever happens.
+        let unaccounted = if count == 1 {
+            String::new()
+        } else {
+            format!(" ({count} expected references unaccounted for)")
+        };
         errors.push(format!(
-            "expected document file \"{missing}\" has no mptr referencing it in the structMap"
+            "expected document file \"{missing}\" has no mptr referencing it in the \
+             structMap{unaccounted}"
         ));
     }
 
@@ -1144,10 +1250,19 @@ fn editorial_page_refs(
 
 #[derive(Serialize, Clone)]
 struct CollectionDocumentEntry {
+    /// This document's database id — the one value here that identifies it unambiguously.
+    /// Used by `render_one_document` to find this document's position in its home
+    /// collection's chapter order for TEI prev/next navigation. That lookup used to match
+    /// on `file_stem`, which silently resolved both of two same-titled documents to
+    /// whichever came first. Never rendered, so it's skipped from serialization like
+    /// `audio_download_failure` below.
+    #[serde(skip)]
+    document_id: DocumentId,
     title: String,
     /// `xs:ID`-safe slug for this document, used to build `file@ID`s in the collection
-    /// METS file. Mirrors `DocumentMetsContext.document_slug`. Never used for
-    /// filenames — see `file_stem`.
+    /// METS file: `dailp::slugify(title)` plus a `short_name` suffix, since titles aren't
+    /// unique (see `document_slug`). Mirrors `DocumentMetsContext.document_slug`. Never
+    /// used for filenames — see `file_stem`.
     slug: String,
     /// The document's real audio resource URL, or `None` if it has no audio recording, OR
     /// if it does but downloading it failed after retries -- both cases render identically
@@ -1183,8 +1298,9 @@ struct CollectionDocumentEntry {
     /// this run's `documents/` directory — a sibling of `collections/`, where the
     /// collection file referencing it lives.
     mets_filename: String,
-    /// Filesystem-safe stem (`sanitize_for_path(&doc.meta.title)`) shared by every file
-    /// this document gets in the bundle. `mets_filename` above is `{file_stem}.mets.xml`;
+    /// Filesystem-safe stem shared by every file this document gets in the bundle:
+    /// `sanitize_for_path(title)` plus a `short_name` suffix, since titles aren't unique
+    /// (see `document_file_stem`). `mets_filename` above is `{file_stem}.mets.xml`;
     /// `DocumentMetsContext.tei_filename` is `{file_stem}.tei.xml` — deriving both from
     /// the same stem guarantees a document's METS and TEI files are true siblings with
     /// matching names, the way collection/manifest files already are.
@@ -1259,6 +1375,13 @@ struct DocumentMetsContext {
     /// membership indicator -- see `collections` below for that.
     collection_slug: String,
     document_slug: String,
+    /// This document's `document.short_name` -- its `not null unique` database identifier
+    /// (e.g. `"ood-efn19"`), rendered into the descriptive `dc:identifier` in
+    /// `document.tera.xml`. Every *other* per-document value in that file is derived from
+    /// the title, which isn't unique, so this is the only thing in the bundle that lets
+    /// `mets_import` restore a document's original `short_name` instead of re-deriving a
+    /// colliding one from its title. See `document_file_stem`.
+    short_name: String,
     cf_url: String,
     dailp_base_url: String,
     /// Filename (not a path) of the manifest METS file produced in this run, one
@@ -1472,6 +1595,10 @@ pub(crate) fn pretty_print_xml(xml: &str) -> Result<String> {
 /// `pub(crate)` so [`crate::audio_backup`] can reuse it for the same purpose (sanitizing a
 /// word's simple-phonetics field for its archival filename) rather than duplicating this
 /// logic.
+///
+/// Note this is *not* injective — it deletes characters, so `"A/B"` and `"AB"` both come
+/// out as `"AB"`. Callers that need a unique per-document name must layer something unique
+/// on top rather than relying on this alone; see [`document_file_stem`].
 pub(crate) fn sanitize_for_path(s: &str) -> String {
     s.chars()
         .filter(|c| !matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|'))
@@ -1479,6 +1606,51 @@ pub(crate) fn sanitize_for_path(s: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join("-")
+}
+
+/// The one filesystem-safe stem every file this document gets in the bundle shares:
+/// `<title>-<short_name>`.
+///
+/// The title alone is *not* unique. DAILP has distinct documents that share a title
+/// verbatim -- `ood-efn19` and `ood-efn23` are both titled "Funeral notice for a child of
+/// Lawani" -- and deriving filenames from the title alone made the second silently
+/// overwrite the first's `.mets.xml`/`.tei.xml` and share its `audio/` subdirectory, so one
+/// document went missing from the backup entirely. `short_name` is `not null unique` in the
+/// database (`types/migrations/20220205042039_init.sql`), so appending it makes the stem
+/// unique while keeping the human-readable title at the front.
+///
+/// Every document is suffixed, not just the ones that actually collide, so the naming rule
+/// is uniform and needs no run-wide collision pass to apply. `generate_mets_bundle` still
+/// checks the assigned names for uniqueness afterwards, since concatenation isn't provably
+/// injective -- see `ensure_document_names_are_unique`.
+pub(crate) fn document_file_stem(title: &str, short_name: &str) -> String {
+    let title = sanitize_for_path(title);
+    let short_name = sanitize_for_path(short_name);
+    if title.is_empty() {
+        short_name
+    } else {
+        format!("{title}-{short_name}")
+    }
+}
+
+/// The `xs:ID`-safe slug for this document's `xml:id`/`ID`/`OBJID` attributes, suffixed with
+/// `short_name` for the same reason as [`document_file_stem`]: two same-titled documents
+/// otherwise emit duplicate `file@ID`s into the *same* collection METS file (which is
+/// METS-invalid), and [`crate::images`] names page images `{document_slug}_page{n}_{oid}.jpg`,
+/// so one document's images would overwrite the other's.
+///
+/// Kept separate from [`document_file_stem`] because the two normalize differently --
+/// `slugify` lowercases and transliterates where `sanitize_for_path` preserves case and
+/// punctuation -- but both take the same suffix, so a document's filenames and its `xml:id`s
+/// can't disagree about which document they name.
+fn document_slug(title: &str, short_name: &str) -> String {
+    let title = dailp::slugify(title);
+    let short_name = dailp::slugify(short_name);
+    if title.is_empty() {
+        short_name
+    } else {
+        format!("{title}-{short_name}")
+    }
 }
 
 /// Derives a file extension (including the leading `.`) from a URL or file path, e.g.
@@ -1517,6 +1689,13 @@ mod tests {
     // `audio_backup::word_audio_candidates`, tested in `audio_backup.rs`
     // (`word_audio_candidates_walks_every_page_and_paragraph`) since it moved there along
     // with the rest of the audio-download logic.
+
+    /// A fixed, distinct `DocumentId`. The value itself is never rendered (see
+    /// `CollectionDocumentEntry.document_id`'s `#[serde(skip)]`) -- these tests only care
+    /// that two documents get two *different* ids.
+    fn doc_id(n: u128) -> DocumentId {
+        DocumentId(dailp::Uuid::from_u128(n))
+    }
 
     fn sample_collection_ref() -> CollectionRef {
         CollectionRef {
@@ -1600,6 +1779,7 @@ mod tests {
                     .to_owned(),
             documents: vec![
                 CollectionDocumentEntry {
+                    document_id: doc_id(1),
                     title: "Story of Millie Pigeon".to_owned(),
                     slug: "story-of-millie-pigeon".to_owned(),
                     audio_locref: Some("https://example.com/audio.mp3".to_owned()),
@@ -1614,6 +1794,7 @@ mod tests {
                     file_stem: "Story-of-Millie-Pigeon".to_owned(),
                 },
                 CollectionDocumentEntry {
+                    document_id: doc_id(2),
                     title: "Story of the Old Timer".to_owned(),
                     slug: "story-of-the-old-timer".to_owned(),
                     audio_locref: None,
@@ -1684,6 +1865,7 @@ mod tests {
             now: "2026-08-06T15:10:00".to_owned(),
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-millie-pigeon".to_owned(),
+            short_name: "wj03".to_owned(),
             cf_url: "https://cdn.example.com".to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
@@ -1836,6 +2018,7 @@ mod tests {
             now: "2026-08-06T15:10:00".to_owned(),
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-the-old-timer".to_owned(),
+            short_name: "wj21".to_owned(),
             cf_url: "https://cdn.example.com".to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
@@ -1879,6 +2062,7 @@ mod tests {
             now: "2026-08-06T15:10:00".to_owned(),
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-the-old-timer".to_owned(),
+            short_name: "wj21".to_owned(),
             cf_url: "https://cdn.example.com".to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
@@ -1976,6 +2160,81 @@ mod tests {
             &["Sample Document.mets.xml".to_owned()],
         );
         assert!(result.is_ok(), "{:?}", result.err());
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // The next two tests pin the multiset (not set) semantics of `expected_document_filenames`.
+    // `remaining` used to be a `HashSet` built from a `Vec`, which collapsed a filename
+    // listed twice into one entry -- so a duplicate was reported against the wrong side, or
+    // (with two divs and two identical expectations) not reported at all.
+
+    #[test]
+    fn validate_document_references_fails_when_two_divs_share_one_locref() {
+        let dir = std::env::temp_dir().join(format!(
+            "dailp-mets-validate-dup-locref-{}",
+            std::process::id()
+        ));
+        let (collection_path, collections_dir) = write_sample_bundle(
+            &dir,
+            &[
+                "../documents/Sample Document.mets.xml",
+                "../documents/Sample Document.mets.xml",
+            ],
+        );
+        std::fs::write(
+            dir.join("documents/Sample Document.mets.xml"),
+            "<mets:mets/>",
+        )
+        .unwrap();
+
+        // One expected filename, two divs claiming it: the second is the duplicate.
+        let result = validate_document_references(
+            &collection_path,
+            &collections_dir,
+            &["Sample Document.mets.xml".to_owned()],
+        );
+        let err = result.expect_err("two divs sharing one locref should fail validation");
+        assert!(
+            err.to_string()
+                .contains("doesn't match any expected document filename"),
+            "{err}"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn validate_document_references_fails_when_a_filename_is_expected_twice_but_referenced_once() {
+        let dir = std::env::temp_dir().join(format!(
+            "dailp-mets-validate-dup-expected-{}",
+            std::process::id()
+        ));
+        let (collection_path, collections_dir) =
+            write_sample_bundle(&dir, &["../documents/Sample Document.mets.xml"]);
+        std::fs::write(
+            dir.join("documents/Sample Document.mets.xml"),
+            "<mets:mets/>",
+        )
+        .unwrap();
+
+        // The mirror case: the expected list names one file twice, but only one div
+        // references it. Under the old `HashSet` the second expectation vanished and this
+        // passed silently.
+        let result = validate_document_references(
+            &collection_path,
+            &collections_dir,
+            &[
+                "Sample Document.mets.xml".to_owned(),
+                "Sample Document.mets.xml".to_owned(),
+            ],
+        );
+        let err = result.expect_err("an unreferenced duplicate expectation should fail");
+        assert!(
+            err.to_string()
+                .contains("has no mptr referencing it in the structMap"),
+            "{err}"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }
@@ -2203,6 +2462,197 @@ mod tests {
             "1869-Story-of-the-Old-Indian"
         );
         assert_eq!(sanitize_for_path("Two  Spaces"), "Two-Spaces");
+    }
+
+    // The real pair that broke the nightly backup: two distinct DAILP documents that share
+    // a title verbatim. Reused across the naming tests below.
+    const LAWANI: &str = "Funeral notice for a child of Lawani";
+
+    #[test]
+    fn document_file_stem_appends_short_name() {
+        assert_eq!(
+            document_file_stem("Story of Millie Pigeon", "wj03"),
+            "Story-of-Millie-Pigeon-wj03"
+        );
+    }
+
+    #[test]
+    fn document_file_stem_distinguishes_same_titled_documents() {
+        assert_ne!(
+            document_file_stem(LAWANI, "ood-efn19"),
+            document_file_stem(LAWANI, "ood-efn23")
+        );
+        assert_eq!(
+            document_file_stem(LAWANI, "ood-efn19"),
+            "Funeral-notice-for-a-child-of-Lawani-ood-efn19"
+        );
+    }
+
+    #[test]
+    fn document_file_stem_falls_back_to_short_name_for_an_empty_title() {
+        // A title that sanitizes away entirely must not leave a stem starting with a stray
+        // dash (or, worse, be nothing but one).
+        assert_eq!(document_file_stem("", "wj03"), "wj03");
+        assert_eq!(document_file_stem("  ", "wj03"), "wj03");
+        assert_eq!(document_file_stem("??", "wj03"), "wj03");
+    }
+
+    #[test]
+    fn document_slug_distinguishes_same_titled_documents() {
+        assert_ne!(
+            document_slug(LAWANI, "ood-efn19"),
+            document_slug(LAWANI, "ood-efn23")
+        );
+        assert_eq!(
+            document_slug(LAWANI, "ood-efn19"),
+            "funeral-notice-for-a-child-of-lawani-ood-efn19"
+        );
+        assert_eq!(document_slug("", "ood-efn19"), "ood-efn19");
+    }
+
+    #[test]
+    fn document_slug_disambiguates_titles_that_only_collide_once_slugified() {
+        // `slugify` strips punctuation and lowercases where `sanitize_for_path` doesn't, so
+        // these two titles have distinct file stems but would share a slug (and therefore
+        // emit duplicate `file@ID`s into one collection file) if the slug weren't suffixed
+        // too.
+        assert_ne!(
+            sanitize_for_path("Tom & Jerry"),
+            sanitize_for_path("Tom Jerry")
+        );
+        assert_eq!(dailp::slugify("Tom & Jerry"), dailp::slugify("Tom Jerry"));
+        assert_ne!(
+            document_slug("Tom & Jerry", "wj01"),
+            document_slug("Tom Jerry", "wj02")
+        );
+    }
+
+    #[test]
+    fn ensure_document_names_are_unique_accepts_same_titled_documents() {
+        // The exact pair that broke the backup. Distinct `short_name`s are enough to make
+        // both names unique, so this must pass -- the run should no longer refuse to export
+        // two documents just because they share a title.
+        assert!(ensure_document_names_are_unique(&[
+            (LAWANI, "ood-efn19"),
+            (LAWANI, "ood-efn23"),
+            ("Story of Millie Pigeon", "wj03"),
+        ])
+        .is_ok());
+    }
+
+    #[test]
+    fn ensure_document_names_are_unique_reports_both_documents_in_a_collision() {
+        // `short_name` is `unique` in the database, so this state is unreachable in
+        // practice; it's the cheapest way to exercise the guard, and what it asserts is the
+        // part that matters -- that the message names *both* documents rather than leaving
+        // the reader to hunt for the other half.
+        let err = ensure_document_names_are_unique(&[(LAWANI, "ood-efn19"), (LAWANI, "ood-efn19")])
+            .expect_err("two documents resolving to one name should fail the run");
+        let msg = err.to_string();
+        assert!(msg.contains("ood-efn19"), "{msg}");
+        assert!(msg.contains(LAWANI), "{msg}");
+        assert!(msg.contains("resolve to filename stem"), "{msg}");
+        assert!(msg.contains("resolve to xml:id slug"), "{msg}");
+    }
+
+    #[test]
+    fn ensure_document_names_are_unique_catches_a_suffix_that_collides_with_another_title() {
+        // The residual case the suffix alone can't rule out: `sanitize_for_path` isn't
+        // injective, so a title that already ends in another document's `-<short_name>` can
+        // meet it. Astronomically unlikely, but the whole point of the guard is that the
+        // rest of the bundle may assume these names are unique.
+        let err = ensure_document_names_are_unique(&[
+            ("Funeral notice", "a-b"),
+            ("Funeral notice a", "b"),
+        ])
+        .expect_err("colliding assigned names should fail the run");
+        assert!(err.to_string().contains("Funeral-notice-a-b"), "{err}");
+    }
+
+    #[test]
+    fn collection_mets_gives_same_titled_documents_distinct_ids_and_mptrs() {
+        let entry = |n: u128, short_name: &str| CollectionDocumentEntry {
+            document_id: doc_id(n),
+            title: LAWANI.to_owned(),
+            slug: document_slug(LAWANI, short_name),
+            audio_locref: Some("https://example.com/audio.mp3".to_owned()),
+            ext: ".mp3".to_owned(),
+            archival_locref: Some("../audio/x/x_audio.mp3".to_owned()),
+            checksum: Some("checksum".to_owned()),
+            audio_download_failure: None,
+            mets_filename: format!("{}.mets.xml", document_file_stem(LAWANI, short_name)),
+            file_stem: document_file_stem(LAWANI, short_name),
+        };
+        let ctx = CollectionMetsContext {
+            collection_title: "Echota Funeral Notices".to_owned(),
+            collection_label: "Echota Funeral Notices".to_owned(),
+            collection_slug: "echota-funeral-notices".to_owned(),
+            cf_url: "https://cdn.example.com".to_owned(),
+            now: "2026-09-02T23:49:35".to_owned(),
+            contributors: vec!["Ellen Cushman".to_owned()],
+            citation: "citation".to_owned(),
+            documents: vec![entry(1, "ood-efn19"), entry(2, "ood-efn23")],
+            editorial_pages: vec![],
+        };
+
+        let xml = render_collection_mets(&ctx).unwrap();
+        let tree = roxmltree::Document::parse(&xml).expect("output should be well-formed XML");
+
+        // The property that actually matters: `ID` is an `xs:ID`, so two same-titled
+        // documents sharing one would make this file METS-invalid.
+        let ids: Vec<&str> = tree
+            .descendants()
+            .filter(|n| n.tag_name().name() == "file")
+            .filter_map(|n| n.attribute("ID"))
+            .collect();
+        let unique: HashSet<&str> = ids.iter().copied().collect();
+        assert_eq!(ids.len(), unique.len(), "duplicate file@IDs in {xml}");
+
+        // ...and each document must point at its *own* METS file, not both at one.
+        let locrefs: Vec<&str> = tree
+            .descendants()
+            .filter(|n| n.tag_name().name() == "mptr")
+            .filter_map(|n| n.attribute("LOCREF"))
+            .collect();
+        assert_eq!(
+            locrefs,
+            vec![
+                "../documents/Funeral-notice-for-a-child-of-Lawani-ood-efn19.mets.xml",
+                "../documents/Funeral-notice-for-a-child-of-Lawani-ood-efn23.mets.xml",
+            ]
+        );
+
+        // Finally, run the real validator over the real rendered file, the way
+        // `generate_mets_bundle` does. This is the exact scenario that failed the nightly
+        // backup ("...doesn't match any expected document filename"), so it's the
+        // regression this whole change exists to prevent.
+        let dir = std::env::temp_dir().join(format!(
+            "dailp-mets-same-title-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let collections_dir = dir.join("collections");
+        std::fs::create_dir_all(&collections_dir).unwrap();
+        std::fs::create_dir_all(dir.join("documents")).unwrap();
+        let collection_path = collections_dir.join("Echota-Funeral-Notices.mets.xml");
+        std::fs::write(&collection_path, &xml).unwrap();
+        for entry in &ctx.documents {
+            std::fs::write(
+                dir.join("documents").join(&entry.mets_filename),
+                "<mets:mets/>",
+            )
+            .unwrap();
+        }
+
+        let expected: Vec<String> = ctx
+            .documents
+            .iter()
+            .map(|entry| entry.mets_filename.clone())
+            .collect();
+        let result = validate_document_references(&collection_path, &collections_dir, &expected);
+        assert!(result.is_ok(), "{:?}", result.err());
+
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]

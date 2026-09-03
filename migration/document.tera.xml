@@ -9,6 +9,22 @@
     this document's TEI file rather than being duplicated here; this points at it
     instead of embedding it. -->
   <mets:mdGrp USE="DESCRIPTIVE">
+    <!-- Mirrors the collection file's descriptive dc:record. `dc:identifier` carries this
+      document's `short_name`, its "not null unique" database identifier. It's here because
+      every other per-document value in this file (OBJID, filenames, xml:ids) is derived
+      from the title, which is NOT unique: two documents can share one verbatim. Without
+      this, `mets_import` has to re-derive a short_name from the title, and two same-titled
+      documents then collide on import. See `mets::document_file_stem`. -->
+    <mets:md ID="{{ document_slug ~ '_dc' }}">
+      <mets:mdWrap MDTYPE="DC">
+        <mets:xmlData>
+          <dc:record xmlns:dc="http://purl.org/dc/elements/1.1/">
+            <dc:title>{{ document_title }}</dc:title>
+            <dc:identifier>{{ short_name }}</dc:identifier>
+          </dc:record>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:md>
     {% if tei_filename -%}
     {{ mets::md_ref(id=document_slug ~ "_tei_desc", loctype="URL", locref="./" ~ tei_filename, mdtype="OTHER", othermdtype="TEI", checksum=tei_checksum) }}
     {% else -%}
