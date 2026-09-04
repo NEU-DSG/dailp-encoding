@@ -10,7 +10,7 @@ import {
   rhythm,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 
 export function withClass<T extends { className?: string }>(
   css: string,
