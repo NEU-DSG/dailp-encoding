@@ -20,12 +20,20 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use dailp::async_graphql::dataloader::Loader;
 use dailp::{Database, ImageSource, ImageSourceId};
+use futures::stream::StreamExt;
 use log::{info, warn};
 use tokio::time::sleep;
 
 use crate::checksum::sha256_hex;
 use crate::mets::sanitize_for_path;
 use crate::tei::LoadedPage;
+
+/// How many page images [`download_page_images`] fetches at once. Kept deliberately modest:
+/// these requests go to an external IIIF server (Northeastern's, among others) that this
+/// pipeline does not own, and each response is a full-resolution image. The equivalent
+/// bound for audio lives in `audio_backup.rs`; the two are not multiplied together, because
+/// `mets::generate_mets_bundle` still walks documents one at a time.
+const DOWNLOAD_CONCURRENCY: usize = 8;
 
 /// A manuscript page image, downloaded into this run's `images/` directory and carrying
 /// its resolved IIIF source URL and archival filename -- see [`download_page_images`].
@@ -87,46 +95,61 @@ pub(crate) async fn download_page_images(
             anyhow::anyhow!("Failed to load image source(s) for \"{document_slug}\": {e}")
         })?;
 
-    let mut downloaded = Vec::with_capacity(refs.len());
-    for r in refs {
+    // These downloads, not the database reads or the XML rendering, are what an export
+    // spends its wall time on, so they run `DOWNLOAD_CONCURRENCY` at a time rather than
+    // one after another. `buffered` (not `buffer_unordered`) because `document.tera.xml`
+    // consumes the returned images in page order.
+    let sources = &sources;
+    let results: Vec<Result<DownloadedImage>> = futures::stream::iter(refs.into_iter().map(|r| {
         let PageImageRef {
             page_number,
             oid,
             source_id,
         } = r;
-        let source = sources.get(&source_id).ok_or_else(|| {
-            anyhow::anyhow!(
-                "Document \"{document_slug}\"'s page image \"{oid}\" references an image \
-                 source that couldn't be loaded"
-            )
-        })?;
-        let image_url = format!("{}/{}/full/max/0/default.jpg", source.url, oid);
-        let filename = image_filename(document_slug, &page_number, &oid);
-        let path = images_dir.join(&filename);
-
-        info!(
-            "Downloading page image \"{oid}\" (page {page_number}) for \"{document_slug}\" \
-             from {image_url}"
-        );
-        let bytes = fetch_with_retry(client, &image_url)
-            .await
-            .with_context(|| {
-                format!(
-                    "Failed to download page image \"{oid}\" (page {page_number}) for \
-                 \"{document_slug}\" from {image_url}"
+        async move {
+            let source = sources.get(&source_id).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Document \"{document_slug}\"'s page image \"{oid}\" references an image \
+                     source that couldn't be loaded"
                 )
             })?;
-        let checksum = sha256_hex(&bytes);
-        std::fs::write(&path, &bytes)
-            .with_context(|| format!("Failed to write {}", path.display()))?;
+            let image_url = format!("{}/{}/full/max/0/default.jpg", source.url, oid);
+            let filename = image_filename(document_slug, &page_number, &oid);
+            let path = images_dir.join(&filename);
 
-        downloaded.push(DownloadedImage {
-            oid,
-            source_url: source.url.clone(),
-            filename,
-            checksum,
-        });
-    }
+            info!(
+                "Downloading page image \"{oid}\" (page {page_number}) for \"{document_slug}\" \
+                 from {image_url}"
+            );
+            let bytes = fetch_with_retry(client, &image_url)
+                .await
+                .with_context(|| {
+                    format!(
+                        "Failed to download page image \"{oid}\" (page {page_number}) for \
+                 \"{document_slug}\" from {image_url}"
+                    )
+                })?;
+            let checksum = sha256_hex(&bytes);
+            std::fs::write(&path, &bytes)
+                .with_context(|| format!("Failed to write {}", path.display()))?;
+
+            Ok(DownloadedImage {
+                oid,
+                source_url: source.url.clone(),
+                filename,
+                checksum,
+            })
+        }
+    }))
+    .buffered(DOWNLOAD_CONCURRENCY)
+    .collect()
+    .await;
+
+    // A single image failing is still fatal to the whole export, exactly as it was when
+    // this ran sequentially -- an incomplete manuscript is not a backup. Unlike the
+    // sequential version, downloads already in flight when one fails do finish and land on
+    // disk; harmless, since the caller discards this run's bundle directory either way.
+    let downloaded = results.into_iter().collect::<Result<Vec<_>>>()?;
 
     info!(
         "Downloaded {} page image(s) for \"{document_slug}\" to {}",

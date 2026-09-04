@@ -18,6 +18,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use anyhow::{Context as _, Result};
 use dailp::async_graphql::dataloader::Loader;
@@ -202,7 +203,18 @@ pub async fn generate_mets_bundle(
 
     // Shared across every image/audio download this run makes, so connections/TLS sessions
     // are reused rather than re-established per file -- mirrors `audio.rs`'s `Client::new()`.
-    let http_client = reqwest::Client::new();
+    //
+    // The timeouts are not optional niceties: `reqwest` applies none by default, so a
+    // stalled IIIF or audio connection blocks this run forever rather than failing into the
+    // retry/backoff that `images::fetch_with_retry` and `audio_backup::fetch_with_retry`
+    // already implement (both treat a `reqwest::Error` as retryable, and a timeout is one).
+    // `timeout` covers the whole request including the body, so it has to accommodate the
+    // largest full-resolution page image on a slow link, not just the handshake.
+    let http_client = reqwest::Client::builder()
+        .connect_timeout(Duration::from_secs(10))
+        .timeout(Duration::from_secs(120))
+        .build()
+        .context("Failed to build the HTTP client for image/audio downloads")?;
 
     // Every audio download failure this run, document-level and per-word alike --
     // already logged as its own `warn!` where it happens, collected here too so
