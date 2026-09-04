@@ -125,6 +125,160 @@
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
         '';
+        awsCli = "${pkgs.awscli2}/bin/aws";
+        # ServerAlive* is the only thing that detects a dropped SSM session.
+        # ssh/scp connect to a local port owned by session-manager-plugin, not
+        # to the bastion, so the kernel's TCP keepalives are answered by that
+        # local process and stay happy long after the remote leg is gone --
+        # leaving a transfer blocked forever on bytes that never arrive.
+        # The values match the remedy documented in terraform/docs/runbook.md.
+        sshCommonOpts = builtins.concatStringsSep " " [
+          "-o StrictHostKeyChecking=no"
+          "-o UserKnownHostsFile=/dev/null"
+          "-o BatchMode=yes"
+          "-o ConnectTimeout=15"
+          "-o ServerAliveInterval=60"
+          "-o ServerAliveCountMax=10"
+        ];
+        # The bastion has no public IP and no open SSH ingress rule, so both
+        # of these tunnel SSH over an SSM Session Manager port-forwarding
+        # session instead of connecting directly.
+        #
+        # Requires:
+        #   BASTION_ID      - the bastion's EC2 instance id
+        #                     (e.g. `nix run --impure .#tf-output bastion_id`)
+        #   BASTION_SSH_KEY - path to the local bastion private key
+        bastionTunnel = ''
+          # `aws ssm start-session` locates session-manager-plugin by searching
+          # PATH at runtime, so interpolating the aws binary is not enough on
+          # its own, the plugin has to be on PATH too.
+          export PATH=${pkgs.ssm-session-manager-plugin}/bin:$PATH
+
+          # For port forwarding the plugin binds a Unix-domain multiplexer
+          # socket at $TMPDIR/<digits>_session_manager_plugin_mux.sock, whose
+          # basename is 42 characters. Darwin caps sockaddr_un.sun_path at 104
+          # bytes (103 usable), and `nix develop` points TMPDIR at a ~65-char
+          # /var/folders/.../nix-shell.XXXXXX directory -- 108 in total, so
+          # bind() fails with EINVAL, surfacing as "bind: invalid argument".
+          # Plain shell sessions don't use this socket, which is why only the
+          # port-forwarding documents are affected.
+          tmp_dir="''${TMPDIR:-/tmp}"
+          if [ "''${#tmp_dir}" -gt 40 ]; then
+            tmp_dir=/tmp
+          fi
+          export TMPDIR="$tmp_dir"
+
+          # Progress messages go to stderr throughout, so that the stdout of
+          # `run-on-bastion` is exactly the remote command's stdout and stays
+          # safe to capture in a `$(...)`.
+          echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..." >&2
+          ${awsCli} ssm start-session \
+            --target "$BASTION_ID" \
+            --document-name AWS-StartPortForwardingSession \
+            --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" &
+          ssm_pid=$!
+          trap 'kill $ssm_pid 2>/dev/null' EXIT
+
+          echo "Waiting for tunnel to come up..." >&2
+          tunnel_up=
+          for _ in $(seq 1 15); do
+            if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
+              exec 3<&-
+              exec 3>&-
+              tunnel_up=1
+              break
+            fi
+            sleep 1
+          done
+
+          # Without this the tunnel failure falls through to a bare
+          # "Connection refused" from ssh/scp, which reads like a bad key.
+          if [ -z "$tunnel_up" ]; then
+            echo "SSM tunnel to $BASTION_ID never came up on local port $local_port." >&2
+            echo "Check that the instance is SSM-registered:" >&2
+            echo "  aws ssm describe-instance-information --filters \"Key=InstanceIds,Values=$BASTION_ID\"" >&2
+            echo "and that local port $local_port is free (override with BASTION_LOCAL_PORT)." >&2
+            exit 1
+          fi
+        '';
+        # Copies a local file or directory onto the dev bastion host.
+        #
+        # Usage: copy-to-bastion <local-path> [remote-path]
+        # `remote-path` defaults to the ec2-user home directory.
+        copyToBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: copy-to-bastion <local-path> [remote-path]" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
+
+          local_path="$1"
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          remote_path="''${2:-/home/$ssh_user/}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..." >&2
+          copy_start=$SECONDS
+          ${pkgs.openssh}/bin/scp ${sshCommonOpts} \
+            -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path" &
+          scp_pid=$!
+
+          # scp hides its progress meter whenever stdout is not a TTY, which it
+          # never is in CI, so emit our own liveness signal instead. Without
+          # this a large bundle looks identical to a hung transfer.
+          #
+          # Poll every second but report every 15, so that a short copy is not
+          # padded out to the reporting interval.
+          next_report=15
+          while kill -0 "$scp_pid" 2>/dev/null; do
+            sleep 1
+            if [ "$((SECONDS - copy_start))" -ge "$next_report" ]; then
+              echo "  ... still copying ($((SECONDS - copy_start))s elapsed)" >&2
+              next_report=$((next_report + 15))
+            fi
+          done
+
+          # `set -e` does not reliably propagate a background job's status, so
+          # check `wait` explicitly.
+          if ! wait "$scp_pid"; then
+            echo "scp failed after $((SECONDS - copy_start))s." >&2
+            echo "If it stopped mid-transfer with no error of its own, the SSM session" >&2
+            echo "dropped; see the 'Transfer dies partway' row in terraform/docs/runbook.md." >&2
+            exit 1
+          fi
+
+          echo "Copy completed in $((SECONDS - copy_start))s." >&2
+        '';
+        # Runs a command on the dev bastion host over the same kind of SSM
+        # tunnel as copy-to-bastion.
+        #
+        # Usage: run-on-bastion <remote-command>
+        runOnBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: run-on-bastion <remote-command>" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
+
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Running command on $ssh_user@localhost via port $local_port..." >&2
+          ${pkgs.openssh}/bin/ssh ${sshCommonOpts} \
+            -p "$local_port" -i "$BASTION_SSH_KEY" "$ssh_user@localhost" -- "$@"
+        '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
         nixConfig = {
@@ -142,6 +296,15 @@
           drv = hostPackage;
           exePath = "/bin/dailp-migration";
         };
+
+        apps.migrate-to-xml = inputs.utils.lib.mkApp {
+          drv = hostPackage;
+          exePath = "/bin/migrate-to-xml";
+        };
+
+        apps.copy-to-bastion = mkBashApp "copy-to-bastion" copyToBastionScript;
+
+        apps.run-on-bastion = mkBashApp "run-on-bastion" runOnBastionScript;
 
         apps.migrate-schema = mkBashApp "migrate-schema" ''
           cd types
@@ -197,8 +360,14 @@
               postgresql_14
               sqlx-cli
               sqlfluff
+              bash
+              shellcheck
+              awscli2
+              ssm-session-manager-plugin
+              curl
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
                 [ ! -d "$PGDATA" ] && initdb
                 postgres -D $PGDATA -c unix_socket_directories=/tmp
               '')
@@ -224,6 +393,30 @@
               (writers.writeBashBin "dev-generate-types" ''
                 cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
+              '')
+              (writers.writeBashBin "dev-pg-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/pg_dump_backup.sh
+                echo "See output in ./backups/pg_dump/"
+              '')
+              (writers.writeBashBin "dev-csv-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/export_db_to_csv.sh
+              '')
+              (writers.writeBashBin "mock-database" ''
+                DATABASE_URL=postgres://localhost:5432/test
+                if [[ -n `psql -Atqc '\list test' postgres` ]]; then
+                  echo "Found leftover test database. Cleaning up..."
+                  dropdb test -f
+                fi
+                createdb test
+                dev-migrate-schema
+              '')
+              (writers.writeBashBin "dev-csv-restore" ''
+                $PROJECT_ROOT/scripts/src/import_db_from_csv.sh $@
+              '')
+              (writers.writeBashBin "dev-pg-restore" ''
+                $PROJECT_ROOT/scripts/src/pg_restore_backup.sh $@
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security

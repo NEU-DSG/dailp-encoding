@@ -1,0 +1,195 @@
+name: Data Backup
+on:
+  workflow_dispatch:
+jobs:
+  backup:
+    name: Back up data to S3
+    runs-on: ubuntu-22.04
+    # workflow_dispatch has no branches filter, so this enforces "main only" at the job level.
+    if: github.ref == 'refs/heads/main'
+    environment: Development
+    env:
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: dev
+      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      BASTION_IP: ${{ secrets.DEV_BASTION_IP }}
+      BASTION_SSH_KEY: ${{ github.workspace }}/.bastion-ssh-key.pem
+      # Where `migrate-to-xml -o=` writes this run's bundle, and where the steps below
+      # look for it. Passed explicitly rather than relying on the tool's cwd-relative
+      # default, so the location stays correct if a step ever gains a `working-directory`.
+      BUNDLE_ROOT: ${{ github.workspace }}/backups/xml/dailp
+      # Set for real by the generate/zip steps via $GITHUB_ENV. Declared here
+      # so later steps can reference them through the `env` context (the
+      # artifact step's `name`, `path` and `if` guard all do).
+      BUNDLE_DIR: ""
+      BUNDLE_ZIP: ""
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-21.11
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v12
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Write bastion SSH key
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.DEV_BASTION_SSH_KEY }}" > "$BASTION_SSH_KEY"
+      - name: Build project
+        run: |
+          nix build --impure -L
+          nix run --impure -L .#tf-init
+      - name: Generate XML backup bundle
+        run: |
+          echo "Retrieving terraform outputs..."
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          SSM_PID=$!
+          echo "Waiting for tunnel on localhost:5432..."
+          for i in $(seq 1 15); do
+            (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          echo "Generating METS/TEI backup bundle..."
+          nix run --impure -L .#migrate-to-xml -- -o="$BUNDLE_ROOT"
+          kill $SSM_PID
+          # -p marks directories with a trailing slash, so the `dailp-*.zip`
+          # the next step writes alongside them can never be selected here.
+          BUNDLE_DIR=$(ls -1tp "$BUNDLE_ROOT" | grep '^dailp-.*/$' | head -n1 | tr -d '/')
+          if [ -z "$BUNDLE_DIR" ]; then
+            echo "No backup bundle directory found under $BUNDLE_ROOT" >&2
+            exit 1
+          fi
+          echo "Generated bundle: $BUNDLE_DIR"
+          echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+      - name: Zip backup bundle
+        run: |
+          RAW_BYTES=$(du -sk "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)
+          RAW_FILES=$(find "$BUNDLE_ROOT/$BUNDLE_DIR" -type f | wc -l | tr -d ' ')
+          echo "Zipping $RAW_FILES files ($(du -sh "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)) from $BUNDLE_DIR..."
+
+          # -q because zip lists every entry otherwise, which buries the
+          # summary below under thousands of lines. Zipped from inside
+          # BUNDLE_ROOT so the archive holds `dailp-<date>/...` rather than
+          # the runner's absolute path.
+          ( cd "$BUNDLE_ROOT" && zip -q -r "$BUNDLE_DIR.zip" "$BUNDLE_DIR" )
+
+          ZIP_PATH="$BUNDLE_ROOT/$BUNDLE_DIR.zip"
+          ZIP_BYTES=$(du -sk "$ZIP_PATH" | cut -f1)
+          RATIO=$(awk -v r="$RAW_BYTES" -v z="$ZIP_BYTES" \
+            'BEGIN { if (r > 0) printf "%.1f%% of raw", (z / r) * 100; else printf "raw size unknown" }')
+          echo "Created $BUNDLE_DIR.zip: $(du -h "$ZIP_PATH" | cut -f1) ($RATIO)"
+
+          # zip exits 0 on some partial-write conditions, so confirm the
+          # archive holds every file we meant to put in it. `zipinfo -t`
+          # counts directory entries as well, hence listing and filtering.
+          ZIP_FILES=$(zipinfo -1 "$ZIP_PATH" | grep -cv '/$')
+          echo "Archive holds $ZIP_FILES files (bundle has $RAW_FILES)"
+          if [ "$ZIP_FILES" != "$RAW_FILES" ]; then
+            echo "Zip is missing files from the bundle; refusing to continue." >&2
+            exit 1
+          fi
+
+          # Verified on the bastion after the copy, so a truncated transfer
+          # cannot reach S3.
+          ZIP_SHA=$(sha256sum "$ZIP_PATH" | cut -d' ' -f1)
+          echo "sha256: $ZIP_SHA"
+          {
+            echo "BUNDLE_ZIP=$ZIP_PATH"
+            echo "ZIP_SHA=$ZIP_SHA"
+          } >> "$GITHUB_ENV"
+      - name: Copy backup scripts to bastion
+        # ./scripts is small; the headroom is for flake evaluation on a cold
+        # runner, not for the transfer.
+        timeout-minutes: 10
+        run: nix run --impure -L .#copy-to-bastion -- ./scripts /home/ec2-user/
+      - name: Copy backup bundle to bastion
+        # copy-to-bastion aborts on its own after ~10 min of dead air. This is
+        # the backstop for a copy that is alive but pathologically slow, which
+        # would otherwise run out the job's 6-hour default.
+        timeout-minutes: 45
+        run: |
+          echo "Copying $BUNDLE_DIR.zip ($(du -h "$BUNDLE_ZIP" | cut -f1)) to the bastion."
+
+          # The bastion root volume is 8 GiB and accumulates prior bundles, so
+          # a copy can fail on space alone. See the "No space left on device"
+          # row in terraform/docs/runbook.md.
+          echo "Bastion free space before copy:"
+          nix run --impure -L .#run-on-bastion -- \
+            "mkdir -p /home/ec2-user/backup && df -h /home | tail -n 1"
+
+          echo "Starting copy at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          nix run --impure -L .#copy-to-bastion -- "$BUNDLE_ZIP" /home/ec2-user/backup/
+
+          # A single archive means the transfer can be verified end to end by
+          # checksum rather than by counting files, so a silently truncated
+          # copy cannot reach S3.
+          REMOTE_SHA=$(nix run --impure -L .#run-on-bastion -- \
+            "sha256sum /home/ec2-user/backup/$BUNDLE_DIR.zip | cut -d' ' -f1" | tr -d '[:space:]')
+          echo "Remote sha256: $REMOTE_SHA"
+          echo "Local  sha256: $ZIP_SHA"
+          if [ "$REMOTE_SHA" != "$ZIP_SHA" ]; then
+            echo "Checksum mismatch: the zip on the bastion is not the one we sent." >&2
+            echo "Refusing to upload to S3. The next step still publishes the" >&2
+            echo "bundle as the backup-bundle-$BUNDLE_DIR artifact on this run." >&2
+            exit 1
+          fi
+          echo "Checksums match."
+      - name: Publish bundle as workflow artifact
+        # Runs even when the copy above fails or times out -- that is the point
+        # of it. An operator can then download the bundle from the run summary
+        # and place it by hand rather than re-running the whole export.
+        # Guarded on BUNDLE_ZIP so it is skipped when the zip step never got
+        # far enough to set it.
+        if: always() && env.BUNDLE_ZIP != ''
+        uses: actions/upload-artifact@v5
+        with:
+          name: backup-bundle-${{ env.BUNDLE_DIR }}
+          path: ${{ env.BUNDLE_ZIP }}
+          # The payload is already compressed, so re-compressing it only costs
+          # time. Note that upload-artifact always wraps what it is given, so
+          # the download is a zip containing our zip.
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload backup to S3 from bastion
+        run: |
+          # A single object rather than a recursive tree: restoring it needs
+          # only GetObject on one known key, whereas the previous per-file
+          # layout needed s3:ListBucket, which this project's Terraform grants
+          # to no principal (see the note in scripts/src/download_from_s3.sh).
+          nix run --impure -L .#run-on-bastion -- \
+            "TF_STAGE=dev bash /home/ec2-user/scripts/src/upload_to_s3.sh -b=dailp-dev-media-storage -p=xml-backups /home/ec2-user/backup/$BUNDLE_DIR.zip"
+      - name: Clean up bastion SSH key
+        if: always()
+        run: rm -f "$BASTION_SSH_KEY"
