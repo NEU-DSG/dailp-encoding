@@ -106,7 +106,9 @@ jobs:
           echo "Generating METS/TEI backup bundle..."
           nix run --impure -L .#migrate-to-xml -- -o="$BUNDLE_ROOT"
           kill $SSM_PID
-          BUNDLE_DIR=$(ls -1t "$BUNDLE_ROOT" | grep '^dailp-' | head -n1)
+          # -p marks directories with a trailing slash, so the `dailp-*.zip`
+          # the next step writes alongside them can never be selected here.
+          BUNDLE_DIR=$(ls -1tp "$BUNDLE_ROOT" | grep '^dailp-.*/$' | head -n1 | tr -d '/')
           if [ -z "$BUNDLE_DIR" ]; then
             echo "No backup bundle directory found under $BUNDLE_ROOT" >&2
             exit 1
