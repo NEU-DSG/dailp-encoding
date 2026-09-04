@@ -21,6 +21,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use dailp::AnnotatedSeg;
+use futures::stream::StreamExt;
 use log::{info, warn};
 use tokio::time::sleep;
 
@@ -197,52 +198,71 @@ pub(crate) async fn download_words_with_audio(
     })?;
 
     let total = candidates.len();
+
+    // `DOWNLOAD_CONCURRENCY` at a time rather than one after another -- see the constant's
+    // doc comment for why the bound is where it is. `buffered` (not `buffer_unordered`)
+    // because `downloaded` has to stay in word order for the METS `structSec` divs and the
+    // TEI `<ptr type="audio">` elements that follow it.
+    //
+    // Each item resolves to Ok(audio) or Err(failure message) -- a per-word outcome, not a
+    // fatal error, which is why the error type here is a plain String and not `anyhow`. The
+    // warning for each failure is still emitted where the failure happens, as before.
+    let results: Vec<std::result::Result<DownloadedWordAudio, String>> =
+        futures::stream::iter(candidates.into_iter().map(|candidate| async move {
+            let filename = word_audio_filename(
+                candidate.word_index,
+                candidate.simple_phonetics.as_deref(),
+                &candidate.audio_url,
+            );
+            let path = document_audio_dir.join(&filename);
+
+            match fetch_with_retry(client, &candidate.audio_url).await {
+                Ok(bytes) => {
+                    let checksum = sha256_hex(&bytes);
+                    if let Err(e) = std::fs::write(&path, &bytes) {
+                        warn!(
+                            "Failed to write {}: {e:#}. Treating \"{}\" as if it had no audio.",
+                            path.display(),
+                            candidate.id
+                        );
+                        return Err(format!(
+                            "word \"{}\" ({}): failed to write {}: {e:#}",
+                            candidate.id,
+                            candidate.audio_url,
+                            path.display()
+                        ));
+                    }
+                    Ok(DownloadedWordAudio {
+                        ext: file_extension(&candidate.audio_url),
+                        audio_url: escape_xml(&candidate.audio_url),
+                        archival_locref: format!("../audio/{file_stem}/{filename}"),
+                        checksum,
+                        id: candidate.id,
+                    })
+                }
+                Err(e) => {
+                    warn!(
+                        "Failed to download audio for word \"{}\" ({}) after retries: {e:#}. \
+                         Treating it as if it had no audio.",
+                        candidate.id, candidate.audio_url
+                    );
+                    Err(format!(
+                        "word \"{}\" ({}): {e:#}",
+                        candidate.id, candidate.audio_url
+                    ))
+                }
+            }
+        }))
+        .buffered(DOWNLOAD_CONCURRENCY)
+        .collect()
+        .await;
+
     let mut downloaded = Vec::with_capacity(total);
     let mut failures = Vec::new();
-    for candidate in candidates {
-        let filename = word_audio_filename(
-            candidate.word_index,
-            candidate.simple_phonetics.as_deref(),
-            &candidate.audio_url,
-        );
-        let path = document_audio_dir.join(&filename);
-
-        match fetch_with_retry(client, &candidate.audio_url).await {
-            Ok(bytes) => {
-                let checksum = sha256_hex(&bytes);
-                if let Err(e) = std::fs::write(&path, &bytes) {
-                    warn!(
-                        "Failed to write {}: {e:#}. Treating \"{}\" as if it had no audio.",
-                        path.display(),
-                        candidate.id
-                    );
-                    failures.push(format!(
-                        "word \"{}\" ({}): failed to write {}: {e:#}",
-                        candidate.id,
-                        candidate.audio_url,
-                        path.display()
-                    ));
-                    continue;
-                }
-                downloaded.push(DownloadedWordAudio {
-                    ext: file_extension(&candidate.audio_url),
-                    audio_url: escape_xml(&candidate.audio_url),
-                    archival_locref: format!("../audio/{file_stem}/{filename}"),
-                    checksum,
-                    id: candidate.id,
-                });
-            }
-            Err(e) => {
-                warn!(
-                    "Failed to download audio for word \"{}\" ({}) after retries: {e:#}. \
-                     Treating it as if it had no audio.",
-                    candidate.id, candidate.audio_url
-                );
-                failures.push(format!(
-                    "word \"{}\" ({}): {e:#}",
-                    candidate.id, candidate.audio_url
-                ));
-            }
+    for result in results {
+        match result {
+            Ok(audio) => downloaded.push(audio),
+            Err(failure) => failures.push(failure),
         }
     }
 
@@ -256,6 +276,12 @@ pub(crate) async fn download_words_with_audio(
         failures,
     })
 }
+
+/// How many word audio files [`download_words_with_audio`] fetches at once. Matches
+/// `images::DOWNLOAD_CONCURRENCY` and is bounded for the same reason: these requests go to
+/// an external service this pipeline does not own. Not multiplied by that constant, since
+/// `mets::generate_mets_bundle` still walks documents one at a time.
+const DOWNLOAD_CONCURRENCY: usize = 8;
 
 /// Number of attempts `fetch_with_retry` makes before giving up.
 const MAX_ATTEMPTS: u32 = 4;

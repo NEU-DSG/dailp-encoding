@@ -23,13 +23,30 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
+      # Used twice: the Postgres tunnel port-forwards through this instance over
+      # SSM, and the scripts deployment at the end of the job copies ./scripts
+      # onto it. The backup bundle itself no longer goes anywhere near it.
       BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
       BASTION_IP: ${{ secrets.DEV_BASTION_IP }}
+      # Needed only by the scripts deployment. Written to disk immediately
+      # before that step and removed immediately after, rather than held for the
+      # whole job.
       BASTION_SSH_KEY: ${{ github.workspace }}/.bastion-ssh-key.pem
-      # Where `migrate-to-xml -o=` writes this run's bundle, and where the steps below
-      # look for it. Passed explicitly rather than relying on the tool's cwd-relative
-      # default, so the location stays correct if a step ever gains a `working-directory`.
-      BUNDLE_ROOT: ${{ github.workspace }}/backups/xml/dailp
+      # All set for real by the workspace/generate/zip steps via $GITHUB_ENV.
+      # Declared empty here so later steps can reference them through the `env`
+      # context (the artifact step's `name`, `path` and `if` guard all do), and
+      # so there is exactly one place each value is assigned -- a non-empty
+      # default here would leave it ambiguous whether the job-level value or the
+      # $GITHUB_ENV write wins.
+      #
+      # BUNDLE_ROOT is where `migrate-to-xml -o=` writes this run's bundle and
+      # where the steps below look for it. It is passed explicitly rather than
+      # relying on the tool's cwd-relative default, so the location stays
+      # correct if a step ever gains a `working-directory`.
+      BUNDLE_ROOT: ""
+      BUNDLE_DIR: ""
+      BUNDLE_ZIP: ""
+      ZIP_BYTES: ""
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -50,15 +67,26 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Write bastion SSH key
-        run: |
-          umask 077
-          printf '%s\n' "${{ secrets.DEV_BASTION_SSH_KEY }}" > "$BASTION_SSH_KEY"
       - name: Build project
         run: |
           nix build --impure -L
           nix run --impure -L .#tf-init
+      - name: Prepare bundle workspace
+        # `zip -r` holds the raw tree and the finished archive at once, and this
+        # bundle is mostly already-compressed media, so peak disk is roughly
+        # twice the bundle size. github.workspace does not have that headroom at
+        # current bundle sizes; /mnt is the runner's larger ephemeral volume.
+        run: |
+          sudo mkdir -p /mnt/dailp-backup
+          sudo chown "$(id -u):$(id -g)" /mnt/dailp-backup
+          df -h / /mnt
+          echo "BUNDLE_ROOT=/mnt/dailp-backup/xml/dailp" >> "$GITHUB_ENV"
       - name: Generate XML backup bundle
+        # Bounded so a stalled media fetch cannot burn the job's 6-hour default.
+        # The exporter downloads with its own connect/read timeouts and retries
+        # (see migration/src/mets.rs), so hitting this means something broader
+        # than one bad URL.
+        timeout-minutes: 90
         run: |
           echo "Retrieving terraform outputs..."
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
@@ -85,16 +113,381 @@ jobs:
           fi
           echo "Generated bundle: $BUNDLE_DIR"
           echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+      - name: Zip backup bundle
+        timeout-minutes: 30
+        run: |
+          # *_KB, because `du -sk` reports kibibytes. Only used for the ratio
+          # message below; the byte-exact size that later steps compare against
+          # comes from `stat` further down.
+          RAW_KB=$(du -sk "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)
+          RAW_FILES=$(find "$BUNDLE_ROOT/$BUNDLE_DIR" -type f | wc -l | tr -d ' ')
+          echo "Zipping $RAW_FILES files ($(du -sh "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)) from $BUNDLE_DIR..."
+
+          # -q because zip lists every entry otherwise, which buries the
+          # summary below under thousands of lines. Zipped from inside
+          # BUNDLE_ROOT so the archive holds `dailp-<date>/...` rather than
+          # the runner's absolute path.
+          ( cd "$BUNDLE_ROOT" && zip -q -r "$BUNDLE_DIR.zip" "$BUNDLE_DIR" )
+
+          ZIP_PATH="$BUNDLE_ROOT/$BUNDLE_DIR.zip"
+          ZIP_KB=$(du -sk "$ZIP_PATH" | cut -f1)
+          RATIO=$(awk -v r="$RAW_KB" -v z="$ZIP_KB" \
+            'BEGIN { if (r > 0) printf "%.1f%% of raw", (z / r) * 100; else printf "raw size unknown" }')
+          echo "Created $BUNDLE_DIR.zip: $(du -h "$ZIP_PATH" | cut -f1) ($RATIO)"
+
+          # zip exits 0 on some partial-write conditions, so confirm the
+          # archive holds every file we meant to put in it. `zipinfo -t`
+          # counts directory entries as well, hence listing and filtering.
+          ZIP_FILES=$(zipinfo -1 "$ZIP_PATH" | grep -cv '/$')
+          echo "Archive holds $ZIP_FILES files (bundle has $RAW_FILES)"
+          if [ "$ZIP_FILES" != "$RAW_FILES" ]; then
+            echo "Zip is missing files from the bundle; refusing to continue." >&2
+            exit 1
+          fi
+
+          # Logged so an operator who downloads the object from S3 has something
+          # to compare against; the upload step verifies the transfer by size.
+          ZIP_SHA=$(sha256sum "$ZIP_PATH" | cut -d' ' -f1)
+          echo "sha256: $ZIP_SHA"
+
+          # Byte-exact, unlike the `du -sk` values above: this is what the
+          # upload step compares against S3's ContentLength, and what gates the
+          # artifact step.
+          ZIP_BYTES=$(stat -c%s "$ZIP_PATH")
+          {
+            echo "BUNDLE_ZIP=$ZIP_PATH"
+            echo "ZIP_SHA=$ZIP_SHA"
+            echo "ZIP_BYTES=$ZIP_BYTES"
+          } >> "$GITHUB_ENV"
+
+          # Peak disk is behind us at this point, so a tight number here is the
+          # warning that the next run may not fit.
+          df -h /mnt
+      - name: Publish bundle as workflow artifact
+        # Runs before, and independently of, the S3 upload: an operator can
+        # download the bundle from the run summary and place it by hand rather
+        # than re-running the whole export.
+        #
+        # Size-gated at 2 GiB. Above that, uploading here costs more time than
+        # the S3 upload it duplicates and consumes Actions storage quota for a
+        # copy nobody reaches for -- S3 is the destination that has to work.
+        # Guarded on BUNDLE_ZIP so it is skipped when the zip step never got
+        # far enough to set it.
+        if: always() && env.BUNDLE_ZIP != '' && fromJSON(env.ZIP_BYTES || '0') < 2147483648
+        uses: actions/upload-artifact@v5
+        with:
+          name: backup-bundle-${{ env.BUNDLE_DIR }}
+          path: ${{ env.BUNDLE_ZIP }}
+          # The payload is already compressed, so re-compressing it only costs
+          # time. Note that upload-artifact always wraps what it is given, so
+          # the download is a zip containing our zip.
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload backup bundle to S3
+        # Straight from the runner, not through the bastion. The bastion hop it
+        # replaces was bounded by SSM port-forwarding throughput (single-digit
+        # MB/s) and by an 8 GiB root volume the bundle no longer fits on, and it
+        # depended on an S3 write grant that this project's Terraform does not
+        # make (see terraform/docs/runbook.md). The runner's credentials are the
+        # dailp-deployment user, which the bucket policy grants s3:PutObject on
+        # the whole bucket -- see terraform/media-storage.nix.
+        timeout-minutes: 60
+        env:
+          # Let individual failed parts retry rather than failing the transfer.
+          AWS_MAX_ATTEMPTS: "10"
+          AWS_RETRY_MODE: adaptive
+        run: |
+          # The CLI's defaults are sized for small objects. 64 MiB parts keep a
+          # ~13 GB archive near 200 parts -- far inside the 10,000-part cap --
+          # while cutting per-part overhead, and cli_read_timeout=0 stops one
+          # slow part from aborting the whole upload.
+          aws configure set default.s3.multipart_threshold 64MB
+          aws configure set default.s3.multipart_chunksize 64MB
+          aws configure set default.s3.max_concurrent_requests 16
+          aws configure set default.cli_read_timeout 0
+
+          echo "Uploading $BUNDLE_DIR.zip ($(du -h "$BUNDLE_ZIP" | cut -f1)) to S3."
+          echo "Starting upload at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+          # A single object rather than a recursive tree: restoring it needs
+          # only GetObject on one known key, whereas the previous per-file
+          # layout needed s3:ListBucket, which this project's Terraform grants
+          # to no principal (see the note in scripts/src/download_from_s3.sh).
+          # upload_to_s3.sh flattens each FILE to prefix/basename, so the key is
+          # the same xml-backups/$BUNDLE_DIR.zip the bastion path produced.
+          TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
+            -b=dailp-dev-media-storage -p=xml-backups "$BUNDLE_ZIP"
+
+          # Replaces the bastion-side sha256 comparison: S3 already checksums
+          # every part, so what is left to catch is a multipart upload that
+          # completed short of the whole file.
+          REMOTE_BYTES=$(aws s3api head-object \
+            --bucket dailp-dev-media-storage \
+            --key "xml-backups/$BUNDLE_DIR.zip" \
+            --query ContentLength --output text)
+          echo "Local  size: $ZIP_BYTES bytes"
+          echo "Remote size: $REMOTE_BYTES bytes"
+          if [ "$REMOTE_BYTES" != "$ZIP_BYTES" ]; then
+            echo "Uploaded object size does not match the local archive." >&2
+            echo "Do not treat s3://dailp-dev-media-storage/xml-backups/$BUNDLE_DIR.zip" >&2
+            echo "as a good backup; see terraform/docs/runbook.md." >&2
+            exit 1
+          fi
+          echo "Upload verified. sha256 of the archive: $ZIP_SHA"
+      # ---------------------------------------------------------------------
+      # Database backup track.
+      #
+      # Everything above backs up *content* (METS/TEI XML plus media) from the
+      # runner. Everything below backs up the *database* from the bastion, which
+      # is a genuinely different job: it runs the operator scripts in ./scripts
+      # against RDS and uploads their output to S3 itself.
+      #
+      # The bastion, not the runner, because it can reach RDS directly --
+      # terraform/database-sql.nix allows 5432 ingress from the `mongodb_access`
+      # security group and terraform/bastion-host.nix puts the bastion in it --
+      # so no tunnel is involved, and this automates the "Routine Database
+      # Backups" procedure in scripts/SOPs.md as written.
+      #
+      # Placed after the XML bundle's S3 upload so an SSM, SSH, or database
+      # problem here cannot cost a 90-minute export that already reached S3.
+      - name: Write bastion SSH key
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.DEV_BASTION_SSH_KEY }}" > "$BASTION_SSH_KEY"
       - name: Copy backup scripts to bastion
+        # ./scripts is small; the headroom is for flake evaluation on a cold
+        # runner, not for the transfer. The bastion also carries this tooling for
+        # the by-hand procedures in terraform/docs/sop.md and scripts/runbook.md,
+        # so it has to stay in step with the repo either way.
+        timeout-minutes: 10
         run: nix run --impure -L .#copy-to-bastion -- ./scripts /home/ec2-user/
-      - name: Copy backup bundle to bastion
+      - name: Send database credentials to bastion
+        # Via a mode-600 file rather than inline in the remote command, because
+        # `run-on-bastion` passes its argument as the ssh command line, which is
+        # visible in `ps` on the bastion for the life of the command. The scripts
+        # themselves are careful about exactly this (pg_dump_backup.sh exports
+        # PGPASSWORD rather than passing -p, "so it never appears in ps output"),
+        # and it would be pointless to undo that here. Removed again by the
+        # cleanup step at the end of the job.
+        #
+        # DATABASE_URL deliberately carries no password: both scripts take it
+        # from DATABASE_PASSWORD and set PGPASSWORD internally, so the secret
+        # stays in one variable instead of being embedded in a URL that gets
+        # logged. Setting DATABASE_PASSWORD also stops export_db_to_csv.sh from
+        # trying to prompt for one (see prompt_password_if_needed in
+        # scripts/src/utils/pg_utils.sh), which would otherwise hang here.
+        timeout-minutes: 10
         run: |
-          nix run --impure -L .#run-on-bastion -- "mkdir -p /home/ec2-user/backup"
-          nix run --impure -L .#copy-to-bastion -- "$BUNDLE_ROOT/$BUNDLE_DIR" /home/ec2-user/backup/
-      - name: Upload backup to S3 from bastion
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          ENV_FILE="${{ github.workspace }}/.bastion-db-env"
+          umask 077
+          # printf %q, not a bare echo: this file is *sourced* by the remote
+          # shell, so an unquoted password containing a space, `$`, quote or
+          # backtick would either be silently truncated at the first space or,
+          # worse, expanded -- turning the password into executable code. %q
+          # emits a form that is safe to re-read as shell input whatever the
+          # secret happens to contain.
+          {
+            printf 'DATABASE_URL=%q\n' "postgres://dailp@$DATABASE_ADDRESS:5432/dailp"
+            printf 'DATABASE_PASSWORD=%q\n' "$DATABASE_PASSWORD"
+          } > "$ENV_FILE"
+
+          nix run --impure -L .#copy-to-bastion -- "$ENV_FILE" /home/ec2-user/.dailp-backup-env
+          rm -f "$ENV_FILE"
+          nix run --impure -L .#run-on-bastion -- "chmod 600 /home/ec2-user/.dailp-backup-env"
+      - name: Check backup prerequisites on bastion
+        # Two independent prerequisites, both checked before anything touches the
+        # database, because both otherwise fail deep inside a backup with an
+        # error that reads like something else entirely.
+        #
+        # 1. bash >= 4.3. Every script in ./scripts uses `local -n` namerefs
+        #    (log_utils.sh's create_logfile, pg_utils.sh's resolve_pg_target,
+        #    upload_to_s3.sh's upload_objects), which bash added in 4.3. Amazon
+        #    Linux 2 ships bash 4.2, where those lines fail with
+        #    "local: -n: invalid option" -- an error that names neither the
+        #    database nor the script that actually broke. There is no newer bash
+        #    in the AL2 repos, so this can only be reported, not fixed here.
+        # 2. A Postgres client >= 14. RDS runs Postgres 14
+        #    (terraform/database-sql.nix) and a default AL2
+        #    `yum install postgresql` gives 9.2; pg_dump refuses to dump a server
+        #    newer than itself. This one is installable, so it is installed.
+        timeout-minutes: 15
         run: |
-          nix run --impure -L .#run-on-bastion -- \
-            "TF_STAGE=dev bash /home/ec2-user/scripts/src/upload_to_s3.sh -r -b=dailp-dev-media-storage -p=xml-backups/$BUNDLE_DIR /home/ec2-user/backup/$BUNDLE_DIR"
-      - name: Clean up bastion SSH key
+          nix run --impure -L .#run-on-bastion -- '
+            set -euo pipefail
+
+            bash_major=${BASH_VERSINFO[0]}
+            bash_minor=${BASH_VERSINFO[1]}
+            echo "bash $bash_major.$bash_minor ($BASH_VERSION)"
+            if [ "$bash_major" -lt 4 ] || { [ "$bash_major" -eq 4 ] && [ "$bash_minor" -lt 3 ]; }; then
+              echo "The backup scripts need bash >= 4.3 for local -n namerefs;" >&2
+              echo "this host has $BASH_VERSION. Amazon Linux 2 ships 4.2 and has" >&2
+              echo "no newer bash available, so the bastion needs an AL2023 AMI" >&2
+              echo "(terraform/bastion-host.nix pins the AMI by id) or a bash >= 4.3" >&2
+              echo "installed on PATH ahead of /bin/bash." >&2
+              exit 1
+            fi
+
+            # Both binaries are needed: pg_dump_backup.sh uses pg_dump,
+            # export_db_to_csv.sh uses psql.
+            client_major() {
+              if command -v pg_dump >/dev/null 2>&1 && command -v psql >/dev/null 2>&1; then
+                pg_dump --version | grep -oE "[0-9]+" | head -n 1
+              else
+                echo 0
+              fi
+            }
+
+            major=$(client_major)
+            if [ "${major:-0}" -lt 14 ]; then
+              if [ "${major:-0}" -eq 0 ]; then
+                echo "pg_dump and/or psql not found; installing a Postgres client."
+              else
+                echo "pg_dump is major version $major, too old for a v14 server; upgrading."
+              fi
+
+              # Amazon Linux 2 and Amazon Linux 2023 differ here, and the AMI is
+              # pinned by id in terraform/bastion-host.nix rather than by family,
+              # so handle whichever this instance turns out to be.
+              if command -v amazon-linux-extras >/dev/null 2>&1; then
+                sudo amazon-linux-extras enable postgresql14
+                sudo yum clean metadata
+                sudo yum install -y postgresql
+              elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y postgresql15 || sudo dnf install -y postgresql
+              else
+                echo "No amazon-linux-extras or dnf on this host; install a" >&2
+                echo "Postgres >= 14 client by hand and re-run." >&2
+                exit 1
+              fi
+
+              # Asserted rather than assumed: installing the wrong major version
+              # would otherwise surface much later as a confusing pg_dump
+              # "server version mismatch" failure mid-backup.
+              major=$(client_major)
+              if [ "${major:-0}" -lt 14 ]; then
+                echo "Still on Postgres client major version ${major:-none} after" >&2
+                echo "installing; a v14 server cannot be dumped with this client." >&2
+                exit 1
+              fi
+            fi
+
+            pg_dump --version
+            psql --version
+          '
+      - name: Run database backups on bastion
+        # Both halves of the complete backup that scripts/SOPs.md defines, run in
+        # the order it specifies. Output paths are passed explicitly so this
+        # workflow knows where they are without parsing anything; the only value
+        # read back from stdout is the dump filename, which pg_dump_backup.sh
+        # generates from its own timestamp and echoes as its single line of
+        # stdout (every log line goes to stderr, so the capture stays clean).
+        timeout-minutes: 60
+        run: |
+          RUN_TS=$(date -u '+%Y%m%d_%H%M%SZ')
+          REMOTE_DIR="/home/ec2-user/backups/db/$RUN_TS"
+          echo "RUN_TS=$RUN_TS" >> "$GITHUB_ENV"
+          echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
+
+          # The bastion root volume is 8 GiB and nothing else prunes it, so a
+          # tight number here is the first thing to look at if this step fails.
+          echo "Bastion free space before backup:"
+          nix run --impure -L .#run-on-bastion -- "df -h /home | tail -n 1"
+
+          echo "Running pg_dump and the CSV export on the bastion..."
+          DUMP_PATH=$(nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            set -a; . /home/ec2-user/.dailp-backup-env; set +a
+            mkdir -p '$REMOTE_DIR'
+            bash /home/ec2-user/scripts/src/pg_dump_backup.sh \
+              -d='$REMOTE_DIR/pg_dump/' -l='$REMOTE_DIR/logs/'
+          " | tr -d '\r' | tail -n 1)
+
+          if [ -z "$DUMP_PATH" ]; then
+            echo "pg_dump_backup.sh printed no output path." >&2
+            exit 1
+          fi
+          echo "Dump file: $DUMP_PATH"
+          echo "DUMP_PATH=$DUMP_PATH" >> "$GITHUB_ENV"
+
+          # export_db_to_csv.sh writes one CSV per table plus the manifest.csv
+          # that import_db_from_csv.sh verifies against, so it is collapsed to a
+          # single archive: restoring it then needs only GetObject on one known
+          # key, the same reasoning the XML bundle upload above follows. tar
+          # rather than zip because tar is always present on Amazon Linux and zip
+          # is not.
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            set -a; . /home/ec2-user/.dailp-backup-env; set +a
+            bash /home/ec2-user/scripts/src/export_db_to_csv.sh \
+              -o='$REMOTE_DIR/csv' -l='$REMOTE_DIR/logs/'
+            tar -czf '$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz' -C '$REMOTE_DIR' csv
+            ls -l '$REMOTE_DIR'
+          "
+          echo "CSV archive: $REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz"
+      - name: Upload database backups to S3 from bastion
+        # From the bastion, not the runner: the outputs only exist there, and
+        # round-tripping them back through the SSM tunnel just to push them out
+        # again would be slower and pointless. Note this needs the bastion
+        # instance role to allow s3:PutObject -- terraform/docs/runbook.md records
+        # that Terraform grants it only s3:GetEncryptionConfiguration, so an
+        # AccessDenied here is a known infrastructure gap and not a bug in this
+        # step.
+        timeout-minutes: 30
+        run: |
+          DUMP_NAME=$(basename "$DUMP_PATH")
+          CSV_NAME="dailp_${RUN_TS}_csv.tar.gz"
+          PREFIX="db-backups/$RUN_TS"
+
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            TF_STAGE=dev bash /home/ec2-user/scripts/src/upload_to_s3.sh \
+              -b=dailp-dev-media-storage -p='$PREFIX' \
+              '$DUMP_PATH' '$REMOTE_DIR/$CSV_NAME'
+          "
+
+          # upload_to_s3.sh reports its own per-file failures and exits non-zero,
+          # but it is the runner that has to be able to state where the backup
+          # ended up, so confirm both objects independently rather than trusting
+          # the exit status alone.
+          STATUS=success
+          for key in "$PREFIX/$DUMP_NAME" "$PREFIX/$CSV_NAME"; do
+            if SIZE=$(aws s3api head-object \
+              --bucket dailp-dev-media-storage --key "$key" \
+              --query ContentLength --output text 2>/dev/null); then
+              echo "verified s3://dailp-dev-media-storage/$key ($SIZE bytes)"
+            else
+              echo "MISSING s3://dailp-dev-media-storage/$key" >&2
+              STATUS=failed
+            fi
+          done
+
+          # Reported back to the run summary so the outcome and the exact
+          # restore locations are visible without reading the step logs.
+          {
+            echo "### Database backup: $STATUS"
+            echo
+            echo "| artifact | location |"
+            echo "| --- | --- |"
+            echo "| pg_dump | \`s3://dailp-dev-media-storage/$PREFIX/$DUMP_NAME\` |"
+            echo "| CSV export | \`s3://dailp-dev-media-storage/$PREFIX/$CSV_NAME\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$STATUS" != success ]; then
+            echo "One or more database backup objects are not in S3." >&2
+            exit 1
+          fi
+
+          # Only once both objects are confirmed in S3: the 8 GiB root volume
+          # cannot hold many runs, and nothing else prunes it.
+          echo "Removing $REMOTE_DIR from the bastion now that both objects are in S3."
+          nix run --impure -L .#run-on-bastion -- "rm -rf '$REMOTE_DIR' && df -h /home | tail -n 1"
+      - name: Clean up bastion credentials and SSH key
         if: always()
-        run: rm -f "$BASTION_SSH_KEY"
+        run: |
+          if [ -f "$BASTION_SSH_KEY" ]; then
+            nix run --impure -L .#run-on-bastion -- \
+              "rm -f /home/ec2-user/.dailp-backup-env" || true
+          fi
+          rm -f "$BASTION_SSH_KEY" "${{ github.workspace }}/.bastion-db-env"
