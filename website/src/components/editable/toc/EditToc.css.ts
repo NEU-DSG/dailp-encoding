@@ -7,14 +7,26 @@ export const tocContainer = style({
   padding: 16,
   borderRadius: 8,
   boxSizing: "border-box",
-  width: "100%",
-  maxWidth: "100%",
-  overflowX: "hidden",
+  width: "95%",
+  maxWidth: "95%",
+})
+
+export const headerContainer = style({
+  position: "relative",
+  display: "inline-flex",
+  alignItems: "center",
+  marginBottom: 6,
 })
 
 export const collectionTitle = style({
-  marginTop: 0,
-  marginBottom: 16,
+  margin: 0,
+})
+
+export const editorContent = style({
+  width: "100%",
+  maxWidth: "100%",
+  overflowX: "hidden",
+  boxSizing: "border-box",
 })
 
 export const sectionsGrid = style({
@@ -26,7 +38,7 @@ export const sectionsGrid = style({
 export const sectionHeading = style({
   marginTop: 0,
   marginBottom: 8,
-  fontSize: 14,
+  fontSize: 20,
   fontWeight: 600,
 })
 
@@ -35,10 +47,9 @@ export const sectionPanel = style({
   padding: 8,
   borderRadius: 6,
   background: "#fafafa",
-  minHeight: 60,
-  maxHeight: "60vh",
-  overflowY: "auto",
-  overflowX: "hidden",
+  minHeight: 64 * 3,
+  maxHeight: 64 * 7,
+  overflow: "hidden",
 })
 
 export const chapterList = style({
@@ -78,6 +89,11 @@ export const chapterRow = styleVariants({
   ],
 })
 
+export const selectedRow = style({
+  backgroundColor: "#eef5ff",
+  boxShadow: "inset 0 0 0 2px #4a90e2",
+})
+
 export const chapterRowContent = style({
   display: "flex",
   flexDirection: "column",
@@ -94,7 +110,12 @@ export const chapterRowContent = style({
   },
 })
 
-// Inputs for slug, title, dragable
+export const nestedChapterContent = style({
+  boxSizing: "border-box",
+  borderLeft: "2px solid #ccc",
+  paddingLeft: 10,
+})
+
 export const inputsOfRow = style({
   display: "flex",
   alignItems: "center",
@@ -105,7 +126,6 @@ export const inputsOfRow = style({
   width: "100%",
 })
 
-// Buttons for cancel and submit
 export const controlsOfRow = style({
   display: "flex",
   alignItems: "center",
@@ -132,6 +152,21 @@ export const dragHandle = style({
 export const nestedArrow = style({
   color: "#999",
   fontSize: 11,
+  flexShrink: 0,
+})
+
+export const nestedBadge = style({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 18,
+  height: 18,
+  borderRadius: "50%",
+  backgroundColor: "#888",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 700,
+  lineHeight: 1,
   flexShrink: 0,
 })
 
@@ -222,4 +257,18 @@ export const saveRow = style({
   alignItems: "center",
   marginTop: 16,
   flexWrap: "wrap",
+})
+
+export const draftBox = style({
+  border: "1px solid #ddd",
+  borderRadius: 6,
+  padding: 8,
+  marginTop: 8,
+  background: "#fafafa",
+})
+
+export const draftParentLabel = style({
+  fontSize: 11,
+  color: "#666",
+  margin: "0 0 4px",
 })
