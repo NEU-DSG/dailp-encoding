@@ -164,6 +164,10 @@ fragment DocFormFields on AnnotatedDoc {
     id
     name
   }
+  keyDates {
+    id
+    name
+  }
 }
 
 query AllSubjectHeadings {
@@ -416,6 +420,10 @@ query DocumentDetails($slug: String!) {
       status
     }
     creators {
+      id
+      name
+    }
+    keyDates {
       id
       name
     }
