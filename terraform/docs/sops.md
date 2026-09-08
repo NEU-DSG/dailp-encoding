@@ -203,14 +203,46 @@ adopted from a workstation; CI's job is to agree afterwards.
 
 ### Two traps in the local Terraform steps
 
-**Export the same variables CI does, or you import the wrong shape.** `tf-plan`/`tf-apply` both run
-`tfInit`, which regenerates `config.tf.json` from the *evaluating* environment. Applying locally
-without `AWS_SUBNET_BASTION` (and `AWS_VPC_ID`) set writes `subnet_id = ""` into state, and the next
-CI apply -- which *does* have the secrets -- then sees a diff. `terraform/main.nix` prints a warning
-when either is unset; do not apply through it.
+**Never run an untargeted `terraform apply` from a workstation.** This is the most dangerous thing
+in this document. `tf-plan`/`tf-apply` both run `tfInit`, which regenerates `config.tf.json` from
+the *evaluating* environment, and several variables the config reads via `getEnv` exist **only as
+GitHub secrets** -- they are not in `.env`, so they are empty in every local shell:
+`AWS_VPC_ID`, `AWS_SUBNET_PRIMARY`, `AWS_SUBNET_SECONDARY0`, `AWS_SUBNET_SECONDARY1`,
+`AWS_ZONE_PRIMARY`, `AWS_ZONE_SECONDARY0`, `AWS_ZONE_SECONDARY1`, `AWS_SUBNET_BASTION`,
+`AWS_SSH_KEY`.
 
-Relatedly, a local apply applies the **whole** config from your working tree to that stage's state,
-not just the bastion. Keep the branch's diff limited to the bastion.
+Empty is not inert. A local plan with the subnet variables unset proposes:
+
+```
+# aws_db_subnet_group.sql_database will be updated in-place
+  ~ subnet_ids = [
+      - "subnet-05944b39f6c30b57e",
+      - "subnet-05a9ef63c46e7e7bc",
+      - "subnet-0c5c9bca12e771cab",
+      + "",
+    ]
+```
+
+i.e. it swaps the database's three real subnets for a single empty string. `terraform/main.nix`
+warns for each of these when unset -- those warnings are the signal that your generated config does
+not describe reality, and you must not apply through them.
+
+So do both of the following:
+
+1. **Export what you have.** At minimum `AWS_VPC_ID` and `AWS_SUBNET_BASTION`; ideally all of the
+   above, read off the live resources or the repository secrets.
+2. **Always `-target`.** Restrict the apply to the resource you actually mean to change. The
+   `.#tf-apply` app takes no arguments, so use `tf-init` to generate the config and then drive
+   `terraform` directly (see step 6b).
+
+Reviewing the plan is not sufficient protection on its own here, because the damage is in a resource
+you are not thinking about. `-target` is what makes a local apply safe.
+
+Note the values that *are* in `.env` -- `OAUTH_TOKEN`, `GIT_REPOSITORY_URL`, `DATABASE_PASSWORD`,
+`GOOGLE_API_KEY`, `TURNSTILE_*`, `TF_STAGE` -- reach you only inside `nix develop`, since `nix run`
+does not source it. Without them `aws_amplify_app.dailp` fails validation outright
+(`expected length of oauth_token to be in the range (1 - 1000), got`), which is at least a loud
+failure rather than a silent one.
 
 **`AWS_PROFILE` must name a profile that actually exists, or nothing works.** This is the single
 most likely way these steps fail, and the error does not look like what it is. Terraform's S3
@@ -372,18 +404,37 @@ different refs.)
 **6b. Local, interactive**, from the branch carrying the new pin. Not CI: `state rm` has no CI path,
 and the only apply CI has is auto-approved.
 
-```sh
-# Same variables CI would supply, or config.tf.json comes out different (see traps above).
-export AWS_VPC_ID=vpc-...  AWS_SUBNET_BASTION=subnet-...  TF_STAGE=<stage>
-export BASTION_ID=<new>
-eval "$(aws configure export-credentials --format env)"   # if using a profile
+Run it from inside `nix develop`, so `.env` supplies `OAUTH_TOKEN`, `GIT_REPOSITORY_URL` and the
+rest; `nix run` on its own does not, and the Amplify resource then fails validation.
 
-nix run --impure -L .#tf-init
+```sh
+# In nix develop. Export the variables that are NOT in .env (see traps above).
+export TF_STAGE=<stage> AWS_VPC_ID=vpc-... AWS_SUBNET_BASTION=subnet-...
+export BASTION_ID=<new>
+
+set -a; . ./.env; set +a                      # OAUTH_TOKEN etc. -- do not rely on direnv having run
+nix run --impure -L .#tf-init                 # THE ONLY thing that regenerates config.tf.json
 export TF_DATA_DIR=$(pwd)/.terraform          # tf-init sets this only inside its own shell
-terraform state rm 'module.bastion_host.aws_instance.default[0]'   # old instance untouched in AWS
-nix run --impure -L .#tf-plan                 # expect: 1 to import, 0 to add/change/destroy
-nix run --impure -L .#tf-apply                # interactive. NOT tf-apply-now
+
+# Assert the generated config is not stale. Bare `terraform` never rewrites
+# config.tf.json -- only the nix apps do (`cp -f $terraformConfig ./...`) -- so a
+# tf-init that ran in an environment missing a variable leaves an empty value on
+# disk that every later `terraform plan` faithfully re-reads.
+grep -q '"oauth_token": ""' config.tf.json &&
+  { echo "config.tf.json is stale/empty -- re-run tf-init with .env loaded"; false; }
+
+BASTION=module.bastion_host.aws_instance.default[0]
+terraform state rm "$BASTION"                 # old instance untouched in AWS
+
+# -target, NOT a bare plan/apply: the generated config carries empty values for
+# variables that only exist as GitHub secrets, and an untargeted apply would act
+# on them. Do not use .#tf-plan / .#tf-apply here -- they take no arguments.
+terraform plan  -target="$BASTION"            # expect: 1 to import, 0 to add/change/destroy
+terraform apply -target="$BASTION"            # interactive. NEVER tf-apply-now
 ```
+
+`-target` also keeps the plan short enough to actually read, which is the point of doing this step
+by hand.
 
 **6c. CI.** Merge. `main.yml` applies from `main`; expect a bastion no-op, and treat that no-op as
 the confirmation that the config, the state and the secret now agree.

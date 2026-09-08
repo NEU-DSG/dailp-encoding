@@ -67,10 +67,20 @@ in {
     vpc = lib.warnIf (getEnv "AWS_VPC_ID" == "")
       "AWS_VPC_ID is unset; vpc_id will be empty. Set it in the workflow env / your .env."
       (getEnv "AWS_VPC_ID");
-    subnets = {
-      primary = getEnv "AWS_SUBNET_PRIMARY";
-      secondary = getEnv "AWS_SUBNET_SECONDARY0";
-      tertiary = getEnv "AWS_SUBNET_SECONDARY1";
+    # These three are NOT in .env -- they exist only as GitHub secrets -- so they
+    # are empty in every local shell unless exported by hand. That is not
+    # cosmetic: they populate aws_db_subnet_group.sql_database.subnet_ids, and a
+    # local `terraform apply` with them unset plans to swap the database's three
+    # real subnets for a single "". Warn loudly, and see the -target guidance in
+    # terraform/docs/sops.md before running any apply from a workstation.
+    subnets = let
+      warnEmpty = name: lib.warnIf (getEnv name == "")
+        "${name} is unset; it will be emitted as \"\". A local terraform apply would rewrite aws_db_subnet_group subnet_ids to [\"\"] -- export it or use -target. See terraform/docs/sops.md."
+        (getEnv name);
+    in {
+      primary = warnEmpty "AWS_SUBNET_PRIMARY";
+      secondary = warnEmpty "AWS_SUBNET_SECONDARY0";
+      tertiary = warnEmpty "AWS_SUBNET_SECONDARY1";
     };
     bastion_subnet = lib.warnIf (getEnv "AWS_SUBNET_BASTION" == "")
       "AWS_SUBNET_BASTION is unset; the bastion's subnet_id will be empty. Set it in the workflow env / your .env before any change that could replace the instance -- see terraform/docs/sops.md."
