@@ -5,6 +5,9 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-22.04
+    environment:
+        name: Development
+        deployment: false
     env:
       DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -28,15 +31,6 @@ jobs:
       # without it PR plans carry `import { id = "" }` and cannot show a bastion
       # diff at all -- which makes this job useless as the review gate for any
       # change to terraform/bastion-host.nix.
-      #
-      # NOTE: this job declares no `environment:`, unlike every other workflow
-      # here, so only *repository*-level secrets resolve. If DEV_EC2_INSTANCE is
-      # scoped to the Development environment this silently expands to "" and
-      # nothing improves. Verify with the AWS_SUBNET_BASTION warning that
-      # terraform/main.nix now emits in the plan log; if it fires, either
-      # promote these to repository secrets or add `environment: Development` to
-      # this job (check that environment's protection rules first -- required
-      # reviewers would start gating every PR).
       BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
     steps:
       - name: Checkout code
