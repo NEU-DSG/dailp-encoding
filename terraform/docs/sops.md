@@ -183,6 +183,76 @@ exists to adopt an instance created outside Terraform, and there is nothing else
 (`bastion_ip` is permanently empty), no Route53 record, no load balancer. Access is entirely "which
 instance id does SSM target", i.e. one GitHub secret.
 
+### Where each step runs
+
+| Step | Runs | Why there |
+|---|---|---|
+| 1 Record ground truth | **Local** | Read-only AWS CLI. |
+| 2 Set + verify the subnet secret | **GitHub UI**, then **CI** | Only the PR check proves it: a local plan uses *your* environment, not the repository's secrets, so a clean local plan says nothing about what `tf-apply-now` will do. |
+| 3 Resolve the new image | **Local** | Read-only. |
+| 4 Launch the new instance | **Local** | Deliberately out of band. No workflow does this and none should. |
+| 5 Validate + seed keys | **Local** | Unavoidable: every workflow targets whatever `*_EC2_INSTANCE` holds, which is still the *old* instance until 6a. Local is the only place you can point `BASTION_ID` at the new one. `BASTION_SSH_KEY` is also only on your machine. |
+| **6a** Flip the secret | **GitHub UI** | -- |
+| **6b** `state rm` + plan + apply | **Local, interactive** | `terraform state rm` has no CI path at all, and CI's only apply is `tf-apply-now` (`-auto-approve`) -- precisely what must not be used, because the whole point is a human reading the plan and aborting on `must be replaced`. |
+| **6c** Merge | **CI** | `main.yml` applies from `main`. Expect a bastion **no-op**; that no-op is the confirmation the loop is closed. |
+| 7 Soak + terminate | **Local** | -- |
+| End-to-end validation | **CI** | `infra-check.yml` and the Data Backup workflow. These only make sense *after* 6a, and CI is what actually has to work. |
+
+The rule underneath: **CI confirms the change, it never makes it.** Green is created, validated and
+adopted from a workstation; CI's job is to agree afterwards.
+
+### Two traps in the local Terraform steps
+
+**Export the same variables CI does, or you import the wrong shape.** `tf-plan`/`tf-apply` both run
+`tfInit`, which regenerates `config.tf.json` from the *evaluating* environment. Applying locally
+without `AWS_SUBNET_BASTION` (and `AWS_VPC_ID`) set writes `subnet_id = ""` into state, and the next
+CI apply -- which *does* have the secrets -- then sees a diff. `terraform/main.nix` prints a warning
+when either is unset; do not apply through it.
+
+Relatedly, a local apply applies the **whole** config from your working tree to that stage's state,
+not just the bastion. Keep the branch's diff limited to the bastion.
+
+**`AWS_PROFILE` must name a profile that actually exists, or nothing works.** This is the single
+most likely way these steps fail, and the error does not look like what it is. Terraform's S3
+backend resolves `AWS_PROFILE` against `~/.aws/config` **before and independently of** credentials,
+and aborts if the profile is absent:
+
+```
+Error: failed to get shared config profile, <name>
+Error loading the state: failed to get shared config profile, <name>
+```
+
+That happens even with perfectly valid credentials exported — it is config resolution, not
+authentication. The usual cause is pasting the AWS access-portal label
+(`PermissionSet-AccountId`, e.g. `NEU-SystemAdministrator-783177801354`) which is *not* a profile
+name. For this account the profile is `library-dev`. None of the `tf-*` apps accept `--profile`, so
+this is all environment:
+
+```sh
+aws configure list-profiles          # the names that actually exist. Start here.
+
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+export AWS_PROFILE=library-dev
+aws sts get-caller-identity || aws sso login      # refresh the SSO token if this fails
+```
+
+That alone is sufficient — `terraform` reads the profile and resolves SSO itself. If you would
+rather not depend on shared config at all (useful when something else in your shell keeps setting
+`AWS_PROFILE`), materialise the credentials and drop the profile reference:
+
+```sh
+eval "$(aws configure export-credentials --format env)"
+unset AWS_PROFILE                    # now there is no shared-config lookup left to fail
+aws sts get-caller-identity          # must still succeed
+```
+
+Both paths are verified working. Note `nix run` does **not** source `.env` — only `nix develop`
+does, via the shellHook's `direnv dotenv` — so for the `nix run .#tf-*` commands here it is your
+ambient environment that counts, not the repo's `.env`.
+
+Note also that `tf-output` alone does *not* run `tfInit`, so it needs `TF_DATA_DIR` already set and
+a prior `tf-init` -- which is why the workflows always call `tf-init` before it.
+
 **1. Record what the new instance must match.** An import diff that proposes replacement means one
 of these is wrong, so capture them all first:
 
@@ -245,9 +315,50 @@ nix run --impure -L .#run-on-bastion -- 'whoami; . /etc/os-release; echo $PRETTY
   bash --version | head -1; uname -m; df -h /; command -v aws && aws --version'
 ```
 
-Then seed `authorized_keys` from the backup taken in step 1, using the keyless
-`aws ssm start-session` path described above if the launch key does not work, and test
-`copy-to-bastion` separately from `run-on-bastion`.
+**Seed `authorized_keys`.** The new instance trusts exactly one key -- the public half of
+`key_name`, injected by cloud-init. Everything the old instance had accumulated is gone, including
+whatever key CI holds in `*_BASTION_SSH_KEY`; without that, the Data Backup workflow fails at
+`Copy backup scripts to bastion` with `Permission denied (publickey)`.
+
+**Append, do not overwrite.** Copying a file over `authorized_keys` wholesale would drop the launch
+key you are currently authenticating with if the backup does not contain it, locking you out
+mid-procedure. Filter the backup locally, ship it to a scratch path, and merge line by line:
+
+```sh
+export BASTION_ID=<new-instance-id>
+export BASTION_SSH_KEY=~/.ssh/<the dailp-dev-2024 private key>
+
+grep -Ev '^[[:space:]]*(#|$)' ~/bastion-keys.bak > /tmp/keys-to-add
+nix run --impure -L .#copy-to-bastion -- /tmp/keys-to-add /home/ec2-user/incoming-keys
+nix run --impure -L .#run-on-bastion -- '
+  set -euo pipefail
+  install -d -m 700 ~/.ssh
+  touch ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
+  while IFS= read -r line; do
+    grep -qxF "$line" ~/.ssh/authorized_keys || printf "%s\n" "$line" >> ~/.ssh/authorized_keys
+  done < ~/incoming-keys
+  rm -f ~/incoming-keys
+  ssh-keygen -lf ~/.ssh/authorized_keys
+'
+```
+
+`grep -qxF` needs the whole-line literal match because key material contains regex metacharacters.
+The loop is idempotent, so re-running it is safe.
+
+Then confirm the CI key specifically, by fingerprint rather than by assuming the backup carried it:
+
+```sh
+ssh-keygen -y -f ~/.ssh/<ci-key> | ssh-keygen -lf /dev/stdin   # expect this in the list above
+BASTION_SSH_KEY=~/.ssh/<ci-key> nix run --impure -L .#run-on-bastion -- 'whoami'
+```
+
+Test `copy-to-bastion` separately from `run-on-bastion` -- `scp` and `ssh` fail in different ways.
+
+If no key works at all, use the keyless path: `aws ssm start-session --target "$BASTION_ID"` drops
+you on the box as `ssm-user` with `sudo`, so you can append to
+`/home/ec2-user/.ssh/authorized_keys` by hand. Remember `chown ec2-user:ec2-user` and `chmod 600`
+afterwards if you create the file that way.
 
 **6. Cut over.** Keep these back-to-back and announce a freeze on pushes to `main` first: in the
 window where the secret points at the new instance but `main` still holds the old pin, any push
@@ -255,16 +366,27 @@ would plan to replace it under `-auto-approve`. (Only dev is exposed to this -- 
 uat and prod solely on release events. `concurrency` does not help; pushes and releases are
 different refs.)
 
+**6a. GitHub UI.** Flip the stage's secret -- `DEV_EC2_INSTANCE` / `UAT_EC2_INSTANCE` /
+`EC2_INSTANCE` -- to the new instance id.
+
+**6b. Local, interactive**, from the branch carrying the new pin. Not CI: `state rm` has no CI path,
+and the only apply CI has is auto-approved.
+
 ```sh
-# a. Flip the stage's secret -- DEV_EC2_INSTANCE / UAT_EC2_INSTANCE / EC2_INSTANCE -- to the new id.
-# b. Hand over state, from the branch carrying the new pin:
+# Same variables CI would supply, or config.tf.json comes out different (see traps above).
+export AWS_VPC_ID=vpc-...  AWS_SUBNET_BASTION=subnet-...  TF_STAGE=<stage>
+export BASTION_ID=<new>
+eval "$(aws configure export-credentials --format env)"   # if using a profile
+
 nix run --impure -L .#tf-init
 export TF_DATA_DIR=$(pwd)/.terraform          # tf-init sets this only inside its own shell
 terraform state rm 'module.bastion_host.aws_instance.default[0]'   # old instance untouched in AWS
-BASTION_ID=<new> nix run --impure -L .#tf-plan   # expect: 1 to import, 0 to add/change/destroy
-BASTION_ID=<new> nix run --impure -L .#tf-apply  # interactive. NOT tf-apply-now
-# c. Merge. The next CI apply should be a bastion no-op -- that no-op is the confirmation.
+nix run --impure -L .#tf-plan                 # expect: 1 to import, 0 to add/change/destroy
+nix run --impure -L .#tf-apply                # interactive. NOT tf-apply-now
 ```
+
+**6c. CI.** Merge. `main.yml` applies from `main`; expect a bastion no-op, and treat that no-op as
+the confirmation that the config, the state and the secret now agree.
 
 The plan may show `disable_api_termination` going true, and possibly a `user_data` in-place update
 (which stops and starts the instance). **Any `must be replaced` line is a stop-and-fix, not

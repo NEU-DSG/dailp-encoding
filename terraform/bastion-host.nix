@@ -65,7 +65,7 @@ let
     # Do not simply swap the id in: merging that replaces the live bastion on
     # the next auto-approved apply. Stand the new instance up first, per
     # ./docs/sops.md.
-    dev = "ami-0d1c8113ba7b8b12a";
+    dev = "ami-0c2fab8ab93985c9b";
 
     # amzn2-ami-kernel-5.10-hvm-2.0.20220316.0-arm64-gp2 -- Amazon Linux 2,
     # deprecated 2024-03-16, and AL2 reached end of support 2026-06-30.
