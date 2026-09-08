@@ -116,11 +116,17 @@ mutable and has been decoupled from `key_name` since the instances launched. `ss
 bastion's own `authorized_keys` is the only authoritative list of what it currently trusts.
 
 **Do not change `key_name` in `bastion-host.nix` to rotate a key.** EC2 has no API for
-changing an instance's key name, so the attribute forces instance replacement -- and because the
-bastion is `terraform import`ed with `disable_api_termination = true`, that replacement destroys
-first and then fails, aborting the apply. `key_name` is also a single value shared by all three
-stages and the deploy workflow applies with `-auto-approve`, so editing it breaks deploys for every
-stage at once. Leave it recording whatever key the instance launched with.
+changing an instance's key name, so the attribute forces instance replacement -- and the replacement
+**succeeds**, destroying the running bastion. `disable_api_termination = true` does not prevent this:
+the AWS provider clears termination protection before terminating and only warns if that fails (the
+provider binary carries the string `attempting to terminate EC2 Instance (%s) despite error disabling
+API termination`). Treat that attribute as documentation of intent, not as a guardrail -- it stops a
+console misclick, not Terraform. `key_name` is also a single value shared by all three stages and the
+deploy workflow applies with `-auto-approve`, so editing it breaks deploys for every stage at once.
+Leave it recording whatever key the instance launched with.
+
+The same reasoning applies to `ami`, which also forces replacement. See
+[Replacing the bastion AMI](#replacing-the-bastion-ami) below -- do not simply edit the pin.
 
 Rotate by editing `authorized_keys` on the running instance instead. This is drift-free: Terraform
 never manages that file, so `terraform plan` stays clean regardless of which key you use.
@@ -158,6 +164,127 @@ Store the private half in exactly three places: the team password manager (with 
 if CI needs it, and `~/.ssh/` on operator machines at mode `600`. Add and verify a new key before
 removing an old one, and do prod last.
 
+## Replacing the bastion AMI
+
+`bastion-host.nix` pins the AMI to a literal id per stage, on purpose -- the file explains why at
+length. Refreshing that pin, or moving between OS major versions, is an **instance replacement**.
+There is no in-place OS upgrade for Amazon Linux, and nothing here restores what the old instance
+carried.
+
+**Do not do it by editing the pin and letting Terraform replace the instance.** Under
+`-auto-approve` the destroy is unattended and unabortable, and if the create then fails -- wrong
+subnet, no capacity, a root volume smaller than the AMI's snapshot -- the stage is left with no
+bastion at all. In `main.yml` the step immediately after the apply tunnels through the bastion to
+migrate the schema, so that failure takes the release with it. Rolling back is not reliable either:
+the old image may already be deregistered, which is exactly what end-of-life does to an AMI id.
+
+Do it blue/green instead. The repo is already built for this -- [`import.nix`](../import.nix)
+exists to adopt an instance created outside Terraform, and there is nothing else to repoint: no EIP
+(`bastion_ip` is permanently empty), no Route53 record, no load balancer. Access is entirely "which
+instance id does SSM target", i.e. one GitHub secret.
+
+**1. Record what the new instance must match.** An import diff that proposes replacement means one
+of these is wrong, so capture them all first:
+
+```sh
+aws ec2 describe-instances --instance-ids "$BASTION_ID" --query \
+ 'Reservations[].Instances[].{Subnet:SubnetId,Vpc:VpcId,Ami:ImageId,SGs:SecurityGroups[].GroupId,
+   Profile:IamInstanceProfile.Arn,Key:KeyName,Mon:Monitoring.State,Meta:MetadataOptions,
+   Vol:BlockDeviceMappings[].Ebs.VolumeId}'
+aws ec2 describe-volumes --volume-ids <root-vol> \
+  --query 'Volumes[].{Size:Size,Type:VolumeType,Enc:Encrypted}'
+nix run --impure -L .#run-on-bastion -- 'cat ~/.ssh/authorized_keys' > ~/bastion-keys.bak
+```
+
+`root_block_device_encrypted` defaults to `true` in the module and `encrypted` is ForceNew, so the
+new instance **must** launch with an encrypted root volume. Same for `monitoring` (default `true`)
+and the `metadata_options` block.
+
+**2. Confirm `AWS_SUBNET_BASTION` is set and correct.** It must equal the `SubnetId` above. If it is
+empty, `terraform` declares the bastion with no subnet, and a create would land it in the default
+VPC where the security groups from the real VPC fail with `InvalidParameterCombination`.
+`terraform/main.nix` emits a warning in the plan log when it is unset -- do not ignore it.
+
+**3. Resolve the new image and check it against the declared root volume.**
+
+```sh
+AMI=$(aws ssm get-parameter --region us-east-1 \
+  --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64 \
+  --query Parameter.Value --output text)
+aws ec2 describe-images --image-ids "$AMI" --query \
+ 'Images[].{Name:Name,Arch:Architecture,Root:RootDeviceName,Size:BlockDeviceMappings[].Ebs.VolumeSize}'
+```
+
+`Architecture` must be `arm64` (the instance type is `t4g.micro`), and the snapshot size must not
+exceed `root_block_device_volume_size`. Use the standard AMI, not `al2023-ami-minimal-*` -- the
+minimal image omits the AWS CLI that `upload_to_s3.sh` runs on the bastion.
+
+**4. Launch the new instance out of band**, mirroring the module's rendered `aws_instance.default`:
+that AMI, `t4g.micro`, the recorded subnet, both security groups,
+`--iam-instance-profile Name=dailp-<stage>-bastion` (one profile can serve many instances),
+`--key-name dailp-dev-2024`, `--monitoring Enabled=true`,
+`--metadata-options HttpEndpoint=enabled,HttpTokens=required,HttpPutResponseHopLimit=1`,
+`--block-device-mappings 'DeviceName=/dev/xvda,Ebs={VolumeSize=30,Encrypted=true,DeleteOnTermination=true}'`,
+and `--user-data` rendered from
+`.terraform/modules/bastion_host/user_data/amazon-linux.sh` with `ssh_user=ec2-user`,
+`ssm_enabled=true` and an empty `user_data`. Launch *without* termination protection; the import
+apply sets it in place. Use a `Name` tag of `dailp-<stage>-bastion-al2023` while validating -- the
+discovery recipe in this document filters on `dailp-<stage>-bastion`, and two matches will mislead
+the next person.
+
+**5. Validate the new instance while the old one still serves everything.** SSM registration is the
+part most worth proving early: there are no SSM VPC endpoints in this Terraform, so the agent's
+reachability depends on a NAT path nothing here asserts, and an instance that never registers is
+unreachable by any means.
+
+```sh
+export BASTION_ID=<new>
+aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$BASTION_ID" \
+  --query 'InstanceInformationList[].{Ping:PingStatus,Agent:AgentVersion}'   # must be Online
+nix run --impure -L .#run-on-bastion -- 'whoami; . /etc/os-release; echo $PRETTY_NAME; \
+  bash --version | head -1; uname -m; df -h /; command -v aws && aws --version'
+```
+
+Then seed `authorized_keys` from the backup taken in step 1, using the keyless
+`aws ssm start-session` path described above if the launch key does not work, and test
+`copy-to-bastion` separately from `run-on-bastion`.
+
+**6. Cut over.** Keep these back-to-back and announce a freeze on pushes to `main` first: in the
+window where the secret points at the new instance but `main` still holds the old pin, any push
+would plan to replace it under `-auto-approve`. (Only dev is exposed to this -- `main.yml` reaches
+uat and prod solely on release events. `concurrency` does not help; pushes and releases are
+different refs.)
+
+```sh
+# a. Flip the stage's secret -- DEV_EC2_INSTANCE / UAT_EC2_INSTANCE / EC2_INSTANCE -- to the new id.
+# b. Hand over state, from the branch carrying the new pin:
+nix run --impure -L .#tf-init
+export TF_DATA_DIR=$(pwd)/.terraform          # tf-init sets this only inside its own shell
+terraform state rm 'module.bastion_host.aws_instance.default[0]'   # old instance untouched in AWS
+BASTION_ID=<new> nix run --impure -L .#tf-plan   # expect: 1 to import, 0 to add/change/destroy
+BASTION_ID=<new> nix run --impure -L .#tf-apply  # interactive. NOT tf-apply-now
+# c. Merge. The next CI apply should be a bastion no-op -- that no-op is the confirmation.
+```
+
+The plan may show `disable_api_termination` going true, and possibly a `user_data` in-place update
+(which stops and starts the instance). **Any `must be replaced` line is a stop-and-fix, not
+something to approve** -- and backing out costs nothing at this point, because the old instance is
+still running: `terraform state rm` the new one, re-import the old one, restore the secret.
+
+Note that uat's state lives in the **dev** bucket under key `uat-terraform.tfstate`; confirm
+`tf-init` selected the backend you expect before any `state rm`.
+
+**7. Soak, then retire the old instance.** Keep it alive but unmanaged for at least one full backup
+cycle. It still has termination protection and Terraform no longer knows about it, so:
+
+```sh
+aws ec2 modify-instance-attribute --instance-id <old> --no-disable-api-termination
+aws ec2 terminate-instances --instance-ids <old>
+```
+
+Finally, `ssh-keygen -R '[localhost]:2222'` on operator machines -- the new host key otherwise
+produces a mismatch warning that reads like an attack.
+
 ## Verifying Success
 
 - `describe-instance-information` reports `PingStatus: Online`.
@@ -170,7 +297,8 @@ removing an old one, and do prod last.
 ## Known Limitations
 
 - `authorized_keys` is unmanaged mutable state. It survives reboots, but any instance replacement or
-  AMI rebuild loses every key added this way.
+  AMI rebuild loses every key added this way -- including whatever key CI uses, so re-seeding it is
+  a step in [Replacing the bastion AMI](#replacing-the-bastion-ami), not an afterthought.
 - Local ports are fixed (`5432` for the database, `2222` default for SSH). Concurrent runs, or a
   local Postgres already on 5432, will collide.
 - Host key checking is disabled in the flake apps (`StrictHostKeyChecking=no`), which is unavoidable
@@ -179,12 +307,15 @@ removing an old one, and do prod last.
   Anything you run on the bastion that writes to S3 depends on a managed policy attached outside
   Terraform; check with `aws iam list-attached-role-policies --role-name dailp-<stage>-bastion`
   before assuming it will work.
-- The bastion root volume is 8 GiB and not overridden. Check `df -h /home` before copying large
-  backup bundles.
+- The bastion root volume is declared as 30 GiB in `bastion-host.nix`, but an instance launched
+  before that was set may still have an 8 GiB volume, and a volume grown in place still has a
+  filesystem at the old size until `growpart` + `xfs_growfs` runs. `df -h /home` is the only
+  trustworthy answer -- check it before copying large backup bundles rather than reading the
+  Terraform.
 
 ## Reference
 
 - [`runbook.md`](./runbook.md) -- symptoms and fixes when the above fails.
 - [`../flake.nix`](../flake.nix) -- the `copy-to-bastion` / `run-on-bastion` app definitions.
-- [`bastion-host.nix`](./bastion-host.nix) -- the instance definition, including the `key_name` warning above.
+- [`bastion-host.nix`](../bastion-host.nix) -- the instance definition, including the `key_name` warning above and the rationale for pinning the AMI by id.
 - [`../scripts/SOPs.md`](../scripts/SOPs.md) -- the database backup procedures these connections exist to serve.

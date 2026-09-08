@@ -16,7 +16,20 @@ gets recovered.
   open the SSM tunnel that puts it on `localhost:5432`.
 - Write permissions on the local filesystem destination (defaults to `./backups/`).
 - `bash`, `pg_dump`, and `psql` on `PATH` -- all provided automatically inside the project's `nix
-  develop` shell.
+  develop` shell. Two version floors matter, and both bite from inside a script rather than at
+  startup, so check them explicitly when running anywhere other than the dev shell:
+  - **bash >= 4.3.** Every script here uses `local -n` namerefs (`create_logfile`,
+    `resolve_pg_target`, `upload_objects`), which bash added in 4.3. Older bash fails with
+    `local: -n: invalid option`, naming neither the database nor the script that broke.
+  - **A Postgres client >= 14**, matching the RDS engine version -- `pg_dump` refuses to dump a
+    server newer than itself. Both binaries are needed: `pg_dump_backup.sh` uses `pg_dump`,
+    `export_db_to_csv.sh` uses `psql`.
+
+  On a bastion host these come from the OS, not from nix. Amazon Linux 2023 satisfies both (bash
+  5.2; `sudo dnf install -y postgresql15`). Amazon Linux 2 satisfies **neither** -- it ships bash
+  4.2 with no newer build in its repos, which is why these scripts cannot run there at all. If you
+  hit that, see "Replacing the bastion AMI" in
+  [`../terraform/docs/sops.md`](../terraform/docs/sops.md).
 - `DATABASE_URL` and `DATABASE_PASSWORD` set in the environment. Local dev values live in the
   repo's `.env` (loaded automatically by the `nix develop` shell hook). For any non-local
   environment, these must come from that environment's secrets store.

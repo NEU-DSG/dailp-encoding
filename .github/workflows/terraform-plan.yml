@@ -13,11 +13,31 @@ jobs:
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      # No per-stage selection here: this job resolves to a single stage whose
+      # environment scopes the secret (cf. main.yml, where uat shares dev's
+      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
+      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
+      # terraform/import.nix renders the bastion's import block from this, so
+      # without it PR plans carry `import { id = "" }` and cannot show a bastion
+      # diff at all -- which makes this job useless as the review gate for any
+      # change to terraform/bastion-host.nix.
+      #
+      # NOTE: this job declares no `environment:`, unlike every other workflow
+      # here, so only *repository*-level secrets resolve. If DEV_EC2_INSTANCE is
+      # scoped to the Development environment this silently expands to "" and
+      # nothing improves. Verify with the AWS_SUBNET_BASTION warning that
+      # terraform/main.nix now emits in the plan log; if it fires, either
+      # promote these to repository secrets or add `environment: Development` to
+      # this job (check that environment's protection rules first -- required
+      # reviewers would start gating every PR).
+      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

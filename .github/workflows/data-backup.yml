@@ -18,6 +18,12 @@ jobs:
       AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      # No per-stage selection here: this job resolves to a single stage whose
+      # environment scopes the secret (cf. main.yml, where uat shares dev's
+      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
+      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
@@ -377,6 +383,21 @@ jobs:
 
             pg_dump --version
             psql --version
+
+            # 3. The AWS CLI, checked here rather than discovered by the upload
+            #    step 40 minutes into a backup. The standard Amazon Linux AMIs
+            #    ship it (v1 on AL2, v2 on AL2023) but the al2023-ami-minimal-*
+            #    images do not, and upload_to_s3.sh runs `aws` on the bastion.
+            #    Not installed automatically: on a host where it is missing, the
+            #    AMI is wrong and that is worth surfacing rather than papering
+            #    over -- see terraform/bastion-host.nix.
+            if ! command -v aws >/dev/null 2>&1; then
+              echo "No aws CLI on the bastion; upload_to_s3.sh cannot run." >&2
+              echo "The standard AL2023 AMI includes it -- a minimal AMI does" >&2
+              echo "not. Check the ami pin in terraform/bastion-host.nix." >&2
+              exit 1
+            fi
+            aws --version
           '
       - name: Run database backups on bastion
         # Both halves of the complete backup that scripts/SOPs.md defines, run in

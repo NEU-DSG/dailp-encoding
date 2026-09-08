@@ -57,13 +57,24 @@ in {
       bucket = prefixName "terraform-state-bucket";
       table = prefixName "terraform-state-locks";
     };
-    vpc = getEnv "AWS_VPC_ID";
+    # getEnv returns "" for anything unset, which terraform then cannot
+    # distinguish from "not configured" for Optional+Computed attributes like
+    # aws_instance.subnet_id -- so a missing variable produces a clean plan
+    # against an existing resource and a wrong-VPC launch against a new one.
+    # Warn rather than throw: `nix build --impure` and a local tf-init are both
+    # run without these today, and terranix does not evaluate module-system
+    # `assertions`, so a hard failure would be hostile and easy to regress.
+    vpc = lib.warnIf (getEnv "AWS_VPC_ID" == "")
+      "AWS_VPC_ID is unset; vpc_id will be empty. Set it in the workflow env / your .env."
+      (getEnv "AWS_VPC_ID");
     subnets = {
       primary = getEnv "AWS_SUBNET_PRIMARY";
       secondary = getEnv "AWS_SUBNET_SECONDARY0";
       tertiary = getEnv "AWS_SUBNET_SECONDARY1";
     };
-    bastion_subnet = getEnv "AWS_SUBNET_BASTION";
+    bastion_subnet = lib.warnIf (getEnv "AWS_SUBNET_BASTION" == "")
+      "AWS_SUBNET_BASTION is unset; the bastion's subnet_id will be empty. Set it in the workflow env / your .env before any change that could replace the instance -- see terraform/docs/sops.md."
+      (getEnv "AWS_SUBNET_BASTION");
   };
 
   functions = 
