@@ -1,3 +1,5 @@
+use crate::Database;
+use async_graphql::{dataloader::DataLoader, Context, FieldResult};
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 
@@ -31,8 +33,24 @@ pub struct Folder {
     pub size_bytes: i64,
 }
 
+/// A resized copy of an image, so a page can serve the smallest file a device
+/// actually needs.
+#[derive(Debug, Clone, async_graphql::SimpleObject, async_graphql::InputObject)]
+#[graphql(input_name = "ImageVariantInput")]
+pub struct ImageVariant {
+    /// Pixel width of this copy
+    pub width: i32,
+    /// Pixel height of this copy
+    pub height: i32,
+    /// URL that this copy's bytes are served from
+    pub s3_url: String,
+    /// MIME type of this copy
+    pub mime_type: String,
+}
+
 /// An image in the shared asset library, pointing at an object in S3.
 #[derive(Debug, Clone, async_graphql::SimpleObject)]
+#[graphql(complex)]
 pub struct Image {
     /// UUID for the image
     pub id: Uuid,
@@ -62,6 +80,20 @@ pub struct Image {
     pub s3_url: String,
     /// Where this image is meant to be used
     pub scope: ImageScope,
+}
+
+#[async_graphql::ComplexObject]
+impl Image {
+    /// Resized copies of this image, smallest first. Empty for GIFs and for
+    /// images already narrower than the smallest copy, so callers must fall
+    /// back to `s3Url`.
+    async fn variants(&self, context: &Context<'_>) -> FieldResult<Vec<ImageVariant>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::VariantsForImage(self.id))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Everything directly inside a single folder (one level) like the unix `ls` command.
@@ -118,4 +150,6 @@ pub struct NewImage {
     pub s3_url: String,
     /// Where this image is meant to be used
     pub scope: ImageScope,
+    /// Resized copies uploaded alongside the original, smallest first
+    pub variants: Vec<ImageVariant>,
 }

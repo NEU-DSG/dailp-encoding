@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Resized copies of many images at once, for the DataLoader that backs\n-- `Image.variants`. Batching keeps a folder listing to one query instead of one\n-- per image. Ordered smallest first: the picker uses the first as its thumbnail.\nselect image_id, width, height, s3_url, mime_type\nfrom image_variant\nwhere image_id = any($1::uuid[])\norder by image_id, width;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "image_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "width",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "height",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "s3_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "mime_type",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "127fc8d9dfb2364ddd26ad187cdcddefb1b50d6ee13ab01eebb46f6f238a14d9"
+}

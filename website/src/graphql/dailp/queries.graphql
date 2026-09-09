@@ -850,6 +850,12 @@ fragment ImageFields on Image {
   caption
   s3Url
   scope
+  variants {
+    width
+    height
+    s3Url
+    mimeType
+  }
 }
 
 query FolderContents($path: String!) {

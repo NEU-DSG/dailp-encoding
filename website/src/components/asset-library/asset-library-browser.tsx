@@ -1,23 +1,25 @@
 import React from "react"
-import type * as Dailp from "src/graphql/dailp"
+import type { CombinedError } from "urql"
 import { AssetGrid } from "./asset-grid"
 import * as css from "./asset-library.css"
 import { AssetList } from "./asset-list"
-import type { Selection, ViewMode } from "./types"
-import { useLibraryContents } from "./use-library-contents"
+import type { AssetSectionProps } from "./section-props"
+import type { ViewMode } from "./types"
 
-interface AssetLibraryBrowserProps {
-  path: string
+interface AssetLibraryBrowserProps extends AssetSectionProps {
   viewMode: ViewMode
-  selected: Selection | null
-  onSelect: (selection: Selection) => void
-  onOpenFolder: (folderPath: string) => void
-  onInsertImage: (image: Dailp.ImageFieldsFragment) => void
+  fetching: boolean
+  error?: CombinedError
 }
 
-// Lists one folder's contents in the current view mode.
+/**
+ * Lists one folder's contents in the current view mode.
+ *
+ * The query itself lives in the modal, which needs its `refetch` to refresh the
+ * listing as uploads complete.
+ */
 export const AssetLibraryBrowser = (p: AssetLibraryBrowserProps) => {
-  const { folders, images, fetching, error } = useLibraryContents(p.path)
+  const { folders, images, fetching, error } = p
 
   let content: React.ReactNode
 

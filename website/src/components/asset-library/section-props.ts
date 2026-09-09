@@ -11,6 +11,6 @@ export interface AssetSectionProps {
   images: readonly Dailp.ImageFieldsFragment[]
   selected: Selection | null
   onSelect: (selection: Selection) => void
-  onOpenFolder: (folderPath: string) => void
+  onOpenFolder: (folder: Dailp.FolderFieldsFragment) => void
   onInsertImage: (image: Dailp.ImageFieldsFragment) => void
 }

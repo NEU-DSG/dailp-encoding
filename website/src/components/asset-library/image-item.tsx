@@ -8,19 +8,20 @@ interface ImageItemProps {
   image: Dailp.ImageFieldsFragment
   selected: boolean
   onSelect: () => void
-  // Primary action: insert this image into the page being edited.
   onInsert: () => void
 }
 
 /**
- * Image-specific presentation, shared by both layouts -- thumbnail source,
+ * Image-specific presentation, shared by both layouts - thumbnail source,
  * accessible label, and the metadata columns.
  */
 export function useImageDisplay(image: Dailp.ImageFieldsFragment) {
   return {
     label: image.filename,
     alt: image.altText || image.filename,
-    thumbnailSrc: image.s3Url,
+    // Smallest variant, so browsing a folder of photos does not download every
+    // full-size original.
+    thumbnailSrc: image.variants[0]?.s3Url ?? image.s3Url,
     type: formatMimeType(image.mimeType),
     size: formatBytes(image.sizeBytes),
     dimensions: `${image.width} × ${image.height}`,

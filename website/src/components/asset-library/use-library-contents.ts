@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import * as Dailp from "src/graphql/dailp"
 
 /**
@@ -15,11 +15,18 @@ import * as Dailp from "src/graphql/dailp"
  * into a page. A trash toggle would also plug in here later.
  */
 export function useLibraryContents(path: string) {
-  const [{ data, fetching, error }] = Dailp.useFolderContentsQuery({
+  const [{ data, fetching, error }, reexecute] = Dailp.useFolderContentsQuery({
     variables: { path },
   })
 
   const contents = data?.folderContents
+
+  // Uploads add rows the cache cannot know about, so the listing is re-fetched
+  // from the network rather than served from cache.
+  const refetch = useCallback(
+    () => reexecute({ requestPolicy: "network-only" }),
+    [reexecute]
+  )
 
   return useMemo(
     () => ({
@@ -28,7 +35,8 @@ export function useLibraryContents(path: string) {
       images: (contents?.images ?? []).filter((i) => !i.deletedAt),
       fetching,
       error,
+      refetch,
     }),
-    [contents, fetching, error]
+    [contents, fetching, error, refetch]
   )
 }

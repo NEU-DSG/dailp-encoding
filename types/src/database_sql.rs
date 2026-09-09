@@ -10,7 +10,9 @@ use std::ptr::null;
 use std::str::FromStr;
 use user::UserUpdate;
 
-use crate::asset_library::{Folder, FolderContents, Image, ImageScope, NewImage, TrashContents};
+use crate::asset_library::{
+    Folder, FolderContents, Image, ImageScope, ImageVariant, NewImage, TrashContents,
+};
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
@@ -812,7 +814,9 @@ impl Database {
     /// Record an image that has already been uploaded to S3. `folder_id` of `None`
     /// places it at the root. `uploaded_by` is the acting user, when known.
     pub async fn insert_image(&self, image: NewImage, uploaded_by: Option<Uuid>) -> Result<Image> {
-        Ok(query_file_as!(
+        let mut tx = self.client.begin().await?;
+
+        let inserted = query_file_as!(
             Image,
             "queries/insert_image.sql",
             image.folder_id,
@@ -827,8 +831,27 @@ impl Database {
             image.scope as _,
             uploaded_by
         )
-        .fetch_one(&self.client)
-        .await?)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Written in the same transaction as the image itself: a row whose
+        // variants failed to record would advertise sizes that do not exist,
+        // and every URL in a srcset must resolve.
+        for variant in &image.variants {
+            query_file!(
+                "queries/insert_image_variant.sql",
+                inserted.id,
+                variant.width,
+                variant.height,
+                variant.s3_url,
+                variant.mime_type
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(inserted)
     }
 
     /// Rename an image.
@@ -3396,6 +3419,36 @@ impl Loader<ContributorsForDocument> for Database {
 }
 
 #[async_trait]
+impl Loader<VariantsForImage> for Database {
+    type Value = Vec<ImageVariant>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[VariantsForImage],
+    ) -> Result<HashMap<VariantsForImage, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/variants_for_images.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| {
+                (
+                    VariantsForImage(x.image_id),
+                    ImageVariant {
+                        width: x.width,
+                        height: x.height,
+                        s3_url: x.s3_url,
+                        mime_type: x.mime_type,
+                    },
+                )
+            })
+            .into_group_map())
+    }
+}
+
+#[async_trait]
 impl Loader<PersonFullName> for Database {
     type Value = ContributorDetails;
     type Error = Arc<sqlx::Error>;
@@ -3810,6 +3863,9 @@ pub struct PersonFullName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ContributorsForDocument(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct VariantsForImage(pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct BookmarkedOn(pub Uuid, pub Uuid);

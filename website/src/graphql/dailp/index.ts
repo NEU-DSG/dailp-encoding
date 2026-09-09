@@ -819,6 +819,12 @@ export type Image = {
   readonly sizeBytes: Scalars["Int"]
   /** User who uploaded this image, if known */
   readonly uploadedBy: Maybe<Scalars["UUID"]>
+  /**
+   * Resized copies of this image, smallest first. Empty for GIFs and for
+   * images already narrower than the smallest copy, so callers must fall
+   * back to `s3Url`.
+   */
+  readonly variants: ReadonlyArray<ImageVariant>
   /** Pixel width of the image */
   readonly width: Scalars["Int"]
 }
@@ -833,6 +839,37 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/**
+ * A resized copy of an image, so a page can serve the smallest file a device
+ * actually needs.
+ */
+export type ImageVariant = {
+  readonly __typename?: "ImageVariant"
+  /** Pixel height of this copy */
+  readonly height: Scalars["Int"]
+  /** MIME type of this copy */
+  readonly mimeType: Scalars["String"]
+  /** URL that this copy's bytes are served from */
+  readonly s3Url: Scalars["String"]
+  /** Pixel width of this copy */
+  readonly width: Scalars["Int"]
+}
+
+/**
+ * A resized copy of an image, so a page can serve the smallest file a device
+ * actually needs.
+ */
+export type ImageVariantInput = {
+  /** Pixel height of this copy */
+  readonly height: Scalars["Int"]
+  /** MIME type of this copy */
+  readonly mimeType: Scalars["String"]
+  /** URL that this copy's bytes are served from */
+  readonly s3Url: Scalars["String"]
+  /** Pixel width of this copy */
+  readonly width: Scalars["Int"]
 }
 
 /** Record to store a keyword associated with a document */
@@ -1232,6 +1269,8 @@ export type NewImage = {
   readonly scope: ImageScope
   /** Size of the underlying object, in bytes */
   readonly sizeBytes: Scalars["Int"]
+  /** Resized copies uploaded alongside the original, smallest first */
+  readonly variants: ReadonlyArray<ImageVariantInput>
   /** Pixel width of the image */
   readonly width: Scalars["Int"]
 }
@@ -3738,7 +3777,14 @@ export type ImageFieldsFragment = { readonly __typename?: "Image" } & Pick<
   | "caption"
   | "s3Url"
   | "scope"
->
+> & {
+    readonly variants: ReadonlyArray<
+      { readonly __typename?: "ImageVariant" } & Pick<
+        ImageVariant,
+        "width" | "height" | "s3Url" | "mimeType"
+      >
+    >
+  }
 
 export type FolderContentsQueryVariables = Exact<{
   path: Scalars["String"]
@@ -3775,7 +3821,14 @@ export type FolderContentsQuery = { readonly __typename?: "Query" } & {
         | "caption"
         | "s3Url"
         | "scope"
-      >
+      > & {
+          readonly variants: ReadonlyArray<
+            { readonly __typename?: "ImageVariant" } & Pick<
+              ImageVariant,
+              "width" | "height" | "s3Url" | "mimeType"
+            >
+          >
+        }
     >
   }
 }
@@ -3832,7 +3885,14 @@ export type ListTrashQuery = { readonly __typename?: "Query" } & {
         | "caption"
         | "s3Url"
         | "scope"
-      >
+      > & {
+          readonly variants: ReadonlyArray<
+            { readonly __typename?: "ImageVariant" } & Pick<
+              ImageVariant,
+              "width" | "height" | "s3Url" | "mimeType"
+            >
+          >
+        }
     >
   }
 }
@@ -3876,7 +3936,14 @@ export type CreateImageMutation = { readonly __typename?: "Mutation" } & {
     | "caption"
     | "s3Url"
     | "scope"
-  >
+  > & {
+      readonly variants: ReadonlyArray<
+        { readonly __typename?: "ImageVariant" } & Pick<
+          ImageVariant,
+          "width" | "height" | "s3Url" | "mimeType"
+        >
+      >
+    }
 }
 
 export type RenameFolderMutationVariables = Exact<{
@@ -3919,7 +3986,14 @@ export type RenameImageMutation = { readonly __typename?: "Mutation" } & {
     | "caption"
     | "s3Url"
     | "scope"
-  >
+  > & {
+      readonly variants: ReadonlyArray<
+        { readonly __typename?: "ImageVariant" } & Pick<
+          ImageVariant,
+          "width" | "height" | "s3Url" | "mimeType"
+        >
+      >
+    }
 }
 
 export type MoveFolderMutationVariables = Exact<{
@@ -3962,7 +4036,14 @@ export type MoveImageMutation = { readonly __typename?: "Mutation" } & {
     | "caption"
     | "s3Url"
     | "scope"
-  >
+  > & {
+      readonly variants: ReadonlyArray<
+        { readonly __typename?: "ImageVariant" } & Pick<
+          ImageVariant,
+          "width" | "height" | "s3Url" | "mimeType"
+        >
+      >
+    }
 }
 
 export type DeleteFolderMutationVariables = Exact<{
@@ -4003,7 +4084,14 @@ export type DeleteImageMutation = { readonly __typename?: "Mutation" } & {
     | "caption"
     | "s3Url"
     | "scope"
-  >
+  > & {
+      readonly variants: ReadonlyArray<
+        { readonly __typename?: "ImageVariant" } & Pick<
+          ImageVariant,
+          "width" | "height" | "s3Url" | "mimeType"
+        >
+      >
+    }
 }
 
 export const AudioSliceFieldsFragmentDoc = gql`
@@ -4249,6 +4337,12 @@ export const ImageFieldsFragmentDoc = gql`
     caption
     s3Url
     scope
+    variants {
+      width
+      height
+      s3Url
+      mimeType
+    }
   }
 `
 export const CollectionsListingDocument = gql`

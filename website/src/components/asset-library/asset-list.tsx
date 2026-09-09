@@ -29,7 +29,7 @@ export const AssetList = (p: AssetSectionProps) => (
             p.selected?.kind === "folder" && p.selected.folder.id === folder.id
           }
           onSelect={() => p.onSelect({ kind: "folder", folder })}
-          onOpen={() => p.onOpenFolder(folder.path)}
+          onOpen={() => p.onOpenFolder(folder)}
         />
       ))}
       {p.images.map((image) => (

@@ -51,6 +51,51 @@ The listing queries return soft-deleted rows on purpose and leave filtering to t
 
 Soft-deleted rows fall outside both, so deleting an image frees its filename for reuse.
 
+## `image_variant`
+
+Resized copies of an image, so a page can serve the smallest file a device actually needs.
+The original is not stored here: it already sits on `images`, and it is always the largest candidate in the set.
+
+| column      | type             | description                           |
+| ----------- | ---------------- | ------------------------------------- |
+| `image_id`  | `uuid -> images` | Image this is a copy of               |
+| `width`     | `integer`        | Pixel width of this copy              |
+| `height`    | `integer`        | Pixel height of this copy             |
+| `s3_url`    | `text`           | URL this copy's bytes are served from |
+| `mime_type` | `text`           | Media type of this copy               |
+
+Rows are uniquely identified by the combination of `image_id` and `width`, so an image cannot hold two copies at the same width.
+The foreign key cascades on delete, so hard-deleting an image drops its copies with it.
+Copies carry no `deleted_at` of their own and follow the soft-deletion state of the image they belong to.
+
+## Which images get copies
+
+Copies are generated in the browser during upload, at 400, 800 and 1600 pixels wide, and only at widths narrower than the image itself.
+
+Two kinds of image get none:
+
+- **Images narrower than 400px**, already smaller than the smallest copy would be.
+- **GIFs**, which are never re-encoded at all.
+
+No image is guaranteed to have copies, so anything reading these rows must handle an empty set by falling back to `images.s3_url`.
+
+## How GIFs are handled
+
+A browser canvas cannot write GIF.
+Asked for one, `toBlob` silently substitutes PNG, and a canvas round-trip keeps only the frame it drew, flattening any animation.
+There is no way to resize a GIF, strip anything from it, or copy it and have the result still be a GIF.
+
+So a GIF takes one of two paths, whether or not it animates:
+
+| uploaded       | outcome                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| Over 4000px    | Rejected, asking the editor to resize it and upload again          |
+| Within the cap | Stored byte-identical to the file the editor chose, with no copies |
+
+Rejecting rather than converting is deliberate.
+Converting would silently turn an editor's `logo.gif` into a `logo.png`, and for an animated GIF it would destroy the animation outright. Using silently converted PNG copies would also cause the GIFs to be still which could confuse users.
+Nothing is lost by never re-encoding: GIF has no EXIF block to strip, only comment and application extensions.
+
 ## `page_image_reference`
 
 A join table recording that a content page refers to an image from the library.

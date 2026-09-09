@@ -57,6 +57,18 @@ create unique index images_live_root_name
   on images (filename)
   where deleted_at is null and folder_id is null;
 
+-- Resized copies of an image, generated at upload time so a page can serve the
+-- smallest file a device actually needs. The original is not stored here: it
+-- already sits on `images`, and it is always the largest candidate.
+create table image_variant (
+  image_id  uuid not null references images (id) on delete cascade,
+  width     integer not null,
+  height    integer not null,
+  s3_url    text not null,
+  mime_type text not null,
+  primary key (image_id, width)
+);
+
 -- Which images a content page refers to.
 create table page_image_reference (
   page_id     uuid not null references page (page_id) on delete cascade,

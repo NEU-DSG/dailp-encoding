@@ -1103,6 +1103,12 @@ type Image {
 	Where this image is meant to be used
 	"""
 	scope: ImageScope!
+	"""
+	Resized copies of this image, smallest first. Empty for GIFs and for
+	images already narrower than the smallest copy, so callers must fall
+	back to `s3Url`.
+	"""
+	variants: [ImageVariant!]!
 }
 
 """
@@ -1118,6 +1124,52 @@ type ImageSource {
 	Base URL for the IIIF server
 	"""
 	url: String!
+}
+
+"""
+A resized copy of an image, so a page can serve the smallest file a device
+actually needs.
+"""
+type ImageVariant {
+	"""
+	Pixel width of this copy
+	"""
+	width: Int!
+	"""
+	Pixel height of this copy
+	"""
+	height: Int!
+	"""
+	URL that this copy's bytes are served from
+	"""
+	s3Url: String!
+	"""
+	MIME type of this copy
+	"""
+	mimeType: String!
+}
+
+"""
+A resized copy of an image, so a page can serve the smallest file a device
+actually needs.
+"""
+input ImageVariantInput {
+	"""
+	Pixel width of this copy
+	"""
+	width: Int!
+	"""
+	Pixel height of this copy
+	"""
+	height: Int!
+	"""
+	URL that this copy's bytes are served from
+	"""
+	s3Url: String!
+	"""
+	MIME type of this copy
+	"""
+	mimeType: String!
 }
 
 
@@ -1533,6 +1585,10 @@ input NewImage {
 	Where this image is meant to be used
 	"""
 	scope: ImageScope!
+	"""
+	Resized copies uploaded alongside the original, smallest first
+	"""
+	variants: [ImageVariantInput!]!
 }
 
 """

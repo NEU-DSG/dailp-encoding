@@ -280,6 +280,53 @@ export const listMetaCell = style({
   fontSize: fontSize.small,
 })
 
+// --- Upload panel ----------------------------------------------------------
+
+export const uploadPanel = style({
+  borderBottom: border,
+  padding: `${vspace.quarter} ${hspace.edge}`,
+  backgroundColor: colors.bodyDark,
+  maxHeight: "9rem",
+  overflowY: "auto",
+})
+
+export const uploadHeader = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: hspace.halfEdge,
+  marginBottom: vspace.eighth,
+})
+
+export const uploadRow = style({
+  display: "flex",
+  alignItems: "center",
+  gap: hspace.halfEdge,
+  padding: `2px 0`,
+  fontFamily: fonts.body,
+  fontSize: fontSize.small,
+})
+
+export const uploadName = style({
+  flex: 1,
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+})
+
+export const dismissButton = style({
+  display: "flex",
+  alignItems: "center",
+  flexShrink: 0,
+  color: colors.text,
+})
+
+export const uploadStatus = styleVariants({
+  normal: [{ flexShrink: 0, color: colors.text }],
+  error: [{ flexShrink: 0, color: "#b3261e", whiteSpace: "normal" }],
+})
+
 // --- Side panel (stub) -----------------------------------------------------
 
 export const sidePanel = style({

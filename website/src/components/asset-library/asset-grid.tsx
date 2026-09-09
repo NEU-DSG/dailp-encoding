@@ -23,7 +23,7 @@ export const AssetGrid = (p: AssetSectionProps) => (
                 p.selected.folder.id === folder.id
               }
               onSelect={() => p.onSelect({ kind: "folder", folder })}
-              onOpen={() => p.onOpenFolder(folder.path)}
+              onOpen={() => p.onOpenFolder(folder)}
             />
           ))}
         </div>
