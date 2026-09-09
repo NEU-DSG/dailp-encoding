@@ -28,6 +28,7 @@ use dailp::{
 use log::{info, warn};
 use serde::Serialize;
 
+use crate::attachment_failures::{AttachmentFailure, AttachmentKind};
 use crate::checksum::sha256_hex;
 
 /// Generates a full backup bundle for every collection in `collections` into a fresh,
@@ -86,11 +87,15 @@ use crate::checksum::sha256_hex;
 /// only a subset.
 ///
 /// `output_root` is the directory that run directories are created under, already resolved
-/// by the caller (see `crate::backup_paths`).
+/// by the caller (see `crate::backup_paths`). `logs_dir` is where this run's attachment
+/// failure report is written (see [`logs_dir`] and [`crate::attachment_failures`]) --
+/// deliberately not under `output_root`'s run directory, so the report never becomes part
+/// of the bundle it describes.
 pub async fn generate_mets_bundle(
     db: &Database,
     collections: &[EditedCollection],
     output_root: &Path,
+    logs_dir: &Path,
 ) -> Result<()> {
     info!(
         "Generating METS backups for {} collection(s)",
@@ -101,7 +106,7 @@ pub async fn generate_mets_bundle(
     let created_at = now.format(CREATEDATE_FORMAT).to_string();
     let file_timestamp = now.format(FILENAME_TIMESTAMP_FORMAT).to_string();
 
-    let cf_url = std::env::var("CF_URL").context(
+    let cf_url = normalize_cf_url(&std::env::var("CF_URL").context(
         "CF_URL must be set to generate METS backups (used for cloud backup file locations)",
     )?);
     // The single location every "cloud backup" fileGrp in this run points at: the one
@@ -178,14 +183,14 @@ pub async fn generate_mets_bundle(
     let editorial_dir = run_root.join("editorial");
     let collections_editorial_dir = collections_dir.join("editorial");
     let images_dir = run_root.join("images");
-    for dir in [
-        &collections_dir,
-        &documents_dir,
-        &audio_dir,
-        &editorial_dir,
-        &collections_editorial_dir,
-        &images_dir,
-    ] {
+    // Only the two directories this function is about to write into unconditionally. The
+    // media/editorial directories are created by whatever first puts a file in them
+    // (`images::download_page_images`, `audio_backup`, `crate::editorial`), so a run with
+    // no images, no audio or no editorial content doesn't ship empty folders -- `zip -r`
+    // records an empty directory as a bundle entry, and an empty `images/` in a backup
+    // reads as "this run found no manuscript images", which is a different claim from
+    // "this run had none to find". `prune_empty_dirs` below is the backstop.
+    for dir in [&run_root, &collections_dir, &documents_dir] {
         std::fs::create_dir_all(dir)
             .with_context(|| format!("Failed to create directory {}", dir.display()))?;
     }
@@ -221,11 +226,13 @@ pub async fn generate_mets_bundle(
         .build()
         .context("Failed to build the HTTP client for image/audio downloads")?;
 
-    // Every audio download failure this run, document-level and per-word alike --
-    // already logged as its own `warn!` where it happens, collected here too so
-    // they can *also* appear in one impossible-to-miss summary at the very end,
-    // instead of only among however many other lines this run logs.
-    let mut audio_failures: Vec<String> = Vec::new();
+    // Every attachment this run failed to download -- document audio, word audio and page
+    // images alike. Each was already logged as its own `warn!` where it happened;
+    // collected here so they can *also* appear in one impossible-to-miss summary at the
+    // very end, instead of only among however many other lines this run logs, and so the
+    // backup workflow can read them as structured data rather than parsing that log (see
+    // `crate::attachment_failures`).
+    let mut attachment_failures: Vec<AttachmentFailure> = Vec::new();
 
     // Confirm no two documents in this run want the same filename or the same `xml:id`
     // before any of them are written (or, more expensively, before their audio is
@@ -244,7 +251,7 @@ pub async fn generate_mets_bundle(
     for (&id, doc) in &documents_by_id {
         let entry = build_document_entry(&http_client, doc, &audio_dir).await;
         if let Some(failure) = &entry.audio_download_failure {
-            audio_failures.push(failure.clone());
+            attachment_failures.push(failure.clone());
         }
         document_entries.insert(id, entry);
     }
@@ -286,7 +293,7 @@ pub async fn generate_mets_bundle(
         cloud_backup_url: cloud_backup_url.clone(),
         dailp_base_url: dailp_base_url.clone(),
         collections: collection_refs.clone(),
-        site_pages: editorial_page_refs(&site_pages, &dailp_base_url, &cf_url),
+        site_pages: editorial_page_refs(&site_pages, &dailp_base_url),
     };
     let manifest_xml = render_manifest_mets(&manifest_ctx)?;
     // Computed before writing (from the same `String` about to be written) rather than
@@ -329,7 +336,7 @@ pub async fn generate_mets_bundle(
 
     let document_run_ctx = DocumentRunContext {
         created_at,
-        cf_url,
+        cloud_backup_url,
         dailp_base_url,
         manifest_filename,
         manifest_checksum,
@@ -364,7 +371,7 @@ pub async fn generate_mets_bundle(
         if let Some(validation_entry) = rendered.validation_entry {
             tei_validation_entries.push(validation_entry);
         }
-        audio_failures.extend(rendered.audio_failures);
+        attachment_failures.extend(rendered.attachment_failures);
     }
 
     // Read each collection's just-written METS file back off disk and confirm every
@@ -383,6 +390,10 @@ pub async fn generate_mets_bundle(
     // the whole bundle, not once per collection.
     validate_tei_bundle(&document_run_ctx.documents_dir, &tei_validation_entries)?;
 
+    // Last thing to touch the bundle, after every writer has had its chance to fill a
+    // directory it created. See `prune_empty_dirs`.
+    prune_empty_dirs(&run_root)?;
+
     info!(
         "Finished generating METS backups in {}: 1 manifest file + {} collection file(s) + {} unique document file(s)",
         run_root.display(),
@@ -393,24 +404,95 @@ pub async fn generate_mets_bundle(
     // Every individual failure above was already logged as its own `warn!` when it
     // happened; this one final summary exists so none of them can get lost among
     // however many other lines (mostly `info!`) this run produced -- see
-    // `CollectionDocumentEntry.audio_download_failure`/`RenderedDocument.audio_failures`.
-    if !audio_failures.is_empty() {
+    // `CollectionDocumentEntry.audio_download_failure`/
+    // `RenderedDocument.attachment_failures`.
+    if !attachment_failures.is_empty() {
         warn!(
-            "{} audio download failure(s) this run (each falls back to no audio; see \
-             warnings above for detail):\n  - {}",
-            audio_failures.len(),
-            audio_failures.join("\n  - ")
+            "{} attachment download failure(s) this run (each is omitted from the bundle; \
+             see warnings above for detail):\n  - {}",
+            attachment_failures.len(),
+            attachment_failures
+                .iter()
+                .map(AttachmentFailure::summary_line)
+                .collect::<Vec<_>>()
+                .join("\n  - ")
         );
     }
 
+    // Written unconditionally, next to this run's logfile rather than inside the bundle:
+    // the backup workflow reads it to build the "Attachments backup: failure" table in
+    // the run summary, and needs to tell "nothing failed" apart from "the export died
+    // before it could say".
+    let report_path =
+        crate::attachment_failures::write_report(&attachment_failures, logs_dir, &file_timestamp)?;
+    info!(
+        "Wrote attachment failure report to {}",
+        report_path.display()
+    );
+
     Ok(())
+}
+
+/// Removes every empty directory under `root`, deepest first, leaving `root` itself in
+/// place even if the run produced nothing.
+///
+/// A backstop, not the primary mechanism: each writer in this crate now creates its own
+/// directory at its first actual write (see the note where the run directories are set up).
+/// This catches the cases that can't be handled there -- a directory whose every intended
+/// file failed to download, and any future write site that forgets the convention --
+/// because `zip -r`, which the backup workflow uses to build the archive, records an empty
+/// directory as a real entry in it.
+fn prune_empty_dirs(root: &Path) -> Result<()> {
+    for child in child_dirs(root)? {
+        prune_dir_if_empty(&child)?;
+    }
+    Ok(())
+}
+
+/// Prunes `dir`'s empty descendants, then `dir` itself if that left it empty.
+fn prune_dir_if_empty(dir: &Path) -> Result<()> {
+    // Depth-first, children before parents, so a directory that held nothing but empty
+    // directories is itself empty by the time it's considered.
+    for child in child_dirs(dir)? {
+        prune_dir_if_empty(&child)?;
+    }
+
+    if std::fs::read_dir(dir)
+        .with_context(|| format!("Failed to read directory {}", dir.display()))?
+        .next()
+        .is_none()
+    {
+        std::fs::remove_dir(dir)
+            .with_context(|| format!("Failed to remove empty directory {}", dir.display()))?;
+        info!("Removed empty directory {}", dir.display());
+    }
+
+    Ok(())
+}
+
+/// Immediate subdirectories of `dir`, collected eagerly so the directory handle is closed
+/// before anything below starts removing entries out from under it.
+fn child_dirs(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut dirs = Vec::new();
+    for entry in std::fs::read_dir(dir)
+        .with_context(|| format!("Failed to read directory {}", dir.display()))?
+    {
+        let entry =
+            entry.with_context(|| format!("Failed to read an entry in {}", dir.display()))?;
+        if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+            dirs.push(entry.path());
+        }
+    }
+    Ok(dirs)
 }
 
 /// Values shared by every collection rendered in one run, bundled together so
 /// [`render_one_collection`] doesn't need a long parameter list of its own.
 struct CollectionRunContext {
     created_at: String,
-    cf_url: String,
+    /// See [`cloud_backup_url`] -- the one location every "cloud backup" fileGrp in this
+    /// run points at.
+    cloud_backup_url: String,
     dailp_base_url: String,
     collections_dir: PathBuf,
     collections_editorial_dir: PathBuf,
@@ -421,7 +503,8 @@ struct CollectionRunContext {
 /// already exist), and passed to every [`render_one_document`] call.
 struct DocumentRunContext {
     created_at: String,
-    cf_url: String,
+    /// See [`cloud_backup_url`].
+    cloud_backup_url: String,
     dailp_base_url: String,
     manifest_filename: String,
     manifest_checksum: String,
@@ -567,7 +650,12 @@ async fn build_document_entry(
                             String::new(),
                             None,
                             None,
-                            Some(format!("document \"{}\": {e:#}", doc.meta.title)),
+                            Some(AttachmentFailure {
+                                title: format!("overall audio ({})", audio.resource_url),
+                                kind: AttachmentKind::Audio,
+                                parent: doc.meta.title.clone(),
+                                message: format!("{e:#}"),
+                            }),
                         )
                     }
                 }
@@ -666,11 +754,7 @@ async fn render_one_collection(
     );
 
     let collection_title_escaped = escape_xml(&collection.title);
-    let editorial_pages = editorial_page_refs(
-        &collection_editorial_pages,
-        &run.dailp_base_url,
-        &run.cf_url,
-    );
+    let editorial_pages = editorial_page_refs(&collection_editorial_pages, &run.dailp_base_url);
 
     let collection_ctx = CollectionMetsContext {
         collection_title: collection_title_escaped.clone(),
@@ -681,7 +765,7 @@ async fn render_one_collection(
                 .unwrap_or(&collection.title),
         ),
         collection_slug: collection.slug.clone(),
-        cf_url: run.cf_url.clone(),
+        cloud_backup_url: run.cloud_backup_url.clone(),
         now: run.created_at.clone(),
         contributors: contributors.iter().map(|name| escape_xml(name)).collect(),
         citation: escape_xml(&citation),
@@ -770,8 +854,18 @@ async fn render_one_document(
     // Downloads each page's manuscript image (resolving its real IIIF source URL
     // along the way) into this run's `images/` directory, named
     // `{document_slug}_{oid}.jpg`. See `document_page_images`.
-    let page_images =
-        document_page_images(http_client, db, &pages, &document_slug, &run.images_dir).await?;
+    let PageImagesResult {
+        entries: page_images,
+        failures: image_failures,
+    } = document_page_images(
+        http_client,
+        db,
+        &pages,
+        &document_slug,
+        &doc.meta.title,
+        &run.images_dir,
+    )
+    .await?;
 
     // Downloads this document's word-for-word audio into the same per-document
     // audio subdirectory its overall audio (if any) was already downloaded into above
@@ -779,8 +873,20 @@ async fn render_one_document(
     let document_audio_dir = run.audio_dir.join(&entry.file_stem);
     let WordsWithAudioResult {
         entries: words_with_audio,
-        failures: audio_failures,
-    } = words_with_audio(http_client, &pages, &document_audio_dir, &entry.file_stem).await?;
+        failures: word_audio_failures,
+    } = words_with_audio(
+        http_client,
+        &pages,
+        &document_audio_dir,
+        &entry.file_stem,
+        &doc.meta.title,
+    )
+    .await?;
+
+    // Images first, then audio, so a document's failures read in the same order its
+    // fileGrps list the content they belong to.
+    let mut attachment_failures = image_failures;
+    attachment_failures.extend(word_audio_failures);
 
     // The TEI file is this document's actual word-for-word content; it's rendered and
     // written *before* this document's own METS file below (reversed from write
@@ -873,7 +979,7 @@ async fn render_one_document(
         collection_slug,
         document_slug: document_slug.clone(),
         short_name: escape_xml(&doc.meta.short_name),
-        cf_url: run.cf_url.clone(),
+        cloud_backup_url: run.cloud_backup_url.clone(),
         dailp_base_url: run.dailp_base_url.clone(),
         manifest_filename: run.manifest_filename.clone(),
         manifest_checksum: run.manifest_checksum.clone(),
@@ -910,18 +1016,19 @@ async fn render_one_document(
 
     Ok(RenderedDocument {
         validation_entry,
-        audio_failures,
+        attachment_failures,
     })
 }
 
 /// The result of [`render_one_document`] -- see its doc comment.
 struct RenderedDocument {
     validation_entry: Option<TeiValidationEntry>,
-    /// One line per word whose audio failed to download for this document (see
-    /// [`WordsWithAudioResult`]). Does *not* include a document-level overall-audio
-    /// failure -- that's read directly off `CollectionDocumentEntry.audio_download_failure`
-    /// by `generate_mets_bundle`, since it's already known before this function runs.
-    audio_failures: Vec<String>,
+    /// One record per attachment that failed to download for this document: its word
+    /// audio (see [`WordsWithAudioResult`]) and its page images. Does *not* include a
+    /// document-level overall-audio failure -- that's read directly off
+    /// `CollectionDocumentEntry.audio_download_failure` by `generate_mets_bundle`, since
+    /// it's already known before this function runs.
+    attachment_failures: Vec<AttachmentFailure>,
 }
 
 /// Parses a just-written collection METS file back off disk and confirms every document
@@ -1149,6 +1256,51 @@ pub fn logs_dir(log_location: Option<PathBuf>, output_root: &Path) -> PathBuf {
     log_location.unwrap_or_else(|| output_root.join("logs"))
 }
 
+/// Default S3 key prefix the backup workflow uploads this run's zip under. Overridable
+/// via `BACKUP_CLOUD_PREFIX` so the two stay in step without a code change if
+/// `.github/workflows/data-backup.yml` ever moves the destination; the default matches
+/// the `-p=xml-backups` that workflow passes to `scripts/src/upload_to_s3.sh` today.
+const DEFAULT_CLOUD_BACKUP_PREFIX: &str = "xml-backups";
+
+/// Adds an `https://` scheme when `raw` doesn't already carry one, and strips a trailing
+/// slash.
+///
+/// `CF_URL` is a bare CloudFront domain -- `terraform/media-access.nix` outputs
+/// `aws_cloudfront_distribution.media_distribution.domain_name` with no scheme -- so
+/// interpolating it directly produced locrefs like `d123.cloudfront.net/manifest.mets.xml`,
+/// which no client resolves. Mirrors `audio.rs`'s handling of the same variable and
+/// `normalize_cf_url` in `scripts/src/utils/s3_utils.sh`, but tolerates a value that
+/// already has a scheme rather than doubling it.
+fn normalize_cf_url(raw: &str) -> String {
+    let trimmed = raw.trim_end_matches('/');
+    if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
+        trimmed.to_owned()
+    } else {
+        format!("https://{trimmed}")
+    }
+}
+
+/// The CloudFront URL of the archive this run will be uploaded as:
+/// `{cf_url}/{prefix}/dailp-{file_timestamp}.zip`.
+///
+/// Every `USE="cloud backup"` fileGrp in the bundle points here, and only here. The
+/// per-file cloud locrefs this replaced (`{cf_url}/{bare filename}`) described a layout
+/// that never existed: nothing uploads individual bundle members to the bucket root, so
+/// each one was a dangling reference. `cf_url` is expected to have already been through
+/// [`normalize_cf_url`].
+///
+/// The templates give this single entry the `file@ID` `cloud_backup_b`, and point each
+/// `structMap`'s `_b` `fptr` at that same ID -- one shared ID rather than one per file,
+/// because there is now exactly one cloud location for the whole run.
+fn cloud_backup_url(cf_url: &str, file_timestamp: &str) -> String {
+    let prefix = std::env::var("BACKUP_CLOUD_PREFIX")
+        .ok()
+        .filter(|p| !p.trim().is_empty())
+        .unwrap_or_else(|| DEFAULT_CLOUD_BACKUP_PREFIX.to_owned());
+    let prefix = prefix.trim_matches('/');
+    escape_xml(&format!("{cf_url}/{prefix}/dailp-{file_timestamp}.zip"))
+}
+
 /// Format used for the human-readable `CREATEDATE` attribute in the rendered METS,
 /// matching the style of the hand-written example files (e.g. "2026-08-06T15:10:00").
 const CREATEDATE_FORMAT: &str = "%Y-%m-%dT%H:%M:%S";
@@ -1169,7 +1321,8 @@ const MACROS_TEMPLATE_SRC: &str = include_str!("../mets_macros.tera.xml");
 #[derive(Serialize)]
 struct ManifestMetsContext {
     now: String,
-    cf_url: String,
+    /// See [`cloud_backup_url`].
+    cloud_backup_url: String,
     dailp_base_url: String,
     collections: Vec<CollectionRef>,
     /// Standalone site pages (not owned by any edited collection) -- see
@@ -1185,7 +1338,8 @@ struct CollectionMetsContext {
     collection_label: String,
     /// `xs:ID`-safe slug for the collection, used to build `md@ID`s.
     collection_slug: String,
-    cf_url: String,
+    /// See [`cloud_backup_url`].
+    cloud_backup_url: String,
     now: String,
     /// Distinct contributor names gathered from every member document, in first-seen order.
     contributors: Vec<String>,
@@ -1219,20 +1373,16 @@ struct EditorialPageRef {
     /// This content's live URL on the DAILP website, e.g.
     /// "https://.../about/team" -- used for the "original" fileGrp.
     original_locref: String,
-    /// This content's cloud-backup URL, e.g. "{CF_URL}/team.md" -- mirrors how every
-    /// other "cloud backup" fileGrp entry in this crate uses just the bare filename
-    /// (not a full relative path) against `CF_URL`; see `DocumentMetsContext`'s own
-    /// `cf_url` usage for the same simplification.
-    cloud_locref: String,
     /// Path to this content file, relative to wherever it's referenced from (either
     /// `collections/<collection>.mets.xml` or the run-root `manifest.mets.xml`) -- both
     /// have an `editorial/` directory as a direct child, so this is always
     /// `"./editorial/<relative_path>"`.
     archival_locref: String,
     /// SHA-256 checksum (see `crate::checksum`) of the exported file this page was
-    /// written to. Attached to the `cloud_locref`/`archival_locref` fileGrp entries only
-    /// -- `original_locref` is a live, rendered webpage, not this exact file's bytes, so
-    /// no checksum applies there.
+    /// written to. Attached to the `archival_locref` fileGrp entry only --
+    /// `original_locref` is a live, rendered webpage, not this exact file's bytes, and
+    /// the "cloud backup" fileGrp now names the run's archive rather than this file, so
+    /// no checksum applies to either.
     checksum: String,
 }
 
@@ -1244,23 +1394,15 @@ struct EditorialPageRef {
 fn editorial_page_refs(
     pages: &[crate::editorial::EditorialPageEntry],
     dailp_base_url: &str,
-    cf_url: &str,
 ) -> Vec<EditorialPageRef> {
     pages
         .iter()
-        .map(|page| {
-            let filename = Path::new(&page.relative_path)
-                .file_name()
-                .map(|name| name.to_string_lossy().into_owned())
-                .unwrap_or_else(|| page.relative_path.clone());
-            EditorialPageRef {
-                id: dailp::slugify(&page.relative_path),
-                title: escape_xml(&page.title),
-                original_locref: escape_xml(&format!("{dailp_base_url}{}", page.site_path)),
-                cloud_locref: escape_xml(&format!("{cf_url}/{filename}")),
-                archival_locref: format!("./editorial/{}", page.relative_path),
-                checksum: page.checksum.clone(),
-            }
+        .map(|page| EditorialPageRef {
+            id: dailp::slugify(&page.relative_path),
+            title: escape_xml(&page.title),
+            original_locref: escape_xml(&format!("{dailp_base_url}{}", page.site_path)),
+            archival_locref: format!("./editorial/{}", page.relative_path),
+            checksum: page.checksum.clone(),
         })
         .collect()
 }
@@ -1304,13 +1446,13 @@ struct CollectionDocumentEntry {
     /// from every fileGrp (original/cloud backup/archival) across the bundle, so this one
     /// checksum covers all of them.
     checksum: Option<String>,
-    /// `Some(<detail>)` iff this document had audio configured but the download failed
+    /// `Some(<record>)` iff this document had audio configured but the download failed
     /// after retries -- distinct from simply having no audio at all, even though
     /// `audio_locref`/`archival_locref`/`checksum` above collapse both cases identically
-    /// for rendering. Only consumed by `generate_mets_bundle`'s end-of-run summary of
-    /// audio download failures, never by a template -- skipped from serialization.
+    /// for rendering. Only consumed by `generate_mets_bundle`'s end-of-run summary and
+    /// its attachment failure report, never by a template -- skipped from serialization.
     #[serde(skip)]
-    audio_download_failure: Option<String>,
+    audio_download_failure: Option<AttachmentFailure>,
     /// Filename (not a path) of the corresponding document-level METS file, written to
     /// this run's `documents/` directory — a sibling of `collections/`, where the
     /// collection file referencing it lives.
@@ -1399,7 +1541,8 @@ struct DocumentMetsContext {
     /// `mets_import` restore a document's original `short_name` instead of re-deriving a
     /// colliding one from its title. See `document_file_stem`.
     short_name: String,
-    cf_url: String,
+    /// See [`cloud_backup_url`].
+    cloud_backup_url: String,
     dailp_base_url: String,
     /// Filename (not a path) of the manifest METS file produced in this run, one
     /// directory up from this document (`../manifest.mets.xml`).
@@ -1457,27 +1600,47 @@ async fn document_page_images(
     db: &Database,
     pages: &[crate::tei::LoadedPage],
     document_slug: &str,
+    document_title: &str,
     images_dir: &Path,
-) -> Result<Vec<PageImageEntry>> {
-    let downloaded =
-        crate::images::download_page_images(client, db, pages, document_slug, images_dir).await?;
-    Ok(downloaded
-        .into_iter()
-        .map(|image| PageImageEntry {
-            oid: image.oid,
-            source_url: image.source_url,
-            filename: image.filename,
-            checksum: image.checksum,
-        })
-        .collect())
+) -> Result<PageImagesResult> {
+    let (downloaded, failures) = crate::images::download_page_images(
+        client,
+        db,
+        pages,
+        document_slug,
+        document_title,
+        images_dir,
+    )
+    .await?;
+    Ok(PageImagesResult {
+        entries: downloaded
+            .into_iter()
+            .map(|image| PageImageEntry {
+                oid: image.oid,
+                source_url: image.source_url,
+                filename: image.filename,
+                checksum: image.checksum,
+            })
+            .collect(),
+        failures,
+    })
 }
 
-/// The result of [`words_with_audio`]: every word's rendered entry, plus one line per
+/// The result of [`document_page_images`]: every page image's rendered entry, plus a
+/// record for each image whose download failed. Mirrors [`WordsWithAudioResult`] just
+/// below -- an image that won't download is reported and skipped, not fatal.
+struct PageImagesResult {
+    entries: Vec<PageImageEntry>,
+    failures: Vec<AttachmentFailure>,
+}
+
+/// The result of [`words_with_audio`]: every word's rendered entry, plus a record per
 /// word whose download failed (see [`crate::audio_backup::DownloadedWordAudioResult`]),
-/// for `render_one_document`/`generate_mets_bundle`'s end-of-run summary.
+/// for `render_one_document`/`generate_mets_bundle`'s end-of-run summary and attachment
+/// failure report.
 struct WordsWithAudioResult {
     entries: Vec<WordAudioEntry>,
-    failures: Vec<String>,
+    failures: Vec<AttachmentFailure>,
 }
 
 /// Downloads a document's word-for-word audio (see
@@ -1491,12 +1654,14 @@ async fn words_with_audio(
     pages: &[crate::tei::LoadedPage],
     document_audio_dir: &Path,
     file_stem: &str,
+    document_title: &str,
 ) -> Result<WordsWithAudioResult> {
     let result = crate::audio_backup::download_words_with_audio(
         client,
         pages,
         document_audio_dir,
         file_stem,
+        document_title,
     )
     .await?;
     Ok(WordsWithAudioResult {
@@ -1698,6 +1863,11 @@ pub(crate) fn remote_audio_key(url: &str) -> String {
 mod tests {
     use super::*;
 
+    /// Stands in for what [`cloud_backup_url`] builds at runtime: the one CloudFront
+    /// location every `USE="cloud backup"` fileGrp in a run points at.
+    const TEST_CLOUD_BACKUP_URL: &str =
+        "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip";
+
     // Collecting `(oid, source_id)` pairs from pages is now `images::page_image_refs`,
     // tested in `images.rs` (`page_image_refs_collects_pairs_in_page_order_and_skips_pages_without_one`)
     // since it moved there along with the rest of the download logic.
@@ -1728,7 +1898,6 @@ mod tests {
             id: id.to_owned(),
             title: escape_xml(title),
             original_locref: escape_xml(&format!("https://dev.dailp.northeastern.edu{path}")),
-            cloud_locref: escape_xml(&format!("https://cdn.example.com/{id}.md")),
             archival_locref: format!("./editorial/{id}.md"),
             checksum: format!("{id}checksum"),
         }
@@ -1738,7 +1907,7 @@ mod tests {
     fn manifest_mets_renders_well_formed_xml() {
         let ctx = ManifestMetsContext {
             now: "2026-08-06T15:10:00".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             collections: vec![sample_collection_ref()],
             site_pages: vec![sample_editorial_page_ref(
@@ -1754,25 +1923,25 @@ mod tests {
         assert!(xml.contains(
             "<mets:mptr LOCTYPE=\"URL\" LOCREF=\"./collections/Willie-Jumper-Manuscripts.mets.xml\"/>"
         ));
-        assert!(
-            xml.contains("LOCREF=\"https://cdn.example.com/Willie-Jumper-Manuscripts.mets.xml\"")
-        );
         assert!(xml.contains("LOCREF=\"./collections/Willie-Jumper-Manuscripts.mets.xml\""));
         assert!(xml.contains(
             "LOCREF=\"https://dev.dailp.northeastern.edu/collections/willie-jumper-stories\""
         ));
-        // Site-level pages (not owned by any collection) get their own fileGrp entries
-        // (live URL, cloud backup, and archival, pointing into the sibling editorial/
-        // directory) and a structSec div.
+        // Site-level pages (not owned by any collection) get their own "original" and
+        // "archival" fileGrp entries (live URL, and the sibling editorial/ directory) and
+        // a structSec div.
         assert!(xml.contains("ID=\"about_team_m\""));
         assert!(xml.contains("LOCREF=\"https://dev.dailp.northeastern.edu/about/team\""));
-        assert!(xml.contains("ID=\"about_team_b\""));
-        assert!(xml.contains("LOCREF=\"https://cdn.example.com/about_team.md\""));
         assert!(xml.contains("ID=\"about_team_a\""));
         assert!(xml.contains("LOCREF=\"./editorial/about_team.md\""));
         assert!(xml.contains("TYPE=\"site page\" LABEL=\"Our Team\""));
+        // The "cloud backup" fileGrp is one entry for the whole run, not one per file, so
+        // no per-page `_b` entry exists to find.
+        assert!(!xml.contains("ID=\"about_team_b\""));
+        assert_eq!(xml.matches("<mets:file ID=\"cloud_backup_b\"").count(), 1);
+        assert!(xml.contains(&format!("LOCREF=\"{TEST_CLOUD_BACKUP_URL}\"")));
         // Every static file this pipeline wrote (collection METS file, editorial page's
-        // cloud-backup/archival copies) carries a checksum...
+        // archival copy) carries a checksum...
         assert!(xml.contains("CHECKSUM=\"collchecksum\" CHECKSUMTYPE=\"SHA-256\""));
         assert!(xml.contains("CHECKSUM=\"about_teamchecksum\" CHECKSUMTYPE=\"SHA-256\""));
         // ...but the site page's `original` fileGrp entry (a live, rendered webpage, not
@@ -1788,7 +1957,7 @@ mod tests {
             collection_label: "A collection of manuscripts and stories from Willie Jumper."
                 .to_owned(),
             collection_slug: "willie-jumper-stories".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             now: "2026-08-06T15:10:00".to_owned(),
             contributors: vec!["Ellen Cushman".to_owned(), "Ben Frey".to_owned()],
             citation:
@@ -1843,10 +2012,13 @@ mod tests {
         assert!(xml.contains(
             "<mets:mptr LOCTYPE=\"URL\" LOCREF=\"../documents/Story-of-Millie-Pigeon.mets.xml\"/>"
         ));
-        // Cloud-backup audio reuses the original URL rather than a literal "S3"; archival
-        // audio points into the run's audio/<file_stem>/ directory, named per
+        // The "cloud backup" fileGrp is a single entry naming the run's archive -- not
+        // one per document, and no longer a copy of the original audio URL. Archival
+        // audio still points into the run's audio/<file_stem>/ directory, named per
         // `audio_backup::document_audio_filename`, rather than an unfilled placeholder.
-        assert!(xml.contains("<mets:file ID=\"story-of-millie-pigeon_b\" CHECKSUM=\"doc1checksum\" CHECKSUMTYPE=\"SHA-256\">\n        <mets:FLocat LOCTYPE=\"URL\" LOCREF=\"https://example.com/audio.mp3\" />"));
+        assert_eq!(xml.matches("<mets:file ID=\"cloud_backup_b\"").count(), 1);
+        assert!(xml.contains(&format!("LOCREF=\"{TEST_CLOUD_BACKUP_URL}\"")));
+        assert!(!xml.contains("ID=\"story-of-millie-pigeon_b\""));
         assert!(xml.contains(
             "LOCREF=\"../audio/Story-of-Millie-Pigeon/Story-of-Millie-Pigeon_audio.mp3\""
         ));
@@ -1883,7 +2055,7 @@ mod tests {
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-millie-pigeon".to_owned(),
             short_name: "wj03".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
             manifest_checksum: "manifestchecksum".to_owned(),
@@ -1963,10 +2135,11 @@ mod tests {
         assert!(xml.contains(
             "LOCREF=\"https://collections.library.yale.edu/iiif/2/15532354/full/max/0/default.jpg\""
         ));
-        // The "cloud backup" fileGrp likewise reuses the same computed archival filename.
-        assert!(xml.contains(
-            "LOCREF=\"https://cdn.example.com/story-of-millie-pigeon_page1_15532353.jpg\""
-        ));
+        // The "cloud backup" fileGrp is a single entry naming the run's archive, so no
+        // per-image cloud locref exists alongside the two IIIF originals above.
+        assert_eq!(xml.matches("<mets:file ID=\"cloud_backup_b\"").count(), 1);
+        assert!(xml.contains(&format!("LOCREF=\"{TEST_CLOUD_BACKUP_URL}\"")));
+        assert!(!xml.contains("cdn.example.com/story-of-millie-pigeon_page1_15532353.jpg"));
         // Manifest and collection cross-references, with archival references pointing
         // one directory up (this document lives in documents/, a sibling of the run
         // root and of collections/).
@@ -1988,43 +2161,49 @@ mod tests {
         // Every referenced file -- overall audio, each page image, the TEI file (both its
         // fileSec entries and its DESCRIPTIVE mdRef), the manifest, the collection METS
         // file, and word audio -- carries a checksum. The same logical file's checksum is
-        // reused across all three fileGrps (original/cloud backup/archival).
+        // reused across the two fileGrps that name that file individually (original and
+        // archival); "cloud backup" names the run's archive instead, and carries no
+        // checksum of its own.
         assert_eq!(
             xml.matches("CHECKSUM=\"audiochecksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
         assert_eq!(
             xml.matches("CHECKSUM=\"image1checksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
         assert_eq!(
             xml.matches("CHECKSUM=\"image2checksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
-        // TEI checksum appears on the DESCRIPTIVE mdRef plus all three fileSec entries.
+        // TEI checksum appears on the DESCRIPTIVE mdRef plus both of those fileSec entries.
         assert_eq!(
             xml.matches("CHECKSUM=\"teichecksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            4
+            3
         );
         assert_eq!(
             xml.matches("CHECKSUM=\"manifestchecksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
         assert_eq!(
             xml.matches("CHECKSUM=\"collchecksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
         assert_eq!(
             xml.matches("CHECKSUM=\"wordchecksum\" CHECKSUMTYPE=\"SHA-256\"")
                 .count(),
-            3
+            2
         );
+        // The single cloud-backup entry is deliberately checksum-free: the archive it
+        // names doesn't exist yet when this file is written.
+        // No CHECKSUM attribute on the element at all, rather than an empty one.
+        assert!(xml.contains("<mets:file ID=\"cloud_backup_b\">"));
         roxmltree::Document::parse(&xml).expect("output should be well-formed XML");
     }
 
@@ -2036,7 +2215,7 @@ mod tests {
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-the-old-timer".to_owned(),
             short_name: "wj21".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
             manifest_checksum: "manifestchecksum".to_owned(),
@@ -2057,12 +2236,13 @@ mod tests {
         };
 
         let xml = render_document_mets(&ctx).expect("template should render");
-        // A comment appears in each of the three fileGrps instead of a `file` entry with
-        // nothing real to reference, and no `_m`/`_b`/`_a` overall-audio file IDs exist.
+        // A comment appears in the "original" and "archival" fileGrps instead of a `file`
+        // entry with nothing real to reference, and no `_m`/`_a` overall-audio file IDs
+        // exist. The "cloud backup" fileGrp has no per-document entry to omit.
         assert_eq!(
             xml.matches("<!-- No audio for Story of the Old Timer -->")
                 .count(),
-            3
+            2
         );
         assert!(!xml.contains("ID=\"story-of-the-old-timer_m\""));
         assert!(!xml.contains("ID=\"story-of-the-old-timer_b\""));
@@ -2080,7 +2260,7 @@ mod tests {
             collection_slug: "willie-jumper-stories".to_owned(),
             document_slug: "story-of-the-old-timer".to_owned(),
             short_name: "wj21".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             dailp_base_url: "https://dev.dailp.northeastern.edu".to_owned(),
             manifest_filename: "manifest.mets.xml".to_owned(),
             manifest_checksum: "manifestchecksum".to_owned(),
@@ -2103,13 +2283,14 @@ mod tests {
         };
 
         let xml = render_document_mets(&ctx).expect("template should render");
-        // The comment appears once for the DESCRIPTIVE mdGrp and once per fileGrp
-        // (original/cloud backup/archival), and no `_tei_m`/`_tei_b`/`_tei_a` file IDs
-        // or structSec `area` referencing them exist.
+        // The comment appears once for the DESCRIPTIVE mdGrp and once each for the
+        // "original" and "archival" fileGrps, and no `_tei_m`/`_tei_b`/`_tei_a` file IDs
+        // or structSec `area` referencing them exist. The "cloud backup" fileGrp has no
+        // per-file entry to omit.
         assert_eq!(
             xml.matches("<!-- No TEI file; translation data not present during export -->")
                 .count(),
-            4
+            3
         );
         assert!(!xml.contains("_tei_m"));
         assert!(!xml.contains("_tei_b"));
@@ -2604,7 +2785,7 @@ mod tests {
             collection_title: "Echota Funeral Notices".to_owned(),
             collection_label: "Echota Funeral Notices".to_owned(),
             collection_slug: "echota-funeral-notices".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             now: "2026-09-02T23:49:35".to_owned(),
             contributors: vec!["Ellen Cushman".to_owned()],
             citation: "citation".to_owned(),
@@ -2691,7 +2872,7 @@ mod tests {
             collection_title: escape_xml("Tom & Jerry"),
             collection_label: escape_xml("Tom & Jerry"),
             collection_slug: "tom-and-jerry".to_owned(),
-            cf_url: "https://cdn.example.com".to_owned(),
+            cloud_backup_url: TEST_CLOUD_BACKUP_URL.to_owned(),
             now: "2026-08-06T15:10:00".to_owned(),
             contributors: vec![escape_xml("Q & A")],
             citation: escape_xml("Tom & Jerry by Q & A, is licensed under CC BY-NC 4.0"),
@@ -2719,6 +2900,96 @@ mod tests {
         std::env::set_var("TF_STAGE", "uat");
         assert_eq!(dailp_base_url(), "https://uat.dailp.northeastern.edu");
         std::env::remove_var("TF_STAGE");
+    }
+
+    #[test]
+    fn normalize_cf_url_adds_a_scheme_only_when_one_is_missing() {
+        // The shape `terraform/media-access.nix` actually outputs: a bare domain.
+        assert_eq!(
+            normalize_cf_url("d123.cloudfront.net"),
+            "https://d123.cloudfront.net"
+        );
+        assert_eq!(
+            normalize_cf_url("d123.cloudfront.net/"),
+            "https://d123.cloudfront.net"
+        );
+        // An operator who exports CF_URL with a scheme doesn't get it doubled.
+        assert_eq!(
+            normalize_cf_url("https://d123.cloudfront.net"),
+            "https://d123.cloudfront.net"
+        );
+        assert_eq!(
+            normalize_cf_url("http://localhost:9000/"),
+            "http://localhost:9000"
+        );
+    }
+
+    #[test]
+    fn cloud_backup_url_names_the_archive_the_workflow_uploads() {
+        // SAFETY: same single-threaded caveat as `dailp_base_url_handles_stages`; no
+        // other test reads or writes BACKUP_CLOUD_PREFIX.
+        std::env::remove_var("BACKUP_CLOUD_PREFIX");
+        // Matches `xml-backups/$BUNDLE_DIR.zip`, the key data-backup.yml's
+        // "Upload backup bundle to S3" step writes.
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip"
+        );
+
+        std::env::set_var("BACKUP_CLOUD_PREFIX", "/other-backups/");
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://cdn.example.com/other-backups/dailp-20260909T120000.zip"
+        );
+
+        // A set-but-empty value falls back rather than producing a doubled slash.
+        std::env::set_var("BACKUP_CLOUD_PREFIX", "  ");
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip"
+        );
+        std::env::remove_var("BACKUP_CLOUD_PREFIX");
+    }
+
+    #[test]
+    fn prune_empty_dirs_removes_empty_descendants_but_keeps_the_run_root() {
+        let root = std::env::temp_dir().join(format!("dailp-prune-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+
+        // The shape a real run leaves behind when a document's every image failed and
+        // nothing has editorial content: populated `documents/`, empty `images/`, and an
+        // `audio/<file_stem>/` that only ever held a directory.
+        std::fs::create_dir_all(root.join("documents")).unwrap();
+        std::fs::write(root.join("documents/doc.mets.xml"), "<mets/>").unwrap();
+        std::fs::create_dir_all(root.join("images")).unwrap();
+        std::fs::create_dir_all(root.join("audio/Story-of-Millie-Pigeon")).unwrap();
+        std::fs::create_dir_all(root.join("collections/editorial")).unwrap();
+        std::fs::write(root.join("collections/coll.mets.xml"), "<mets/>").unwrap();
+
+        prune_empty_dirs(&root).unwrap();
+
+        assert!(root.exists(), "the run root itself is never removed");
+        assert!(root.join("documents/doc.mets.xml").exists());
+        assert!(root.join("collections/coll.mets.xml").exists());
+        assert!(!root.join("images").exists());
+        // Removed parent-and-child, not just the leaf: `audio/` is empty once its only
+        // subdirectory goes.
+        assert!(!root.join("audio").exists());
+        assert!(!root.join("collections/editorial").exists());
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn prune_empty_dirs_leaves_an_entirely_empty_run_root_in_place() {
+        let root = std::env::temp_dir().join(format!("dailp-prune-empty-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        std::fs::create_dir_all(&root).unwrap();
+
+        prune_empty_dirs(&root).unwrap();
+
+        assert!(root.exists());
+        std::fs::remove_dir_all(&root).ok();
     }
 
     #[test]

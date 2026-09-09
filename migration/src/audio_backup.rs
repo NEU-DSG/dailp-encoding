@@ -25,6 +25,7 @@ use futures::stream::StreamExt;
 use log::{info, warn};
 use tokio::time::sleep;
 
+use crate::attachment_failures::{AttachmentFailure, AttachmentKind};
 use crate::checksum::sha256_hex;
 use crate::mets::{escape_xml, file_extension, remote_audio_key, sanitize_for_path};
 use crate::tei::LoadedPage;
@@ -42,12 +43,12 @@ pub(crate) struct DownloadedDocumentAudio {
 }
 
 /// The result of [`download_words_with_audio`]: every word whose download succeeded,
-/// plus a human-readable line for every word whose download failed -- so callers can
-/// surface those failures in an end-of-run summary instead of only the per-word
-/// `warn!` already logged when each one happens.
+/// plus a record for every word whose download failed -- so callers can surface those
+/// failures in an end-of-run summary, and in the run's attachment failure report,
+/// instead of only the per-word `warn!` already logged when each one happens.
 pub(crate) struct DownloadedWordAudioResult {
     pub(crate) downloaded: Vec<DownloadedWordAudio>,
-    pub(crate) failures: Vec<String>,
+    pub(crate) failures: Vec<AttachmentFailure>,
 }
 
 /// One word's archived audio file, plus the fields `document.tera.xml`'s word fileGrps
@@ -94,7 +95,8 @@ fn word_audio_filename(word_index: i64, simple_phonetics: Option<&str>, audio_ur
     )
 }
 
-/// Downloads `resource_url` into `document_audio_dir` (creating it if needed), named per
+/// Downloads `resource_url` into `document_audio_dir` (created only once the download has
+/// actually produced bytes to write there), named per
 /// [`document_audio_filename`]. On persistent failure (after retries), returns `Err` -- the
 /// caller (`mets::build_document_entry`) is responsible for logging a warning and
 /// falling back to "no audio" for this document, exactly mirroring what already happens
@@ -105,13 +107,6 @@ pub(crate) async fn download_document_audio(
     document_audio_dir: &Path,
     file_stem: &str,
 ) -> Result<DownloadedDocumentAudio> {
-    std::fs::create_dir_all(document_audio_dir).with_context(|| {
-        format!(
-            "Failed to create directory {}",
-            document_audio_dir.display()
-        )
-    })?;
-
     let filename = document_audio_filename(file_stem, resource_url);
     let path = document_audio_dir.join(&filename);
 
@@ -120,6 +115,17 @@ pub(crate) async fn download_document_audio(
         .await
         .with_context(|| format!("Failed to download document audio from {resource_url}"))?;
     let checksum = sha256_hex(&bytes);
+
+    // Created only once there are bytes to put in it. Creating it up front left an empty
+    // `audio/<file_stem>/` behind whenever the download failed -- and, for a document with
+    // no word audio to fill it in later, permanently, since `zip -r` records empty
+    // directories as bundle entries.
+    std::fs::create_dir_all(document_audio_dir).with_context(|| {
+        format!(
+            "Failed to create directory {}",
+            document_audio_dir.display()
+        )
+    })?;
     std::fs::write(&path, &bytes).with_context(|| format!("Failed to write {}", path.display()))?;
 
     Ok(DownloadedDocumentAudio {
@@ -182,6 +188,7 @@ pub(crate) async fn download_words_with_audio(
     pages: &[LoadedPage],
     document_audio_dir: &Path,
     file_stem: &str,
+    document_title: &str,
 ) -> Result<DownloadedWordAudioResult> {
     let candidates = word_audio_candidates(pages);
     if candidates.is_empty() {
@@ -190,12 +197,6 @@ pub(crate) async fn download_words_with_audio(
             failures: Vec::new(),
         });
     }
-    std::fs::create_dir_all(document_audio_dir).with_context(|| {
-        format!(
-            "Failed to create directory {}",
-            document_audio_dir.display()
-        )
-    })?;
 
     let total = candidates.len();
 
@@ -204,10 +205,10 @@ pub(crate) async fn download_words_with_audio(
     // because `downloaded` has to stay in word order for the METS `structSec` divs and the
     // TEI `<ptr type="audio">` elements that follow it.
     //
-    // Each item resolves to Ok(audio) or Err(failure message) -- a per-word outcome, not a
-    // fatal error, which is why the error type here is a plain String and not `anyhow`. The
-    // warning for each failure is still emitted where the failure happens, as before.
-    let results: Vec<std::result::Result<DownloadedWordAudio, String>> =
+    // Each item resolves to Ok(audio) or Err(failure) -- a per-word outcome, not a fatal
+    // error, which is why the error type here is an `AttachmentFailure` and not `anyhow`.
+    // The warning for each failure is still emitted where the failure happens, as before.
+    let results: Vec<std::result::Result<DownloadedWordAudio, AttachmentFailure>> =
         futures::stream::iter(candidates.into_iter().map(|candidate| async move {
             let filename = word_audio_filename(
                 candidate.word_index,
@@ -215,22 +216,39 @@ pub(crate) async fn download_words_with_audio(
                 &candidate.audio_url,
             );
             let path = document_audio_dir.join(&filename);
+            let fail = |message: String| AttachmentFailure {
+                title: format!("word \"{}\" ({})", candidate.id, candidate.audio_url),
+                kind: AttachmentKind::Audio,
+                parent: document_title.to_owned(),
+                message,
+            };
 
             match fetch_with_retry(client, &candidate.audio_url).await {
                 Ok(bytes) => {
                     let checksum = sha256_hex(&bytes);
+                    // Created here, at the first word that actually has bytes to write,
+                    // rather than before the downloads start: a document whose every word
+                    // audio fails must not leave an empty `audio/<file_stem>/` behind for
+                    // `zip -r` to record as a bundle entry.
+                    if let Err(e) = std::fs::create_dir_all(document_audio_dir) {
+                        warn!(
+                            "Failed to create directory {}: {e:#}. Treating \"{}\" as if it \
+                             had no audio.",
+                            document_audio_dir.display(),
+                            candidate.id
+                        );
+                        return Err(fail(format!(
+                            "failed to create {}: {e:#}",
+                            document_audio_dir.display()
+                        )));
+                    }
                     if let Err(e) = std::fs::write(&path, &bytes) {
                         warn!(
                             "Failed to write {}: {e:#}. Treating \"{}\" as if it had no audio.",
                             path.display(),
                             candidate.id
                         );
-                        return Err(format!(
-                            "word \"{}\" ({}): failed to write {}: {e:#}",
-                            candidate.id,
-                            candidate.audio_url,
-                            path.display()
-                        ));
+                        return Err(fail(format!("failed to write {}: {e:#}", path.display())));
                     }
                     Ok(DownloadedWordAudio {
                         ext: file_extension(&candidate.audio_url),
@@ -246,10 +264,7 @@ pub(crate) async fn download_words_with_audio(
                          Treating it as if it had no audio.",
                         candidate.id, candidate.audio_url
                     );
-                    Err(format!(
-                        "word \"{}\" ({}): {e:#}",
-                        candidate.id, candidate.audio_url
-                    ))
+                    Err(fail(format!("{e:#}")))
                 }
             }
         }))
