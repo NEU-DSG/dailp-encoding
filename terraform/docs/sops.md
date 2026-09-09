@@ -69,18 +69,30 @@ aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$BASTION
 DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
 aws ssm start-session --target "$BASTION_ID" \
   --document-name AWS-StartPortForwardingSessionToRemoteHost \
-  --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"],"localPortNumber":["5432"]}' &
+  --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"],"localPortNumber":["5432"]}' >&2 &
 SSM_PID=$!
 for i in $(seq 1 15); do (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break; sleep 1; done
 export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
 # ... run psql / pg_dump_backup.sh / pg_export_to_csv.sh ...
-kill $SSM_PID
+# Group kill, not `kill $SSM_PID`: see the fourth point below.
+kill -- "-$SSM_PID" 2>/dev/null || kill "$SSM_PID"
 ```
 
-Three things matter here and each has broken a workflow before: the trailing `&` (the command
-blocks otherwise), the readiness loop (the tunnel is not up when `start-session` returns), and the
-bare hostname in `host` (the RDS `endpoint` value includes `:5432` and will not work -- use
-`database_address`).
+Four things matter here and each has broken a workflow before:
+
+1. The trailing `&` -- the command blocks otherwise.
+2. The readiness loop -- the tunnel is not up when `start-session` returns.
+3. The bare hostname in `host` -- the RDS `endpoint` value includes `:5432` and will not work, so
+   use `database_address`.
+4. `>&2` on the tunnel, and killing the **process group** rather than the pid. `start-session` runs
+   `session-manager-plugin` as a child that inherits its stdio, and `kill $SSM_PID` reaches only the
+   `aws` wrapper -- leaving the plugin orphaned, still holding the local port and a live SSM session.
+   Combined, those two are worse than untidy: a plugin that inherits your stdout and then outlives
+   you holds the write end of any `$( ... )` you are inside, so the command substitution never sees
+   EOF. That is what hung the Data Backup workflow for a full 60 minutes; see the
+   [runbook](./runbook.md). Note the group kill needs job control, which interactive shells have on
+   by default -- inside a script, add `set -m` immediately before the `&` and `set +m` after, as
+   `bastionTunnel` in [`flake.nix`](../../flake.nix) does.
 
 **3b. To run something on the bastion**, use the flake apps, which handle the tunnel, the wait, and
 the cleanup for you:
@@ -94,6 +106,11 @@ nix run --impure -L .#copy-to-bastion -- ./scripts /home/ec2-user/
 `copy-to-bastion` takes `<local-path> [remote-path]` and defaults the remote path to the login
 user's home. Two optional overrides: `BASTION_SSH_USER` (default `ec2-user`) and
 `BASTION_LOCAL_PORT` (default `2222`, worth changing if that port is already bound).
+
+Both apps check that the local port is free before opening the tunnel, and fail with a message
+naming the port rather than quietly reusing whatever session already owns it. They also kill the
+tunnel's whole process group on exit, so an interrupted run should not leave a
+`session-manager-plugin` behind for the next one to trip over.
 
 ## Rotating or Adding a Bastion SSH Key
 
@@ -436,6 +453,17 @@ terraform apply -target="$BASTION"            # interactive. NEVER tf-apply-now
 `-target` also keeps the plan short enough to actually read, which is the point of doing this step
 by hand.
 
+**In fish.** `nix develop` gives you bash whatever your login shell is, so the simplest thing is to
+run the block above there, unmodified. If you would rather stay in fish
+(`nix develop --command fish`), four lines need translating: `export X=y` becomes `set -gx X y`;
+`set -a; . ./.env; set +a` becomes `direnv dotenv fish ./.env | source` (the same parser the
+devShell's bash `shellHook` uses, just emitting fish -- and you do need it, because that hook cannot
+export into a fish child); `$(pwd)` becomes `(pwd)`; and the `&& { ...; false; }` staleness assert
+becomes a bare `grep` whose output you read yourself, since fish has no `{ ...; }` grouping. The rest
+carries over as-is: `.#tf-init` is safe unquoted (`#` only opens a comment at a word boundary), and
+`module.bastion_host.aws_instance.default[0]` is not read as a list index (brackets only index
+directly after a `$var`).
+
 **6c. CI.** Merge. `main.yml` applies from `main`; expect a bastion no-op, and treat that no-op as
 the confirmation that the config, the state and the secret now agree.
 
@@ -473,7 +501,9 @@ produces a mismatch warning that reads like an attack.
   AMI rebuild loses every key added this way -- including whatever key CI uses, so re-seeding it is
   a step in [Replacing the bastion AMI](#replacing-the-bastion-ami), not an afterthought.
 - Local ports are fixed (`5432` for the database, `2222` default for SSH). Concurrent runs, or a
-  local Postgres already on 5432, will collide.
+  local Postgres already on 5432, will collide. The flake apps now detect this before opening the
+  tunnel and fail with the port named, so a collision is loud rather than a wrong-session
+  connection -- but it is still a collision, and `BASTION_LOCAL_PORT` is the only way around it.
 - Host key checking is disabled in the flake apps (`StrictHostKeyChecking=no`), which is unavoidable
   when the SSH target is `localhost:2222`. Authentication is one-directional as a result.
 - The bastion's instance role is granted only `s3:GetEncryptionConfiguration` for S3 by Terraform.
