@@ -403,9 +403,19 @@ jobs:
         # Both halves of the complete backup that scripts/SOPs.md defines, run in
         # the order it specifies. Output paths are passed explicitly so this
         # workflow knows where they are without parsing anything; the only value
-        # read back from stdout is the dump filename, which pg_dump_backup.sh
-        # generates from its own timestamp and echoes as its single line of
-        # stdout (every log line goes to stderr, so the capture stays clean).
+        # read back is the dump filename, which pg_dump_backup.sh generates from
+        # its own timestamp and echoes as its single line of stdout (every log
+        # line goes to stderr -- see log_utils.sh's log_event).
+        #
+        # That last part used to be the whole justification for capturing this
+        # value, and it was not enough: the scripts were clean, but the SSM
+        # tunnel underneath `run-on-bastion` was not. It inherited this step's
+        # stdout, so session-manager-plugin both interleaved its own banner with
+        # the dump path and -- being orphaned rather than killed -- held the
+        # write end of the `$( )` pipe open, hanging this step for its full
+        # 60 minutes. Fixed at the source in flake.nix's bastionTunnel; the
+        # capture below is written so that a regression of that class produces a
+        # bad value instead of a hang.
         timeout-minutes: 60
         run: |
           RUN_TS=$(date -u '+%Y%m%d_%H%M%SZ')
@@ -419,16 +429,42 @@ jobs:
           nix run --impure -L .#run-on-bastion -- "df -h /home | tail -n 1"
 
           echo "Running pg_dump and the CSV export on the bastion..."
-          DUMP_PATH=$(nix run --impure -L .#run-on-bastion -- "
+
+          # Redirected to a file rather than read through `$( ... | ... )`.
+          # Blocking forever on a leaked write end is structurally impossible
+          # against a regular file, whereas a pipe stays open for as long as
+          # *any* process holds it -- which is why wrapping this in `timeout`
+          # would not have helped either, the pipe outliving `nix run` being the
+          # entire problem. Only stdout is redirected, so the script's log lines
+          # still reach this step's log. The file also survives the step for
+          # debugging.
+          DUMP_OUT="$RUNNER_TEMP/pg_dump_stdout.txt"
+          nix run --impure -L .#run-on-bastion -- "
             set -euo pipefail
             set -a; . /home/ec2-user/.dailp-backup-env; set +a
             mkdir -p '$REMOTE_DIR'
             bash /home/ec2-user/scripts/src/pg_dump_backup.sh \
               -d='$REMOTE_DIR/pg_dump/' -l='$REMOTE_DIR/logs/'
-          " | tr -d '\r' | tail -n 1)
+          " > "$DUMP_OUT"
+
+          # Matched by shape instead of taken as "the last line". create_backup
+          # in pg_dump_backup.sh builds the name as
+          # "${destination}dailp_$(date +%Y%m%d_%H%M%S%z).dump", so the value is
+          # fully predictable, and anything else on stdout is by definition not
+          # ours. Worth doing beyond mere tidiness: DUMP_PATH is interpolated
+          # into a single-quoted remote command in the next step, so an
+          # unvalidated value carrying a quote is a shell-injection-shaped bug,
+          # and basename "$DUMP_PATH" becomes an S3 key.
+          DUMP_PATH=$(tr -d '\r' < "$DUMP_OUT" \
+            | grep -E "^$REMOTE_DIR/pg_dump/dailp_[0-9]{8}_[0-9]{6}[+-][0-9]{4}\.dump$" \
+            | tail -n 1 || true)
 
           if [ -z "$DUMP_PATH" ]; then
-            echo "pg_dump_backup.sh printed no output path." >&2
+            echo "pg_dump_backup.sh printed no usable dump path." >&2
+            echo "Expected one line matching" >&2
+            echo "  $REMOTE_DIR/pg_dump/dailp_<date>_<time><tz>.dump" >&2
+            echo "Its stdout was:" >&2
+            cat "$DUMP_OUT" >&2
             exit 1
           fi
           echo "Dump file: $DUMP_PATH"
