@@ -43,12 +43,11 @@
     {% endfor -%}
   </mets:fileGrp>
   <mets:fileGrp USE="cloud backup">
-    {% for c in collections -%}
-    {{ mets::file_entry(id=c.slug ~ "_b", loctype="URL", locref=cf_url ~ "/" ~ c.mets_filename, checksum=c.checksum) }}
-    {% endfor -%}
-    {% for page in site_pages -%}
-    {{ mets::file_entry(id=page.id ~ "_b", loctype="URL", locref=page.cloud_locref, checksum=page.checksum) }}
-    {% endfor -%}
+    <!-- One entry, not one per file: this run ships to the cloud as a single archive,
+      so there is exactly one cloud location for everything listed above. No checksum,
+      because the archive is built and uploaded by the backup workflow after this file is
+      written, so its bytes don't exist yet to be hashed. -->
+    {{ mets::file_entry(id="cloud_backup_b", loctype="URL", locref=cloud_backup_url) }}
   </mets:fileGrp>
   <mets:fileGrp USE="archival">
     <!-- The manifest lives at the run root; each collection file lives one level down,
@@ -75,7 +74,7 @@
         {% for page in site_pages -%}
         <mets:div TYPE="site page" LABEL="{{ page.title }}">
           <mets:fptr FILEID="{{ page.id ~ '_m' }}"/>
-          <mets:fptr FILEID="{{ page.id ~ '_b' }}"/>
+          <mets:fptr FILEID="cloud_backup_b"/>
           <mets:fptr FILEID="{{ page.id ~ '_a' }}"/>
         </mets:div>
         {% endfor -%}

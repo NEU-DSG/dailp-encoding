@@ -103,7 +103,12 @@ pub async fn generate_mets_bundle(
 
     let cf_url = std::env::var("CF_URL").context(
         "CF_URL must be set to generate METS backups (used for cloud backup file locations)",
-    )?;
+    )?);
+    // The single location every "cloud backup" fileGrp in this run points at: the one
+    // object the backup workflow actually uploads. Anticipated, not verified -- the zip
+    // it names is built and uploaded by later workflow steps, after this process has
+    // exited.
+    let cloud_backup_url = cloud_backup_url(&cf_url, &file_timestamp);
     let dailp_base_url = dailp_base_url();
 
     // Batch-load every collection's chapters in one call -- `ChaptersInCollection`'s query
@@ -246,7 +251,7 @@ pub async fn generate_mets_bundle(
 
     let collection_run_ctx = CollectionRunContext {
         created_at: created_at.clone(),
-        cf_url: cf_url.clone(),
+        cloud_backup_url: cloud_backup_url.clone(),
         dailp_base_url: dailp_base_url.clone(),
         collections_dir: collections_dir.clone(),
         collections_editorial_dir,
@@ -278,7 +283,7 @@ pub async fn generate_mets_bundle(
     let manifest_filename = "manifest.mets.xml".to_owned();
     let manifest_ctx = ManifestMetsContext {
         now: created_at.clone(),
-        cf_url: cf_url.clone(),
+        cloud_backup_url: cloud_backup_url.clone(),
         dailp_base_url: dailp_base_url.clone(),
         collections: collection_refs.clone(),
         site_pages: editorial_page_refs(&site_pages, &dailp_base_url, &cf_url),
