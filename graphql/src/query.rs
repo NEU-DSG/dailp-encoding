@@ -424,8 +424,7 @@ impl Query {
     /// Everything directly inside an asset-library folder - subfolders and images
     /// one level deep. `path` is a slugified folder path such as
     /// "partners.logos"; the empty string lists the root of the library.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn folder_contents(
         &self,
         context: &Context<'_>,
@@ -438,8 +437,7 @@ impl Query {
 
     /// The ancestor trail of a folder path, root first, including the folder
     /// itself. The empty string (the library root) has no trail.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn folder_breadcrumbs(
         &self,
         context: &Context<'_>,
@@ -459,8 +457,7 @@ impl Query {
     /// folders and images. Anything inside a deleted folder is omitted, since
     /// restoring that folder restores its whole subtree and children cannot be
     /// restored on their own.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn list_trash(&self, context: &Context<'_>) -> FieldResult<TrashContents> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -1099,8 +1096,7 @@ impl Mutation {
     }
 
     /// Create an asset-library folder. A null `parentId` places it at the root.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn create_folder(
         &self,
         context: &Context<'_>,
@@ -1116,8 +1112,7 @@ impl Mutation {
 
     /// Record an image that has already been uploaded to S3. A null `folderId`
     /// places it at the root. The uploader is taken from the signed-in user.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn create_image(&self, context: &Context<'_>, image: NewImage) -> FieldResult<Image> {
         let uploaded_by = context.data_opt::<UserInfo>().map(|user| user.id);
         Ok(context
@@ -1128,8 +1123,7 @@ impl Mutation {
     }
 
     /// Rename a folder.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn rename_folder(
         &self,
         context: &Context<'_>,
@@ -1144,8 +1138,7 @@ impl Mutation {
     }
 
     /// Rename an image.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn rename_image(
         &self,
         context: &Context<'_>,
@@ -1161,8 +1154,7 @@ impl Mutation {
 
     /// Move a folder under a new parent. Descendants follow automatically since
     /// they reference the folder's id. A null `parentId` moves it to the root.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn move_folder(
         &self,
         context: &Context<'_>,
@@ -1177,8 +1169,7 @@ impl Mutation {
     }
 
     /// Move an image into another folder. A null `folderId` moves it to the root.
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn move_image(
         &self,
         context: &Context<'_>,
@@ -1194,8 +1185,7 @@ impl Mutation {
 
     /// Soft-delete a folder and its whole subtree (stamps `deleted_at` on the
     /// folder and all descendant folders and files; the rows stay for history).
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn delete_folder(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Folder> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -1205,8 +1195,7 @@ impl Mutation {
     }
 
     /// Soft-delete an image (stamps `deleted_at`; the row stays for history).
-    // TESTING: auth guard temporarily disabled — restore before commit
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn delete_image(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Image> {
         Ok(context
             .data::<DataLoader<Database>>()?
