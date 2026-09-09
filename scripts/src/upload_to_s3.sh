@@ -20,9 +20,10 @@
 #   ./upload_to_s3.sh [-b=BUCKET] [-l=LOG_LOCATION] [-p=PREFIX] -r DIRECTORY
 #
 # If -b/--bucket is omitted, $CF_URL must be set and the bucket is derived as
-# "dailp-${TF_STAGE}-media-storage". When $CF_URL is set, the public CloudFront URL
-# for each uploaded object is also logged, as "${CF_URL}/${key}" with an
-# "https://" scheme added only if $CF_URL doesn't already have one.
+# "dailp-${TF_STAGE}-media-storage". Every object location this script reports is
+# the public CloudFront URL, "${CF_URL}/${key}" with an "https://" scheme added only
+# if $CF_URL doesn't already have one; the bare "s3://bucket/key" form appears only
+# as a fallback when $CF_URL is unset. See object_location in utils/s3_utils.sh.
 #
 # With -r/--recursive, exactly one DIRECTORY argument is given (no FILE
 # arguments) and every regular file found under it is uploaded, with its
@@ -48,8 +49,8 @@ set -euo pipefail
 # even if this script is sourced or invoked in an unusual way; see
 # https://mywiki.wooledge.org/BashFAQ/028.
 source "$(dirname "${BASH_SOURCE[0]}")/utils/log_utils.sh"
-# s3_utils.sh (default_media_bucket, normalize_cf_url) is shared with
-# download_from_s3.sh.
+# s3_utils.sh (default_media_bucket, normalize_cf_url, object_location) is
+# shared with download_from_s3.sh.
 source "$(dirname "${BASH_SOURCE[0]}")/utils/s3_utils.sh"
 # defensive_utils.sh (check_command_installed, ensure_dir) is shared by
 # every executable in this directory.
@@ -61,8 +62,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/utils/defensive_utils.sh"
 # -r/--recursive) every file under DIRECTORY.
 # Globals:
 #   CF_URL     CloudFront distribution domain, with or without a scheme.
-#              Optional; if set, used to derive a default
-#              bucket, and to log a public URL for each uploaded object.
+#              Optional; if set, used to derive a default bucket, and to
+#              report every object's location as a public URL rather than
+#              an s3:// URI.
 #   TF_STAGE   Deployment stage (e.g. dev/uat/prod). Optional, default
 #              "dev"; only consulted when -b/--bucket is omitted.
 # Arguments:
@@ -216,13 +218,13 @@ EOF
 
 #######################################
 # Upload a single local file to an exact S3 key via aws s3 cp, logging the
-# public CloudFront URL alongside it when $CF_URL is set. Shared by
-# upload_objects, for both flattened (literal FILE) and
-# structure-preserving (-r/--recursive) keys.
+# object's public CloudFront URL as its location. Shared by upload_objects,
+# for both flattened (literal FILE) and structure-preserving
+# (-r/--recursive) keys.
 # Globals:
-#   CF_URL   CloudFront distribution domain, with or without a scheme. If
-#            set, the public URL for a successfully-uploaded object is
-#            logged alongside it.
+#   CF_URL   CloudFront distribution domain, with or without a scheme.
+#            Read by object_location to build the location this logs for
+#            the object, on both the success and the failure path.
 # Arguments:
 #   -b=NAME | --bucket=NAME   Destination S3 bucket.
 #   -f=PATH | --file=PATH     Local file path to upload.
@@ -270,19 +272,20 @@ function upload_one_object() {
     return 1
   fi
 
+  # Reported instead of the raw "s3://${bucket}/${key}" this used to log, so that the
+  # location an operator reads out of the log is one they can open -- see
+  # object_location. The aws s3 cp target below is of course still the s3:// URI; it's
+  # the transport, not the report.
+  local location
+  location="$(object_location --bucket="${bucket}" --key="${key}")"
+
   if ! aws s3 cp "${file}" "s3://${bucket}/${key}" >/dev/null; then
     log_event -e="1" -f="${logfile}" \
-      -m="Failed to upload ${file} -> s3://${bucket}/${key}" -s="ERROR"
+      -m="Failed to upload ${file} -> ${location}" -s="ERROR"
     return 1
   fi
 
-  log_event -f="${logfile}" -m="Uploaded ${file} -> s3://${bucket}/${key}" -s="INFO"
-
-  if [[ -n "${CF_URL:-}" ]]; then
-    local cf_url
-    cf_url="$(normalize_cf_url --url="${CF_URL}")"
-    log_event -f="${logfile}" -m="Public URL: ${cf_url}/${key}" -s="INFO"
-  fi
+  log_event -f="${logfile}" -m="Uploaded ${file} -> ${location}" -s="INFO"
   return 0
 }
 
@@ -369,7 +372,7 @@ function upload_objects() {
   for file_index in "${!target_files[@]}"; do
     file="${target_files[file_index]}"
     key="${keys_in[file_index]}"
-    echo "[$((file_index + 1))/${file_count}] Uploading ${file} -> s3://${bucket}/${key}"
+    echo "[$((file_index + 1))/${file_count}] Uploading ${file} -> $(object_location --bucket="${bucket}" --key="${key}")"
 
     if upload_one_object --bucket="${bucket}" --file="${file}" --key="${key}" --logfile="${logfile}"; then
       success_count=$((success_count + 1))
