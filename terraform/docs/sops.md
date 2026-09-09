@@ -506,10 +506,17 @@ produces a mismatch warning that reads like an attack.
   connection -- but it is still a collision, and `BASTION_LOCAL_PORT` is the only way around it.
 - Host key checking is disabled in the flake apps (`StrictHostKeyChecking=no`), which is unavoidable
   when the SSH target is `localhost:2222`. Authentication is one-directional as a result.
-- The bastion's instance role is granted only `s3:GetEncryptionConfiguration` for S3 by Terraform.
-  Anything you run on the bastion that writes to S3 depends on a managed policy attached outside
-  Terraform; check with `aws iam list-attached-role-policies --role-name dailp-<stage>-bastion`
-  before assuming it will work.
+- The bastion's instance role is granted only `s3:GetEncryptionConfiguration` for S3 by its own
+  policy -- that policy belongs to the cloudposse module and cannot be extended from out here. The
+  one write it can do comes from the *bucket* side: `allow_bastion_backup_writes` in
+  [`../media-storage.nix`](../media-storage.nix) grants it `s3:PutObject` and
+  `s3:AbortMultipartUpload` on `db-backups/*` of the media bucket, which is sufficient because the
+  role and the bucket are in the same account. Anything you run on the bastion that writes anywhere
+  *else* in S3 will get `AccessDenied`, and the fix is another statement there rather than a change
+  to the role. Note you probably cannot grant it on the role yourself even if you wanted to: the
+  `NEU-SysAdmin-Additional-Deny-Permissions` boundary on the NEU SSO admin roles denies
+  `iam:PutRolePolicy` and `iam:AttachRolePolicy` on everything outside an ecs/ecr allowlist. The
+  `dailp-deployment` user that CI applies as carries no such boundary.
 - The bastion root volume is declared as 30 GiB in `bastion-host.nix`, but an instance launched
   before that was set may still have an 8 GiB volume, and a volume grown in place still has a
   filesystem at the old size until `growpart` + `xfs_growfs` runs. `df -h /home` is the only
