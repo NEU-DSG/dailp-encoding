@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Select all the chapters containing this document's id.\nselect\n    c.id,\n    c.title,\n    c.document_id,\n    c.wordpress_id,\n    c.index_in_parent,\n    c.chapter_path,\n    c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\n    inner join\n        (select id from document where document.short_name = $1) as d on c.document_id = d.id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "wordpress_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "index_in_parent",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "chapter_path",
+        "type_info": {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "section: CollectionSection",
+        "type_info": {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "da8fe05cd8a441259c19df0ab08edafe27d11640443b4f62bc2b983485f38278"
+}

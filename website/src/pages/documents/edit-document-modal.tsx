@@ -2,17 +2,18 @@ import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
+import { FiInfo } from "react-icons/fi/index"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
-import { form } from "src/edit-word-feature.css"
+import { InfoTooltip } from "src/components/info-tooltip"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import { buildCitationMetadata } from "../../utils/build-citation-metadata"
 import Cite from "../../utils/citation-config"
+import { buildCitationMetadata } from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
 import * as styles from "./edit-document-modal.css"
-import { EditingProvider, useEditing } from "./editing-context"
+import { useEditing } from "./editing-context"
 import { TagSelector } from "./tag-selector"
 
 export type EditDocumentModalProps = {
@@ -52,6 +53,22 @@ function getDisplayName(code: string) {
   return Object.keys(formatMap).find((key) => formatMap[key] === code) ?? code
 }
 
+// Tool tips for metadata types
+const TOOLTIP_TEXT = {
+  date: "Date that the physical resource we are translated here was created.",
+  docType:
+    "Distinguishes resources by describing the nature of this resource's content. Please use format and genre for more information.",
+  format: "File type for this digital version of the resource.",
+  contributors:
+    "People who work to create the resources on the site, labelled by the types of contributions they made.",
+  keywords:
+    "Main words that represent this resource’s content. This helps to improve searching on our site, but can also be a good place to gain context for the resource.",
+  subjectHeadings:
+    "Topic or main concept of this resource’s content, including Indigenous knowledge practices.",
+  spatialCoverage:
+    "Locations, dates, and/or time periods that appear throughout this resource.",
+}
+
 // Reusable approved tags lists
 const approvedKeywords = [
   "Colonialism",
@@ -66,16 +83,6 @@ const approvedKeywords = [
   "Land Rights",
   "Self-Determination",
   "Tribal Governance",
-]
-
-const approvedSubjectHeadings = [
-  "Cherokee Political Structure",
-  "Sacred Relationships to Land",
-  "Indigenous Self-Determination",
-  "Ecological Stewardship",
-  "Colonial Disruption and Resilience",
-  "Ceremony and Sacred Practice",
-  "Indigenous Governance Models",
 ]
 
 const approvedLanguages = [
@@ -167,6 +174,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
   const [creator, setCreator] = useState(documentMetadata.creators ?? [])
   const [keywords, setKeywords] = useState(documentMetadata.keywords ?? [])
+  const [freeKeyword, setFreeKeyword] = useState("")
   const [languages, setLanguages] = useState(documentMetadata.languages ?? [])
   const [spatialCoverage, setSpatialCoverage] = useState(
     documentMetadata.spatialCoverage ?? []
@@ -184,9 +192,98 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     }))
   )
 
+  // Changes for pulling and creating new subject headings
+  const [{ data: allSubjectsData }, refetchSubjects] =
+    Dailp.useAllSubjectHeadingsQuery()
+  const [, createSubjectMutation] = Dailp.useCreateSubjectHeadingMutation()
+
+  const [selectedSubjects, setSelectedSubjects] = useState<
+    Dailp.SubjectHeadingUpdate[]
+  >(
+    documentMetadata.subjectHeadings?.map((s) => ({
+      id: s.id,
+      name: s.name,
+    })) ?? []
+  )
+
+  // For the subject heading input field
+  const [newSubjectName, setNewSubjectName] = useState("")
+
+  // For tag selector, used for newly added subject headings that are blue
+  const [newSubjectNames, setNewSubjectNames] = useState<Set<string>>(new Set())
+
+  // Grab just strings from the db
+  const approvedSubjectNames = useMemo(() => {
+    return allSubjectsData?.allSubjectHeadings?.map((h) => h.name) ?? []
+  }, [allSubjectsData])
+
+  // Mutation call to add new subjects
+  const handleCreateSubject = async () => {
+    const nameToAdd = newSubjectName.trim()
+    if (!nameToAdd) return
+
+    const subjectSelected = selectedSubjects.some(
+      (s) => s.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
+    const subjectInDatabase = allSubjectsData?.allSubjectHeadings?.find(
+      (h) => h.name.toLowerCase() === nameToAdd.toLowerCase()
+    )
+
+    if (!subjectSelected) {
+      if (subjectInDatabase) {
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: subjectInDatabase.id, name: subjectInDatabase.name },
+        ])
+      } else {
+        const tempId = uuidv4()
+        setSelectedSubjects((prev) => [
+          ...prev,
+          { id: tempId, name: nameToAdd },
+        ])
+
+        await createSubjectMutation({
+          name: nameToAdd,
+          status: Dailp.ApprovalStatus.Approved,
+        })
+
+        refetchSubjects({ requestPolicy: "network-only" })
+      }
+    }
+    setNewSubjectName("")
+    setNewSubjectNames((prev) => new Set(prev).add(nameToAdd))
+  }
+
   // const [description, setDescription] = useState(documentMetadata.description ?? "")
   const [genre, setGenre] = useState(documentMetadata.genre?.name ?? "")
   const [format, setFormat] = useState(documentMetadata.format?.name ?? "")
+
+  // Query IIIF link for format type of this document
+  const [{ data: iiifData }] = Dailp.useIiifSourceForDocumentMetadataQuery({
+    variables: { documentId: documentMetadata.id },
+    pause: !documentMetadata.id,
+  })
+  const [iiifFormat, setIiifFormat] = useState<string>("")
+
+  // When URL is accessible, grab format type from IIIF url info.json
+  useEffect(() => {
+    if (!iiifData?.iiifSourceForDocumentMetadata) return
+
+    fetch(iiifData.iiifSourceForDocumentMetadata)
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        return res.json()
+      })
+      .then((info) => {
+        const formats = info?.profile?.[1]?.formats
+        if (Array.isArray(formats) && formats.length > 0) {
+          setIiifFormat(formats[0])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [iiifData])
+
   // const [pages, setPages] = useState(documentMetadata.pages ?? "")
   // const [source, setSource] = useState(documentMetadata.source ?? "")
   // const [doi, setDOI] = useState(documentMetadata.doi ?? "")
@@ -229,6 +326,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         format: "text",
         template: citeFormat || "apa",
         lang: "en-US",
+        type: "document",
       })
       console.log("Using citeFormat:", citeFormat)
       console.log("Generated citation:", docCitation)
@@ -274,7 +372,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     newTags: newHeadings,
     addTag: addHeading,
     removeTag: removeHeading,
-  } = useTagSelector(subjectHeadingStrings, approvedSubjectHeadings)
+  } = useTagSelector(subjectHeadingStrings)
 
   const {
     tags: selectedLanguages,
@@ -346,7 +444,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setDate(dateObj)
 
     setTitle(dm.title ?? "")
-    setFormat(dm.format?.name ?? "")
+    setFormat(dm.format?.name ?? iiifFormat ?? "")
     setGenre(dm.genre?.name ?? "")
     setCreator(dm.creators ?? [])
     setCreatorInput(dm.creators?.map((c) => c.name).join(", ") ?? "")
@@ -386,7 +484,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       languages: [...(dm.languages ?? [])],
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
     })
-  }, [documentMetadata])
+  }, [documentMetadata, iiifFormat])
 
   const addContributor = (
     name: string,
@@ -428,7 +526,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   }
 
   const creatorStrings = useMemo(
-    () => (documentMetadata.creators ?? []).map((cr) => cr.name),
+    () => (creator ?? []).map((cr) => cr.name),
     [documentMetadata.creators]
   )
 
@@ -520,15 +618,10 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     })
 
     // Subject Headings to be submitted
-    const subjectHeadingsToSubmit = selectedSubjectHeadings.map((name) => {
-      // Find existing subject headings by name to get id, otherwise generate new UUID
-      const existing = subjectHeadings.find((sh) => sh.name === name)
-      return {
-        id: existing?.id ?? uuidv4(),
-        name,
-        //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
-      }
-    })
+    const subjectHeadingsToSubmit = selectedSubjects.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }))
 
     // Languages to be submitted
     const languagesToSubmit = selectedLanguages.map((name) => {
@@ -611,7 +704,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
 
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Date Created</label>
+              <label className={styles.label}>
+                Date Created <InfoTooltip content={TOOLTIP_TEXT.date} />
+              </label>
               <DatePicker
                 onChange={(newDate: any) => setDate(newDate)}
                 value={date}
@@ -639,7 +734,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Document Type</label>
+              <label className={styles.label}>
+                Document Type <InfoTooltip content={TOOLTIP_TEXT.docType} />
+              </label>
               <input
                 type="text"
                 className={styles.input}
@@ -650,7 +747,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             </div>
 
             <div className={styles.fieldGroup}>
-              <label className={styles.label}>Format</label>
+              <label className={styles.label}>
+                Format <InfoTooltip content={TOOLTIP_TEXT.format} />
+              </label>
               <input
                 type="text"
                 className={styles.input}
@@ -760,6 +859,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
                 </div>
               ) : null
             }
+            tooltipInfo={TOOLTIP_TEXT.contributors}
           />
 
           {/* <div className={styles.fullWidthGroup}>
@@ -792,17 +892,121 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             newTags={newKeywords}
             onAdd={(tagName) => addKeyword(tagName)}
             onRemove={removeKeyword}
-            addButtonLabel="Add Keyword"
+            addButtonLabel="Add Pre-existing Keywords"
+            tooltipInfo={TOOLTIP_TEXT.keywords}
+            customForm={
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  marginBottom: "12px",
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Enter keyword..."
+                  value={freeKeyword}
+                  onChange={(e) => setFreeKeyword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.addTagButton}
+                  onClick={() => {
+                    if (freeKeyword.trim()) {
+                      addKeyword(freeKeyword.trim())
+                      setFreeKeyword("")
+                    }
+                  }}
+                >
+                  Add Keyword
+                </button>
+              </div>
+            }
           />
 
           <TagSelector
             label="Subject Headings"
-            selectedTags={selectedSubjectHeadings}
-            approvedTags={approvedSubjectHeadings}
-            newTags={newHeadings}
-            onAdd={isEditing ? addHeading : undefined}
-            onRemove={isEditing ? removeHeading : undefined}
-            addButtonLabel="Add Subject Heading"
+            selectedTags={selectedSubjects.map((s) => s.name)}
+            approvedTags={approvedSubjectNames}
+            newTags={newSubjectNames}
+            onAdd={(tagName) => {
+              const existing = allSubjectsData?.allSubjectHeadings?.find(
+                (h) => h.name === tagName
+              )
+              if (existing) {
+                setSelectedSubjects((prev) => [
+                  ...prev,
+                  { id: existing.id, name: existing.name },
+                ])
+              }
+              setNewSubjectNames((prev) => new Set(prev).add(tagName))
+            }}
+            onRemove={(index) => {
+              setSelectedSubjects((prev) => prev.filter((_, i) => i !== index))
+            }}
+            addButtonLabel="Add Existing Subjects"
+            customForm={
+              approvedSubjectNames.length === 0 && (
+                <div
+                  style={{
+                    color: "#666",
+                    fontStyle: "italic",
+                    padding: "0.5rem",
+                  }}
+                >
+                  No subject headings found in database.
+                </div>
+              )
+            }
+            additionalForm={
+              isEditing && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    width: "100%",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Create or add new heading..."
+                    value={newSubjectName}
+                    onChange={(e) => setNewSubjectName(e.target.value)}
+                    style={{
+                      flex: 1,
+                      height: "2.625rem",
+                      marginBottom: 0,
+                      boxSizing: "border-box",
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleCreateSubject()
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateSubject}
+                    className={styles.addTagButton}
+                    style={{
+                      height: "2.625rem",
+                      marginTop: 0,
+                      whiteSpace: "nowrap",
+                      padding: "0 1.25rem",
+                    }}
+                  >
+                    Add New Subject
+                  </button>
+                </div>
+              )
+            }
+            tooltipInfo={TOOLTIP_TEXT.subjectHeadings}
           />
 
           <TagSelector
@@ -823,6 +1027,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onAdd={isEditing ? addCoverage : undefined}
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
+            tooltipInfo={TOOLTIP_TEXT.spatialCoverage}
           />
 
           {/* Might need to pull the creator(s) from creator or contributors w/ author role */}

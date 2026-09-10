@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  dsh.document_id,\n  sh.id,\n  sh.name,\n  sh.status as \"status: ApprovalStatus\"\nfrom document_subject_heading dsh\njoin subject_heading sh on sh.id = dsh.subject_heading_id\nwhere dsh.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a8f7e026b923c82ddcdc135f55b78f9be10bd15d79ab6bbe38d67bf765d08ed8"
+}

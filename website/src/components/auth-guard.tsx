@@ -4,7 +4,7 @@ import Layout from "src/layout"
 
 interface AuthGuardProps {
   children: React.ReactNode
-  requiredRole?: UserRole
+  requiredRoles?: UserRole[]
   fallback?: React.ReactNode
 }
 
@@ -14,7 +14,7 @@ interface AuthGuardProps {
  */
 export const AuthGuard: React.FC<AuthGuardProps> = ({
   children,
-  requiredRole,
+  requiredRoles,
   fallback,
 }) => {
   const { user } = useUser()
@@ -62,10 +62,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   // Check role requirements
-  if (requiredRole && userRole !== requiredRole) {
+  const hasRequiredRole =
+    !requiredRoles ||
+    requiredRoles.length === 0 ||
+    (userRole !== undefined && requiredRoles.includes(userRole))
+
+  if (!hasRequiredRole) {
     if (fallback) {
       return <>{fallback}</>
     }
+
     return (
       <Layout>
         <main>
@@ -79,8 +85,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
           >
             <h1>Access Denied</h1>
             <p>
-              You need {requiredRole} permissions to access this page. Please
-              contact an administrator if you believe you should have access.
+              You need {requiredRoles!.join(", ")} permissions to access this
+              page. Please contact an administrator if you believe you should
+              have access.
             </p>
           </div>
         </main>

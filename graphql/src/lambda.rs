@@ -1,3 +1,4 @@
+mod outbound_lambda;
 mod query;
 
 use {
