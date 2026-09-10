@@ -104,17 +104,26 @@ drill.
 Both steps above are automated by the **Data Backup** workflow
 ([`.github/workflows/data-backup.yml`](../.github/workflows/data-backup.yml)), dispatched manually
 from `main`. It runs them on the dev bastion, which reaches RDS directly rather than through a
-tunnel, and uploads the results to
-`s3://dailp-dev-media-storage/db-backups/<run-timestamp>/`:
+tunnel, and uploads the results under `db-backups/<run-timestamp>/` in the media bucket. Every
+location it reports is the object's CloudFront URL, `$CF_URL/db-backups/<run-timestamp>/<object>`,
+rather than an `s3://` URI -- the CloudFront form is fetchable with `curl` and clickable in the run
+summary, and the bucket grants `s3:ListBucket` to no principal, so an `s3://` path is not something
+you can browse to anyway:
 
-| artifact | object |
-|---|---|
-| `pg_dump_backup.sh` output | `dailp_<timestamp>.dump` |
-| `export_db_to_csv.sh` output | `dailp_<timestamp>_csv.tar.gz` (the export folder, `manifest.csv` included) |
+| artifact | object | logs |
+|---|---|---|
+| `pg_dump_backup.sh` output | `dailp_<timestamp>.dump` | `logs/dailp_pg-dump_<timestamp>.log` |
+| `export_db_to_csv.sh` output | `dailp_<timestamp>_csv.tar.gz` (the export folder, `manifest.csv` included) | `logs/export_db_to_csv_<timestamp>.log` |
 
-The final status and both object locations are reported in the run summary. The workflow removes
-its working directory from the bastion only after confirming both objects are in S3, so a failed
-run leaves the artifacts on the instance for recovery by hand.
+The run summary reports each artifact's checksum and links both its download URL and its log. Both
+scripts' logfiles are uploaded alongside the backups they describe, before the workflow removes its
+working directory from the bastion -- and it only removes that directory after confirming both
+objects are in S3, so a failed run leaves the artifacts on the instance for recovery by hand.
+
+The **Data Backup** workflow also produces a third artifact the manual procedure above has no
+equivalent for: the METS/TEI XML bundle, uploaded to `$CF_URL/xml-backups/dailp-<timestamp>.zip`
+with its own log under `xml-backups/logs/`. Images and audio files that could not be downloaded
+into that bundle are listed individually in the run summary rather than failing the export.
 
 Prefer the workflow for the recurring daily backup. Use the manual procedure above when you need a
 backup of a stage the workflow does not cover, or when you need one immediately before a change

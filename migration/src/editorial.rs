@@ -106,6 +106,12 @@ pub async fn export_collection_chapters(
             collection_section_label(chapter.section),
             dailp::slugify(&chapter.title),
         );
+        // Created here, at the first chapter that actually has content to write, rather
+        // than up front by the caller: a run whose collections have no `page`-backed
+        // chapters must not ship an empty `collections/editorial/`. Mirrors what
+        // `export_site_pages` below already does for each heading's directory.
+        std::fs::create_dir_all(out_dir)
+            .with_context(|| format!("Failed to create directory {}", out_dir.display()))?;
         let path = out_dir.join(&filename);
         let checksum = sha256_hex(content.as_bytes());
         std::fs::write(&path, content)

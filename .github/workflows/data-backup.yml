@@ -1,6 +1,14 @@
 name: Data Backup
 on:
   workflow_dispatch:
+# `actions: read` is what the final summary step needs: it reads this run's own job via
+# the REST API to resolve each step's number and conclusion, which is how the summary
+# links a failed step and decides which backup track failed. `contents: read` is the
+# checkout. Spelled out because the repository default would otherwise apply, and this
+# job should not depend on what that happens to be set to.
+permissions:
+  contents: read
+  actions: read
 jobs:
   backup:
     name: Back up data to S3
@@ -53,6 +61,24 @@ jobs:
       BUNDLE_DIR: ""
       BUNDLE_ZIP: ""
       ZIP_BYTES: ""
+      # The media CloudFront distribution's domain, resolved once from terraform in
+      # "Build project" below. Every location this job reports -- in its own logs, and in
+      # the run summary -- is built from this rather than being a bare s3:// URI, which is
+      # neither fetchable nor clickable. Also read by `upload_to_s3.sh` (which routes all
+      # of its own location reporting through `object_location`) and by `migrate-to-xml`
+      # (which needs it to write each METS file's "cloud backup" location).
+      CF_URL: ""
+      # Where the bundle zip lands in S3. Exported so `migrate-to-xml` builds the same
+      # "cloud backup" URL that the upload step below actually writes to -- the two would
+      # otherwise agree only by coincidence. See `mets::cloud_backup_url`.
+      BACKUP_CLOUD_PREFIX: xml-backups
+      BACKUP_BUCKET: dailp-dev-media-storage
+      # One file per backup artifact, written by whichever step produces it and read by
+      # the final summary step. A directory of files rather than $GITHUB_ENV because a
+      # step that fails partway still leaves behind whatever it had already established,
+      # and because the summary step needs to distinguish "this artifact was never
+      # attempted" from "it was attempted and failed".
+      SUMMARY_DIR: ${{ github.workspace }}/.backup-summary
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -77,6 +103,21 @@ jobs:
         run: |
           nix build --impure -L
           nix run --impure -L .#tf-init
+          # Resolved here, once, and published to the whole job rather than exported
+          # inside the one step that used to need it. Both `upload_to_s3.sh` calls below
+          # run in their own shells, so a step-local export reached neither of them, and
+          # every location they logged fell back to a bare s3:// URI.
+          echo "CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)" >> "$GITHUB_ENV"
+
+          # One file per artifact this run intends to produce, seeded here so that every
+          # artifact appears in the run summary even when the step that would have
+          # produced it never ran. Creating them lazily instead would silently drop a
+          # failed backup from both summary tables, which is precisely the case the
+          # failure table exists for. Later steps append to these.
+          mkdir -p "$SUMMARY_DIR"
+          echo "type=pg_dump"    > "$SUMMARY_DIR/pg-dump.env"
+          echo "type=CSV export" > "$SUMMARY_DIR/csv-export.env"
+          echo "type=XML Bundle" > "$SUMMARY_DIR/xml-bundle.env"
       - name: Prepare bundle workspace
         # `zip -r` holds the raw tree and the finished archive at once, and this
         # bundle is mostly already-compressed media, so peak disk is roughly
@@ -96,7 +137,6 @@ jobs:
         run: |
           echo "Retrieving terraform outputs..."
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
-          export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
           echo "Connecting to bastion via SSM..."
           aws ssm start-session \
           --target ${{ env.BASTION_ID }} \
@@ -168,6 +208,12 @@ jobs:
             echo "ZIP_BYTES=$ZIP_BYTES"
           } >> "$GITHUB_ENV"
 
+          # Recorded now rather than after the upload, so the checksum survives into the
+          # run summary even if the upload is what fails. `location` is filled in by
+          # whichever of the S3 upload or the artifact step ends up being the place an
+          # operator can actually fetch this from.
+          echo "checksum=$ZIP_SHA" >> "$SUMMARY_DIR/xml-bundle.env"
+
           # Peak disk is behind us at this point, so a tight number here is the
           # warning that the next run may not fit.
           df -h /mnt
@@ -181,6 +227,7 @@ jobs:
         # copy nobody reaches for -- S3 is the destination that has to work.
         # Guarded on BUNDLE_ZIP so it is skipped when the zip step never got
         # far enough to set it.
+        id: bundle-artifact
         if: always() && env.BUNDLE_ZIP != '' && fromJSON(env.ZIP_BYTES || '0') < 2147483648
         uses: actions/upload-artifact@v5
         with:
@@ -224,25 +271,83 @@ jobs:
           # to no principal (see the note in scripts/src/download_from_s3.sh).
           # upload_to_s3.sh flattens each FILE to prefix/basename, so the key is
           # the same xml-backups/$BUNDLE_DIR.zip the bastion path produced.
+          # Sourced rather than reimplemented, so the URL reported here is the same
+          # string `upload_to_s3.sh` logs for the same object -- and the same one
+          # `migrate-to-xml` wrote into every METS file's "cloud backup" fileGrp, since
+          # all three derive it from $CF_URL and $BACKUP_CLOUD_PREFIX.
+          source ./scripts/src/utils/s3_utils.sh
+          KEY="$BACKUP_CLOUD_PREFIX/$BUNDLE_DIR.zip"
+          LOCATION="$(object_location --bucket="$BACKUP_BUCKET" --key="$KEY")"
+
           TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
-            -b=dailp-dev-media-storage -p=xml-backups "$BUNDLE_ZIP"
+            -b="$BACKUP_BUCKET" -p="$BACKUP_CLOUD_PREFIX" "$BUNDLE_ZIP"
 
           # Replaces the bastion-side sha256 comparison: S3 already checksums
           # every part, so what is left to catch is a multipart upload that
           # completed short of the whole file.
           REMOTE_BYTES=$(aws s3api head-object \
-            --bucket dailp-dev-media-storage \
-            --key "xml-backups/$BUNDLE_DIR.zip" \
+            --bucket "$BACKUP_BUCKET" \
+            --key "$KEY" \
             --query ContentLength --output text)
           echo "Local  size: $ZIP_BYTES bytes"
           echo "Remote size: $REMOTE_BYTES bytes"
           if [ "$REMOTE_BYTES" != "$ZIP_BYTES" ]; then
             echo "Uploaded object size does not match the local archive." >&2
-            echo "Do not treat s3://dailp-dev-media-storage/xml-backups/$BUNDLE_DIR.zip" >&2
+            echo "Do not treat $LOCATION" >&2
             echo "as a good backup; see terraform/docs/runbook.md." >&2
             exit 1
           fi
-          echo "Upload verified. sha256 of the archive: $ZIP_SHA"
+          echo "Upload verified: $LOCATION"
+          echo "sha256 of the archive: $ZIP_SHA"
+          echo "location=$LOCATION" >> "$SUMMARY_DIR/xml-bundle.env"
+      - name: Upload XML export logs to S3
+        # `if: always()`, and placed after the bundle upload rather than at the end of the
+        # job, because a failed export is exactly when its log is worth having -- and
+        # because the runner's copy dies with the runner. `migrate-to-xml` writes both its
+        # logfile and its attachment failure report into <BUNDLE_ROOT>/logs/, a sibling of
+        # the run directory rather than a child, so neither is inside the zip that was
+        # just uploaded (see `mets::logs_dir`).
+        if: always() && env.BUNDLE_ROOT != ''
+        timeout-minutes: 10
+        run: |
+          LOG_DIR="$BUNDLE_ROOT/logs"
+          # Both conditions, not just the directory: an unmatched glob expands to itself
+          # in bash, so an existing-but-empty directory would hand upload_to_s3.sh the
+          # literal string "<dir>/*" and fail the step on a run that simply had nothing
+          # to log.
+          if [ ! -d "$LOG_DIR" ] || ! compgen -G "$LOG_DIR/*" > /dev/null; then
+            echo "No files in $LOG_DIR to upload; the export did not get as far as logging." >&2
+            exit 0
+          fi
+
+          # Keyed by run directory rather than by date, so a run's logs sit next to
+          # nothing but themselves and are findable from the bundle name alone. Falls back
+          # to the run id when the export failed before naming a bundle.
+          LOG_PREFIX="$BACKUP_CLOUD_PREFIX/logs/${BUNDLE_DIR:-run-$GITHUB_RUN_ID}"
+          source ./scripts/src/utils/s3_utils.sh
+
+          TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
+            -b="$BACKUP_BUCKET" -p="$LOG_PREFIX" "$LOG_DIR"/*
+
+          # The exporter's own logfile is the one the summary links; the failure report
+          # next to it is read below, not linked.
+          EXPORT_LOG=$(ls -1 "$LOG_DIR"/migrate-to-xml_*.log 2>/dev/null | tail -n 1 || true)
+          if [ -n "$EXPORT_LOG" ]; then
+            LOG_LOCATION="$(object_location --bucket="$BACKUP_BUCKET" \
+              --key="$LOG_PREFIX/$(basename "$EXPORT_LOG")")"
+            echo "Export log: $LOG_LOCATION"
+            echo "logs=$LOG_LOCATION" >> "$SUMMARY_DIR/xml-bundle.env"
+          fi
+
+          # Copied into the summary state directory so the final step can read it without
+          # knowing anything about where the bundle was built. Written unconditionally by
+          # `migrate-to-xml`, including as an empty array -- its absence means the export
+          # died before finishing, which the summary step reports differently.
+          REPORT=$(ls -1 "$LOG_DIR"/attachment-failures_*.json 2>/dev/null | tail -n 1 || true)
+          if [ -n "$REPORT" ]; then
+            cp "$REPORT" "$SUMMARY_DIR/attachment-failures.json"
+            echo "Attachment failures recorded: $(jq 'length' "$REPORT")"
+          fi
       # ---------------------------------------------------------------------
       # Database backup track.
       #
@@ -485,6 +590,33 @@ jobs:
             ls -l '$REMOTE_DIR'
           "
           echo "CSV archive: $REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz"
+
+          # Computed on the bastion, where the files are, and matched by shape on the way
+          # back for the same reason the dump path above is: these values are interpolated
+          # into a Markdown table in the run summary. The XML bundle has carried a
+          # checksum since it was zipped; without this the two database artifacts were the
+          # only things in the backup an operator could not verify after downloading.
+          SUMS_OUT="$RUNNER_TEMP/db_checksums.txt"
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            sha256sum '$DUMP_PATH' '$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz'
+          " > "$SUMS_OUT"
+
+          # Compared as a whole field rather than matched as a pattern: `sha256sum`
+          # prints "<hash>  <path>", and the dump's own filename carries a `+` (from
+          # pg_dump_backup.sh's %z timezone suffix) and `.`, both of which mean something
+          # other than themselves in a regex -- a `grep -E` built from the path would
+          # simply never match.
+          sum_for() {
+            tr -d '\r' < "$SUMS_OUT" | awk -v f="$1" '$2 == f { print $1 }' | tail -n 1
+          }
+          DUMP_SHA=$(sum_for "$DUMP_PATH" || true)
+          CSV_SHA=$(sum_for "$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz" || true)
+          echo "pg_dump sha256: ${DUMP_SHA:-unavailable}"
+          echo "CSV     sha256: ${CSV_SHA:-unavailable}"
+
+          echo "checksum=${DUMP_SHA:-unavailable}" >> "$SUMMARY_DIR/pg-dump.env"
+          echo "checksum=${CSV_SHA:-unavailable}" >> "$SUMMARY_DIR/csv-export.env"
       - name: Upload database backups to S3 from bastion
         # From the bastion, not the runner: the outputs only exist there, and
         # round-tripping them back through the SSM tunnel just to push them out
@@ -496,16 +628,34 @@ jobs:
         # below must stay under that prefix or the upload is denied.
         timeout-minutes: 30
         run: |
+          source ./scripts/src/utils/s3_utils.sh
           DUMP_NAME=$(basename "$DUMP_PATH")
           CSV_NAME="dailp_${RUN_TS}_csv.tar.gz"
           PREFIX="db-backups/$RUN_TS"
+          LOG_PREFIX="$PREFIX/logs"
 
+          # The scripts' own logfiles go up alongside the backups they describe, in the
+          # same call. They used to be written to $REMOTE_DIR/logs/ and then deleted with
+          # it at the end of this step, so a failed or merely surprising backup left
+          # nothing behind to read. `create_logfile` names them
+          # "<name>_<timestamp>.log", so the pg_dump and CSV logs are told apart below by
+          # their "dailp_pg-dump"/"export_db_to_csv" prefixes.
+          # CF_URL is passed inline alongside TF_STAGE, rather than through
+          # .dailp-backup-env, because it is a public CDN domain rather than a credential
+          # and this step has no other reason to source that file. Without it the
+          # bastion-side upload reports every location as a bare s3:// URI.
           nix run --impure -L .#run-on-bastion -- "
             set -euo pipefail
-            TF_STAGE=dev bash /home/ec2-user/scripts/src/upload_to_s3.sh \
-              -b=dailp-dev-media-storage -p='$PREFIX' \
+            export CF_URL='$CF_URL' TF_STAGE=dev
+            bash /home/ec2-user/scripts/src/upload_to_s3.sh \
+              -b='$BACKUP_BUCKET' -p='$PREFIX' \
               '$DUMP_PATH' '$REMOTE_DIR/$CSV_NAME'
-          "
+            if compgen -G '$REMOTE_DIR/logs/*.log' > /dev/null; then
+              bash /home/ec2-user/scripts/src/upload_to_s3.sh \
+                -b='$BACKUP_BUCKET' -p='$LOG_PREFIX' '$REMOTE_DIR'/logs/*.log
+            fi
+            ls -1 '$REMOTE_DIR'/logs/ 2>/dev/null || true
+          " | tee "$RUNNER_TEMP/db_upload.txt"
 
           # upload_to_s3.sh reports its own per-file failures and exits non-zero,
           # but it is the runner that has to be able to state where the backup
@@ -514,25 +664,36 @@ jobs:
           STATUS=success
           for key in "$PREFIX/$DUMP_NAME" "$PREFIX/$CSV_NAME"; do
             if SIZE=$(aws s3api head-object \
-              --bucket dailp-dev-media-storage --key "$key" \
+              --bucket "$BACKUP_BUCKET" --key "$key" \
               --query ContentLength --output text 2>/dev/null); then
-              echo "verified s3://dailp-dev-media-storage/$key ($SIZE bytes)"
+              echo "verified $(object_location --bucket="$BACKUP_BUCKET" --key="$key") ($SIZE bytes)"
             else
-              echo "MISSING s3://dailp-dev-media-storage/$key" >&2
+              echo "MISSING $(object_location --bucket="$BACKUP_BUCKET" --key="$key")" >&2
               STATUS=failed
             fi
           done
 
-          # Reported back to the run summary so the outcome and the exact
-          # restore locations are visible without reading the step logs.
+          # Resolved from the listing above rather than guessed, since the timestamp in
+          # each log's name is the script's own, not $RUN_TS.
+          log_location_for() {
+            local name
+            name=$(tr -d '\r' < "$RUNNER_TEMP/db_upload.txt" \
+              | grep -E "^$1_.*\.log$" | tail -n 1 || true)
+            if [ -n "$name" ]; then
+              object_location --bucket="$BACKUP_BUCKET" --key="$LOG_PREFIX/$name"
+            fi
+          }
+
           {
-            echo "### Database backup: $STATUS"
-            echo
-            echo "| artifact | location |"
-            echo "| --- | --- |"
-            echo "| pg_dump | \`s3://dailp-dev-media-storage/$PREFIX/$DUMP_NAME\` |"
-            echo "| CSV export | \`s3://dailp-dev-media-storage/$PREFIX/$CSV_NAME\` |"
-          } >> "$GITHUB_STEP_SUMMARY"
+            echo "status=$STATUS"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$DUMP_NAME")"
+            echo "logs=$(log_location_for dailp_pg-dump)"
+          } >> "$SUMMARY_DIR/pg-dump.env"
+          {
+            echo "status=$STATUS"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$CSV_NAME")"
+            echo "logs=$(log_location_for export_db_to_csv)"
+          } >> "$SUMMARY_DIR/csv-export.env"
 
           if [ "$STATUS" != success ]; then
             echo "One or more database backup objects are not in S3." >&2
@@ -540,7 +701,8 @@ jobs:
           fi
 
           # Only once both objects are confirmed in S3: the 8 GiB root volume
-          # cannot hold many runs, and nothing else prunes it.
+          # cannot hold many runs, and nothing else prunes it. Safe for the logs too --
+          # they went up in the same call above.
           echo "Removing $REMOTE_DIR from the bastion now that both objects are in S3."
           nix run --impure -L .#run-on-bastion -- "rm -rf '$REMOTE_DIR' && df -h /home | tail -n 1"
       - name: Clean up bastion credentials and SSH key
@@ -551,3 +713,181 @@ jobs:
               "rm -f /home/ec2-user/.dailp-backup-env" || true
           fi
           rm -f "$BASTION_SSH_KEY" "${{ github.workspace }}/.bastion-db-env"
+      - name: Write run summary
+        # Last, and `if: always()`, because its whole job is to report what the steps
+        # before it did -- including when they failed. It replaces the two-column table
+        # the S3 upload step used to append to $GITHUB_STEP_SUMMARY itself, which covered
+        # only the database half of the backup, carried no checksums or logs, and had no
+        # way to say anything at all about a run that failed.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Empty when the artifact step was skipped -- it is size-gated at 2 GiB, so a
+          # large bundle has S3 as its only location.
+          BUNDLE_ARTIFACT_URL: ${{ steps.bundle-artifact.outputs.artifact-url }}
+        run: |
+          # Which steps failed, and where to link them, comes from the API rather than
+          # from state the steps maintain themselves: `steps[]` on this run's job carries
+          # each step's name, 1-based number and conclusion, which is both the
+          # authoritative answer and the only way to build a `#step:<n>:1` anchor. This
+          # step is still in_progress while it runs, which is what identifies the job.
+          JOBS_JSON="$RUNNER_TEMP/jobs.json"
+          if ! gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+            --paginate > "$JOBS_JSON" 2>/dev/null; then
+            echo "Could not read this run's jobs from the API; step links will be omitted." >&2
+            echo '{"jobs":[]}' > "$JOBS_JSON"
+          fi
+
+          JOB=$(jq -c '(.jobs | map(select(.status == "in_progress")) | last)
+                       // (.jobs | last) // {}' "$JOBS_JSON")
+          JOB_URL=$(printf '%s' "$JOB" | jq -r '.html_url // ""')
+
+          # name -> "[name](url#step:n:1)" for every step that failed. Steps that were
+          # skipped or cancelled are not failures and are deliberately not listed.
+          failed_steps() {
+            printf '%s' "$JOB" | jq -r --arg url "$JOB_URL" '
+              (.steps // [])
+              | map(select(.conclusion == "failure"))
+              | .[]
+              | "\(.name)\t[\(.name)](\($url)#step:\(.number):1)"'
+          }
+          FAILED_TSV="$RUNNER_TEMP/failed_steps.tsv"
+          failed_steps > "$FAILED_TSV" || true
+
+          # Which workflow steps can break which backup artifact. The bastion steps are
+          # listed against both database artifacts because a failure in any of them
+          # (credentials, prerequisites, the backup run itself) costs the pg_dump and the
+          # CSV export alike.
+          steps_for() {
+            case "$1" in
+              pg-dump|csv-export)
+                printf '%s\n' \
+                  'Copy backup scripts to bastion' \
+                  'Send database credentials to bastion' \
+                  'Check backup prerequisites on bastion' \
+                  'Run database backups on bastion' \
+                  'Upload database backups to S3 from bastion'
+                ;;
+              xml-bundle)
+                printf '%s\n' \
+                  'Prepare bundle workspace' \
+                  'Generate XML backup bundle' \
+                  'Zip backup bundle' \
+                  'Upload backup bundle to S3' \
+                  'Upload XML export logs to S3'
+                ;;
+            esac
+          }
+
+          # The first failed step among the ones that could have produced this artifact --
+          # first, not last, because a later failure is usually a consequence of it.
+          first_failed_step_link() {
+            local step link
+            while IFS= read -r step; do
+              # Exact match on the whole first field: a substring match would let
+              # "Upload backup bundle to S3" be found by a search for "Upload".
+              link=$(awk -F'\t' -v s="$step" '$1 == s { print $2; exit }' "$FAILED_TSV")
+              if [ -n "$link" ]; then
+                printf '%s' "$link"
+                return
+              fi
+            done < <(steps_for "$1")
+          }
+
+          # Values are read back with `cut -d= -f2-`, so a value containing "=" (every
+          # URL with a query string) survives; only the first "=" separates key from
+          # value.
+          field() {
+            [ -f "$SUMMARY_DIR/$1.env" ] || return 0
+            grep -m1 "^$2=" "$SUMMARY_DIR/$1.env" | cut -d= -f2- || true
+          }
+
+          SUCCESS_ROWS=""
+          FAILURE_ROWS=""
+          for artifact in pg-dump csv-export xml-bundle; do
+            # An artifact nothing even attempted -- the XML bundle when the export died
+            # before zipping, say -- gets no row in either table. There is nothing to say
+            # about it beyond what the failed step it never reached already says.
+            [ -f "$SUMMARY_DIR/$artifact.env" ] || continue
+
+            TYPE=$(field "$artifact" type)
+            LOCATION=$(field "$artifact" location)
+            CHECKSUM=$(field "$artifact" checksum)
+            LOGS=$(field "$artifact" logs)
+            STATUS=$(field "$artifact" status)
+
+            # The bundle reached Actions but not S3: still retrievable, just from the
+            # other place, so report that rather than calling the backup a failure.
+            if [ "$artifact" = xml-bundle ] && [ -z "$LOCATION" ] \
+              && [ -n "${BUNDLE_ARTIFACT_URL:-}" ]; then
+              LOCATION="$BUNDLE_ARTIFACT_URL"
+            fi
+
+            # Success means the thing is actually retrievable, not merely that no step
+            # reported an error: an artifact with no recorded location is a failure
+            # however quietly it got that way.
+            if [ -n "$LOCATION" ] && [ "${STATUS:-success}" = success ]; then
+              SUCCESS_ROWS+="| $TYPE | \`${CHECKSUM:-unavailable}\` | [download]($LOCATION) |"
+              if [ -n "$LOGS" ]; then
+                SUCCESS_ROWS+=" [log]($LOGS) |"$'\n'
+              else
+                SUCCESS_ROWS+=" |"$'\n'
+              fi
+            else
+              STEP_LINK=$(first_failed_step_link "$artifact")
+              FAILURE_ROWS+="| $TYPE | ${STEP_LINK:-_not reported_} |"
+              if [ -n "$LOGS" ]; then
+                FAILURE_ROWS+=" [log]($LOGS) |"$'\n'
+              else
+                FAILURE_ROWS+=" _none_ |"$'\n'
+              fi
+            fi
+          done
+
+          # One row per image or audio file that would not download. `migrate-to-xml`
+          # writes this report itself (see `crate::attachment_failures`) rather than the
+          # workflow parsing its log, so the parent document and the error are separate
+          # fields here instead of prose that would have to be picked apart. Pipes and
+          # newlines in a message are neutralized so one bad error string cannot break
+          # the table.
+          ATTACHMENT_ROWS=""
+          if [ -f "$SUMMARY_DIR/attachment-failures.json" ]; then
+            ATTACHMENT_ROWS=$(jq -r '
+              .[]
+              | [.title, .kind, .parent, .message]
+              | map(gsub("\\|"; "\\|") | gsub("[\n\r]"; " "))
+              | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) |"
+            ' "$SUMMARY_DIR/attachment-failures.json" || true)
+          fi
+
+          # Each section is emitted only if it has rows: a run where everything worked
+          # shows one table, not two empty ones under headers implying something broke.
+          {
+            if [ -n "$SUCCESS_ROWS" ]; then
+              echo "### Database backup: success"
+              echo
+              echo "| artifact | checksum | location | logs |"
+              echo "| --- | --- |---|---|"
+              printf '%s' "$SUCCESS_ROWS"
+              echo
+            fi
+
+            if [ -n "$FAILURE_ROWS" ]; then
+              echo "### Database backup: failure"
+              echo
+              echo "| backup type | workflow step | logs |"
+              echo "|---|---|---|"
+              printf '%s' "$FAILURE_ROWS"
+              echo
+            fi
+
+            if [ -n "$ATTACHMENT_ROWS" ]; then
+              echo "### Attachments backup: failure"
+              echo "Accumulates images and audio files that failed to be included in the XML backup bundle"
+              echo
+              echo "| title | type | parent | message |"
+              echo "|---|---|---|---|"
+              printf '%s\n' "$ATTACHMENT_ROWS"
+              echo
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
