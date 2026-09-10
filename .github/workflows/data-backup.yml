@@ -1,0 +1,893 @@
+name: Data Backup
+on:
+  workflow_dispatch:
+# `actions: read` is what the final summary step needs: it reads this run's own job via
+# the REST API to resolve each step's number and conclusion, which is how the summary
+# links a failed step and decides which backup track failed. `contents: read` is the
+# checkout. Spelled out because the repository default would otherwise apply, and this
+# job should not depend on what that happens to be set to.
+permissions:
+  contents: read
+  actions: read
+jobs:
+  backup:
+    name: Back up data to S3
+    runs-on: ubuntu-22.04
+    # workflow_dispatch has no branches filter, so this enforces "main only" at the job level.
+    if: github.ref == 'refs/heads/main'
+    environment: Development
+    env:
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      # No per-stage selection here: this job resolves to a single stage whose
+      # environment scopes the secret (cf. main.yml, where uat shares dev's
+      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
+      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: dev
+      # Used twice: the Postgres tunnel port-forwards through this instance over
+      # SSM, and the scripts deployment at the end of the job copies ./scripts
+      # onto it. The backup bundle itself no longer goes anywhere near it.
+      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      BASTION_IP: ${{ secrets.DEV_BASTION_IP }}
+      # Needed only by the scripts deployment. Written to disk immediately
+      # before that step and removed immediately after, rather than held for the
+      # whole job.
+      BASTION_SSH_KEY: ${{ github.workspace }}/.bastion-ssh-key.pem
+      # All set for real by the workspace/generate/zip steps via $GITHUB_ENV.
+      # Declared empty here so later steps can reference them through the `env`
+      # context (the artifact step's `name`, `path` and `if` guard all do), and
+      # so there is exactly one place each value is assigned -- a non-empty
+      # default here would leave it ambiguous whether the job-level value or the
+      # $GITHUB_ENV write wins.
+      #
+      # BUNDLE_ROOT is where `migrate-to-xml -o=` writes this run's bundle and
+      # where the steps below look for it. It is passed explicitly rather than
+      # relying on the tool's cwd-relative default, so the location stays
+      # correct if a step ever gains a `working-directory`.
+      BUNDLE_ROOT: ""
+      BUNDLE_DIR: ""
+      BUNDLE_ZIP: ""
+      ZIP_BYTES: ""
+      # The media CloudFront distribution's domain, resolved once from terraform in
+      # "Build project" below. Every location this job reports -- in its own logs, and in
+      # the run summary -- is built from this rather than being a bare s3:// URI, which is
+      # neither fetchable nor clickable. Also read by `upload_to_s3.sh` (which routes all
+      # of its own location reporting through `object_location`) and by `migrate-to-xml`
+      # (which needs it to write each METS file's "cloud backup" location).
+      CF_URL: ""
+      # Where the bundle zip lands in S3. Exported so `migrate-to-xml` builds the same
+      # "cloud backup" URL that the upload step below actually writes to -- the two would
+      # otherwise agree only by coincidence. See `mets::cloud_backup_url`.
+      BACKUP_CLOUD_PREFIX: xml-backups
+      BACKUP_BUCKET: dailp-dev-media-storage
+      # One file per backup artifact, written by whichever step produces it and read by
+      # the final summary step. A directory of files rather than $GITHUB_ENV because a
+      # step that fails partway still leaves behind whatever it had already established,
+      # and because the summary step needs to distinguish "this artifact was never
+      # attempted" from "it was attempted and failed".
+      SUMMARY_DIR: ${{ github.workspace }}/.backup-summary
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-21.11
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v12
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Build project
+        run: |
+          nix build --impure -L
+          nix run --impure -L .#tf-init
+          # Resolved here, once, and published to the whole job rather than exported
+          # inside the one step that used to need it. Both `upload_to_s3.sh` calls below
+          # run in their own shells, so a step-local export reached neither of them, and
+          # every location they logged fell back to a bare s3:// URI.
+          echo "CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)" >> "$GITHUB_ENV"
+
+          # One file per artifact this run intends to produce, seeded here so that every
+          # artifact appears in the run summary even when the step that would have
+          # produced it never ran. Creating them lazily instead would silently drop a
+          # failed backup from both summary tables, which is precisely the case the
+          # failure table exists for. Later steps append to these.
+          mkdir -p "$SUMMARY_DIR"
+          echo "type=pg_dump"    > "$SUMMARY_DIR/pg-dump.env"
+          echo "type=CSV export" > "$SUMMARY_DIR/csv-export.env"
+          echo "type=XML Bundle" > "$SUMMARY_DIR/xml-bundle.env"
+      - name: Prepare bundle workspace
+        # `zip -r` holds the raw tree and the finished archive at once, and this
+        # bundle is mostly already-compressed media, so peak disk is roughly
+        # twice the bundle size. github.workspace does not have that headroom at
+        # current bundle sizes; /mnt is the runner's larger ephemeral volume.
+        run: |
+          sudo mkdir -p /mnt/dailp-backup
+          sudo chown "$(id -u):$(id -g)" /mnt/dailp-backup
+          df -h / /mnt
+          echo "BUNDLE_ROOT=/mnt/dailp-backup/xml/dailp" >> "$GITHUB_ENV"
+      - name: Generate XML backup bundle
+        # Bounded so a stalled media fetch cannot burn the job's 6-hour default.
+        # The exporter downloads with its own connect/read timeouts and retries
+        # (see migration/src/mets.rs), so hitting this means something broader
+        # than one bad URL.
+        timeout-minutes: 90
+        run: |
+          echo "Retrieving terraform outputs..."
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          SSM_PID=$!
+          echo "Waiting for tunnel on localhost:5432..."
+          for i in $(seq 1 15); do
+            (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          echo "Generating METS/TEI backup bundle..."
+          nix run --impure -L .#migrate-to-xml -- -o="$BUNDLE_ROOT"
+          kill $SSM_PID
+          # -p marks directories with a trailing slash, so the `dailp-*.zip`
+          # the next step writes alongside them can never be selected here.
+          BUNDLE_DIR=$(ls -1tp "$BUNDLE_ROOT" | grep '^dailp-.*/$' | head -n1 | tr -d '/')
+          if [ -z "$BUNDLE_DIR" ]; then
+            echo "No backup bundle directory found under $BUNDLE_ROOT" >&2
+            exit 1
+          fi
+          echo "Generated bundle: $BUNDLE_DIR"
+          echo "BUNDLE_DIR=$BUNDLE_DIR" >> "$GITHUB_ENV"
+      - name: Zip backup bundle
+        timeout-minutes: 30
+        run: |
+          # *_KB, because `du -sk` reports kibibytes. Only used for the ratio
+          # message below; the byte-exact size that later steps compare against
+          # comes from `stat` further down.
+          RAW_KB=$(du -sk "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)
+          RAW_FILES=$(find "$BUNDLE_ROOT/$BUNDLE_DIR" -type f | wc -l | tr -d ' ')
+          echo "Zipping $RAW_FILES files ($(du -sh "$BUNDLE_ROOT/$BUNDLE_DIR" | cut -f1)) from $BUNDLE_DIR..."
+
+          # -q because zip lists every entry otherwise, which buries the
+          # summary below under thousands of lines. Zipped from inside
+          # BUNDLE_ROOT so the archive holds `dailp-<date>/...` rather than
+          # the runner's absolute path.
+          ( cd "$BUNDLE_ROOT" && zip -q -r "$BUNDLE_DIR.zip" "$BUNDLE_DIR" )
+
+          ZIP_PATH="$BUNDLE_ROOT/$BUNDLE_DIR.zip"
+          ZIP_KB=$(du -sk "$ZIP_PATH" | cut -f1)
+          RATIO=$(awk -v r="$RAW_KB" -v z="$ZIP_KB" \
+            'BEGIN { if (r > 0) printf "%.1f%% of raw", (z / r) * 100; else printf "raw size unknown" }')
+          echo "Created $BUNDLE_DIR.zip: $(du -h "$ZIP_PATH" | cut -f1) ($RATIO)"
+
+          # zip exits 0 on some partial-write conditions, so confirm the
+          # archive holds every file we meant to put in it. `zipinfo -t`
+          # counts directory entries as well, hence listing and filtering.
+          ZIP_FILES=$(zipinfo -1 "$ZIP_PATH" | grep -cv '/$')
+          echo "Archive holds $ZIP_FILES files (bundle has $RAW_FILES)"
+          if [ "$ZIP_FILES" != "$RAW_FILES" ]; then
+            echo "Zip is missing files from the bundle; refusing to continue." >&2
+            exit 1
+          fi
+
+          # Logged so an operator who downloads the object from S3 has something
+          # to compare against; the upload step verifies the transfer by size.
+          ZIP_SHA=$(sha256sum "$ZIP_PATH" | cut -d' ' -f1)
+          echo "sha256: $ZIP_SHA"
+
+          # Byte-exact, unlike the `du -sk` values above: this is what the
+          # upload step compares against S3's ContentLength, and what gates the
+          # artifact step.
+          ZIP_BYTES=$(stat -c%s "$ZIP_PATH")
+          {
+            echo "BUNDLE_ZIP=$ZIP_PATH"
+            echo "ZIP_SHA=$ZIP_SHA"
+            echo "ZIP_BYTES=$ZIP_BYTES"
+          } >> "$GITHUB_ENV"
+
+          # Recorded now rather than after the upload, so the checksum survives into the
+          # run summary even if the upload is what fails. `location` is filled in by
+          # whichever of the S3 upload or the artifact step ends up being the place an
+          # operator can actually fetch this from.
+          echo "checksum=$ZIP_SHA" >> "$SUMMARY_DIR/xml-bundle.env"
+
+          # Peak disk is behind us at this point, so a tight number here is the
+          # warning that the next run may not fit.
+          df -h /mnt
+      - name: Publish bundle as workflow artifact
+        # Runs before, and independently of, the S3 upload: an operator can
+        # download the bundle from the run summary and place it by hand rather
+        # than re-running the whole export.
+        #
+        # Size-gated at 2 GiB. Above that, uploading here costs more time than
+        # the S3 upload it duplicates and consumes Actions storage quota for a
+        # copy nobody reaches for -- S3 is the destination that has to work.
+        # Guarded on BUNDLE_ZIP so it is skipped when the zip step never got
+        # far enough to set it.
+        id: bundle-artifact
+        if: always() && env.BUNDLE_ZIP != '' && fromJSON(env.ZIP_BYTES || '0') < 2147483648
+        uses: actions/upload-artifact@v5
+        with:
+          name: backup-bundle-${{ env.BUNDLE_DIR }}
+          path: ${{ env.BUNDLE_ZIP }}
+          # The payload is already compressed, so re-compressing it only costs
+          # time. Note that upload-artifact always wraps what it is given, so
+          # the download is a zip containing our zip.
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload backup bundle to S3
+        # Straight from the runner, not through the bastion. The bastion hop it
+        # replaces was bounded by SSM port-forwarding throughput (single-digit
+        # MB/s) and by an 8 GiB root volume the bundle no longer fits on, and it
+        # depended on an S3 write grant that this project's Terraform does not
+        # make (see terraform/docs/runbook.md). The runner's credentials are the
+        # dailp-deployment user, which the bucket policy grants s3:PutObject on
+        # the whole bucket -- see terraform/media-storage.nix.
+        timeout-minutes: 60
+        env:
+          # Let individual failed parts retry rather than failing the transfer.
+          AWS_MAX_ATTEMPTS: "10"
+          AWS_RETRY_MODE: adaptive
+        run: |
+          # The CLI's defaults are sized for small objects. 64 MiB parts keep a
+          # ~13 GB archive near 200 parts -- far inside the 10,000-part cap --
+          # while cutting per-part overhead, and cli_read_timeout=0 stops one
+          # slow part from aborting the whole upload.
+          aws configure set default.s3.multipart_threshold 64MB
+          aws configure set default.s3.multipart_chunksize 64MB
+          aws configure set default.s3.max_concurrent_requests 16
+          aws configure set default.cli_read_timeout 0
+
+          echo "Uploading $BUNDLE_DIR.zip ($(du -h "$BUNDLE_ZIP" | cut -f1)) to S3."
+          echo "Starting upload at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+
+          # A single object rather than a recursive tree: restoring it needs
+          # only GetObject on one known key, whereas the previous per-file
+          # layout needed s3:ListBucket, which this project's Terraform grants
+          # to no principal (see the note in scripts/src/download_from_s3.sh).
+          # upload_to_s3.sh flattens each FILE to prefix/basename, so the key is
+          # the same xml-backups/$BUNDLE_DIR.zip the bastion path produced.
+          # Sourced rather than reimplemented, so the URL reported here is the same
+          # string `upload_to_s3.sh` logs for the same object -- and the same one
+          # `migrate-to-xml` wrote into every METS file's "cloud backup" fileGrp, since
+          # all three derive it from $CF_URL and $BACKUP_CLOUD_PREFIX.
+          source ./scripts/src/utils/s3_utils.sh
+          KEY="$BACKUP_CLOUD_PREFIX/$BUNDLE_DIR.zip"
+          LOCATION="$(object_location --bucket="$BACKUP_BUCKET" --key="$KEY")"
+
+          TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
+            -b="$BACKUP_BUCKET" -p="$BACKUP_CLOUD_PREFIX" "$BUNDLE_ZIP"
+
+          # Replaces the bastion-side sha256 comparison: S3 already checksums
+          # every part, so what is left to catch is a multipart upload that
+          # completed short of the whole file.
+          REMOTE_BYTES=$(aws s3api head-object \
+            --bucket "$BACKUP_BUCKET" \
+            --key "$KEY" \
+            --query ContentLength --output text)
+          echo "Local  size: $ZIP_BYTES bytes"
+          echo "Remote size: $REMOTE_BYTES bytes"
+          if [ "$REMOTE_BYTES" != "$ZIP_BYTES" ]; then
+            echo "Uploaded object size does not match the local archive." >&2
+            echo "Do not treat $LOCATION" >&2
+            echo "as a good backup; see terraform/docs/runbook.md." >&2
+            exit 1
+          fi
+          echo "Upload verified: $LOCATION"
+          echo "sha256 of the archive: $ZIP_SHA"
+          echo "location=$LOCATION" >> "$SUMMARY_DIR/xml-bundle.env"
+      - name: Upload XML export logs to S3
+        # `if: always()`, and placed after the bundle upload rather than at the end of the
+        # job, because a failed export is exactly when its log is worth having -- and
+        # because the runner's copy dies with the runner. `migrate-to-xml` writes both its
+        # logfile and its attachment failure report into <BUNDLE_ROOT>/logs/, a sibling of
+        # the run directory rather than a child, so neither is inside the zip that was
+        # just uploaded (see `mets::logs_dir`).
+        if: always() && env.BUNDLE_ROOT != ''
+        timeout-minutes: 10
+        run: |
+          LOG_DIR="$BUNDLE_ROOT/logs"
+          # Both conditions, not just the directory: an unmatched glob expands to itself
+          # in bash, so an existing-but-empty directory would hand upload_to_s3.sh the
+          # literal string "<dir>/*" and fail the step on a run that simply had nothing
+          # to log.
+          if [ ! -d "$LOG_DIR" ] || ! compgen -G "$LOG_DIR/*" > /dev/null; then
+            echo "No files in $LOG_DIR to upload; the export did not get as far as logging." >&2
+            exit 0
+          fi
+
+          # Keyed by run directory rather than by date, so a run's logs sit next to
+          # nothing but themselves and are findable from the bundle name alone. Falls back
+          # to the run id when the export failed before naming a bundle.
+          LOG_PREFIX="$BACKUP_CLOUD_PREFIX/logs/${BUNDLE_DIR:-run-$GITHUB_RUN_ID}"
+          source ./scripts/src/utils/s3_utils.sh
+
+          TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
+            -b="$BACKUP_BUCKET" -p="$LOG_PREFIX" "$LOG_DIR"/*
+
+          # The exporter's own logfile is the one the summary links; the failure report
+          # next to it is read below, not linked.
+          EXPORT_LOG=$(ls -1 "$LOG_DIR"/migrate-to-xml_*.log 2>/dev/null | tail -n 1 || true)
+          if [ -n "$EXPORT_LOG" ]; then
+            LOG_LOCATION="$(object_location --bucket="$BACKUP_BUCKET" \
+              --key="$LOG_PREFIX/$(basename "$EXPORT_LOG")")"
+            echo "Export log: $LOG_LOCATION"
+            echo "logs=$LOG_LOCATION" >> "$SUMMARY_DIR/xml-bundle.env"
+          fi
+
+          # Copied into the summary state directory so the final step can read it without
+          # knowing anything about where the bundle was built. Written unconditionally by
+          # `migrate-to-xml`, including as an empty array -- its absence means the export
+          # died before finishing, which the summary step reports differently.
+          REPORT=$(ls -1 "$LOG_DIR"/attachment-failures_*.json 2>/dev/null | tail -n 1 || true)
+          if [ -n "$REPORT" ]; then
+            cp "$REPORT" "$SUMMARY_DIR/attachment-failures.json"
+            echo "Attachment failures recorded: $(jq 'length' "$REPORT")"
+          fi
+      # ---------------------------------------------------------------------
+      # Database backup track.
+      #
+      # Everything above backs up *content* (METS/TEI XML plus media) from the
+      # runner. Everything below backs up the *database* from the bastion, which
+      # is a genuinely different job: it runs the operator scripts in ./scripts
+      # against RDS and uploads their output to S3 itself.
+      #
+      # The bastion, not the runner, because it can reach RDS directly --
+      # terraform/database-sql.nix allows 5432 ingress from the `mongodb_access`
+      # security group and terraform/bastion-host.nix puts the bastion in it --
+      # so no tunnel is involved, and this automates the "Routine Database
+      # Backups" procedure in scripts/SOPs.md as written.
+      #
+      # Placed after the XML bundle's S3 upload so an SSM, SSH, or database
+      # problem here cannot cost a 90-minute export that already reached S3.
+      - name: Write bastion SSH key
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.DEV_BASTION_SSH_KEY }}" > "$BASTION_SSH_KEY"
+      - name: Copy backup scripts to bastion
+        # ./scripts is small; the headroom is for flake evaluation on a cold
+        # runner, not for the transfer. The bastion also carries this tooling for
+        # the by-hand procedures in terraform/docs/sop.md and scripts/runbook.md,
+        # so it has to stay in step with the repo either way.
+        timeout-minutes: 10
+        run: nix run --impure -L .#copy-to-bastion -- ./scripts /home/ec2-user/
+      - name: Send database credentials to bastion
+        # Via a mode-600 file rather than inline in the remote command, because
+        # `run-on-bastion` passes its argument as the ssh command line, which is
+        # visible in `ps` on the bastion for the life of the command. The scripts
+        # themselves are careful about exactly this (pg_dump_backup.sh exports
+        # PGPASSWORD rather than passing -p, "so it never appears in ps output"),
+        # and it would be pointless to undo that here. Removed again by the
+        # cleanup step at the end of the job.
+        #
+        # DATABASE_URL deliberately carries no password: both scripts take it
+        # from DATABASE_PASSWORD and set PGPASSWORD internally, so the secret
+        # stays in one variable instead of being embedded in a URL that gets
+        # logged. Setting DATABASE_PASSWORD also stops export_db_to_csv.sh from
+        # trying to prompt for one (see prompt_password_if_needed in
+        # scripts/src/utils/pg_utils.sh), which would otherwise hang here.
+        timeout-minutes: 10
+        run: |
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          ENV_FILE="${{ github.workspace }}/.bastion-db-env"
+          umask 077
+          # printf %q, not a bare echo: this file is *sourced* by the remote
+          # shell, so an unquoted password containing a space, `$`, quote or
+          # backtick would either be silently truncated at the first space or,
+          # worse, expanded -- turning the password into executable code. %q
+          # emits a form that is safe to re-read as shell input whatever the
+          # secret happens to contain.
+          {
+            printf 'DATABASE_URL=%q\n' "postgres://dailp@$DATABASE_ADDRESS:5432/dailp"
+            printf 'DATABASE_PASSWORD=%q\n' "$DATABASE_PASSWORD"
+          } > "$ENV_FILE"
+
+          nix run --impure -L .#copy-to-bastion -- "$ENV_FILE" /home/ec2-user/.dailp-backup-env
+          rm -f "$ENV_FILE"
+          nix run --impure -L .#run-on-bastion -- "chmod 600 /home/ec2-user/.dailp-backup-env"
+      - name: Check backup prerequisites on bastion
+        # Two independent prerequisites, both checked before anything touches the
+        # database, because both otherwise fail deep inside a backup with an
+        # error that reads like something else entirely.
+        #
+        # 1. bash >= 4.3. Every script in ./scripts uses `local -n` namerefs
+        #    (log_utils.sh's create_logfile, pg_utils.sh's resolve_pg_target,
+        #    upload_to_s3.sh's upload_objects), which bash added in 4.3. Amazon
+        #    Linux 2 ships bash 4.2, where those lines fail with
+        #    "local: -n: invalid option" -- an error that names neither the
+        #    database nor the script that actually broke. There is no newer bash
+        #    in the AL2 repos, so this can only be reported, not fixed here.
+        # 2. A Postgres client >= 14. RDS runs Postgres 14
+        #    (terraform/database-sql.nix) and a default AL2
+        #    `yum install postgresql` gives 9.2; pg_dump refuses to dump a server
+        #    newer than itself. This one is installable, so it is installed.
+        timeout-minutes: 15
+        run: |
+          nix run --impure -L .#run-on-bastion -- '
+            set -euo pipefail
+
+            bash_major=${BASH_VERSINFO[0]}
+            bash_minor=${BASH_VERSINFO[1]}
+            echo "bash $bash_major.$bash_minor ($BASH_VERSION)"
+            if [ "$bash_major" -lt 4 ] || { [ "$bash_major" -eq 4 ] && [ "$bash_minor" -lt 3 ]; }; then
+              echo "The backup scripts need bash >= 4.3 for local -n namerefs;" >&2
+              echo "this host has $BASH_VERSION. Amazon Linux 2 ships 4.2 and has" >&2
+              echo "no newer bash available, so the bastion needs an AL2023 AMI" >&2
+              echo "(terraform/bastion-host.nix pins the AMI by id) or a bash >= 4.3" >&2
+              echo "installed on PATH ahead of /bin/bash." >&2
+              exit 1
+            fi
+
+            # Both binaries are needed: pg_dump_backup.sh uses pg_dump,
+            # export_db_to_csv.sh uses psql.
+            client_major() {
+              if command -v pg_dump >/dev/null 2>&1 && command -v psql >/dev/null 2>&1; then
+                pg_dump --version | grep -oE "[0-9]+" | head -n 1
+              else
+                echo 0
+              fi
+            }
+
+            major=$(client_major)
+            if [ "${major:-0}" -lt 14 ]; then
+              if [ "${major:-0}" -eq 0 ]; then
+                echo "pg_dump and/or psql not found; installing a Postgres client."
+              else
+                echo "pg_dump is major version $major, too old for a v14 server; upgrading."
+              fi
+
+              # Amazon Linux 2 and Amazon Linux 2023 differ here, and the AMI is
+              # pinned by id in terraform/bastion-host.nix rather than by family,
+              # so handle whichever this instance turns out to be.
+              if command -v amazon-linux-extras >/dev/null 2>&1; then
+                sudo amazon-linux-extras enable postgresql14
+                sudo yum clean metadata
+                sudo yum install -y postgresql
+              elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y postgresql15 || sudo dnf install -y postgresql
+              else
+                echo "No amazon-linux-extras or dnf on this host; install a" >&2
+                echo "Postgres >= 14 client by hand and re-run." >&2
+                exit 1
+              fi
+
+              # Asserted rather than assumed: installing the wrong major version
+              # would otherwise surface much later as a confusing pg_dump
+              # "server version mismatch" failure mid-backup.
+              major=$(client_major)
+              if [ "${major:-0}" -lt 14 ]; then
+                echo "Still on Postgres client major version ${major:-none} after" >&2
+                echo "installing; a v14 server cannot be dumped with this client." >&2
+                exit 1
+              fi
+            fi
+
+            pg_dump --version
+            psql --version
+
+            # 3. The AWS CLI, checked here rather than discovered by the upload
+            #    step 40 minutes into a backup. The standard Amazon Linux AMIs
+            #    ship it (v1 on AL2, v2 on AL2023) but the al2023-ami-minimal-*
+            #    images do not, and upload_to_s3.sh runs `aws` on the bastion.
+            #    Not installed automatically: on a host where it is missing, the
+            #    AMI is wrong and that is worth surfacing rather than papering
+            #    over -- see terraform/bastion-host.nix.
+            if ! command -v aws >/dev/null 2>&1; then
+              echo "No aws CLI on the bastion; upload_to_s3.sh cannot run." >&2
+              echo "The standard AL2023 AMI includes it -- a minimal AMI does" >&2
+              echo "not. Check the ami pin in terraform/bastion-host.nix." >&2
+              exit 1
+            fi
+            aws --version
+          '
+      - name: Run database backups on bastion
+        # Both halves of the complete backup that scripts/SOPs.md defines, run in
+        # the order it specifies. Output paths are passed explicitly so this
+        # workflow knows where they are without parsing anything; the only value
+        # read back is the dump filename, which pg_dump_backup.sh generates from
+        # its own timestamp and echoes as its single line of stdout (every log
+        # line goes to stderr -- see log_utils.sh's log_event).
+        #
+        # That last part used to be the whole justification for capturing this
+        # value, and it was not enough: the scripts were clean, but the SSM
+        # tunnel underneath `run-on-bastion` was not. It inherited this step's
+        # stdout, so session-manager-plugin both interleaved its own banner with
+        # the dump path and -- being orphaned rather than killed -- held the
+        # write end of the `$( )` pipe open, hanging this step for its full
+        # 60 minutes. Fixed at the source in flake.nix's bastionTunnel; the
+        # capture below is written so that a regression of that class produces a
+        # bad value instead of a hang.
+        timeout-minutes: 60
+        run: |
+          RUN_TS=$(date -u '+%Y%m%d_%H%M%SZ')
+          REMOTE_DIR="/home/ec2-user/backups/db/$RUN_TS"
+          echo "RUN_TS=$RUN_TS" >> "$GITHUB_ENV"
+          echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
+
+          # The bastion root volume is 8 GiB and nothing else prunes it, so a
+          # tight number here is the first thing to look at if this step fails.
+          echo "Bastion free space before backup:"
+          nix run --impure -L .#run-on-bastion -- "df -h /home | tail -n 1"
+
+          echo "Running pg_dump and the CSV export on the bastion..."
+
+          # Redirected to a file rather than read through `$( ... | ... )`.
+          # Blocking forever on a leaked write end is structurally impossible
+          # against a regular file, whereas a pipe stays open for as long as
+          # *any* process holds it -- which is why wrapping this in `timeout`
+          # would not have helped either, the pipe outliving `nix run` being the
+          # entire problem. Only stdout is redirected, so the script's log lines
+          # still reach this step's log. The file also survives the step for
+          # debugging.
+          DUMP_OUT="$RUNNER_TEMP/pg_dump_stdout.txt"
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            set -a; . /home/ec2-user/.dailp-backup-env; set +a
+            mkdir -p '$REMOTE_DIR'
+            bash /home/ec2-user/scripts/src/pg_dump_backup.sh \
+              -d='$REMOTE_DIR/pg_dump/' -l='$REMOTE_DIR/logs/'
+          " > "$DUMP_OUT"
+
+          # Matched by shape instead of taken as "the last line". create_backup
+          # in pg_dump_backup.sh builds the name as
+          # "${destination}dailp_$(date +%Y%m%d_%H%M%S%z).dump", so the value is
+          # fully predictable, and anything else on stdout is by definition not
+          # ours. Worth doing beyond mere tidiness: DUMP_PATH is interpolated
+          # into a single-quoted remote command in the next step, so an
+          # unvalidated value carrying a quote is a shell-injection-shaped bug,
+          # and basename "$DUMP_PATH" becomes an S3 key.
+          DUMP_PATH=$(tr -d '\r' < "$DUMP_OUT" \
+            | grep -E "^$REMOTE_DIR/pg_dump/dailp_[0-9]{8}_[0-9]{6}[+-][0-9]{4}\.dump$" \
+            | tail -n 1 || true)
+
+          if [ -z "$DUMP_PATH" ]; then
+            echo "pg_dump_backup.sh printed no usable dump path." >&2
+            echo "Expected one line matching" >&2
+            echo "  $REMOTE_DIR/pg_dump/dailp_<date>_<time><tz>.dump" >&2
+            echo "Its stdout was:" >&2
+            cat "$DUMP_OUT" >&2
+            exit 1
+          fi
+          echo "Dump file: $DUMP_PATH"
+          echo "DUMP_PATH=$DUMP_PATH" >> "$GITHUB_ENV"
+
+          # export_db_to_csv.sh writes one CSV per table plus the manifest.csv
+          # that import_db_from_csv.sh verifies against, so it is collapsed to a
+          # single archive: restoring it then needs only GetObject on one known
+          # key, the same reasoning the XML bundle upload above follows. tar
+          # rather than zip because tar is always present on Amazon Linux and zip
+          # is not.
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            set -a; . /home/ec2-user/.dailp-backup-env; set +a
+            bash /home/ec2-user/scripts/src/export_db_to_csv.sh \
+              -o='$REMOTE_DIR/csv' -l='$REMOTE_DIR/logs/'
+            tar -czf '$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz' -C '$REMOTE_DIR' csv
+            ls -l '$REMOTE_DIR'
+          "
+          echo "CSV archive: $REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz"
+
+          # Computed on the bastion, where the files are, and matched by shape on the way
+          # back for the same reason the dump path above is: these values are interpolated
+          # into a Markdown table in the run summary. The XML bundle has carried a
+          # checksum since it was zipped; without this the two database artifacts were the
+          # only things in the backup an operator could not verify after downloading.
+          SUMS_OUT="$RUNNER_TEMP/db_checksums.txt"
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            sha256sum '$DUMP_PATH' '$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz'
+          " > "$SUMS_OUT"
+
+          # Compared as a whole field rather than matched as a pattern: `sha256sum`
+          # prints "<hash>  <path>", and the dump's own filename carries a `+` (from
+          # pg_dump_backup.sh's %z timezone suffix) and `.`, both of which mean something
+          # other than themselves in a regex -- a `grep -E` built from the path would
+          # simply never match.
+          sum_for() {
+            tr -d '\r' < "$SUMS_OUT" | awk -v f="$1" '$2 == f { print $1 }' | tail -n 1
+          }
+          DUMP_SHA=$(sum_for "$DUMP_PATH" || true)
+          CSV_SHA=$(sum_for "$REMOTE_DIR/dailp_${RUN_TS}_csv.tar.gz" || true)
+          echo "pg_dump sha256: ${DUMP_SHA:-unavailable}"
+          echo "CSV     sha256: ${CSV_SHA:-unavailable}"
+
+          echo "checksum=${DUMP_SHA:-unavailable}" >> "$SUMMARY_DIR/pg-dump.env"
+          echo "checksum=${CSV_SHA:-unavailable}" >> "$SUMMARY_DIR/csv-export.env"
+      - name: Upload database backups to S3 from bastion
+        # From the bastion, not the runner: the outputs only exist there, and
+        # round-tripping them back through the SSM tunnel just to push them out
+        # again would be slower and pointless. This runs as the bastion instance
+        # role, not as the dailp-deployment user the runner steps use, and that
+        # role's own policy has no s3:PutObject. The grant it relies on is on the
+        # bucket instead -- allow_bastion_backup_writes in
+        # terraform/media-storage.nix -- and is scoped to db-backups/*, so PREFIX
+        # below must stay under that prefix or the upload is denied.
+        timeout-minutes: 30
+        run: |
+          source ./scripts/src/utils/s3_utils.sh
+          DUMP_NAME=$(basename "$DUMP_PATH")
+          CSV_NAME="dailp_${RUN_TS}_csv.tar.gz"
+          PREFIX="db-backups/$RUN_TS"
+          LOG_PREFIX="$PREFIX/logs"
+
+          # The scripts' own logfiles go up alongside the backups they describe, in the
+          # same call. They used to be written to $REMOTE_DIR/logs/ and then deleted with
+          # it at the end of this step, so a failed or merely surprising backup left
+          # nothing behind to read. `create_logfile` names them
+          # "<name>_<timestamp>.log", so the pg_dump and CSV logs are told apart below by
+          # their "dailp_pg-dump"/"export_db_to_csv" prefixes.
+          # CF_URL is passed inline alongside TF_STAGE, rather than through
+          # .dailp-backup-env, because it is a public CDN domain rather than a credential
+          # and this step has no other reason to source that file. Without it the
+          # bastion-side upload reports every location as a bare s3:// URI.
+          nix run --impure -L .#run-on-bastion -- "
+            set -euo pipefail
+            export CF_URL='$CF_URL' TF_STAGE=dev
+            bash /home/ec2-user/scripts/src/upload_to_s3.sh \
+              -b='$BACKUP_BUCKET' -p='$PREFIX' \
+              '$DUMP_PATH' '$REMOTE_DIR/$CSV_NAME'
+            if compgen -G '$REMOTE_DIR/logs/*.log' > /dev/null; then
+              bash /home/ec2-user/scripts/src/upload_to_s3.sh \
+                -b='$BACKUP_BUCKET' -p='$LOG_PREFIX' '$REMOTE_DIR'/logs/*.log
+            fi
+            ls -1 '$REMOTE_DIR'/logs/ 2>/dev/null || true
+          " | tee "$RUNNER_TEMP/db_upload.txt"
+
+          # upload_to_s3.sh reports its own per-file failures and exits non-zero,
+          # but it is the runner that has to be able to state where the backup
+          # ended up, so confirm both objects independently rather than trusting
+          # the exit status alone.
+          STATUS=success
+          for key in "$PREFIX/$DUMP_NAME" "$PREFIX/$CSV_NAME"; do
+            if SIZE=$(aws s3api head-object \
+              --bucket "$BACKUP_BUCKET" --key "$key" \
+              --query ContentLength --output text 2>/dev/null); then
+              echo "verified $(object_location --bucket="$BACKUP_BUCKET" --key="$key") ($SIZE bytes)"
+            else
+              echo "MISSING $(object_location --bucket="$BACKUP_BUCKET" --key="$key")" >&2
+              STATUS=failed
+            fi
+          done
+
+          # Resolved from the listing above rather than guessed, since the timestamp in
+          # each log's name is the script's own, not $RUN_TS.
+          log_location_for() {
+            local name
+            name=$(tr -d '\r' < "$RUNNER_TEMP/db_upload.txt" \
+              | grep -E "^$1_.*\.log$" | tail -n 1 || true)
+            if [ -n "$name" ]; then
+              object_location --bucket="$BACKUP_BUCKET" --key="$LOG_PREFIX/$name"
+            fi
+          }
+
+          {
+            echo "status=$STATUS"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$DUMP_NAME")"
+            echo "logs=$(log_location_for dailp_pg-dump)"
+          } >> "$SUMMARY_DIR/pg-dump.env"
+          {
+            echo "status=$STATUS"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$CSV_NAME")"
+            echo "logs=$(log_location_for export_db_to_csv)"
+          } >> "$SUMMARY_DIR/csv-export.env"
+
+          if [ "$STATUS" != success ]; then
+            echo "One or more database backup objects are not in S3." >&2
+            exit 1
+          fi
+
+          # Only once both objects are confirmed in S3: the 8 GiB root volume
+          # cannot hold many runs, and nothing else prunes it. Safe for the logs too --
+          # they went up in the same call above.
+          echo "Removing $REMOTE_DIR from the bastion now that both objects are in S3."
+          nix run --impure -L .#run-on-bastion -- "rm -rf '$REMOTE_DIR' && df -h /home | tail -n 1"
+      - name: Clean up bastion credentials and SSH key
+        if: always()
+        run: |
+          if [ -f "$BASTION_SSH_KEY" ]; then
+            nix run --impure -L .#run-on-bastion -- \
+              "rm -f /home/ec2-user/.dailp-backup-env" || true
+          fi
+          rm -f "$BASTION_SSH_KEY" "${{ github.workspace }}/.bastion-db-env"
+      - name: Write run summary
+        # Last, and `if: always()`, because its whole job is to report what the steps
+        # before it did -- including when they failed. It replaces the two-column table
+        # the S3 upload step used to append to $GITHUB_STEP_SUMMARY itself, which covered
+        # only the database half of the backup, carried no checksums or logs, and had no
+        # way to say anything at all about a run that failed.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Empty when the artifact step was skipped -- it is size-gated at 2 GiB, so a
+          # large bundle has S3 as its only location.
+          BUNDLE_ARTIFACT_URL: ${{ steps.bundle-artifact.outputs.artifact-url }}
+        run: |
+          # Which steps failed, and where to link them, comes from the API rather than
+          # from state the steps maintain themselves: `steps[]` on this run's job carries
+          # each step's name, 1-based number and conclusion, which is both the
+          # authoritative answer and the only way to build a `#step:<n>:1` anchor. This
+          # step is still in_progress while it runs, which is what identifies the job.
+          JOBS_JSON="$RUNNER_TEMP/jobs.json"
+          if ! gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+            --paginate > "$JOBS_JSON" 2>/dev/null; then
+            echo "Could not read this run's jobs from the API; step links will be omitted." >&2
+            echo '{"jobs":[]}' > "$JOBS_JSON"
+          fi
+
+          JOB=$(jq -c '(.jobs | map(select(.status == "in_progress")) | last)
+                       // (.jobs | last) // {}' "$JOBS_JSON")
+          JOB_URL=$(printf '%s' "$JOB" | jq -r '.html_url // ""')
+
+          # name -> "[name](url#step:n:1)" for every step that failed. Steps that were
+          # skipped or cancelled are not failures and are deliberately not listed.
+          failed_steps() {
+            printf '%s' "$JOB" | jq -r --arg url "$JOB_URL" '
+              (.steps // [])
+              | map(select(.conclusion == "failure"))
+              | .[]
+              | "\(.name)\t[\(.name)](\($url)#step:\(.number):1)"'
+          }
+          FAILED_TSV="$RUNNER_TEMP/failed_steps.tsv"
+          failed_steps > "$FAILED_TSV" || true
+
+          # Which workflow steps can break which backup artifact. The bastion steps are
+          # listed against both database artifacts because a failure in any of them
+          # (credentials, prerequisites, the backup run itself) costs the pg_dump and the
+          # CSV export alike.
+          steps_for() {
+            case "$1" in
+              pg-dump|csv-export)
+                printf '%s\n' \
+                  'Copy backup scripts to bastion' \
+                  'Send database credentials to bastion' \
+                  'Check backup prerequisites on bastion' \
+                  'Run database backups on bastion' \
+                  'Upload database backups to S3 from bastion'
+                ;;
+              xml-bundle)
+                printf '%s\n' \
+                  'Prepare bundle workspace' \
+                  'Generate XML backup bundle' \
+                  'Zip backup bundle' \
+                  'Upload backup bundle to S3' \
+                  'Upload XML export logs to S3'
+                ;;
+            esac
+          }
+
+          # The first failed step among the ones that could have produced this artifact --
+          # first, not last, because a later failure is usually a consequence of it.
+          first_failed_step_link() {
+            local step link
+            while IFS= read -r step; do
+              # Exact match on the whole first field: a substring match would let
+              # "Upload backup bundle to S3" be found by a search for "Upload".
+              link=$(awk -F'\t' -v s="$step" '$1 == s { print $2; exit }' "$FAILED_TSV")
+              if [ -n "$link" ]; then
+                printf '%s' "$link"
+                return
+              fi
+            done < <(steps_for "$1")
+          }
+
+          # Values are read back with `cut -d= -f2-`, so a value containing "=" (every
+          # URL with a query string) survives; only the first "=" separates key from
+          # value.
+          field() {
+            [ -f "$SUMMARY_DIR/$1.env" ] || return 0
+            grep -m1 "^$2=" "$SUMMARY_DIR/$1.env" | cut -d= -f2- || true
+          }
+
+          SUCCESS_ROWS=""
+          FAILURE_ROWS=""
+          for artifact in pg-dump csv-export xml-bundle; do
+            # An artifact nothing even attempted -- the XML bundle when the export died
+            # before zipping, say -- gets no row in either table. There is nothing to say
+            # about it beyond what the failed step it never reached already says.
+            [ -f "$SUMMARY_DIR/$artifact.env" ] || continue
+
+            TYPE=$(field "$artifact" type)
+            LOCATION=$(field "$artifact" location)
+            CHECKSUM=$(field "$artifact" checksum)
+            LOGS=$(field "$artifact" logs)
+            STATUS=$(field "$artifact" status)
+
+            # The bundle reached Actions but not S3: still retrievable, just from the
+            # other place, so report that rather than calling the backup a failure.
+            if [ "$artifact" = xml-bundle ] && [ -z "$LOCATION" ] \
+              && [ -n "${BUNDLE_ARTIFACT_URL:-}" ]; then
+              LOCATION="$BUNDLE_ARTIFACT_URL"
+            fi
+
+            # Success means the thing is actually retrievable, not merely that no step
+            # reported an error: an artifact with no recorded location is a failure
+            # however quietly it got that way.
+            if [ -n "$LOCATION" ] && [ "${STATUS:-success}" = success ]; then
+              SUCCESS_ROWS+="| $TYPE | \`${CHECKSUM:-unavailable}\` | [download]($LOCATION) |"
+              if [ -n "$LOGS" ]; then
+                SUCCESS_ROWS+=" [log]($LOGS) |"$'\n'
+              else
+                SUCCESS_ROWS+=" |"$'\n'
+              fi
+            else
+              STEP_LINK=$(first_failed_step_link "$artifact")
+              FAILURE_ROWS+="| $TYPE | ${STEP_LINK:-_not reported_} |"
+              if [ -n "$LOGS" ]; then
+                FAILURE_ROWS+=" [log]($LOGS) |"$'\n'
+              else
+                FAILURE_ROWS+=" _none_ |"$'\n'
+              fi
+            fi
+          done
+
+          # One row per image or audio file that would not download. `migrate-to-xml`
+          # writes this report itself (see `crate::attachment_failures`) rather than the
+          # workflow parsing its log, so the parent document and the error are separate
+          # fields here instead of prose that would have to be picked apart. Pipes and
+          # newlines in a message are neutralized so one bad error string cannot break
+          # the table.
+          ATTACHMENT_ROWS=""
+          if [ -f "$SUMMARY_DIR/attachment-failures.json" ]; then
+            ATTACHMENT_ROWS=$(jq -r '
+              .[]
+              | [.title, .kind, .parent, .message]
+              | map(gsub("\\|"; "\\|") | gsub("[\n\r]"; " "))
+              | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) |"
+            ' "$SUMMARY_DIR/attachment-failures.json" || true)
+          fi
+
+          # Each section is emitted only if it has rows: a run where everything worked
+          # shows one table, not two empty ones under headers implying something broke.
+          {
+            if [ -n "$SUCCESS_ROWS" ]; then
+              echo "### Database backup: success"
+              echo
+              echo "| artifact | checksum | location | logs |"
+              echo "| --- | --- |---|---|"
+              printf '%s' "$SUCCESS_ROWS"
+              echo
+            fi
+
+            if [ -n "$FAILURE_ROWS" ]; then
+              echo "### Database backup: failure"
+              echo
+              echo "| backup type | workflow step | logs |"
+              echo "|---|---|---|"
+              printf '%s' "$FAILURE_ROWS"
+              echo
+            fi
+
+            if [ -n "$ATTACHMENT_ROWS" ]; then
+              echo "### Attachments backup: failure"
+              echo "Accumulates images and audio files that failed to be included in the XML backup bundle"
+              echo
+              echo "| title | type | parent | message |"
+              echo "|---|---|---|---|"
+              printf '%s\n' "$ATTACHMENT_ROWS"
+              echo
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
