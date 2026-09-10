@@ -1251,6 +1251,8 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Retrieves the IIIF image source URL of a document */
+  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /** Gets all dailp_user with their id, username, and role for now */
   readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
@@ -1328,6 +1330,10 @@ export type QueryDocumentByUuidArgs = {
 
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryIiifSourceForDocumentMetadataArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type QueryMenuBySlugArgs = {
@@ -1988,6 +1994,14 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
       }
   >
 }
+
+export type IiifSourceForDocumentMetadataQueryVariables = Exact<{
+  documentId: Scalars["UUID"]
+}>
+
+export type IiifSourceForDocumentMetadataQuery = {
+  readonly __typename?: "Query"
+} & Pick<Query, "iiifSourceForDocumentMetadata">
 
 export type AudioSliceFieldsFragment = {
   readonly __typename?: "AudioSlice"
@@ -3989,6 +4003,23 @@ export function useDocumentContentsQuery(
     query: DocumentContentsDocument,
     ...options,
   })
+}
+export const IiifSourceForDocumentMetadataDocument = gql`
+  query IiifSourceForDocumentMetadata($documentId: UUID!) {
+    iiifSourceForDocumentMetadata(documentId: $documentId)
+  }
+`
+
+export function useIiifSourceForDocumentMetadataQuery(
+  options: Omit<
+    Urql.UseQueryArgs<IiifSourceForDocumentMetadataQueryVariables>,
+    "query"
+  >
+) {
+  return Urql.useQuery<
+    IiifSourceForDocumentMetadataQuery,
+    IiifSourceForDocumentMetadataQueryVariables
+  >({ query: IiifSourceForDocumentMetadataDocument, ...options })
 }
 export const AllSubjectHeadingsDocument = gql`
   query AllSubjectHeadings {
