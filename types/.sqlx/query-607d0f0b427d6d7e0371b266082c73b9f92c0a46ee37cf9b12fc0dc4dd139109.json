@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- `upsert_collection.sql` only ever writes slug/title/wordpress_menu_id -- this fills in\n-- the two columns it leaves untouched (description, thumbnail_url), as a separate,\n-- additive call, so that query's existing Sheets-import caller isn't affected by this.\n-- Used by the XML-backup importer (`migration/src/mets_import.rs`), which can recover a\n-- collection's description (but not its wordpress_menu_id or thumbnail_url -- see\n-- `migration/import-from-xml.md`) from the exported bundle.\nupdate edited_collection\nset\n  description = coalesce($2, description),\n  thumbnail_url = coalesce($3, thumbnail_url)\nwhere slug = $1\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "607d0f0b427d6d7e0371b266082c73b9f92c0a46ee37cf9b12fc0dc4dd139109"
+}

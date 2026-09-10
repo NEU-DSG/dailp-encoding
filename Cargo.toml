@@ -1,2 +1,3 @@
 [workspace]
 members = ["types", "graphql", "migration"]
+resolver = "2"
