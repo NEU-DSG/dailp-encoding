@@ -62,13 +62,32 @@
             crossSystem.config = target;
           };
           cc = pkgsCross.pkgsStatic.stdenv.cc;
+          # `cargo test` builds and then *runs* the test binaries. On the
+          # x86_64-linux CI runners those are native; on darwin they are
+          # foreign ELF and cannot be executed at all.
+          canRunTests = pkgs.stdenv.buildPlatform.canExecute
+            pkgsCross.pkgsStatic.stdenv.hostPlatform;
         in naersk.buildPackage {
           root = ./.;
           src = packageSrc;
-          doCheck = true;
-          doTest = true;
+          doCheck = canRunTests;
+          doTest = canRunTests;
 
-          nativeBuildInputs = [ cc ];
+          # This is a darwin derivation that cross compiles by hand, so two
+          # cc-wrappers are active at once. They keep out of each other's way
+          # by reading role-suffixed flag variables, but only when strictDeps
+          # is set -- otherwise setup.sh copies every dependency into every
+          # role, and the musl gcc inherits darwin's clang flags, including
+          # the `-iframework <CoreFoundation>` that gcc does not understand.
+          #
+          # So: strictDeps to keep the roles apart, and depsBuildBuild to put
+          # the musl wrapper in the _FOR_BUILD role rather than the *host*
+          # role it would share with clang. Its setup hook still runs (it is
+          # gated on hostOffset, which is -1 either way), so its bin/ is still
+          # on PATH for the bare `linker = "x86_64-unknown-linux-musl-gcc"` in
+          # .cargo/config.toml.
+          strictDeps = true;
+          depsBuildBuild = [ cc ];
 
           # Configures the target which will be built.
           # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
@@ -117,13 +136,280 @@
             exePath = "/bin/${name}";
           };
         tf = "${pkgs.terraform}/bin/terraform";
-        inherit (builtins) getEnv;
         tfInit = ''
           cp -f ${terraformConfig} ./config.tf.json
-          export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
-          export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
+          # Credentials are deliberately NOT set here. This used to export
+          # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from builtins.getEnv,
+          # interpolated at nix-eval time, which was wrong three ways:
+          #
+          #   1. It wrote the key material as literal text into the generated
+          #      script in /nix/store, which is world-readable.
+          #   2. It never carried AWS_SESSION_TOKEN, so no temporary credential
+          #      could work through it -- every SSO login, every assumed role.
+          #   3. When the variables were unset it exported empty strings,
+          #      clobbering perfectly good ambient credentials.
+          #
+          # terraform reads AWS_* from the environment natively and `nix run`
+          # passes the caller's environment through, so there is nothing to do:
+          # in CI aws-actions/configure-aws-credentials has already populated
+          # them, and locally your shell or AWS_PROFILE supplies them. See
+          # terraform/docs/sops.md for the local recipe.
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
+        '';
+        awsCli = "${pkgs.awscli2}/bin/aws";
+        # ServerAlive* is the only thing that detects a dropped SSM session.
+        # ssh/scp connect to a local port owned by session-manager-plugin, not
+        # to the bastion, so the kernel's TCP keepalives are answered by that
+        # local process and stay happy long after the remote leg is gone --
+        # leaving a transfer blocked forever on bytes that never arrive.
+        # The values match the remedy documented in terraform/docs/runbook.md.
+        sshCommonOpts = builtins.concatStringsSep " " [
+          "-o StrictHostKeyChecking=no"
+          "-o UserKnownHostsFile=/dev/null"
+          "-o BatchMode=yes"
+          "-o ConnectTimeout=15"
+          "-o ServerAliveInterval=60"
+          "-o ServerAliveCountMax=10"
+        ];
+        # The bastion has no public IP and no open SSH ingress rule, so both
+        # of these tunnel SSH over an SSM Session Manager port-forwarding
+        # session instead of connecting directly.
+        #
+        # Requires:
+        #   BASTION_ID      - the bastion's EC2 instance id
+        #                     (e.g. `nix run --impure .#tf-output bastion_id`)
+        #   BASTION_SSH_KEY - path to the local bastion private key
+        bastionTunnel = ''
+          # `aws ssm start-session` locates session-manager-plugin by searching
+          # PATH at runtime, so interpolating the aws binary is not enough on
+          # its own, the plugin has to be on PATH too.
+          export PATH=${pkgs.ssm-session-manager-plugin}/bin:$PATH
+
+          # For port forwarding the plugin binds a Unix-domain multiplexer
+          # socket at $TMPDIR/<digits>_session_manager_plugin_mux.sock, whose
+          # basename is 42 characters. Darwin caps sockaddr_un.sun_path at 104
+          # bytes (103 usable), and `nix develop` points TMPDIR at a ~65-char
+          # /var/folders/.../nix-shell.XXXXXX directory -- 108 in total, so
+          # bind() fails with EINVAL, surfacing as "bind: invalid argument".
+          # Plain shell sessions don't use this socket, which is why only the
+          # port-forwarding documents are affected.
+          tmp_dir="''${TMPDIR:-/tmp}"
+          if [ "''${#tmp_dir}" -gt 40 ]; then
+            tmp_dir=/tmp
+          fi
+          export TMPDIR="$tmp_dir"
+
+          # Checked before the tunnel is launched, not after. The readiness
+          # probe below cannot tell our own tunnel from someone else's -- it
+          # only asks whether *something* is listening on $local_port -- so
+          # without this a collision plays out as: our plugin fails to bind,
+          # the probe succeeds against the leftover listener, and ssh/scp ride
+          # a session we do not own. If that session has already passed SSM's
+          # idle timeout, ssh hangs with no output at all: ConnectTimeout only
+          # covers the TCP connect, which the local plugin socket answers
+          # happily, ServerAlive* only applies once the transport is up, and
+          # OpenSSH has no client-side banner timeout. A loud failure here is
+          # worth far more than a silent wrong-session connection.
+          if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
+            exec 3<&-
+            exec 3>&-
+            echo "Local port $local_port is already in use, so the tunnel cannot bind it." >&2
+            echo "Most likely a leftover session-manager-plugin from an interrupted run," >&2
+            echo "or a local service on that port. Find it with:" >&2
+            echo "  lsof -i :$local_port" >&2
+            echo "then kill it, or pick another port with BASTION_LOCAL_PORT." >&2
+            exit 1
+          fi
+
+          # Progress messages go to stderr throughout, so that the stdout of
+          # `run-on-bastion` is exactly the remote command's stdout and stays
+          # safe to capture in a `$(...)`.
+          echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..." >&2
+
+          # Two things about this invocation are load-bearing.
+          #
+          #   1. `>&2`. `aws ssm start-session` runs session-manager-plugin as
+          #      a child process -- awscli's customizations/sessionmanager.py
+          #      does a plain check_call with no stdio redirection -- so the
+          #      plugin inherits our stdout, and it writes a banner of its own
+          #      to it ("Starting session with SessionId", "Port N opened for
+          #      sessionId", "Connection accepted for session", "Connection to
+          #      destination port closed"), some of it *after* the remote
+          #      command has already printed. Leaving that on our stdout is two
+          #      bugs at once: it corrupts a `$(run-on-bastion ...)` capture,
+          #      and, because the plugin can outlive us (see close_tunnel
+          #      below), it holds the write end of the caller's command
+          #      substitution pipe open, so `$( )` never sees EOF. That is not
+          #      a garbled line, it is an unbounded hang -- it cost the Data
+          #      Backup workflow's `Run database backups on bastion` step a
+          #      full 60-minute timeout. stderr rather than /dev/null because
+          #      the plugin's "bind: Address already in use" and
+          #      "SessionManagerPlugin is not found" messages are two of the
+          #      most useful rows in terraform/docs/runbook.md; this keeps them
+          #      in the log while making them impossible to capture.
+          #   2. `set -m`, which puts the background job in its own process
+          #      group so that $ssm_pid doubles as a process-group id for
+          #      close_tunnel. This has to stay adjacent to the launch: the
+          #      process group is fixed at fork time, and if monitor mode were
+          #      ever off here then $ssm_pid would share *our* group and the
+          #      negative kill below would take down the whole script. `set +m`
+          #      immediately after, so nothing else inherits job control --
+          #      copy-to-bastion's own `scp &` / `kill -0` / `wait` loop is
+          #      written against the default.
+          set -m
+          ${awsCli} ssm start-session \
+            --target "$BASTION_ID" \
+            --document-name AWS-StartPortForwardingSession \
+            --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" >&2 &
+          ssm_pid=$!
+          set +m
+
+          # Signals the process group, not just the pid. `kill $ssm_pid` reaches
+          # only the `aws` python wrapper; the plugin it spawned is then
+          # orphaned, re-parented to init, and still holding the local port, the
+          # mux socket and a live SSM session -- which is exactly the "leftover
+          # session-manager-plugin" the pre-flight check above now refuses to
+          # run alongside.
+          #
+          # Process groups are the only dependency-free way to do this on both
+          # platforms this runs on: `setsid` is util-linux and absent on Darwin,
+          # `pkill -P` loses the parent link the moment `aws` dies, and
+          # `pkill -f session-manager-plugin` would kill an unrelated operator's
+          # session.
+          #
+          # Note that `set -m` costs us one thing: the plugin no longer shares
+          # this shell's foreground process group, so a local Ctrl-C does not
+          # reach it directly any more. Bash runs an EXIT trap on an untrapped
+          # INT/TERM/HUP, so this function still covers that case. SIGKILL --
+          # including GitHub's step teardown after its grace period -- bypasses
+          # it regardless, which is why the pre-flight check exists rather than
+          # trusting cleanup alone.
+          close_tunnel() {
+            kill -TERM -- "-$ssm_pid" 2>/dev/null || kill -TERM "$ssm_pid" 2>/dev/null || true
+            # Reap our own child so it does not linger as a zombie, then give
+            # the group a moment: on SIGTERM the plugin terminates its SSM
+            # session, and a session abandoned instead of terminated lingers
+            # service-side until the idle timeout.
+            wait "$ssm_pid" 2>/dev/null || true
+            for _ in $(seq 1 10); do
+              kill -0 -- "-$ssm_pid" 2>/dev/null || return 0
+              sleep 0.2
+            done
+            kill -KILL -- "-$ssm_pid" 2>/dev/null || true
+          }
+          trap close_tunnel EXIT
+
+          echo "Waiting for tunnel to come up..." >&2
+          tunnel_up=
+          for _ in $(seq 1 15); do
+            if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
+              exec 3<&-
+              exec 3>&-
+              tunnel_up=1
+              break
+            fi
+            # Checked after the probe, not before: a tunnel that comes up and
+            # whose `aws` exits in the same second should still count as up.
+            # This turns every fail-fast case -- a missing plugin, an
+            # unbindable port, TargetNotConnected, an expired credential --
+            # into a one-second failure with the plugin's own error right above
+            # it, instead of 15 seconds of "Waiting for tunnel to come up..."
+            # followed by a message that blames SSM registration.
+            if ! kill -0 "$ssm_pid" 2>/dev/null; then
+              echo "The SSM session exited before the tunnel came up; see its error above." >&2
+              exit 1
+            fi
+            sleep 1
+          done
+
+          # Without this the tunnel failure falls through to a bare
+          # "Connection refused" from ssh/scp, which reads like a bad key.
+          if [ -z "$tunnel_up" ]; then
+            echo "SSM tunnel to $BASTION_ID never came up on local port $local_port." >&2
+            echo "Check that the instance is SSM-registered:" >&2
+            echo "  aws ssm describe-instance-information --filters \"Key=InstanceIds,Values=$BASTION_ID\"" >&2
+            echo "and that local port $local_port is free (override with BASTION_LOCAL_PORT)." >&2
+            exit 1
+          fi
+        '';
+        # Copies a local file or directory onto the dev bastion host.
+        #
+        # Usage: copy-to-bastion <local-path> [remote-path]
+        # `remote-path` defaults to the ec2-user home directory.
+        copyToBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: copy-to-bastion <local-path> [remote-path]" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
+
+          local_path="$1"
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          remote_path="''${2:-/home/$ssh_user/}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Copying $local_path to $ssh_user@localhost:$remote_path via port $local_port..." >&2
+          copy_start=$SECONDS
+          ${pkgs.openssh}/bin/scp ${sshCommonOpts} \
+            -P "$local_port" -i "$BASTION_SSH_KEY" -r "$local_path" "$ssh_user@localhost:$remote_path" &
+          scp_pid=$!
+
+          # scp hides its progress meter whenever stdout is not a TTY, which it
+          # never is in CI, so emit our own liveness signal instead. Without
+          # this a large bundle looks identical to a hung transfer.
+          #
+          # Poll every second but report every 15, so that a short copy is not
+          # padded out to the reporting interval.
+          next_report=15
+          while kill -0 "$scp_pid" 2>/dev/null; do
+            sleep 1
+            if [ "$((SECONDS - copy_start))" -ge "$next_report" ]; then
+              echo "  ... still copying ($((SECONDS - copy_start))s elapsed)" >&2
+              next_report=$((next_report + 15))
+            fi
+          done
+
+          # `set -e` does not reliably propagate a background job's status, so
+          # check `wait` explicitly.
+          if ! wait "$scp_pid"; then
+            echo "scp failed after $((SECONDS - copy_start))s." >&2
+            echo "If it stopped mid-transfer with no error of its own, the SSM session" >&2
+            echo "dropped; see the 'Transfer dies partway' row in terraform/docs/runbook.md." >&2
+            exit 1
+          fi
+
+          echo "Copy completed in $((SECONDS - copy_start))s." >&2
+        '';
+        # Runs a command on the dev bastion host over the same kind of SSM
+        # tunnel as copy-to-bastion.
+        #
+        # Usage: run-on-bastion <remote-command>
+        runOnBastionScript = ''
+          set -euo pipefail
+
+          if [ $# -lt 1 ]; then
+            echo "Usage: run-on-bastion <remote-command>" >&2
+            exit 1
+          fi
+
+          : "''${BASTION_ID:?Set BASTION_ID to the target EC2 instance id}"
+          : "''${BASTION_SSH_KEY:?Set BASTION_SSH_KEY to the path of the bastion private key}"
+
+          ssh_user="''${BASTION_SSH_USER:-ec2-user}"
+          local_port="''${BASTION_LOCAL_PORT:-2222}"
+
+          ${bastionTunnel}
+
+          echo "Running command on $ssh_user@localhost via port $local_port..." >&2
+          ${pkgs.openssh}/bin/ssh ${sshCommonOpts} \
+            -p "$local_port" -i "$BASTION_SSH_KEY" "$ssh_user@localhost" -- "$@"
         '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
@@ -142,6 +428,15 @@
           drv = hostPackage;
           exePath = "/bin/dailp-migration";
         };
+
+        apps.migrate-to-xml = inputs.utils.lib.mkApp {
+          drv = hostPackage;
+          exePath = "/bin/migrate-to-xml";
+        };
+
+        apps.copy-to-bastion = mkBashApp "copy-to-bastion" copyToBastionScript;
+
+        apps.run-on-bastion = mkBashApp "run-on-bastion" runOnBastionScript;
 
         apps.migrate-schema = mkBashApp "migrate-schema" ''
           cd types
@@ -197,8 +492,15 @@
               postgresql_14
               sqlx-cli
               sqlfluff
+              bash
+              shellcheck
+              awscli2
+              ssm-session-manager-plugin
+              curl
+              pandoc
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
                 [ ! -d "$PGDATA" ] && initdb
                 postgres -D $PGDATA -c unix_socket_directories=/tmp
               '')
@@ -224,6 +526,33 @@
               (writers.writeBashBin "dev-generate-types" ''
                 cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
+              '')
+              (writers.writeBashBin "dev-pg-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/pg_dump_backup.sh
+                echo "See output in ./backups/pg_dump/"
+              '')
+              (writers.writeBashBin "dev-csv-dump" ''
+                export DATABASE_URL=postgres://localhost:5432/dailp
+                $PROJECT_ROOT/scripts/src/export_db_to_csv.sh
+              '')
+              (writers.writeBashBin "mock-database" ''
+                DATABASE_URL=postgres://localhost:5432/test
+                if [[ -n `psql -Atqc '\list test' postgres` ]]; then
+                  echo "Found leftover test database. Cleaning up..."
+                  dropdb test -f
+                fi
+                createdb test
+                dev-migrate-schema
+              '')
+              (writers.writeBashBin "dev-csv-restore" ''
+                $PROJECT_ROOT/scripts/src/import_db_from_csv.sh $@
+              '')
+              (writers.writeBashBin "dev-pg-restore" ''
+                $PROJECT_ROOT/scripts/src/pg_restore_backup.sh $@
+              '')
+              (writers.writeBashBin "dev-md-to-docx" ''
+                $PROJECT_ROOT/scripts/src/md_to_docx.sh $@
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security

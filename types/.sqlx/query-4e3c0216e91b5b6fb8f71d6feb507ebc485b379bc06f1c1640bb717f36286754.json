@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Every document's short_name in a given document_group. Used by the XML-backup\n-- importer (`migration/src/mets_import.rs`) for its pre-flight collision scan and\n-- post-import row-count sanity check -- nothing else needed \"documents in this group.\"\nselect short_name\nfrom document\nwhere group_id = $1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "short_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4e3c0216e91b5b6fb8f71d6feb507ebc485b379bc06f1c1640bb717f36286754"
+}
