@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- -1 index removes the chapter and its children from the TOC to be  \n--- unassigned and not accessible until reassigned\nupdate collection_chapter\nset\n    index_in_parent = -1,\n    section = 'Body'\nwhere id = $1\n    or chapter_path <@ (\n        select chapter_path from collection_chapter WHERE id = $1\n    )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8d2f72c74457a7bd61cf2eba2f76e3188a1405786fea694196be89c5288fcf0b"
+}

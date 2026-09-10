@@ -1,0 +1,109 @@
+{# -*- mode: web; -*- #}
+{% import "tei_macros.tera.xml" as macros %}
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>{{ title }}</title>
+      </titleStmt>
+        <sourceDesc>
+          <p>{{collection}}</p>
+          {% if document_audio_archival_locref %}
+            <recordingStmt>
+              <recording type="audio">
+                <media url="{{document_audio_archival_locref}}"/>
+              </recording>
+            </recordingStmt>
+          {% endif %}
+        </sourceDesc>
+    </fileDesc>
+    <profileDesc>
+      {% if people %}
+        <particDesc>
+          {% for person in people %}
+            <person xml:id="{{person.name | slugify}}">
+              <persName>{{person.name}}</persName>
+            </person>
+          {% endfor %}
+        </particDesc>
+      {% endif %}
+    </profileDesc>
+  </teiHeader>
+
+  <text>
+    <group>
+      {# One page/paragraph structure per `TeiPageContext`/`TeiParagraphContext` (see
+        `migration/src/tei.rs`), matching the real `AnnotatedDoc.segments: Vec<TranslatedPage>`
+        shape: a whole-paragraph translation paired with its flat sequence of
+        word/line-break segments, rather than the finer per-block alignment this template
+        used to assume (which no real struct ever provided). #}
+      <text type="source" xml:lang="chr">
+        <body>
+          {% for page in pages %}
+            <pb n="{{page.page_number}}"/>
+            {% for paragraph in page.paragraphs %}
+              {# Only point `corresp` at the translation `<ab>` when one will actually
+                exist -- rendered conditionally below (either the real translation, or a
+                `<gap>` placeholder for untranslated source), so an unconditional
+                `corresp` here would dangle for paragraphs with neither. #}
+              <ab xml:id="{{paragraph.id}}"{% if paragraph.translation or paragraph.has_source_words %} corresp="#{{paragraph.id}}_trans"{% endif %}>
+                {% for segment in paragraph.source %}
+                  {{ macros::any_segment(segment=segment) }}
+                {% endfor %}
+              </ab>
+            {% endfor %}
+          {% endfor %}
+        </body>
+      </text>
+
+      <text type="translation" xml:lang="en">
+        <body>
+          {% for page in pages %}
+            {% for paragraph in page.paragraphs %}
+              {% if paragraph.translation %}
+                <ab xml:id="{{paragraph.id}}_trans">
+                  <seg>{{paragraph.translation}}</seg>
+                </ab>
+              {% elif paragraph.has_source_words %}
+                {# Source exists for this paragraph but has never been translated --
+                  a meaningful, known absence, not silence. `<gap>` is TEI's standard
+                  element for marking omitted content; `reason` says why. #}
+                <ab xml:id="{{paragraph.id}}_trans">
+                  <gap reason="untranslated"/>
+                </ab>
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </body>
+      </text>
+    </group>
+  </text>
+
+  <standOff>
+    {# Links back to this document's own METS file and to the neighboring documents'
+      METS files (in collection order), for navigating out of the TEI file. All three
+      live alongside each other in the run's documents/ directory, so a bare "./" is
+      enough -- mirrors how document.tera.xml points at its own TEI file. #}
+    <linkGrp type="navigation">
+      <ptr type="mets" target="./{{mets_filename}}"/>
+      {% if prev_mets_filename %}
+        <ptr type="prev" target="./{{prev_mets_filename}}"/>
+      {% endif %}
+      {% if next_mets_filename %}
+        <ptr type="next" target="./{{next_mets_filename}}"/>
+      {% endif %}
+    </linkGrp>
+
+    {# Commentary is included for some words to capture extra information or uncertainty. #}
+    <d:noteBlock>
+      {% for page in pages %}
+        {% for paragraph in page.paragraphs %}
+          {% for segment in paragraph.source %}
+            {{ macros::commentary(segment=segment) }}
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    </d:noteBlock>
+  </standOff>
+</TEI>
