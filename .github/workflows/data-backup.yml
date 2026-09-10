@@ -620,11 +620,12 @@ jobs:
       - name: Upload database backups to S3 from bastion
         # From the bastion, not the runner: the outputs only exist there, and
         # round-tripping them back through the SSM tunnel just to push them out
-        # again would be slower and pointless. Note this needs the bastion
-        # instance role to allow s3:PutObject -- terraform/docs/runbook.md records
-        # that Terraform grants it only s3:GetEncryptionConfiguration, so an
-        # AccessDenied here is a known infrastructure gap and not a bug in this
-        # step.
+        # again would be slower and pointless. This runs as the bastion instance
+        # role, not as the dailp-deployment user the runner steps use, and that
+        # role's own policy has no s3:PutObject. The grant it relies on is on the
+        # bucket instead -- allow_bastion_backup_writes in
+        # terraform/media-storage.nix -- and is scoped to db-backups/*, so PREFIX
+        # below must stay under that prefix or the upload is denied.
         timeout-minutes: 30
         run: |
           source ./scripts/src/utils/s3_utils.sh
