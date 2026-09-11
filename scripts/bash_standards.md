@@ -88,7 +88,7 @@ Function and variable names use lowercase words separated by underscores
 
 **Description:**
 Consistent, readable naming distinguishes ordinary variables/functions
-(lowercase) from constants and exported environment variables (uppercase).
+(lowercase) from design-tokens and exported environment variables (uppercase).
 Snake case is more idiomatic for shell programming.
 
 **Testable assertion:**

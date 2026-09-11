@@ -7,8 +7,8 @@ import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit"
 import CollectionTOC from "src/components/toc"
 import { drawerBg, navButton } from "src/menu.css"
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"
+import { colors } from "src/style/app-theme-contract.css"
 import "src/style/global.css"
-import { colors } from "src/style/theme-contract.css"
 import * as css from "./sidebar.css"
 
 interface SidebarProps {

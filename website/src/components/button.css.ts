@@ -8,7 +8,7 @@ import {
   space,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { marginX, onFocus, onHover, paddingX, paddingY } from "src/style/utils"
 
 export const button = style([

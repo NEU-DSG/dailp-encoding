@@ -17,7 +17,7 @@ import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import { useRouteParams } from "./renderer/PageShell"
-import { colors } from "./style/theme-contract.css"
+import { colors } from "./style/app-theme-contract.css"
 import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }

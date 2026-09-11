@@ -8,7 +8,7 @@ import {
   mediaQueries,
   radii,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 
 export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })

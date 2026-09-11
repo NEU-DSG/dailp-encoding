@@ -7,7 +7,7 @@ import {
 } from "reakit"
 import { useUser } from "src/auth"
 import { button, cleanButton, iconButton } from "src/components/button.css"
-import { fonts } from "src/style/theme-contract.css"
+import { fonts } from "src/style/app-theme-contract.css"
 import {
   FormFields,
   FormSubmitButton,

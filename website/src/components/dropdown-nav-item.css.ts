@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts } from "src/style/theme-contract.css"
+import { fonts } from "src/style/app-theme-contract.css"
 
 export const dropdownContainer = style({
   position: "relative",
