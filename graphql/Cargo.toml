@@ -54,6 +54,14 @@ aws-config = "1.1.7"
 # do work to ensure our dependencies are reasonably up-to-date but that's
 # not the issue I'm solving at this moment.
 aws-sdk-lambda = "1.3.0"
+# Presigning backup download URLs (service_integrations/backups.rs). aws-sigv4
+# rather than aws-sdk-s3 on purpose: all three of these are already resolved in
+# Cargo.lock as transitive dependencies, so they add nothing to the build
+# closure, and signing at this level works for any operation -- which matters
+# because the backup listing has to be presigned too, not just GetObject.
+aws-sigv4 = "1"
+aws-credential-types = "1"
+percent-encoding = "2"
 
 dailp = {path = "../types"}
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }

@@ -115,6 +115,17 @@ you can browse to anyway:
 | `pg_dump_backup.sh` output | `dailp_<timestamp>.dump` | `logs/dailp_pg-dump_<timestamp>.log` |
 | `export_db_to_csv.sh` output | `dailp_<timestamp>_csv.tar.gz` (the export folder, `manifest.csv` included) | `logs/export_db_to_csv_<timestamp>.log` |
 
+Note that the two `<timestamp>`s are not the same value. The directory uses the workflow run's
+`date -u '+%Y%m%d_%H%M%SZ'`, while the `.dump` filename carries `pg_dump_backup.sh`'s own
+`date +%Y%m%d_%H%M%S%z`, whose `%z` expands to a numeric UTC offset -- so every dump is named
+`dailp_<date>_<time>+0000.dump`, minutes later than the directory around it. **That `+` is a
+literal character in the S3 key, and must be percent-encoded as `%2B` in a URL.** The scripts do
+this for you (`url_encode_key` in [`src/utils/s3_utils.sh`](./src/utils/s3_utils.sh), applied by
+`object_location` and by `download_from_s3.sh`), so a location the workflow prints or a key you
+hand to `download_from_s3.sh` needs no special handling. It matters when you paste a key into a
+browser or `curl` by hand: the raw `+` form returns 403, not 404 -- see the row on that in
+[`../terraform/docs/runbook.md`](../terraform/docs/runbook.md).
+
 The run summary reports each artifact's checksum and links both its download URL and its log. Both
 scripts' logfiles are uploaded alongside the backups they describe, before the workflow removes its
 working directory from the bastion -- and it only removes that directory after confirming both

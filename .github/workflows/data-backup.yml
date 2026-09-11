@@ -62,17 +62,31 @@ jobs:
       BUNDLE_ZIP: ""
       ZIP_BYTES: ""
       # The media CloudFront distribution's domain, resolved once from terraform in
-      # "Build project" below. Every location this job reports -- in its own logs, and in
-      # the run summary -- is built from this rather than being a bare s3:// URI, which is
-      # neither fetchable nor clickable. Also read by `upload_to_s3.sh` (which routes all
-      # of its own location reporting through `object_location`) and by `migrate-to-xml`
-      # (which needs it to write each METS file's "cloud backup" location).
+      # "Build project" below. Still required: `migrate-to-xml` needs it for the per-file
+      # media locrefs and `migration/src/audio.rs` reads it directly. It is NOT used for
+      # backup locations any more -- backups live in a bucket with no distribution, so
+      # `object_location --kind=backup` ignores this and reports an s3:// URI instead.
       CF_URL: ""
       # Where the bundle zip lands in S3. Exported so `migrate-to-xml` builds the same
       # "cloud backup" URL that the upload step below actually writes to -- the two would
       # otherwise agree only by coincidence. See `mets::cloud_backup_url`.
       BACKUP_CLOUD_PREFIX: xml-backups
-      BACKUP_BUCKET: dailp-dev-media-storage
+      # The dedicated private backup bucket (terraform/backup-storage.nix), resolved from
+      # terraform in "Build project" so this and the config cannot drift apart. Declared
+      # here as well so the variable exists for every step even if that resolution fails.
+      #
+      # Backups used to go to dailp-dev-media-storage, which an unauthenticated
+      # CloudFront distribution fronts with s3:GetObject on the whole bucket -- so every
+      # dump was readable by anyone who knew or guessed the key, and the key is only a UTC
+      # timestamp. Do not point this back at the media bucket.
+      BACKUP_BUCKET: dailp-dev-backups
+      # Base URL that `migrate-to-xml` bakes into every "cloud backup" locref inside the
+      # bundle. Resolved from BACKUP_BUCKET in "Build project".
+      #
+      # This one is unusually unforgiving: the locref is written *inside the archived
+      # zip*, so a wrong value is not a stale log line but a dead URL preserved in every
+      # archived METS file for as long as the archive exists. See mets::cloud_backup_url.
+      BACKUP_BASE_URL: ""
       # One file per backup artifact, written by whichever step produces it and read by
       # the final summary step. A directory of files rather than $GITHUB_ENV because a
       # step that fails partway still leaves behind whatever it had already established,
@@ -108,6 +122,15 @@ jobs:
           # run in their own shells, so a step-local export reached neither of them, and
           # every location they logged fell back to a bare s3:// URI.
           echo "CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)" >> "$GITHUB_ENV"
+          # Resolved from terraform for the same reason: so the bucket this job writes to
+          # is by construction the one the config creates, rather than a literal that has
+          # to be remembered whenever the bucket is renamed or a stage is added.
+          RESOLVED_BACKUP_BUCKET="$(nix run --impure .#tf-output backup_bucket)"
+          echo "BACKUP_BUCKET=$RESOLVED_BACKUP_BUCKET" >> "$GITHUB_ENV"
+          # The backup bucket's S3 URL, for the locrefs migrate-to-xml writes into the
+          # bundle. A real, correct location that simply requires credentials -- which
+          # keeps LOCTYPE="URL" accurate without touching the METS templates.
+          echo "BACKUP_BASE_URL=https://$RESOLVED_BACKUP_BUCKET.s3.us-east-1.amazonaws.com" >> "$GITHUB_ENV"
 
           # One file per artifact this run intends to produce, seeded here so that every
           # artifact appears in the run summary even when the step that would have
@@ -255,10 +278,10 @@ jobs:
           # all three derive it from $CF_URL and $BACKUP_CLOUD_PREFIX.
           source ./scripts/src/utils/s3_utils.sh
           KEY="$BACKUP_CLOUD_PREFIX/$BUNDLE_DIR.zip"
-          LOCATION="$(object_location --bucket="$BACKUP_BUCKET" --key="$KEY")"
+          LOCATION="$(object_location --bucket="$BACKUP_BUCKET" --key="$KEY" --kind=backup)"
 
           TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
-            -b="$BACKUP_BUCKET" -p="$BACKUP_CLOUD_PREFIX" "$BUNDLE_ZIP"
+            -b="$BACKUP_BUCKET" -K=backup -p="$BACKUP_CLOUD_PREFIX" "$BUNDLE_ZIP"
 
           # Replaces the bastion-side sha256 comparison: S3 already checksums
           # every part, so what is left to catch is a multipart upload that
@@ -305,14 +328,14 @@ jobs:
           source ./scripts/src/utils/s3_utils.sh
 
           TF_STAGE=dev bash ./scripts/src/upload_to_s3.sh \
-            -b="$BACKUP_BUCKET" -p="$LOG_PREFIX" "$LOG_DIR"/*
+            -b="$BACKUP_BUCKET" -K=backup -p="$LOG_PREFIX" "$LOG_DIR"/*
 
           # The exporter's own logfile is the one the summary links; the failure report
           # next to it is read below, not linked.
           EXPORT_LOG=$(ls -1 "$LOG_DIR"/migrate-to-xml_*.log 2>/dev/null | tail -n 1 || true)
           if [ -n "$EXPORT_LOG" ]; then
             LOG_LOCATION="$(object_location --bucket="$BACKUP_BUCKET" \
-              --key="$LOG_PREFIX/$(basename "$EXPORT_LOG")")"
+              --key="$LOG_PREFIX/$(basename "$EXPORT_LOG")" --kind=backup)"
             echo "Export log: $LOG_LOCATION"
             echo "logs=$LOG_LOCATION" >> "$SUMMARY_DIR/xml-bundle.env"
           fi
@@ -601,9 +624,14 @@ jobs:
         # again would be slower and pointless. This runs as the bastion instance
         # role, not as the dailp-deployment user the runner steps use, and that
         # role's own policy has no s3:PutObject. The grant it relies on is on the
-        # bucket instead -- allow_bastion_backup_writes in
-        # terraform/media-storage.nix -- and is scoped to db-backups/*, so PREFIX
+        # bucket instead -- allow_backup_bastion_writes in
+        # terraform/backup-storage.nix -- and is scoped to db-backups/*, so PREFIX
         # below must stay under that prefix or the upload is denied.
+        #
+        # That same file also grants this role s3:GetObject on both backup prefixes,
+        # which is how a future restore job reads a dump back: on the bastion, under
+        # this role, with no token and no presigning. The dailp-deployment user
+        # deliberately has no read access to db-backups/ at all.
         timeout-minutes: 30
         run: |
           source ./scripts/src/utils/s3_utils.sh
@@ -618,19 +646,21 @@ jobs:
           # nothing behind to read. `create_logfile` names them
           # "<name>_<timestamp>.log", so the pg_dump and CSV logs are told apart below by
           # their "dailp_pg-dump"/"export_db_to_csv" prefixes.
-          # CF_URL is passed inline alongside TF_STAGE, rather than through
-          # .dailp-backup-env, because it is a public CDN domain rather than a credential
-          # and this step has no other reason to source that file. Without it the
-          # bastion-side upload reports every location as a bare s3:// URI.
+          # CF_URL is deliberately NOT passed to the bastion any more. It used to be, so
+          # that the bastion-side upload could report CloudFront URLs instead of bare
+          # s3:// URIs -- but the backup bucket has no distribution, and
+          # `object_location --kind=backup` ignores CF_URL regardless. Passing it would
+          # only imply these objects are web-reachable, which is precisely what moving
+          # them off the media bucket was meant to stop being true.
           nix run --impure -L .#run-on-bastion -- "
             set -euo pipefail
-            export CF_URL='$CF_URL' TF_STAGE=dev
+            export TF_STAGE=dev
             bash /home/ec2-user/scripts/src/upload_to_s3.sh \
-              -b='$BACKUP_BUCKET' -p='$PREFIX' \
+              -b='$BACKUP_BUCKET' -K=backup -p='$PREFIX' \
               '$DUMP_PATH' '$REMOTE_DIR/$CSV_NAME'
             if compgen -G '$REMOTE_DIR/logs/*.log' > /dev/null; then
               bash /home/ec2-user/scripts/src/upload_to_s3.sh \
-                -b='$BACKUP_BUCKET' -p='$LOG_PREFIX' '$REMOTE_DIR'/logs/*.log
+                -b='$BACKUP_BUCKET' -K=backup -p='$LOG_PREFIX' '$REMOTE_DIR'/logs/*.log
             fi
             ls -1 '$REMOTE_DIR'/logs/ 2>/dev/null || true
           " | tee "$RUNNER_TEMP/db_upload.txt"
@@ -644,9 +674,9 @@ jobs:
             if SIZE=$(aws s3api head-object \
               --bucket "$BACKUP_BUCKET" --key "$key" \
               --query ContentLength --output text 2>/dev/null); then
-              echo "verified $(object_location --bucket="$BACKUP_BUCKET" --key="$key") ($SIZE bytes)"
+              echo "verified $(object_location --bucket="$BACKUP_BUCKET" --key="$key" --kind=backup) ($SIZE bytes)"
             else
-              echo "MISSING $(object_location --bucket="$BACKUP_BUCKET" --key="$key")" >&2
+              echo "MISSING $(object_location --bucket="$BACKUP_BUCKET" --key="$key" --kind=backup)" >&2
               STATUS=failed
             fi
           done
@@ -658,18 +688,18 @@ jobs:
             name=$(tr -d '\r' < "$RUNNER_TEMP/db_upload.txt" \
               | grep -E "^$1_.*\.log$" | tail -n 1 || true)
             if [ -n "$name" ]; then
-              object_location --bucket="$BACKUP_BUCKET" --key="$LOG_PREFIX/$name"
+              object_location --bucket="$BACKUP_BUCKET" --key="$LOG_PREFIX/$name" --kind=backup
             fi
           }
 
           {
             echo "status=$STATUS"
-            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$DUMP_NAME")"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$DUMP_NAME" --kind=backup)"
             echo "logs=$(log_location_for dailp_pg-dump)"
           } >> "$SUMMARY_DIR/pg-dump.env"
           {
             echo "status=$STATUS"
-            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$CSV_NAME")"
+            echo "location=$(object_location --bucket="$BACKUP_BUCKET" --key="$PREFIX/$CSV_NAME" --kind=backup)"
             echo "logs=$(log_location_for export_db_to_csv)"
           } >> "$SUMMARY_DIR/csv-export.env"
 
@@ -847,6 +877,24 @@ jobs:
               echo "| artifact | checksum | location | logs |"
               echo "| --- | --- |---|---|"
               printf '%s' "$SUCCESS_ROWS"
+              echo
+              # The locations above are s3:// URIs, not links: the backup bucket has no
+              # CloudFront distribution, so there is deliberately no URL to click. Spell
+              # out both retrieval paths here, because this summary is where an operator
+              # actually starts from and the choice between them is a security decision
+              # rather than a preference.
+              echo "To retrieve one of these:"
+              echo
+              echo '- **As a person** (needs a DAILP login in the `Administrators` group, no AWS credentials):'
+              echo '  ```sh'
+              echo '  export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)'
+              echo '  export DAILP_USER_POOL_CLIENT_ID=$(nix run --impure .#tf-output cli_user_pool_client_id)'
+              echo '  ./scripts/src/download_from_s3.sh -B -o=./out/ <key>'
+              echo '  ```'
+              echo '- **From automation**, on the bastion, under the instance role (no token, no Cognito):'
+              echo '  ```sh'
+              echo "  ./scripts/src/download_from_s3.sh -b=$BACKUP_BUCKET -o=./out/ <key>"
+              echo '  ```'
               echo
             fi
 

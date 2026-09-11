@@ -24,6 +24,7 @@ in {
     ./database-sql.nix
     ./media-storage.nix
     ./media-access.nix
+    ./backup-storage.nix
     ./user-roles.nix
     ./bastion-host.nix
     ./import.nix
@@ -102,6 +103,11 @@ in {
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
         TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
         OUTBOUND_LAMBDA_NAME = "\${aws_lambda_function.outbound_turnstile.function_name}";
+        # Read by service_integrations/backups.rs to presign backup download
+        # URLs. Resolved from the bucket rather than hardcoded so the two cannot
+        # drift; the lambda's read grant lives on that bucket's policy, in
+        # terraform/backup-storage.nix.
+        BACKUP_BUCKET = "\${aws_s3_bucket.backups.id}";
       };
       endpoints = [
         {

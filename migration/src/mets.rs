@@ -106,8 +106,13 @@ pub async fn generate_mets_bundle(
     let created_at = now.format(CREATEDATE_FORMAT).to_string();
     let file_timestamp = now.format(FILENAME_TIMESTAMP_FORMAT).to_string();
 
+    // Still required even though BACKUP_BASE_URL now governs the "cloud backup" locrefs:
+    // CF_URL is the media distribution, which audio.rs and the per-file media locrefs
+    // both depend on. It only acts as the cloud-backup fallback when BACKUP_BASE_URL is
+    // unset.
     let cf_url = normalize_cf_url(&std::env::var("CF_URL").context(
-        "CF_URL must be set to generate METS backups (used for cloud backup file locations)",
+        "CF_URL must be set to generate METS backups (used for media file locations, and \
+         for cloud backup locations when BACKUP_BASE_URL is unset)",
     )?);
     // The single location every "cloud backup" fileGrp in this run points at: the one
     // object the backup workflow actually uploads. Anticipated, not verified -- the zip
@@ -1280,25 +1285,44 @@ fn normalize_cf_url(raw: &str) -> String {
     }
 }
 
-/// The CloudFront URL of the archive this run will be uploaded as:
-/// `{cf_url}/{prefix}/dailp-{file_timestamp}.zip`.
+/// The URL of the archive this run will be uploaded as:
+/// `{base}/{prefix}/dailp-{file_timestamp}.zip`.
 ///
 /// Every `USE="cloud backup"` fileGrp in the bundle points here, and only here. The
-/// per-file cloud locrefs this replaced (`{cf_url}/{bare filename}`) described a layout
+/// per-file cloud locrefs this replaced (`{base}/{bare filename}`) described a layout
 /// that never existed: nothing uploads individual bundle members to the bucket root, so
-/// each one was a dangling reference. `cf_url` is expected to have already been through
-/// [`normalize_cf_url`].
+/// each one was a dangling reference.
 ///
 /// The templates give this single entry the `file@ID` `cloud_backup_b`, and point each
 /// `structMap`'s `_b` `fptr` at that same ID -- one shared ID rather than one per file,
 /// because there is now exactly one cloud location for the whole run.
+///
+/// `BACKUP_BASE_URL` takes precedence over `cf_url`, and setting it is what keeps these
+/// locrefs honest now that backups no longer live in the CloudFront-served media bucket.
+/// This matters more than a normal config knob: the locref is written *inside the
+/// archived bundle*, so a wrong value is not a stale log line you can correct later --
+/// it is a dead URL preserved in every archived METS file for as long as the bundle
+/// exists. The backup bucket has no distribution, so the correct value is its S3 URL
+/// (`https://<bucket>.s3.<region>.amazonaws.com`), which is a real and correct location
+/// that simply requires credentials. `LOCTYPE="URL"` therefore stays accurate and no
+/// template change is needed.
+///
+/// Falls back to `cf_url` when `BACKUP_BASE_URL` is unset, so nothing changes for a
+/// caller that has not set it.
 fn cloud_backup_url(cf_url: &str, file_timestamp: &str) -> String {
     let prefix = std::env::var("BACKUP_CLOUD_PREFIX")
         .ok()
         .filter(|p| !p.trim().is_empty())
         .unwrap_or_else(|| DEFAULT_CLOUD_BACKUP_PREFIX.to_owned());
     let prefix = prefix.trim_matches('/');
-    escape_xml(&format!("{cf_url}/{prefix}/dailp-{file_timestamp}.zip"))
+    // Normalized the same way as cf_url: the workflow resolves this from a bucket name,
+    // and a value pasted by hand may arrive with or without a scheme or trailing slash.
+    let base = std::env::var("BACKUP_BASE_URL")
+        .ok()
+        .filter(|url| !url.trim().is_empty())
+        .map(|url| normalize_cf_url(&url))
+        .unwrap_or_else(|| cf_url.to_owned());
+    escape_xml(&format!("{base}/{prefix}/dailp-{file_timestamp}.zip"))
 }
 
 /// Format used for the human-readable `CREATEDATE` attribute in the rendered METS,
@@ -2949,6 +2973,51 @@ mod tests {
             "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip"
         );
         std::env::remove_var("BACKUP_CLOUD_PREFIX");
+    }
+
+    #[test]
+    fn cloud_backup_url_prefers_backup_base_url_over_cloudfront() {
+        // SAFETY: same single-threaded caveat as `dailp_base_url_handles_stages`; no
+        // other test reads or writes BACKUP_BASE_URL.
+        std::env::remove_var("BACKUP_CLOUD_PREFIX");
+        std::env::remove_var("BACKUP_BASE_URL");
+
+        // Unset: unchanged behaviour, so a caller that never sets it sees no difference.
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip"
+        );
+
+        // Set: wins over CF_URL. This is the value that must end up baked into every
+        // archived bundle's "cloud backup" locref, because the backup bucket has no
+        // CloudFront distribution and a cdn.example.com URL there would be permanently
+        // dead inside an archive nobody can rewrite.
+        std::env::set_var(
+            "BACKUP_BASE_URL",
+            "https://dailp-dev-backups.s3.us-east-1.amazonaws.com",
+        );
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://dailp-dev-backups.s3.us-east-1.amazonaws.com/xml-backups/dailp-20260909T120000.zip"
+        );
+
+        // Normalized like CF_URL, so a bare host or a trailing slash still works.
+        std::env::set_var(
+            "BACKUP_BASE_URL",
+            "dailp-dev-backups.s3.us-east-1.amazonaws.com/",
+        );
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://dailp-dev-backups.s3.us-east-1.amazonaws.com/xml-backups/dailp-20260909T120000.zip"
+        );
+
+        // Set-but-empty falls back rather than emitting a scheme-only URL.
+        std::env::set_var("BACKUP_BASE_URL", "  ");
+        assert_eq!(
+            cloud_backup_url("https://cdn.example.com", "20260909T120000"),
+            "https://cdn.example.com/xml-backups/dailp-20260909T120000.zip"
+        );
+        std::env::remove_var("BACKUP_BASE_URL");
     }
 
     #[test]
