@@ -24,6 +24,7 @@ in {
     ./database-sql.nix
     ./media-storage.nix
     ./media-access.nix
+    ./backup-storage.nix
     ./user-roles.nix
     ./bastion-host.nix
     ./import.nix
