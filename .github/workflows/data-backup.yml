@@ -217,28 +217,6 @@ jobs:
           # Peak disk is behind us at this point, so a tight number here is the
           # warning that the next run may not fit.
           df -h /mnt
-      - name: Publish bundle as workflow artifact
-        # Runs before, and independently of, the S3 upload: an operator can
-        # download the bundle from the run summary and place it by hand rather
-        # than re-running the whole export.
-        #
-        # Size-gated at 2 GiB. Above that, uploading here costs more time than
-        # the S3 upload it duplicates and consumes Actions storage quota for a
-        # copy nobody reaches for -- S3 is the destination that has to work.
-        # Guarded on BUNDLE_ZIP so it is skipped when the zip step never got
-        # far enough to set it.
-        id: bundle-artifact
-        if: always() && env.BUNDLE_ZIP != '' && fromJSON(env.ZIP_BYTES || '0') < 2147483648
-        uses: actions/upload-artifact@v5
-        with:
-          name: backup-bundle-${{ env.BUNDLE_DIR }}
-          path: ${{ env.BUNDLE_ZIP }}
-          # The payload is already compressed, so re-compressing it only costs
-          # time. Note that upload-artifact always wraps what it is given, so
-          # the download is a zip containing our zip.
-          compression-level: 0
-          retention-days: 14
-          if-no-files-found: error
       - name: Upload backup bundle to S3
         # Straight from the runner, not through the bastion. The bastion hop it
         # replaces was bounded by SSM port-forwarding throughput (single-digit
