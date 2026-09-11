@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts } from "src/style/constants"
+import { fonts } from "src/style/design-tokens"
 
 export const dropdownToggle = style({
   background: "none",

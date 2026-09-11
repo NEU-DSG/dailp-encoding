@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { colors, fonts, hspace, rhythm } from "src/style/constants"
+import { colors, fonts, hspace, rhythm } from "src/style/design-tokens"
 
 export const contributeAudioContainer = style({
   position: "relative",
