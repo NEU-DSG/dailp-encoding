@@ -1222,6 +1222,29 @@ export type PostCommentInput = {
   readonly textContent: Scalars["String"]
 }
 
+/** A presigned URL plus the metadata a caller needs to use it sensibly. */
+export type PresignedBackupUrl = {
+  readonly __typename?: "PresignedBackupUrl"
+  /** When the URL stops working, RFC 3339, UTC. */
+  readonly expiresAt: Scalars["String"]
+  /**
+   * Lifetime actually granted, which may differ from what was requested
+   * only in that out-of-range requests are rejected rather than clamped.
+   */
+  readonly expiresInSeconds: Scalars["Int"]
+  /**
+   * The object key (for `backup_download_url`) or prefix (for
+   * `backup_listing_url`) the URL addresses, echoed back so a caller can log
+   * what it actually asked for.
+   */
+  readonly key: Scalars["String"]
+  /**
+   * The signed URL. Fetch it **verbatim** -- it is already percent-encoded,
+   * and re-encoding or unescaping any part of it invalidates the signature.
+   */
+  readonly url: Scalars["String"]
+}
+
 export type Query = {
   readonly __typename?: "Query"
   readonly abbreviationIdFromShortName: Scalars["UUID"]
@@ -1238,6 +1261,44 @@ export type Query = {
   readonly allSubjectHeadings: ReadonlyArray<SubjectHeading>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  /**
+   * A short-lived presigned URL for downloading one backup object.
+   *
+   * This is the **human** path: validating a backup by hand, or feeding one
+   * to another program. Restore automation does not come through here -- it
+   * reads the private backup bucket directly under the bastion instance
+   * role, so it needs no token and no Cognito round trip. See
+   * `terraform/backup-storage.nix`.
+   *
+   * Gated on Administrators rather than Editors so that holding a full
+   * database dump is a deliberate grant, not a side effect of being able to
+   * edit content.
+   *
+   * This lives on `Query` because it mutates nothing, and that placement is
+   * *not* what enforces access. The same lambda serves both roots on both
+   * API Gateway routes, including the unauthenticated `{proxy+}` one, so the
+   * field is reachable without auth -- it is simply not usable, because
+   * `UserInfo` is only ever populated from API Gateway authorizer claims
+   * (see `graphql/src/lambda.rs`) and the guard denies an absent user. The
+   * `GroupGuard` is the real gate; routing through `graphql-edit` is defence
+   * in depth. Same posture as `iiif_source_for_document_metadata` above.
+   */
+  readonly backupDownloadUrl: PresignedBackupUrl
+  /**
+   * A short-lived presigned URL that lists the objects under one backup
+   * prefix, so a human can discover what is available to download.
+   *
+   * The listing is *presigned* rather than performed here on purpose: the
+   * lambda runs inside the VPC and nothing in this repo asserts its subnets
+   * have an egress path, so a real `ListObjectsV2` call could hang until the
+   * function times out. Signing is pure local computation, and the caller --
+   * who does have internet -- fetches the result.
+   *
+   * Returns `ListBucketResult` XML, not JSON. A caller must handle
+   * `<IsTruncated>true</IsTruncated>`: one page caps at 1000 keys and
+   * continuing requires a fresh presigned URL carrying a continuation token.
+   */
+  readonly backupListingUrl: PresignedBackupUrl
   /** Retrieves all documents that are bookmarked by the current user. */
   readonly bookmarkedDocuments: ReadonlyArray<AnnotatedDoc>
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
@@ -1304,6 +1365,16 @@ export type QueryAllChapterSlugsArgs = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
+}
+
+export type QueryBackupDownloadUrlArgs = {
+  expiresInSeconds: InputMaybe<Scalars["Int"]>
+  key: Scalars["String"]
+}
+
+export type QueryBackupListingUrlArgs = {
+  expiresInSeconds: InputMaybe<Scalars["Int"]>
+  prefix: Scalars["String"]
 }
 
 export type QueryChapterArgs = {

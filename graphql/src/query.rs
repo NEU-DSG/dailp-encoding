@@ -28,6 +28,7 @@ use {
     },
 };
 
+use dailp_graphql::service_integrations::backups::{self, PresignedBackupUrl};
 use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
 /// Home for all read-only queries
@@ -447,6 +448,79 @@ impl Query {
             .loader()
             .all_chapter_slugs(&collection_slug)
             .await?)
+    }
+
+    /// A short-lived presigned URL for downloading one backup object.
+    ///
+    /// This is the **human** path: validating a backup by hand, or feeding one
+    /// to another program. Restore automation does not come through here -- it
+    /// reads the private backup bucket directly under the bastion instance
+    /// role, so it needs no token and no Cognito round trip. See
+    /// `terraform/backup-storage.nix`.
+    ///
+    /// Gated on Administrators rather than Editors so that holding a full
+    /// database dump is a deliberate grant, not a side effect of being able to
+    /// edit content.
+    ///
+    /// This lives on `Query` because it mutates nothing, and that placement is
+    /// *not* what enforces access. The same lambda serves both roots on both
+    /// API Gateway routes, including the unauthenticated `{proxy+}` one, so the
+    /// field is reachable without auth -- it is simply not usable, because
+    /// `UserInfo` is only ever populated from API Gateway authorizer claims
+    /// (see `graphql/src/lambda.rs`) and the guard denies an absent user. The
+    /// `GroupGuard` is the real gate; routing through `graphql-edit` is defence
+    /// in depth. Same posture as `iiif_source_for_document_metadata` above.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn backup_download_url(
+        &self,
+        context: &Context<'_>,
+        key: String,
+        expires_in_seconds: Option<i32>,
+    ) -> FieldResult<PresignedBackupUrl> {
+        let bucket = backups::backup_bucket()?;
+        let expiry = backups::validate_expiry(expires_in_seconds)?;
+        let presigned = backups::presign_backup_object(&bucket, &key, expiry)?;
+        // Audit line. Handing out a database dump is the most sensitive thing
+        // this API does, and CloudWatch is the only place it would ever be
+        // reconstructable after the fact.
+        info!(
+            "Presigned backup download: key={:?} expires_in={}s requested_by={:?}",
+            key,
+            expiry,
+            context.data_opt::<UserInfo>().map(|user| user.id),
+        );
+        Ok(presigned)
+    }
+
+    /// A short-lived presigned URL that lists the objects under one backup
+    /// prefix, so a human can discover what is available to download.
+    ///
+    /// The listing is *presigned* rather than performed here on purpose: the
+    /// lambda runs inside the VPC and nothing in this repo asserts its subnets
+    /// have an egress path, so a real `ListObjectsV2` call could hang until the
+    /// function times out. Signing is pure local computation, and the caller --
+    /// who does have internet -- fetches the result.
+    ///
+    /// Returns `ListBucketResult` XML, not JSON. A caller must handle
+    /// `<IsTruncated>true</IsTruncated>`: one page caps at 1000 keys and
+    /// continuing requires a fresh presigned URL carrying a continuation token.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn backup_listing_url(
+        &self,
+        context: &Context<'_>,
+        prefix: String,
+        expires_in_seconds: Option<i32>,
+    ) -> FieldResult<PresignedBackupUrl> {
+        let bucket = backups::backup_bucket()?;
+        let expiry = backups::validate_expiry(expires_in_seconds)?;
+        let presigned = backups::presign_backup_listing(&bucket, &prefix, expiry)?;
+        info!(
+            "Presigned backup listing: prefix={:?} expires_in={}s requested_by={:?}",
+            prefix,
+            expiry,
+            context.data_opt::<UserInfo>().map(|user| user.id),
+        );
+        Ok(presigned)
     }
 }
 

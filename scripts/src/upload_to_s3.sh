@@ -20,10 +20,16 @@
 #   ./upload_to_s3.sh [-b=BUCKET] [-l=LOG_LOCATION] [-p=PREFIX] -r DIRECTORY
 #
 # If -b/--bucket is omitted, $CF_URL must be set and the bucket is derived as
-# "dailp-${TF_STAGE}-media-storage". Every object location this script reports is
-# the public CloudFront URL, "${CF_URL}/${key}" with an "https://" scheme added only
-# if $CF_URL doesn't already have one; the bare "s3://bucket/key" form appears only
-# as a fallback when $CF_URL is unset. See object_location in utils/s3_utils.sh.
+# "dailp-${TF_STAGE}-media-storage". By default every object location this script
+# reports is the public CloudFront URL, "${CF_URL}/${key}" with an "https://" scheme
+# added only if $CF_URL doesn't already have one; the bare "s3://bucket/key" form
+# appears as a fallback when $CF_URL is unset. See object_location in utils/s3_utils.sh.
+#
+# Pass -K=backup when uploading to the backup bucket (dailp-${TF_STAGE}-backups). That
+# bucket has no CloudFront distribution -- deliberately, so that knowing a key is not
+# enough to read a database dump -- so locations there are always reported as s3://
+# URIs. Without it, and with $CF_URL set as it is in the backup workflow, every logged
+# location would be a CDN URL that cannot resolve.
 #
 # With -r/--recursive, exactly one DIRECTORY argument is given (no FILE
 # arguments) and every regular file found under it is uploaded, with its
@@ -76,6 +82,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/utils/defensive_utils.sh"
 #######################################
 function main() {
   local bucket=""
+  local kind="media"
   local log_location
   log_location="$(pwd)/logs/upload_to_s3/"
   local prefix=""
@@ -90,6 +97,9 @@ function main() {
         ;;
       -b=* | --bucket=*)
         bucket="${arg#*=}"
+        ;;
+      -K=* | --kind=*)
+        kind="${arg#*=}"
         ;;
       -l=* | --log-location=*)
         log_location="${arg#*=}"
@@ -171,7 +181,7 @@ function main() {
 
   local failure_count=0
   upload_objects --bucket="${bucket}" --failures=failure_count --keys=target_keys \
-    --logfile="${logfile}" "${target_files[@]}"
+    --kind="${kind}" --logfile="${logfile}" "${target_files[@]}"
 
   if [[ "${failure_count}" -gt 0 ]]; then
     log_event -e="${failure_count}" -f="${logfile}" \
@@ -196,11 +206,16 @@ function main() {
 #######################################
 function usage() {
   cat <<EOF
-Usage: $0 [-b=BUCKET] [-l=LOG_LOCATION] [-p=PREFIX] FILE [FILE ...]
-       $0 [-b=BUCKET] [-l=LOG_LOCATION] [-p=PREFIX] -r DIRECTORY
+Usage: $0 [-b=BUCKET] [-K=KIND] [-l=LOG_LOCATION] [-p=PREFIX] FILE [FILE ...]
+       $0 [-b=BUCKET] [-K=KIND] [-l=LOG_LOCATION] [-p=PREFIX] -r DIRECTORY
 
   -b=BUCKET        Destination S3 bucket. If omitted, requires \$CF_URL to
                    be set and derives "dailp-\${TF_STAGE:-dev}-media-storage"
+  -K=KIND          How to report each object's location: "media" (default,
+                   a CloudFront URL when \$CF_URL is set) or "backup" (always
+                   an s3:// URI). Pass "backup" when uploading to the backup
+                   bucket: it has no CloudFront distribution, so a CDN URL
+                   there would name a location that cannot work.
   -l=LOG_LOCATION  Folder to save logs to (default: ./logs/upload_to_s3/)
   -p=PREFIX        S3 key prefix/folder to upload into (default: none)
   -r, --recursive  Upload every regular file found under DIRECTORY instead
@@ -242,6 +257,7 @@ function upload_one_object() {
   local bucket=""
   local file=""
   local key=""
+  local kind="media"
   local logfile=""
   local i
 
@@ -253,6 +269,10 @@ function upload_one_object() {
         ;;
       -f=* | --file=*)
         file="${i#*=}"
+        shift
+        ;;
+      -K=* | --kind=*)
+        kind="${i#*=}"
         shift
         ;;
       -k=* | --key=*)
@@ -276,8 +296,12 @@ function upload_one_object() {
   # location an operator reads out of the log is one they can open -- see
   # object_location. The aws s3 cp target below is of course still the s3:// URI; it's
   # the transport, not the report.
+  #
+  # --kind matters here even though it looks like a formatting detail: with kind=media
+  # and CF_URL set, a backup object would be logged as a CloudFront URL, which for the
+  # backup bucket is a location that cannot work. Better a bare s3:// URI that is true.
   local location
-  location="$(object_location --bucket="${bucket}" --key="${key}")"
+  location="$(object_location --bucket="${bucket}" --key="${key}" --kind="${kind}")"
 
   if ! aws s3 cp "${file}" "s3://${bucket}/${key}" >/dev/null; then
     log_event -e="1" -f="${logfile}" \
@@ -318,6 +342,7 @@ function upload_one_object() {
 #######################################
 function upload_objects() {
   local bucket=""
+  local kind="media"
   local -n failures_out
   # NOTE: needed for nounset (set -u) safety. If --failures was never
   # passed, failures_out is never bound, and unconditionally writing to it
@@ -339,6 +364,10 @@ function upload_objects() {
       -f=* | --failures=*)
         failures_out="${i#*=}"
         failures_given=1
+        shift
+        ;;
+      -K=* | --kind=*)
+        kind="${i#*=}"
         shift
         ;;
       -k=* | --keys=*)
@@ -372,9 +401,10 @@ function upload_objects() {
   for file_index in "${!target_files[@]}"; do
     file="${target_files[file_index]}"
     key="${keys_in[file_index]}"
-    echo "[$((file_index + 1))/${file_count}] Uploading ${file} -> $(object_location --bucket="${bucket}" --key="${key}")"
+    echo "[$((file_index + 1))/${file_count}] Uploading ${file} -> $(object_location --bucket="${bucket}" --key="${key}" --kind="${kind}")"
 
-    if upload_one_object --bucket="${bucket}" --file="${file}" --key="${key}" --logfile="${logfile}"; then
+    if upload_one_object --bucket="${bucket}" --file="${file}" --key="${key}" \
+      --kind="${kind}" --logfile="${logfile}"; then
       success_count=$((success_count + 1))
     else
       _upload_failure_count=$((_upload_failure_count + 1))
