@@ -13,3 +13,10 @@ export const docHeader = style([
     },
   },
 ])
+
+export const number = style({
+  width: "40px",
+  textAlign: "right",
+  opacity: 0.7,
+  fontVariantNumeric: "tabular-nums",
+})
