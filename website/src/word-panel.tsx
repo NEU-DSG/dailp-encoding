@@ -431,11 +431,17 @@ const EditWordPartGloss = (props: {
           title: title,
           system: preferences.cherokeeRepresentation,
         })
-        // Refresh the query to get the new tag
-        await executeQuery({ requestPolicy: "network-only" })
       } else {
         //just do frontend update
+        await insertCustomMorphemeTag({
+          tag: newValue.value,
+          title: newValue.value,
+          system: preferences.cherokeeRepresentation,
+        })
       }
+
+      // Refresh the query to get the new tag
+      await executeQuery({ requestPolicy: "network-only" })
 
       let matchingTag =
         newValue.value === newValue.label
