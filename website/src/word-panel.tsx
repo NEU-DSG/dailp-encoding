@@ -1,6 +1,6 @@
 import { groupBy } from "lodash"
 import { set } from "lodash"
-import React, { ReactNode, useState } from "react"
+import React, { ReactNode, useEffect, useState } from "react"
 import {
   DragDropContext,
   Draggable,
@@ -20,11 +20,16 @@ import {
   MdRecordVoiceOver,
 } from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
-import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
+import {
+  Disclosure,
+  DisclosureContent,
+  Radio,
+  useDisclosureState,
+} from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { useMutation, useQuery } from "urql"
 import * as Dailp from "src/graphql/dailp"
-import { AudioPlayer } from "./components"
+import { AudioPlayer, Select } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
@@ -62,6 +67,23 @@ type GroupedOption = {
     value: string
     label: string
   }[]
+}
+
+type PreferenceDetails = { label: string }
+
+const cherokeeRepresentationMapping: Record<
+  Dailp.CherokeeOrthography,
+  PreferenceDetails
+> = {
+  [Dailp.CherokeeOrthography.Learner]: {
+    label: "Learner",
+  },
+  [Dailp.CherokeeOrthography.Crg]: {
+    label: "CRG",
+  },
+  [Dailp.CherokeeOrthography.Taoc]: {
+    label: "TAOC",
+  },
 }
 
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
@@ -102,19 +124,6 @@ export const WordPanel = (p: {
           label="Simple Phonetics"
         />
       }
-    </>
-  )
-
-  const translation = (
-    <>
-      {/* If the english gloss string is not empty, then display it. */}
-      {p.word.englishGloss[0] !== "" && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"englishGloss"}
-          label="English Translation"
-        />
-      )}
     </>
   )
 
@@ -191,19 +200,17 @@ export const WordPanel = (p: {
         />
       )}
 
-      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
-      {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
-        <CollapsiblePanel
-          title={"Word Parts"}
-          content={wordPartsContent}
-          icon={
-            <IoEllipsisHorizontalCircle
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
+      {/* Always show Word Parts panel in edit and view mode */}
+      <CollapsiblePanel
+        title={"Word Parts"}
+        content={wordPartsContent}
+        icon={
+          <IoEllipsisHorizontalCircle
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
+      />
 
       {/* If there is no commentary, does not display Commentary panel */}
       {p.word.commentary && p.word.commentary.length > 0 && (
@@ -233,6 +240,7 @@ const EditSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   options: GroupedOption[]
 }) => {
+  const preferences = usePreferences()
   const { form } = useForm()
   const currentWord = form.values.word as Dailp.FormFieldsFragment
   const currentSegments = currentWord.segments
@@ -262,6 +270,7 @@ const EditSegmentation = (p: {
       previousSeparator: "-",
       matchingTag: null,
       word_id: currentWord.id,
+      system: preferences.cherokeeRepresentation,
     }
 
     const updatedSegments = [...currentSegments, newSegment]
@@ -272,8 +281,12 @@ const EditSegmentation = (p: {
     })
   }
 
-  const deleteSegment = (index: number) => {
-    const updatedSegments = currentSegments.filter((_, i) => i !== index)
+  const currentFilteredSegments = currentSegments.filter((s) => {
+    return s.system === preferences.cherokeeRepresentation
+  })
+  // Updated since we are now using a filtered version and must remove from currentSegments
+  const deleteSegment = (segmentToDelete: typeof currentSegments[0]) => {
+    const updatedSegments = currentSegments.filter((s) => s !== segmentToDelete)
     form.update("word", {
       ...currentWord,
       segments: updatedSegments,
@@ -290,7 +303,32 @@ const EditSegmentation = (p: {
             className={css.tableContainer}
           >
             <tbody>
-              {currentSegments.map((segment, index) => (
+              <tr>
+                <div className={css.systemSelectorContainer}>
+                  {Object.entries(cherokeeRepresentationMapping).map(
+                    ([key, details]) => {
+                      const orthKey = key as Dailp.CherokeeOrthography
+                      return (
+                        <label key={orthKey}>
+                          <input
+                            type="radio"
+                            name="system-preference-radio"
+                            value={orthKey}
+                            checked={
+                              preferences.cherokeeRepresentation === orthKey
+                            }
+                            onChange={(e) => {
+                              preferences.setCherokeeRepresentation(orthKey)
+                            }}
+                          />
+                          {details.label}
+                        </label>
+                      )
+                    }
+                  )}
+                </div>
+              </tr>
+              {currentFilteredSegments.map((segment, index) => (
                 <Draggable
                   key={index}
                   draggableId={index.toString()}
@@ -333,7 +371,7 @@ const EditSegmentation = (p: {
                       </td>
                       <td style={{ padding: "0 10px" }}>
                         <button
-                          onClick={() => deleteSegment(index)}
+                          onClick={() => deleteSegment(segment)}
                           style={{
                             padding: "5px 10px",
                             borderRadius: "4px",
@@ -432,10 +470,16 @@ const EditWordPartGloss = (props: {
           system: preferences.cherokeeRepresentation,
         })
         // Refresh the query to get the new tag
-        await executeQuery({ requestPolicy: "network-only" })
       } else {
         //just do frontend update
+        await insertCustomMorphemeTag({
+          tag: newValue.value,
+          title: newValue.value,
+          system: preferences.cherokeeRepresentation,
+        })
       }
+
+      await executeQuery({ requestPolicy: "network-only" })
 
       let matchingTag =
         newValue.value === newValue.label
@@ -494,9 +538,20 @@ export const VerticalMorphemicSegmentation = (p: {
   if (!p.segments) {
     return null
   }
+
+  const systemLabel =
+    cherokeeRepresentationMapping[p.cherokeeRepresentation].label
+
+  const systemSegments = p.segments.filter(
+    (s) => s.system === p.cherokeeRepresentation
+  )
+
+  // No word parts
+  if (p.segments.length === 0) return <p>No word parts exist for this word.</p>
+
   if (p.segments) {
     // Combine certain morphemes.
-    const combinedSegments: typeof p.segments = p.segments.reduce(
+    const combinedSegments: typeof p.segments = systemSegments.reduce(
       (result, segment) => {
         if (segment.role === Dailp.WordSegmentRole.Modifier) {
           const lastSegment = result[result.length - 1]!
@@ -532,7 +587,7 @@ export const VerticalMorphemicSegmentation = (p: {
                   : null}
                 {segment.morpheme}
                 {index < segmentCount - 1 && index < firstRootIndex && !isRoot
-                  ? p.segments[index + 1]!.previousSeparator
+                  ? systemSegments[index + 1]!.previousSeparator
                   : null}
               </td>
               <td className={css.glossCell}>

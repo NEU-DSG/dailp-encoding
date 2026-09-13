@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select distinct on (input_gloss) coalesce(internal_gloss, input_gloss) as gloss\r\nfrom abstract_morpheme_tag\r\n  inner join morpheme_tag\r\n    on array_length(morpheme_tag.abstract_ids, 1) = 1 \r\n      and abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1] \r\n  inner join abbreviation_system \r\n    on abbreviation_system.short_name = $2::text \r\n      and morpheme_tag.system_id = abbreviation_system.id\r\n  right join unnest($1::text[]) as input_gloss\r\n    on input_gloss = morpheme_tag.gloss\r\norder by input_gloss",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "gloss",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d514cc87ba13203c6dedfef28bff9ef5be6302416cdf7b4c1528f1d747b47704"
+}
