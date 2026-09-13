@@ -14,6 +14,7 @@
         allowed_headers = ["*"];
         allowed_methods = ["GET" "PUT" "POST"];
         allowed_origins = ["*"];
+        expose_headers   = ["ETag"]; # Required for multipart uploads
         max_age_seconds = 3600;
       };
     };
