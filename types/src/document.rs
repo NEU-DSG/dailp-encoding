@@ -754,7 +754,7 @@ impl DocumentMetadata {
                 .try_get("role")
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?;
 
-            let role = role_str.and_then(|s| Some(ContributorRole::from(s)));
+            let role = role_str.and_then(|s| ContributorRole::from_option_str(&s));
 
             contributors.push(Contributor { id, name, role });
         }

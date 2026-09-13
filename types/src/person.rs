@@ -91,22 +91,6 @@ pub enum ContributorRole {
     Editor,
 }
 
-impl From<String> for ContributorRole {
-    //type Err = String;
-
-    fn from(s: String) -> Self {
-        match s.to_lowercase().as_str() {
-            "transcriber" => ContributorRole::Transcriber,
-            "translator" => ContributorRole::Translator,
-            "annotator" => ContributorRole::Annotator,
-            "culturaladvisor" => ContributorRole::CulturalAdvisor,
-            "author" => ContributorRole::Author,
-            "editor" => ContributorRole::Editor,
-            other => panic!("{} is not a valid contributor role", s),
-        }
-    }
-}
-
 impl fmt::Display for ContributorRole {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
@@ -122,10 +106,20 @@ impl fmt::Display for ContributorRole {
 }
 
 impl ContributorRole {
-    /// Attempts to parse a string into a ContributorRole, returning None if parsing fails
+    /// Attempts to parse a string into a ContributorRole, returning None if the value
+    /// is not a recognized role. Legacy free-text `contribution_role` values (e.g.
+    /// document titles or noun forms like "Translation") resolve to None rather than
+    /// panicking.
     pub fn from_option_str(s: &str) -> Option<Self> {
-        // TODO: Make ContributorRole::from return a ContributorRole instead of a panic
-        Some(ContributorRole::from(s.to_string()))
+        match s.trim().to_lowercase().replace(['_', ' '], "").as_str() {
+            "transcriber" => Some(ContributorRole::Transcriber),
+            "translator" => Some(ContributorRole::Translator),
+            "annotator" => Some(ContributorRole::Annotator),
+            "culturaladvisor" => Some(ContributorRole::CulturalAdvisor),
+            "author" => Some(ContributorRole::Author),
+            "editor" => Some(ContributorRole::Editor),
+            _ => None,
+        }
     }
 
     /// Converts a ContributorRole into its string representation
