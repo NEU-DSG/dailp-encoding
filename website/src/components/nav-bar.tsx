@@ -1,9 +1,19 @@
 import * as Dailp from "src/graphql/dailp"
+import { HeaderPrefDrawer } from "src/mode"
+import { LoginHeaderButton } from "src/pages/auth/user-auth-layout"
+import * as cwkwCss from "src/pages/cwkw/cwkw-layout.css"
 import { useLocation } from "src/renderer/PageShell"
+import { colors } from "src/style/constants"
 import { DropdownNavItem } from "./dropdown-nav-item"
-import { navBar, navIcons, navLinks } from "./nav-bar.css"
+import { navBar, navBarShadow, navIcons, navLinks } from "./nav-bar.css"
 
-export const NavBar = () => {
+export const NavBar = ({
+  withShadow = false,
+  withAuthControls = false,
+}: {
+  withShadow?: boolean
+  withAuthControls?: boolean
+}) => {
   const location = useLocation()
 
   const [{ data, fetching, error }] = Dailp.useMenuBySlugQuery({
@@ -21,7 +31,7 @@ export const NavBar = () => {
     !menuItems.some((b: any) => b?.items?.some((c: any) => c?.path === a?.path))
 
   return (
-    <nav className={navBar}>
+    <nav className={`${navBar} ${withShadow ? navBarShadow : ""}`}>
       <ul className={navLinks}>
         {menuItems.filter(isTopLevel).map((item: any) => {
           if (!item) return null
@@ -59,10 +69,21 @@ export const NavBar = () => {
         })}
 
         <li className={navIcons}>
-          {/* Only show for logged in users, otherwise  "Log in" */}
-          <i className="fa-solid fa-user"></i>
-          <i className="fa-solid fa-gear"></i>
-          <i className="fa-solid fa-bell"></i>
+          {withAuthControls ? (
+            <>
+              <LoginHeaderButton className={cwkwCss.loginHeader} />
+              <HeaderPrefDrawer color={colors.body} />
+              {/* Bell placeholder */}
+              <i className="fa-solid fa-bell"></i>
+            </>
+          ) : (
+            <>
+              {/* Only show for logged in users, otherwise  "Log in" */}
+              <i className="fa-solid fa-user"></i>
+              <i className="fa-solid fa-gear"></i>
+              <i className="fa-solid fa-bell"></i>
+            </>
+          )}
         </li>
       </ul>
     </nav>
