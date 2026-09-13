@@ -160,6 +160,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           spatialCoverage: changes.spatialCoverage,
           subjectHeadings: changes.subjectHeadings,
           writtenAt: writtenAtValue,
+          keyDates: changes.keyDates,
         },
       })
 
@@ -337,6 +338,13 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           <div className={styles.value}>
             {formatArray(docData.spatialCoverage) ||
               "Spatial Coverage Not Yet Available."}
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <div className={styles.label}>KEY DATES</div>
+          <div className={styles.value}>
+            {formatArray(docData.keyDates) || "Key Dates Not Yet Available."}
           </div>
         </div>
 

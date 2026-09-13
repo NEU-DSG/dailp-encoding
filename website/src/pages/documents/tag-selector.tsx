@@ -5,11 +5,11 @@ import * as styles from "./tag-selector.css"
 interface TagSelectorProps {
   label: string
   selectedTags: string[]
-  approvedTags: string[]
+  approvedTags?: string[]
   newTags?: Set<string>
   onAdd?: (tag: string) => void
   onRemove?: (index: number) => void
-  addButtonLabel: string
+  addButtonLabel?: string
   customForm?: React.ReactNode
   tooltipInfo?: string
   additionalForm?: React.ReactNode
@@ -58,36 +58,41 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
       <div className={styles.tagDropdownContainer}>
         {additionalForm}
-        <button
-          type="button"
-          onClick={() => setShowDropdown(!showDropdown)}
-          className={styles.addTagButton}
-          aria-expanded={showDropdown}
-          aria-haspopup="true"
-        >
-          {addButtonLabel}
-        </button>
 
-        {showDropdown && (
-          <div className={styles.tagDropdown}>
-            {customForm
-              ? customForm
-              : approvedTags
-                  .filter((tag) => !selectedTags.includes(tag))
-                  .map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => {
-                        onAdd?.(tag)
-                        setShowDropdown(false)
-                      }}
-                      className={styles.tagOption}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-          </div>
+        {approvedTags && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowDropdown(!showDropdown)}
+              className={styles.addTagButton}
+              aria-expanded={showDropdown}
+              aria-haspopup="true"
+            >
+              {addButtonLabel}
+            </button>
+
+            {showDropdown && (
+              <div className={styles.tagDropdown}>
+                {customForm
+                  ? customForm
+                  : approvedTags
+                      .filter((tag) => !selectedTags.includes(tag))
+                      .map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            onAdd?.(tag)
+                            setShowDropdown(false)
+                          }}
+                          className={styles.tagOption}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
