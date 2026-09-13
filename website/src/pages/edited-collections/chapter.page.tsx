@@ -85,78 +85,74 @@ const ChapterPage = (props: {
   const { document, wordpressId } = chapter
 
   return (
-    <CollectionAuthGuard isHidden={collection.isHidden}>
-      <CWKWLayout>
-        <Helmet title={chapter.title} />
-        <main className={util.paddedCenterColumn}>
-          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
-            {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-            {wordpressId && chapter.slug ? (
-              <>
-                <header className={chapterStyle.docHeader}>
-                  <Breadcrumbs aria-label="Breadcrumbs">
-                    {chapter.breadcrumbs
-                      .map((crumb) => (
-                        <Link
-                          href={
-                            props.collectionSlug
-                              ? `${collectionRoute(props.collectionSlug)}/${
-                                  crumb.slug
-                                }`
-                              : ``
-                          }
-                          key={crumb.slug}
-                        >
-                          {crumb.name}
-                        </Link>
-                      ))
-                      .concat(
-                        <Link
-                          href={`${collectionRoute}/${chapter.slug}`}
-                          key={chapter.slug}
-                        >
-                          {chapter.title}
-                        </Link>
-                      )}
-                  </Breadcrumbs>
-                </header>
-                {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
-                <DailpPageContents
-                  path={`/${props.collectionSlug}/${chapter.slug.replace(
-                    /_/g,
-                    "-"
-                  )}`}
-                />
-              </>
-            ) : null}
-
-            {/* If this chapter is a document, display the document contents. */}
-            {document ? (
-              <>
-                <DocumentTitleHeader
-                  breadcrumbs={chapter.breadcrumbs}
-                  rootPath={collectionRoute(props.collectionSlug)}
-                  doc={document}
-                />
-                <TabSet doc={document} />
-              </>
-            ) : null}
-
-            <ul>
-              {subchapters?.map((chapter) => (
-                <li key={chapter.slug}>
-                  <Link
-                    href={chapterRoute(props.collectionSlug!, chapter.slug)}
-                  >
-                    {chapter.title}
+    <CWKWLayout>
+      <Helmet title={chapter.title} />
+      <main className={util.paddedCenterColumn}>
+        <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+          {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
+          {wordpressId && chapter.slug ? (
+            <>
+              <header className={chapterStyle.docHeader}>
+                <Breadcrumbs aria-label="Breadcrumbs">
+                  <Link href={collectionRoute(props.collectionSlug)}>
+                    {props.collectionSlug.toUpperCase()}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </article>
-        </main>
-      </CWKWLayout>
-    </CollectionAuthGuard>
+
+                  {chapter.breadcrumbs
+                    .map((crumb) => (
+                      <Link
+                        href={`${collectionRoute(props.collectionSlug)}/${
+                          crumb.slug
+                        }`}
+                        key={crumb.slug}
+                      >
+                        {crumb.name}
+                      </Link>
+                    ))
+                    .concat(
+                      <Link
+                        href={`${collectionRoute}/${chapter.slug}`}
+                        key={chapter.slug}
+                      >
+                        {chapter.title}
+                      </Link>
+                    )}
+                </Breadcrumbs>
+              </header>
+              {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
+              <DailpPageContents
+                path={`/${props.collectionSlug}/${chapter.slug.replace(
+                  /_/g,
+                  "-"
+                )}`}
+              />
+            </>
+          ) : null}
+
+          {/* If this chapter is a document, display the document contents. */}
+          {document ? (
+            <>
+              <DocumentTitleHeader
+                breadcrumbs={chapter.breadcrumbs}
+                rootPath={collectionRoute(props.collectionSlug)}
+                doc={document}
+              />
+              <TabSet doc={document} />
+            </>
+          ) : null}
+
+          <ul>
+            {subchapters?.map((chapter) => (
+              <li key={chapter.slug}>
+                <Link href={chapterRoute(props.collectionSlug!, chapter.slug)}>
+                  {chapter.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </main>
+    </CWKWLayout>
   )
 }
 
