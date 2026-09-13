@@ -3,6 +3,7 @@ select
   title,
   path,
   slug,
-  content as body
+  content as body,
+  created_at
 from page
 where path = $1;

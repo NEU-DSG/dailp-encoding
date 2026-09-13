@@ -1,5 +1,6 @@
 //! Provides types for structuring text-based pages.
 use async_graphql::{InputObject, SimpleObject, Union};
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 /// A website page which lives at a specific URL and has a list of blocks that
@@ -12,15 +13,23 @@ pub struct Page {
     pub title: String,
     pub body: Vec<ContentBlock>,
     pub path: String,
+    pub created_at: Option<NaiveDate>,
 }
 
 impl Page {
-    pub fn build(id: uuid::Uuid, path: String, title: String, body: Vec<ContentBlock>) -> Self {
+    pub fn build(
+        id: uuid::Uuid,
+        path: String,
+        title: String,
+        body: Vec<ContentBlock>,
+        created_at: Option<NaiveDate>,
+    ) -> Self {
         Self {
             id,
             path,
             title,
             body,
+            created_at,
         }
     }
 }
