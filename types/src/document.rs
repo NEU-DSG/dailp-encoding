@@ -14,8 +14,8 @@ use crate::{
 use itertools::Itertools;
 
 use crate::{
-    CreatorsForDocument, KeywordsForDocument, LanguagesForDocument, SpatialCoverageForDocument,
-    SubjectHeadingsForDocument,
+    CreatorsForDocument, EditedCollection, EditedCollectionForDocument, KeywordsForDocument,
+    LanguagesForDocument, SpatialCoverageForDocument, SubjectHeadingsForDocument,
 };
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -129,6 +129,16 @@ impl AnnotatedDoc {
             .collection
             .as_ref()
             .map(|name| DocumentCollection::from_name(name.to_owned()))
+    }
+
+    async fn edited_collection(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<EditedCollection>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(EditedCollectionForDocument(self.meta.id.0))
+            .await?)
     }
 
     /// Images of each source document page, in order
