@@ -7,6 +7,7 @@ select
   d.format_id,
   d.genre_id,
   d.audio_slice_id,
+  d.include_audio_in_edited_collection,
   media_resource.url as "audio_url?",
   media_resource.recorded_at as "recorded_at?",
   dailp_user.id as "recorded_by?",
