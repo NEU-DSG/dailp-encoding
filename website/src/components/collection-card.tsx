@@ -1,4 +1,7 @@
 import React from "react"
+import { Link } from "src/components"
+import { fullWidth } from "src/style/utils.css"
+import { card, cardHeader, cardImage, cardText } from "./card.css"
 import { BiHide } from "react-icons/bi/index"
 import { IoCheckmarkCircle } from "react-icons/io5/index"
 import { Group } from "reakit"
@@ -6,13 +9,13 @@ import { UserRole, useUserRole } from "src/auth"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./collection-card.css"
 
-export const CollectionCard = (props: {
+export const Card = (props: {
   thumbnail: string
   header: { text: string; link: string | undefined }
   description: string
   buttonLabel: string
   collectionId?: string
-  isHidden?: boolean
+  isHidden?: booleann
 }) => {
   const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
 
@@ -28,9 +31,10 @@ export const CollectionCard = (props: {
   }
 
   return (
-    <Group className={css.collectionCard}>
+    <Group className={card}>
       <div className={css.collectionCardImageContainer}>
-        <img src={props.thumbnail} className={css.collectionCardImage} />
+        <img src={props.thumbnail} className={cardImage} />
+
         {canToggleCollections && (
           <button
             onClick={handleToggle}
@@ -43,36 +47,36 @@ export const CollectionCard = (props: {
           </button>
         )}
       </div>
+
       <div className={css.cardContent}>
         <div className={css.titleWrapper}>
-          <h2 className={css.collectionCardHeader}>
+          <h2 className={cardHeader}>
             {props.header.link ? (
-              <a href={props.header.link}>{props.header.text}</a>
+              <Link href={props.header.link}>{props.header.text}</Link>
             ) : (
               props.header.text
             )}
           </h2>
+
           {canViewHiddenCollections && (
-            <div>
-              {props.isHidden ? (
-                <span className={css.hiddenBadge}>
-                  <BiHide size={16} /> Hidden
-                </span>
-              ) : (
-                <span className={css.publishedBadge}>
-                  <IoCheckmarkCircle size={16} /> Published
-                </span>
-              )}
-            </div>
+            props.isHidden ? (
+              <span className={css.hiddenBadge}>
+                <BiHide size={16} /> Hidden
+              </span>
+            ) : (
+              <span className={css.publishedBadge}>
+                <IoCheckmarkCircle size={16} /> Published
+              </span>
+            )
           )}
         </div>
-        <p className={css.collectionCardText}>{props.description}</p>
-        <a href={props.header.link} className={css.actionButton}>
+
+        <p className={cardText}>{props.description}</p>
+
+        <Link href={props.header.link!} className={css.actionButton}>
           {props.buttonLabel}
-        </a>
+        </Link>
       </div>
     </Group>
   )
 }
-
-export default CollectionCard
