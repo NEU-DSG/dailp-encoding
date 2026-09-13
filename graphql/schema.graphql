@@ -136,6 +136,10 @@ type AnnotatedDoc {
 	"""
 	creators: [Creator!]!
 	"""
+	People associated with this document
+	"""
+	associatedPeople: [AssociatedPerson!]!
+	"""
 	The audio for this document that was ingested from GoogleSheets, if there is any.
 	"""
 	ingestedAudioTrack: AudioSlice
@@ -289,6 +293,16 @@ enum ApprovalStatus {
 	PENDING
 	APPROVED
 	REJECTED
+}
+
+type AssociatedPerson {
+	id: UUID!
+	name: String!
+}
+
+input AssociatedPersonUpdate {
+	id: UUID!
+	name: String!
 }
 
 """
@@ -836,6 +850,10 @@ input DocumentMetadataUpdate {
 	The creator(s) of the document
 	"""
 	creators: [CreatorUpdate!]
+	"""
+	The people associated with a document
+	"""
+	associatedPeople: [AssociatedPersonUpdate!]
 	"""
 	The format of the original artifact
 	"""

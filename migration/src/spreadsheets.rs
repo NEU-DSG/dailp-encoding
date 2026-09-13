@@ -1013,6 +1013,7 @@ impl SheetInterpretation {
             spatial_coverage_ids: None,
             creators_ids: Some(creators_ids),
             format_id: None,
+            associated_people_ids: None,
             translation,
             page_images,
             date: parsed_date,
