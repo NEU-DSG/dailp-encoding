@@ -11,10 +11,13 @@ export function ContributeAudioPanel(p: {
   panelTitle: string
   Icon: IconType
   Component: ContributeAudioComponent
-  word: Dailp.FormFieldsFragment
+  parent: Dailp.FormFieldsFragment | Dailp.DocumentFieldsFragment
 }) {
-  const [_contributeAudioResult, contributeAudio] =
+  const [_contributeDocumentAudioResult, contributeDocumentAudio] =
+    Dailp.useAttachAudioToDocumentMutation()
+  const [_contributeWordAudioResult, contributeWordAudio] =
     Dailp.useAttachAudioToWordMutation()
+
   return (
     <CollapsiblePanel
       title={p.panelTitle}
@@ -22,9 +25,20 @@ export function ContributeAudioPanel(p: {
         <ContributeAudioSection
           Component={p.Component}
           processUploadedAudio={async (resourceUrl: string) => {
-            const result = await contributeAudio({
-              input: { wordId: p.word.id, contributorAudioUrl: resourceUrl },
-            })
+            const result =
+              p.parent.__typename == "AnnotatedForm"
+                ? await contributeWordAudio({
+                    input: {
+                      contributorAudioUrl: resourceUrl,
+                      wordId: p.parent.id,
+                    },
+                  })
+                : await contributeDocumentAudio({
+                    input: {
+                      contributorAudioUrl: resourceUrl,
+                      documentId: p.parent.id,
+                    },
+                  })
             return result.error === undefined
           }}
         />
