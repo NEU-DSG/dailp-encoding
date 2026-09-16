@@ -2,6 +2,7 @@
 //! documents. See the `mets` module for the actual template rendering and file writing,
 //! and the `tei` module for each document's companion TEI file.
 
+mod attachment_failures;
 mod audio_backup;
 mod backup_paths;
 mod checksum;
@@ -60,7 +61,7 @@ async fn main() -> Result<()> {
     // (and the "home collection" tie-break for documents shared by more than one
     // collection -- see `mets::generate_mets_bundle`) stable from run to run.
     collections.sort_by(|a, b| a.slug.cmp(&b.slug));
-    mets::generate_mets_bundle(&db, &collections, &output_root).await?;
+    mets::generate_mets_bundle(&db, &collections, &output_root, &log_dir).await?;
 
     Ok(())
 }

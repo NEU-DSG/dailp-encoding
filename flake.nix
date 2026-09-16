@@ -62,13 +62,32 @@
             crossSystem.config = target;
           };
           cc = pkgsCross.pkgsStatic.stdenv.cc;
+          # `cargo test` builds and then *runs* the test binaries. On the
+          # x86_64-linux CI runners those are native; on darwin they are
+          # foreign ELF and cannot be executed at all.
+          canRunTests = pkgs.stdenv.buildPlatform.canExecute
+            pkgsCross.pkgsStatic.stdenv.hostPlatform;
         in naersk.buildPackage {
           root = ./.;
           src = packageSrc;
-          doCheck = true;
-          doTest = true;
+          doCheck = canRunTests;
+          doTest = canRunTests;
 
-          nativeBuildInputs = [ cc ];
+          # This is a darwin derivation that cross compiles by hand, so two
+          # cc-wrappers are active at once. They keep out of each other's way
+          # by reading role-suffixed flag variables, but only when strictDeps
+          # is set -- otherwise setup.sh copies every dependency into every
+          # role, and the musl gcc inherits darwin's clang flags, including
+          # the `-iframework <CoreFoundation>` that gcc does not understand.
+          #
+          # So: strictDeps to keep the roles apart, and depsBuildBuild to put
+          # the musl wrapper in the _FOR_BUILD role rather than the *host*
+          # role it would share with clang. Its setup hook still runs (it is
+          # gated on hostOffset, which is -1 either way), so its bin/ is still
+          # on PATH for the bare `linker = "x86_64-unknown-linux-musl-gcc"` in
+          # .cargo/config.toml.
+          strictDeps = true;
+          depsBuildBuild = [ cc ];
 
           # Configures the target which will be built.
           # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
@@ -117,11 +136,24 @@
             exePath = "/bin/${name}";
           };
         tf = "${pkgs.terraform}/bin/terraform";
-        inherit (builtins) getEnv;
         tfInit = ''
           cp -f ${terraformConfig} ./config.tf.json
-          export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
-          export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
+          # Credentials are deliberately NOT set here. This used to export
+          # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from builtins.getEnv,
+          # interpolated at nix-eval time, which was wrong three ways:
+          #
+          #   1. It wrote the key material as literal text into the generated
+          #      script in /nix/store, which is world-readable.
+          #   2. It never carried AWS_SESSION_TOKEN, so no temporary credential
+          #      could work through it -- every SSO login, every assumed role.
+          #   3. When the variables were unset it exported empty strings,
+          #      clobbering perfectly good ambient credentials.
+          #
+          # terraform reads AWS_* from the environment natively and `nix run`
+          # passes the caller's environment through, so there is nothing to do:
+          # in CI aws-actions/configure-aws-credentials has already populated
+          # them, and locally your shell or AWS_PROFILE supplies them. See
+          # terraform/docs/sops.md for the local recipe.
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
         '';
@@ -168,16 +200,105 @@
           fi
           export TMPDIR="$tmp_dir"
 
+          # Checked before the tunnel is launched, not after. The readiness
+          # probe below cannot tell our own tunnel from someone else's -- it
+          # only asks whether *something* is listening on $local_port -- so
+          # without this a collision plays out as: our plugin fails to bind,
+          # the probe succeeds against the leftover listener, and ssh/scp ride
+          # a session we do not own. If that session has already passed SSM's
+          # idle timeout, ssh hangs with no output at all: ConnectTimeout only
+          # covers the TCP connect, which the local plugin socket answers
+          # happily, ServerAlive* only applies once the transport is up, and
+          # OpenSSH has no client-side banner timeout. A loud failure here is
+          # worth far more than a silent wrong-session connection.
+          if (exec 3<>"/dev/tcp/localhost/$local_port") 2>/dev/null; then
+            exec 3<&-
+            exec 3>&-
+            echo "Local port $local_port is already in use, so the tunnel cannot bind it." >&2
+            echo "Most likely a leftover session-manager-plugin from an interrupted run," >&2
+            echo "or a local service on that port. Find it with:" >&2
+            echo "  lsof -i :$local_port" >&2
+            echo "then kill it, or pick another port with BASTION_LOCAL_PORT." >&2
+            exit 1
+          fi
+
           # Progress messages go to stderr throughout, so that the stdout of
           # `run-on-bastion` is exactly the remote command's stdout and stays
           # safe to capture in a `$(...)`.
           echo "Opening SSM tunnel to $BASTION_ID on local port $local_port..." >&2
+
+          # Two things about this invocation are load-bearing.
+          #
+          #   1. `>&2`. `aws ssm start-session` runs session-manager-plugin as
+          #      a child process -- awscli's customizations/sessionmanager.py
+          #      does a plain check_call with no stdio redirection -- so the
+          #      plugin inherits our stdout, and it writes a banner of its own
+          #      to it ("Starting session with SessionId", "Port N opened for
+          #      sessionId", "Connection accepted for session", "Connection to
+          #      destination port closed"), some of it *after* the remote
+          #      command has already printed. Leaving that on our stdout is two
+          #      bugs at once: it corrupts a `$(run-on-bastion ...)` capture,
+          #      and, because the plugin can outlive us (see close_tunnel
+          #      below), it holds the write end of the caller's command
+          #      substitution pipe open, so `$( )` never sees EOF. That is not
+          #      a garbled line, it is an unbounded hang -- it cost the Data
+          #      Backup workflow's `Run database backups on bastion` step a
+          #      full 60-minute timeout. stderr rather than /dev/null because
+          #      the plugin's "bind: Address already in use" and
+          #      "SessionManagerPlugin is not found" messages are two of the
+          #      most useful rows in terraform/docs/runbook.md; this keeps them
+          #      in the log while making them impossible to capture.
+          #   2. `set -m`, which puts the background job in its own process
+          #      group so that $ssm_pid doubles as a process-group id for
+          #      close_tunnel. This has to stay adjacent to the launch: the
+          #      process group is fixed at fork time, and if monitor mode were
+          #      ever off here then $ssm_pid would share *our* group and the
+          #      negative kill below would take down the whole script. `set +m`
+          #      immediately after, so nothing else inherits job control --
+          #      copy-to-bastion's own `scp &` / `kill -0` / `wait` loop is
+          #      written against the default.
+          set -m
           ${awsCli} ssm start-session \
             --target "$BASTION_ID" \
             --document-name AWS-StartPortForwardingSession \
-            --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" &
+            --parameters "{\"portNumber\":[\"22\"],\"localPortNumber\":[\"$local_port\"]}" >&2 &
           ssm_pid=$!
-          trap 'kill $ssm_pid 2>/dev/null' EXIT
+          set +m
+
+          # Signals the process group, not just the pid. `kill $ssm_pid` reaches
+          # only the `aws` python wrapper; the plugin it spawned is then
+          # orphaned, re-parented to init, and still holding the local port, the
+          # mux socket and a live SSM session -- which is exactly the "leftover
+          # session-manager-plugin" the pre-flight check above now refuses to
+          # run alongside.
+          #
+          # Process groups are the only dependency-free way to do this on both
+          # platforms this runs on: `setsid` is util-linux and absent on Darwin,
+          # `pkill -P` loses the parent link the moment `aws` dies, and
+          # `pkill -f session-manager-plugin` would kill an unrelated operator's
+          # session.
+          #
+          # Note that `set -m` costs us one thing: the plugin no longer shares
+          # this shell's foreground process group, so a local Ctrl-C does not
+          # reach it directly any more. Bash runs an EXIT trap on an untrapped
+          # INT/TERM/HUP, so this function still covers that case. SIGKILL --
+          # including GitHub's step teardown after its grace period -- bypasses
+          # it regardless, which is why the pre-flight check exists rather than
+          # trusting cleanup alone.
+          close_tunnel() {
+            kill -TERM -- "-$ssm_pid" 2>/dev/null || kill -TERM "$ssm_pid" 2>/dev/null || true
+            # Reap our own child so it does not linger as a zombie, then give
+            # the group a moment: on SIGTERM the plugin terminates its SSM
+            # session, and a session abandoned instead of terminated lingers
+            # service-side until the idle timeout.
+            wait "$ssm_pid" 2>/dev/null || true
+            for _ in $(seq 1 10); do
+              kill -0 -- "-$ssm_pid" 2>/dev/null || return 0
+              sleep 0.2
+            done
+            kill -KILL -- "-$ssm_pid" 2>/dev/null || true
+          }
+          trap close_tunnel EXIT
 
           echo "Waiting for tunnel to come up..." >&2
           tunnel_up=
@@ -187,6 +308,17 @@
               exec 3>&-
               tunnel_up=1
               break
+            fi
+            # Checked after the probe, not before: a tunnel that comes up and
+            # whose `aws` exits in the same second should still count as up.
+            # This turns every fail-fast case -- a missing plugin, an
+            # unbindable port, TargetNotConnected, an expired credential --
+            # into a one-second failure with the plugin's own error right above
+            # it, instead of 15 seconds of "Waiting for tunnel to come up..."
+            # followed by a message that blames SSM registration.
+            if ! kill -0 "$ssm_pid" 2>/dev/null; then
+              echo "The SSM session exited before the tunnel came up; see its error above." >&2
+              exit 1
             fi
             sleep 1
           done
@@ -365,6 +497,7 @@
               awscli2
               ssm-session-manager-plugin
               curl
+              pandoc
               (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
                 export DATABASE_URL=postgres://localhost:5432/dailp
@@ -417,6 +550,9 @@
               '')
               (writers.writeBashBin "dev-pg-restore" ''
                 $PROJECT_ROOT/scripts/src/pg_restore_backup.sh $@
+              '')
+              (writers.writeBashBin "dev-md-to-docx" ''
+                $PROJECT_ROOT/scripts/src/md_to_docx.sh $@
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security

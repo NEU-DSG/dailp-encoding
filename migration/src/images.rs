@@ -12,6 +12,10 @@
 //! named) as its own separate image instead. Some sources also nest an oid in a path (e.g.
 //! `"StoryOfTheSequoyah/WJ22--StoryOfTheSequoyah-pg1"`), valid for the IIIF request itself
 //! but not for a flat local filename -- see [`sanitize_for_path`]'s use below.
+//!
+//! An image that won't download after retries is reported and skipped, not fatal -- see
+//! the end of [`download_page_images`], and [`crate::attachment_failures`] for where
+//! those reports end up.
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -20,12 +24,21 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use dailp::async_graphql::dataloader::Loader;
 use dailp::{Database, ImageSource, ImageSourceId};
+use futures::stream::StreamExt;
 use log::{info, warn};
 use tokio::time::sleep;
 
+use crate::attachment_failures::{AttachmentFailure, AttachmentKind};
 use crate::checksum::sha256_hex;
 use crate::mets::sanitize_for_path;
 use crate::tei::LoadedPage;
+
+/// How many page images [`download_page_images`] fetches at once. Kept deliberately modest:
+/// these requests go to an external IIIF server (Northeastern's, among others) that this
+/// pipeline does not own, and each response is a full-resolution image. The equivalent
+/// bound for audio lives in `audio_backup.rs`; the two are not multiplied together, because
+/// `mets::generate_mets_bundle` still walks documents one at a time.
+const DOWNLOAD_CONCURRENCY: usize = 8;
 
 /// A manuscript page image, downloaded into this run's `images/` directory and carrying
 /// its resolved IIIF source URL and archival filename -- see [`download_page_images`].
@@ -64,16 +77,21 @@ struct PageImageRef {
 /// `images_dir`, resolving each image's [`ImageSourceId`] to its real base URL via the
 /// [`Loader<ImageSourceId>`] impl (batched once per distinct source, not once per image)
 /// rather than assuming a single IIIF host for every document.
+///
+/// Returns the images that downloaded successfully alongside an [`AttachmentFailure`] for
+/// each one that didn't -- see the note above the result loop below for why a failed image
+/// no longer aborts the run.
 pub(crate) async fn download_page_images(
     client: &reqwest::Client,
     db: &Database,
     pages: &[LoadedPage],
     document_slug: &str,
+    document_title: &str,
     images_dir: &Path,
-) -> Result<Vec<DownloadedImage>> {
+) -> Result<(Vec<DownloadedImage>, Vec<AttachmentFailure>)> {
     let refs = page_image_refs(pages);
     if refs.is_empty() {
-        return Ok(Vec::new());
+        return Ok((Vec::new(), Vec::new()));
     }
 
     let mut seen = HashSet::new();
@@ -87,45 +105,96 @@ pub(crate) async fn download_page_images(
             anyhow::anyhow!("Failed to load image source(s) for \"{document_slug}\": {e}")
         })?;
 
-    let mut downloaded = Vec::with_capacity(refs.len());
-    for r in refs {
-        let PageImageRef {
-            page_number,
-            oid,
-            source_id,
-        } = r;
-        let source = sources.get(&source_id).ok_or_else(|| {
-            anyhow::anyhow!(
-                "Document \"{document_slug}\"'s page image \"{oid}\" references an image \
-                 source that couldn't be loaded"
-            )
-        })?;
-        let image_url = format!("{}/{}/full/max/0/default.jpg", source.url, oid);
-        let filename = image_filename(document_slug, &page_number, &oid);
-        let path = images_dir.join(&filename);
+    // These downloads, not the database reads or the XML rendering, are what an export
+    // spends its wall time on, so they run `DOWNLOAD_CONCURRENCY` at a time rather than
+    // one after another. `buffered` (not `buffer_unordered`) because `document.tera.xml`
+    // consumes the returned images in page order.
+    let sources = &sources;
+    let results: Vec<std::result::Result<DownloadedImage, AttachmentFailure>> =
+        futures::stream::iter(refs.into_iter().map(|r| {
+            let PageImageRef {
+                page_number,
+                oid,
+                source_id,
+            } = r;
+            // Computed before anything that can fail, so a failure record can name the
+            // image the same way a success would -- by the filename it was headed for.
+            let filename = image_filename(document_slug, &page_number, &oid);
+            async move {
+                let fail = |e: anyhow::Error| AttachmentFailure {
+                    title: filename.clone(),
+                    kind: AttachmentKind::Image,
+                    parent: document_title.to_owned(),
+                    message: format!("{e:#}"),
+                };
 
-        info!(
-            "Downloading page image \"{oid}\" (page {page_number}) for \"{document_slug}\" \
-             from {image_url}"
-        );
-        let bytes = fetch_with_retry(client, &image_url)
-            .await
-            .with_context(|| {
-                format!(
-                    "Failed to download page image \"{oid}\" (page {page_number}) for \
-                 \"{document_slug}\" from {image_url}"
-                )
-            })?;
-        let checksum = sha256_hex(&bytes);
-        std::fs::write(&path, &bytes)
-            .with_context(|| format!("Failed to write {}", path.display()))?;
+                let source = sources.get(&source_id).ok_or_else(|| {
+                    fail(anyhow::anyhow!(
+                        "Document \"{document_slug}\"'s page image \"{oid}\" references an image \
+                         source that couldn't be loaded"
+                    ))
+                })?;
+                let image_url = format!("{}/{}/full/max/0/default.jpg", source.url, oid);
 
-        downloaded.push(DownloadedImage {
-            oid,
-            source_url: source.url.clone(),
-            filename,
-            checksum,
-        });
+                info!(
+                    "Downloading page image \"{oid}\" (page {page_number}) for \"{document_slug}\" \
+                     from {image_url}"
+                );
+                let bytes = fetch_with_retry(client, &image_url)
+                    .await
+                    .with_context(|| {
+                        format!(
+                            "Failed to download page image \"{oid}\" (page {page_number}) for \
+                             \"{document_slug}\" from {image_url}"
+                        )
+                    })
+                    .map_err(fail)?;
+                let checksum = sha256_hex(&bytes);
+
+                // Created here, at the first byte actually written, rather than up front:
+                // a run whose documents have no images -- or whose every image fails --
+                // must not leave an empty `images/` behind for `zip -r` to record.
+                std::fs::create_dir_all(images_dir)
+                    .with_context(|| format!("Failed to create directory {}", images_dir.display()))
+                    .map_err(fail)?;
+                let path = images_dir.join(&filename);
+                std::fs::write(&path, &bytes)
+                    .with_context(|| format!("Failed to write {}", path.display()))
+                    .map_err(fail)?;
+
+                Ok(DownloadedImage {
+                    oid,
+                    source_url: source.url.clone(),
+                    filename,
+                    checksum,
+                })
+            }
+        }))
+        .buffered(DOWNLOAD_CONCURRENCY)
+        .collect()
+        .await;
+
+    // A failed image no longer aborts the export. It used to, on the grounds that "an
+    // incomplete manuscript is not a backup" -- but aborting produced *no* backup at all
+    // and left the half-written run directory on disk (nothing ever deleted it), so one
+    // unreachable IIIF oid cost the entire run's database dump-equivalent of content. The
+    // failure is instead reported, per image, in the run's attachment failure report, and
+    // the page is omitted from this document's fileGrps exactly as `audio_backup` already
+    // does for a track that won't download.
+    let mut downloaded = Vec::new();
+    let mut failures = Vec::new();
+    for result in results {
+        match result {
+            Ok(image) => downloaded.push(image),
+            Err(failure) => {
+                warn!(
+                    "Failed to download page image \"{}\" for \"{document_slug}\": {}. \
+                     Omitting it from this document.",
+                    failure.title, failure.message
+                );
+                failures.push(failure);
+            }
+        }
     }
 
     info!(
@@ -134,7 +203,7 @@ pub(crate) async fn download_page_images(
         images_dir.display()
     );
 
-    Ok(downloaded)
+    Ok((downloaded, failures))
 }
 
 /// Collects a [`PageImageRef`] for every individual IIIF image referenced by `pages`, in

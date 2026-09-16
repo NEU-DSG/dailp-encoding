@@ -12,11 +12,24 @@ gets recovered.
 ### Prerequisites
 
 - A running PostgreSQL instance, reachable from the machine running the backup. A non-local
-  database is not reachable directly -- see [`../terraform/sop.md`](../terraform/sop.md) for how to
+  database is not reachable directly -- see [`../terraform/docs/sops.md`](../terraform/docs/sops.md) for how to
   open the SSM tunnel that puts it on `localhost:5432`.
 - Write permissions on the local filesystem destination (defaults to `./backups/`).
 - `bash`, `pg_dump`, and `psql` on `PATH` -- all provided automatically inside the project's `nix
-  develop` shell.
+  develop` shell. Two version floors matter, and both bite from inside a script rather than at
+  startup, so check them explicitly when running anywhere other than the dev shell:
+  - **bash >= 4.3.** Every script here uses `local -n` namerefs (`create_logfile`,
+    `resolve_pg_target`, `upload_objects`), which bash added in 4.3. Older bash fails with
+    `local: -n: invalid option`, naming neither the database nor the script that broke.
+  - **A Postgres client >= 14**, matching the RDS engine version -- `pg_dump` refuses to dump a
+    server newer than itself. Both binaries are needed: `pg_dump_backup.sh` uses `pg_dump`,
+    `export_db_to_csv.sh` uses `psql`.
+
+  On a bastion host these come from the OS, not from nix. Amazon Linux 2023 satisfies both (bash
+  5.2; `sudo dnf install -y postgresql15`). Amazon Linux 2 satisfies **neither** -- it ships bash
+  4.2 with no newer build in its repos, which is why these scripts cannot run there at all. If you
+  hit that, see "Replacing the bastion AMI" in
+  [`../terraform/docs/sops.md`](../terraform/docs/sops.md).
 - `DATABASE_URL` and `DATABASE_PASSWORD` set in the environment. Local dev values live in the
   repo's `.env` (loaded automatically by the `nix develop` shell hook). For any non-local
   environment, these must come from that environment's secrets store.
@@ -26,28 +39,35 @@ gets recovered.
 A complete backup is **both** of the following, run one after another. Commands below assume
 you're in the `scripts/` directory; adjust paths otherwise.
 
-**1. Dumpfile backup ([`pg_dump_backup.sh`](./pg_dump_backup.sh))**
+**1. Dumpfile backup ([`pg_dump_backup.sh`](./src/pg_dump_backup.sh))**
 
 ```sh
-./pg_dump_backup.sh
+./src/pg_dump_backup.sh
 ```
 
 - Produces a single custom-format (`-Fc`) dump file at `./backups/pg_dump/dailp_<timestamp>.dump`.
 - Logs to `./backups/pg_dump/logs/dailp_pg-dump_<timestamp>.log`.
 - Override the output locations with `-d=DESTINATION` / `-l=LOG_LOCATION` if needed.
 
-**2. CSV export ([`pg_export_to_csv.sh`](./pg_export_to_csv.sh))**
+**2. CSV export ([`export_db_to_csv.sh`](./src/export_db_to_csv.sh))**
 
 ```sh
-./pg_export_to_csv.sh -d=dailp -h=localhost -U=<user>
+./src/export_db_to_csv.sh
 ```
 
-- Produces one CSV file per table at `./backups/csv/dailp_csv_export_<timestamp>/`.
-- Logs to that same folder's `logs/` subfolder.
-- Substitute `-h=`/`-U=`/`-p=` (or pass a full connection string via `-c=`) for the target
-  environment. Add `-s=SCHEMA` to export a schema other than `public`.
+- Reads `DATABASE_URL`/`DATABASE_PASSWORD` from the environment, same as step 1 -- which is what
+  the `dev-csv-dump` dev-shell wrapper does. Pass `-d=`/`-h=`/`-U=`/`-p=` (or a full connection
+  string via `-c=`) to target something other than `$DATABASE_URL`. Add `-s=SCHEMA` to export a
+  schema other than `public`.
+- Produces one CSV file per table at `./backups/pg_export/dailp_csv_export_<timestamp>/`, plus the
+  `manifest.csv` (`table,csv_filename,row_count,sha256`) that
+  [`import_db_from_csv.sh`](./src/import_db_from_csv.sh) verifies against. Override with `-o=`.
+- Logs to `./backups/pg_export/logs/`. Note this is *not* nested inside the timestamped export
+  folder; override with `-l=`.
 
-See [`README.md`](./README.md) for the full argument reference for both scripts.
+See [`README.md`](./README.md) for the full argument reference for both scripts. Be aware that
+`README.md` and [`runbook.md`](./runbook.md) still refer to this second script by an older name,
+`pg_export_to_csv.sh`; `export_db_to_csv.sh` is the one the tooling actually calls.
 
 ### When to Run
 
@@ -79,13 +99,44 @@ dropdb dailp_restore_test
 This is a lightweight sanity check that the dumpfile is usable, not a full disaster-recovery
 drill.
 
+### Automated Alternative
+
+Both steps above are automated by the **Data Backup** workflow
+([`.github/workflows/data-backup.yml`](../.github/workflows/data-backup.yml)), dispatched manually
+from `main`. It runs them on the dev bastion, which reaches RDS directly rather than through a
+tunnel, and uploads the results under `db-backups/<run-timestamp>/` in the media bucket. Every
+location it reports is the object's CloudFront URL, `$CF_URL/db-backups/<run-timestamp>/<object>`,
+rather than an `s3://` URI -- the CloudFront form is fetchable with `curl` and clickable in the run
+summary, and the bucket grants `s3:ListBucket` to no principal, so an `s3://` path is not something
+you can browse to anyway:
+
+| artifact | object | logs |
+|---|---|---|
+| `pg_dump_backup.sh` output | `dailp_<timestamp>.dump` | `logs/dailp_pg-dump_<timestamp>.log` |
+| `export_db_to_csv.sh` output | `dailp_<timestamp>_csv.tar.gz` (the export folder, `manifest.csv` included) | `logs/export_db_to_csv_<timestamp>.log` |
+
+The run summary reports each artifact's checksum and links both its download URL and its log. Both
+scripts' logfiles are uploaded alongside the backups they describe, before the workflow removes its
+working directory from the bastion -- and it only removes that directory after confirming both
+objects are in S3, so a failed run leaves the artifacts on the instance for recovery by hand.
+
+The **Data Backup** workflow also produces a third artifact the manual procedure above has no
+equivalent for: the METS/TEI XML bundle, uploaded to `$CF_URL/xml-backups/dailp-<timestamp>.zip`
+with its own log under `xml-backups/logs/`. Images and audio files that could not be downloaded
+into that bundle are listed individually in the run summary rather than failing the export.
+
+Prefer the workflow for the recurring daily backup. Use the manual procedure above when you need a
+backup of a stage the workflow does not cover, or when you need one immediately before a change
+and don't want to wait on a full workflow run.
+
 ### Known Limitations
 
 - Neither script prunes old backups -- storage and retention cleanup is a manual, separate
-  responsibility for now.
-- Neither script is wired into a scheduler yet. Until cron/CI automation exists, running them is a
-  manual step on the cadence described above. (Future enhancement: automate the daily recurring
-  backup.)
+  responsibility for now. This applies to S3 too: nothing expires objects under `db-backups/`,
+  and the bucket is versioned.
+- The workflow above is dispatch-only; nothing schedules it yet, so the daily cadence described
+  above is still something a person has to initiate. (Future enhancement: put it on a schedule.)
+- The workflow covers `dev` only -- its `TF_STAGE` is hardcoded.
 
 ### Reference
 
