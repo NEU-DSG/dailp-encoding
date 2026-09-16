@@ -1,5 +1,5 @@
 import { style, styleVariants } from "@vanilla-extract/css"
-import { mediaQueries } from "src/style/constants"
+import { mediaQueries } from "src/style/design-tokens"
 import { button } from "../../button.css"
 
 export const tocContainer = style({
