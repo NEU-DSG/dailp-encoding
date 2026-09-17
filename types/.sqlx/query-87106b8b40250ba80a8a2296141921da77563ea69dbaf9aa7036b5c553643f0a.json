@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select p.* \nfrom associated_person p\njoin document_associated_person dp\non dp.associated_person_id = p.id \nwhere dp.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "87106b8b40250ba80a8a2296141921da77563ea69dbaf9aa7036b5c553643f0a"
+}
