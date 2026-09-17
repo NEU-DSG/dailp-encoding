@@ -92,10 +92,16 @@ impl AnnotatedForm {
             .await?
             .unwrap_or_default();
 
+        let system_segments: Vec<_> = abstract_segments
+            .iter()
+            .filter(|seg| seg.system == Some(system) || seg.system.is_none())
+            .cloned()
+            .collect();
+
         // 2. Request all concrete tags that start with each abstract tag.
         let concrete_tag_matches = db
             .load_many(
-                abstract_segments
+                system_segments
                     .iter()
                     .map(|seg| TagId(seg.gloss.clone(), system)),
             )
@@ -104,7 +110,7 @@ impl AnnotatedForm {
         // 3. Pick the longest match for each abstract segment.
         let mut concrete_segments = Vec::new();
         let mut curr_index = 0;
-        for (idx, abstract_segment) in abstract_segments.iter().enumerate() {
+        for (idx, abstract_segment) in system_segments.iter().enumerate() {
             // If this segment has already been filled by a previous match, skip it.
             if idx < curr_index {
                 continue;
@@ -119,10 +125,10 @@ impl AnnotatedForm {
                     let abstract_matches = concrete_tag
                         .internal_tags
                         .iter()
-                        .zip(abstract_segments.iter().skip(curr_index));
+                        .zip(system_segments.iter().skip(curr_index));
                     let is_match = abstract_matches.clone().all(|(a, b)| *a == b.gloss);
                     if is_match {
-                        let corresponding_segments = abstract_segments
+                        let corresponding_segments = system_segments
                             .iter()
                             .skip(curr_index)
                             .take(concrete_tag.internal_tags.len());
@@ -148,10 +154,17 @@ impl AnnotatedForm {
             } else {
                 // If this abstract segment was unmatched (probably a root),
                 // then just use it directly.
-                concrete_segments.push(WordSegment {
-                    system: Some(system),
-                    ..abstract_segment.clone()
-                });
+
+                eprintln!(
+                    "No concrete match for gloss: {:?}, gloss_id: {:?}, system: {:?}",
+                    abstract_segment.gloss, abstract_segment.gloss_id, system
+                );
+                if abstract_segment.gloss_id.is_none() {
+                    concrete_segments.push(WordSegment {
+                        system: Some(system),
+                        ..abstract_segment.clone()
+                    });
+                }
                 curr_index += 1;
             }
             // if !success {

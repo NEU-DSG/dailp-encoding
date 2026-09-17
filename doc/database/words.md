@@ -33,21 +33,34 @@ A join table linking user audio contributions to words in documents. This is a m
 | `include_in_edited_collection` | `boolean`             | Should audio be revealed to readers? Defaults to `false`.               |
 | `edited_by`                    | `uuid? -> dailp_user` | Last Editor to decide if audio should be included in edited collection. |
 
+## `representation_system_type`
+
+An enum representing the orthography system used for a word part of a word.
+This type is used across `abstract_morpheme_tag`, `morpheme_tag`, and
+`word_segment` to delineate differences between systems for each word.
+
+| value     | description                          |
+| --------- | ------------------------------------ |
+| `TAOC`    | Tone and Accent in Oklahoma Cherokee |
+| `CRG`     | Cherokee Reference Grammar           |
+| `LEARNER` | Learner-oriented orthography system  |
+
 ## `word_segment`
 
 A part of a word, also known as a morpheme within a morphemic segmentation.
 Generally used to display interlinear glossed text.
 
-Word segments are unique on the combination of `word_id` and `index_in_word`.
+Word segments are unique on the combination of `word_id`, `index_in_word`, and `representation_system_type`.
 
-| column          | type                      | description                                                                                                                                   |
-| --------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | `uuid`                    | Primary key                                                                                                                                   |
-| `word_id`       | `uuid -> word`            | Word this is a part of                                                                                                                        |
-| `index_in_word` | `bigint`                  | Position within the word                                                                                                                      |
-| `morpheme`      | `text`                    | Underlying phonemic representation of the morpheme                                                                                            |
-| `gloss_id`      | `uuid? -> morpheme_gloss` | English gloss which may be shared with other word segments                                                                                    |
-| `role`          | `word_segment_role`       | Role of the segment within the word, either `Morpheme`, `Clitic`, or `Modifier`. This usually determines the separator character used in IGT. |
+| column                       | type                          | description                                                                                                                                   |
+| ---------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                         | `uuid`                        | Primary key                                                                                                                                   |
+| `word_id`                    | `uuid -> word`                | Word this is a part of                                                                                                                        |
+| `index_in_word`              | `bigint`                      | Position within the word                                                                                                                      |
+| `morpheme`                   | `text`                        | Underlying phonemic representation of the morpheme                                                                                            |
+| `gloss_id`                   | `uuid? -> morpheme_gloss`     | English gloss which may be shared with other word segments                                                                                    |
+| `role`                       | `word_segment_role`           | Role of the segment within the word, either `Morpheme`, `Clitic`, or `Modifier`. This usually determines the separator character used in IGT. |
+| `representation_system_type` | `representation_system_type?` | Orthography system this segment belongs to (`TAOC`, `CRG`, or `LEARNER`)                                                                      |
 
 ## `morpheme_gloss`
 
@@ -79,20 +92,22 @@ Each system has a different mapping of internal morpheme glosses to display morp
 
 ## `abstract_morpheme_tag`
 
-| column            | type    | description                                              |
-| ----------------- | ------- | -------------------------------------------------------- |
-| `id`              | `uuid`  | Primary key                                              |
-| `internal_gloss`  | `text`  | Abbreviation used in morphemic segmentations, like `3PL` |
-| `linguistic_type` | `text?` | For example "pronominal orefix" or "modal suffix"        |
+| column                       | type                          | description                                                              |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `id`                         | `uuid`                        | Primary key                                                              |
+| `internal_gloss`             | `text`                        | Abbreviation used in morphemic segmentations, like `3PL`                 |
+| `linguistic_type`            | `text?`                       | For example "pronominal orefix" or "modal suffix"                        |
+| `representation_system_type` | `representation_system_type?` | The orthography system this tag belongs to (`TAOC`, `CRG`, or `LEARNER`) |
 
 ## `morpheme_tag`
 
-| column          | type                          | description                                                                                                                                 |
-| --------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | `uuid`                        | Primary key                                                                                                                                 |
-| `system_id`     | `uuid -> abbreviation_system` |                                                                                                                                             |
-| `abtract_ids`   | `uuid[]`                      | Internal tags making up this output tag                                                                                                     |
-| `gloss`         | `text`                        | Abbreviation used in segmentations like `PFT`                                                                                               |
-| `title`         | `text`                        | Full name like `Perfective Aspect`                                                                                                          |
-| `description`   | `text?`                       | For example "3rd person plural"                                                                                                             |
-| `role_override` | `word_segment_role?`          | Overrides the role of all uses of this tag. Useful for abbreviation systems which require certain morphemes to take on the `Modifier` role. |
+| column                       | type                          | description                                                                                                                                 |
+| ---------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                         | `uuid`                        | Primary key                                                                                                                                 |
+| `system_id`                  | `uuid -> abbreviation_system` |                                                                                                                                             |
+| `abstract_ids`               | `uuid[]`                      | Internal tags making up this output tag                                                                                                     |
+| `gloss`                      | `text`                        | Abbreviation used in segmentations like `PFT`                                                                                               |
+| `title`                      | `text`                        | Full name like `Perfective Aspect`                                                                                                          |
+| `description`                | `text?`                       | For example "3rd person plural"                                                                                                             |
+| `role_override`              | `word_segment_role?`          | Overrides the role of all uses of this tag. Useful for abbreviation systems which require certain morphemes to take on the `Modifier` role. |
+| `representation_system_type` | `representation_system_type?` | The orthography system this tag belongs to (`TAOC`, `CRG`, or `LEARNER`)                                                                    |

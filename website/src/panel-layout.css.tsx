@@ -178,3 +178,15 @@ export const globalGlossTag = style([
 ])
 
 export const buttonSpacing = style([marginX(hspace.small)])
+
+export const systemSelectorContainer = style([
+  {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "10px",
+    width: "90%",
+    paddingBottom: "10px",
+  },
+])

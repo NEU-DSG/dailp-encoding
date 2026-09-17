@@ -73,6 +73,7 @@ export const PanelLayout = (p: {
 
   // Get all global glosses / matching tags to display.
   const { cherokeeRepresentation } = usePreferences()
+
   const [{ data }] = Dailp.useGlossaryQuery({
     variables: { system: cherokeeRepresentation },
   })
@@ -159,6 +160,10 @@ export const PanelLayout = (p: {
         {/* Renders audio recording. */}
         {isEditing ? (
           <Form {...form}>
+            {console.log(
+              "view mode segments:",
+              p.segment.__typename === "AnnotatedForm" && p.segment.segments
+            )}
             <WordPanel
               panel={PanelType.EditWordPanel}
               word={p.segment}
@@ -275,6 +280,7 @@ export const PanelLayout = (p: {
           role: Dailp.WordSegmentRole.Morpheme,
           previousSeparator: "-",
           matchingTag: null,
+          system: cherokeeRepresentation,
         }
 
         console.log("Adding new segment:", newSegment)
