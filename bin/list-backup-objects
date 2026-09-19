@@ -10,3 +10,4 @@ echo "bucket name: $backup_bucket"
 aws sts get-caller-identity
 
 aws s3api list-objects --bucket "$backup_bucket" --prefix "db-backups"
+aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups"
