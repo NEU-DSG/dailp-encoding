@@ -11,5 +11,5 @@ aws s3api list-objects --bucket "$backup_bucket" --prefix "db-backups"
 aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups"
 
 echo "Retrieving cloudfront distribution metadata..."
-terraform state show 'aws_cloudfront_distribution.media_distribution' -json
+terraform state show 'aws_cloudfront_distribution.media_distribution'
 echo "done"
