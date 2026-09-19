@@ -7,6 +7,8 @@ jobs:
     name: List backups
     runs-on: ubuntu-22.04
     environment:
+      name: Development
+      deployment: false
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -35,8 +37,6 @@ jobs:
       BACKUP_BUCKET: dailp-dev-media-storage
       SUMMARY_DIR: ${{ github.workspace }}/.backup-summary
     steps:
-      name: Development
-      deployment: false
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Configure AWS credentials
