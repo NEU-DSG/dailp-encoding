@@ -18,7 +18,7 @@ echo "done"
 # followed by the command that would delete it if we were doing this
 # for real.
 versions_json="$(aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups")"
-echo "$versions_json" | jq -r '.Versions.[] | .VersionId + "\t" + .Key' | while read version_id key | do
+echo "$versions_json" | jq -r '.Versions.[] | .VersionId + "\t" + .Key' | while read version_id key ; do
 	echo "Dry run: would remove key ${key} at version ${version_id}"
 	echo aws s3api delete-object --bucket "${backup_bucket}" --key "${key}" --version-id "${version_id}"
 done
