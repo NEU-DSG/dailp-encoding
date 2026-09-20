@@ -22,3 +22,10 @@ jq -r '.Versions[] | .VersionId + "\t" + .Key' | while read version_id key ; do
 	echo "Dry run: would remove key ${key} at version ${version_id}"
 	echo aws s3api delete-object --bucket "${backup_bucket}" --key "${key}" --version-id "${version_id}"
 done
+
+echo "Retrieving metadata on cloudfront distribution..."
+nix run --impure .#tf-cloudfront-dist
+
+echo "Dry run: this is the command we would use to invalidate the cloudfront cache if we were doing this for real"
+echo "During dry-run, check the above output to confirm that the distribution ID is correct."
+echo aws cloudfront create-invalidation --distribution-id TODO --paths "/db-backups/*"
