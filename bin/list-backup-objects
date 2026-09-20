@@ -18,7 +18,7 @@ aws sts get-caller-identity
 # followed by the command that would delete it if we were doing this
 # for real.
 aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups" |
-jq -r '.Versions.[] | .VersionId + "\t" + .Key' | while read version_id key ; do
+jq -r '.Versions[] | .VersionId + "\t" + .Key' | while read version_id key ; do
 	echo "Dry run: would remove key ${key} at version ${version_id}"
 	echo aws s3api delete-object --bucket "${backup_bucket}" --key "${key}" --version-id "${version_id}"
 done
