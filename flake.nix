@@ -468,7 +468,7 @@
         apps.tf-cloudfront-dist = mkBashApp "tf-cloudfront-dist" ''
           ${tfInit}
           ${tf} state show 'aws_cloudfront_distribution.media_distribution'
-        ''
+        '';
 
         devShells.default = with pkgs;
           mkShell rec {
