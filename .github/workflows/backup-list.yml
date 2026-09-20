@@ -60,4 +60,6 @@ jobs:
           nix build --impure -L
           nix run --impure -L .#tf-init
       - name: Run list script
-        run: ./bin/list-backup-objects
+        run: |
+          nix run --impure -L .#tf-init
+          ./bin/list-backup-objects
