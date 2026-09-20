@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 backup_bucket=$(jq -r '.resource.aws_s3_bucket.media_storage.bucket' < config.tf.json)
 
 # Check who we are calling the APIs as
+echo "AWS caller identity:"
 aws sts get-caller-identity
 
-aws s3api list-objects --bucket "$backup_bucket" --prefix "db-backups"
-aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups"
-
-echo "Retrieving cloudfront distribution metadata..."
-nix run --impure .#tf-cloudfront-dist
-echo "done"
+# aws s3api list-objects --bucket "$backup_bucket" --prefix "db-backups"
+# aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups"
+# echo "Retrieving cloudfront distribution metadata..."
+# nix run --impure .#tf-cloudfront-dist
+# echo "done"
 
 # Dry run of delete. Lists the objects and versions that we'd delete,
 # followed by the command that would delete it if we were doing this
