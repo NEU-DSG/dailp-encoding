@@ -41,14 +41,17 @@ export const LexicalSearch = () => {
           <Link href="/sources">dictionaries and grammars</Link> and{" "}
           <Link href="/cwkw">edited collection of documents</Link>.
         </p>
-        <Input
-          className={searchBox}
-          defaultValue={morphemeId ?? ""}
-          placeholder="Search query"
-          onChange={(e) => {
-            setMorpheme(e.target.value || null)
-          }}
-        />
+        <div>
+          <Input
+            className={searchBox}
+            defaultValue={morphemeId ?? ""}
+            placeholder="Search query"
+            onChange={(e) => {
+              setMorpheme(e.target.value || null)
+            }}
+          />
+          <p>Filters</p>
+        </div>
 
         {!!morphemeId && <Timeline gloss={morphemeId} />}
       </main>
@@ -74,7 +77,7 @@ const Timeline = (p: { gloss: string }) => {
     return (
       <div className={fullWidth}>
         <div className={boldWordRow}>
-          <div>Document ID</div>
+          <div>Document Title</div>
           <div>Transcription</div>
           <div>Simple Phonetics</div>
           <div>Translation</div>
