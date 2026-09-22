@@ -14,18 +14,11 @@ aws sts get-caller-identity
 # nix run --impure .#tf-cloudfront-dist
 # echo "done"
 
-echo "Getting list of backup objects to delete"
-aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups" |
-jq -r '.Versions[] | .VersionId + "\t" + .Key' | while read version_id key ; do
-	echo "Deleting backup object ${key} version ${version_id}"
-	aws s3api delete-object --bucket "${backup_bucket}" --key "${key}" --version-id "${version_id}"
-	echo "done"
-done
-echo "Done deleting backup objects"
+echo "Getting list of backup objects"
+aws s3api list-object-versions --bucket "$backup_bucket" --prefix "db-backups" 
 
-echo "Retrieving metadata on cloudfront distribution..."
-nix run --impure .#tf-cloudfront-dist
+# echo "Retrieving metadata on cloudfront distribution..."
+# nix run --impure .#tf-cloudfront-dist
 
-echo "Creating Cloudfront invalidation"
-aws cloudfront create-invalidation --distribution-id E3BURE3XRHNGBC --paths "/db-backups/*"
-echo "done"
+echo "Getting invalidation status"
+aws cloudfront get-invalidation --distribution-id E3BURE3XRHNGBC --id I536KC6YOF9J3CMANAVF9EYRCB
