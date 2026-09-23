@@ -161,18 +161,17 @@ export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
             </p>
 
             <div className={css.modalButtonGroup}>
-              <Button onClick={() => setIsConfirmingDelete(false)}>
+              <Button
+                onClick={() => setIsConfirmingDelete(false)}
+                style={{
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+              >
                 Cancel
               </Button>
 
-              <Button
-                onClick={handleDelete}
-                style={{
-                  backgroundColor: "#b72d3b",
-                }}
-              >
-                Confirm
-              </Button>
+              <Button onClick={handleDelete}>Confirm</Button>
             </div>
           </div>
         </div>
