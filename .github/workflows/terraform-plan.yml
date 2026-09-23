@@ -5,6 +5,9 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-22.04
+    environment:
+        name: Development
+        deployment: false
     env:
       DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -13,10 +16,22 @@ jobs:
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      # No per-stage selection here: this job resolves to a single stage whose
+      # environment scopes the secret (cf. main.yml, where uat shares dev's
+      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
+      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
+      # terraform/import.nix renders the bastion's import block from this, so
+      # without it PR plans carry `import { id = "" }` and cannot show a bastion
+      # diff at all -- which makes this job useless as the review gate for any
+      # change to terraform/bastion-host.nix.
+      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -54,3 +69,9 @@ jobs:
           aws-region: us-east-1
       - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
+      - name: Report build artifacts
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v5
+        with:
+          path: config.tf.json
+          name: terraform-config

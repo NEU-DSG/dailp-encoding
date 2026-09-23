@@ -2,12 +2,21 @@
 linker = "x86_64-unknown-linux-musl-gcc"
 
 [target.x86_64-apple-darwin]
+# Use the real system linker instead of Nix's bundled cctools-based one:
+# the Nix-provided `cc` on PATH in `nix develop` can't emit a valid LC_UUID
+# load command for dylibs linked with `-undefined dynamic_lookup` (which
+# rustc always applies when linking proc-macro crates on macOS), so any
+# proc-macro dylib built through it fails to load with a misleading
+# `error[E0463]: can't find crate for '<proc-macro>'`.
+# Once we update nixpkgs, this workaround may not be needed.
+linker = "/usr/bin/cc"
 rustflags = [
   "-C", "link-arg=-undefined",
   "-C", "link-arg=dynamic_lookup",
 ]
 
 [target.aarch64-apple-darwin]
+linker = "/usr/bin/cc"
 rustflags = [
   "-C", "link-arg=-undefined",
   "-C", "link-arg=dynamic_lookup",

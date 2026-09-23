@@ -32,6 +32,18 @@ jobs:
       AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      #
+      # Selected per stage, because the bastions genuinely live in different
+      # subnets (dev subnet-08452f5a8b4ff8085, uat subnet-0a39453d94ed889d6) and
+      # uat shares the Development environment with dev -- so a single secret
+      # would declare uat's bastion in dev's subnet and force its replacement on
+      # the next prerelease apply, which is auto-approved. Matches the
+      # DATABASE_PASSWORD selection above; job-level env cannot read
+      # env.TF_STAGE, hence the repeated event expression rather than the
+      # step-level form used for BASTION_ID below.
+      AWS_SUBNET_BASTION: ${{ github.event.action == 'prereleased' && secrets.UAT_AWS_SUBNET_BASTION || secrets.AWS_SUBNET_BASTION }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
