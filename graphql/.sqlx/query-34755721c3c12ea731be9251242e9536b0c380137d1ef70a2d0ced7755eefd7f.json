@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  media_slice.id as \"id\",\n  media_slice.time_range as \"range?\",\n  media_resource.url as \"resource_url\",\n  word_user_media.include_in_edited_collection as \"include_in_edited_collection\",\n  media_resource.recorded_at as \"recorded_at?\",\n  contributor.id as \"recorded_by?\",\n  contributor.display_name as \"recorded_by_name?\",\n  editor.id as \"edited_by?\",\n  editor.display_name as \"edited_by_name?\"\nfrom word_user_media\n  left join media_slice on media_slice.id = word_user_media.media_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = word_user_media.edited_by\nwhere\n  word_id = $1\norder by media_resource.recorded_at desc\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "range?",
+        "type_info": "Int8Range"
+      },
+      {
+        "ordinal": 2,
+        "name": "resource_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "include_in_edited_collection",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "recorded_at?",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "recorded_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "recorded_by_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "edited_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "edited_by_name?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "34755721c3c12ea731be9251242e9536b0c380137d1ef70a2d0ced7755eefd7f"
+}

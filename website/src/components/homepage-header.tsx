@@ -1,4 +1,5 @@
 import "@fontsource/philosopher/400.css"
+import React from "react"
 import { Button } from "reakit"
 import DefaultImage from "../assets/DollieDuncan.jpg"
 import * as styles from "./homepage-header.css"
@@ -40,6 +41,15 @@ export const HomepageHeader = (props: {
             as="a"
             href={props.button_right.link}
             className={styles.actionButton}
+            onClick={(e: React.MouseEvent) => {
+              const hash = props.button_right.link
+              if (hash.startsWith("#")) {
+                e.preventDefault()
+                document
+                  .getElementById(hash.slice(1))
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+            }}
           >
             {props.button_right.text}
           </Button>

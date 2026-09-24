@@ -53,7 +53,7 @@ const Footer = () => {
               </div>
 
               <p className={css.lastUpdated}>
-                Last Updated on {buildDate.toDateString()}
+                Last Updated on {buildDate ? buildDate.toDateString() : ""}
               </p>
             </div>
 

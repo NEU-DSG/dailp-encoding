@@ -140,7 +140,7 @@ const NewEditedCollectionPage = () => {
   }
 
   return (
-    <AuthGuard requiredRole={UserRole.Editor}>
+    <AuthGuard requiredRoles={[UserRole.Editor]}>
       <Layout>
         <Helmet title="New edited collection" />
         <main>

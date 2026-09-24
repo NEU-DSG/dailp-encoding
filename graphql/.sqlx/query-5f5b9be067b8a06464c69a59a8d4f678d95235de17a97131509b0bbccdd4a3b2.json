@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into abstract_morpheme_tag (internal_gloss, linguistic_type)\nvalues ($1, $2)\non conflict (internal_gloss) do update set\nlinguistic_type = excluded.linguistic_type\nreturning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5f5b9be067b8a06464c69a59a8d4f678d95235de17a97131509b0bbccdd4a3b2"
+}
