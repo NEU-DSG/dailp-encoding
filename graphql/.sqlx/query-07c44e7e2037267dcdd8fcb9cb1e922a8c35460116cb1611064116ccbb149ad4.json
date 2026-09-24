@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section)\nvalues (\n  $1,\n  $2,\n  $3,\n  $4,\n  $5,\n  $6\n)\nreturning id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Int8",
+        "Int8",
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        },
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "07c44e7e2037267dcdd8fcb9cb1e922a8c35460116cb1611064116ccbb149ad4"
+}
