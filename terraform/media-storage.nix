@@ -49,6 +49,7 @@
           (reference_policy "allow_cloudfront_service_principal")
           (reference_policy "allow_dailp_user_principals")
           (reference_policy "allow_dailp_deploy_principal")
+          (reference_policy "allow_bastion_backup_writes")
         ];
     };
     allow_cloudfront_service_principal.statement = {
@@ -105,6 +106,45 @@
         "s3:PutObject"
       ];
       resources = [ "$\{aws_s3_bucket.media_storage.arn}/*" ];
+    };
+    # The Data Backup workflow's database step runs on the bastion, not on the
+    # GitHub runner: .github/workflows/data-backup.yml shells in over the SSM
+    # tunnel and invokes scripts/src/upload_to_s3.sh there. No AWS credentials
+    # are ever shipped across that tunnel, so the `aws s3 cp` executes under the
+    # EC2 instance profile rather than the dailp-deployment user granted above.
+    #
+    # That role comes from the cloudposse ec2-bastion-server module, whose only
+    # S3 statement is s3:GetEncryptionConfiguration -- so the upload used to fail
+    # with AccessDenied. The grant lives here, on the bucket, rather than on the
+    # role, because the module owns its inline policy and cannot be extended from
+    # out here, and because the NEU-SysAdmin-Additional-Deny-Permissions boundary
+    # denies iam:PutRolePolicy/AttachRolePolicy on this role to human admins.
+    # Bucket and role are in the same account, where a resource-based grant alone
+    # is sufficient, so nothing further is needed on the identity side.
+    #
+    # Scoped to db-backups/ deliberately: the bastion writes backups and nothing
+    # else, so it has no business touching the user-uploaded prefixes above.
+    # AbortMultipartUpload is here because a pg_dump is far over the CLI's
+    # multipart threshold -- PutObject covers create/upload/complete, but
+    # cleaning up a failed transfer's parts is a separate action.
+    allow_bastion_backup_writes.statement = {
+      sid = "AllowBastionDbBackupWrites";
+      effect = "Allow";
+      principals = {
+        type = "AWS";
+        # Role name from the module output so it tracks namespace/stage/name;
+        # account id hardcoded per stage, matching the deploy principal above.
+        identifiers =
+          if config.setup.stage == "dev" then
+            [ "arn:aws:iam::783177801354:role/$\{module.bastion_host.role}" ]
+          else
+            [ "arn:aws:iam::363539660090:role/$\{module.bastion_host.role}" ];
+      };
+      actions = [
+        "s3:PutObject"
+        "s3:AbortMultipartUpload"
+      ];
+      resources = [ "$\{aws_s3_bucket.media_storage.arn}/db-backups/*" ];
     };
   };
 }
