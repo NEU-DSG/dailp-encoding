@@ -116,6 +116,7 @@ async fn parse_early_vocab(
         genre_id: None,
         format_id: None,
         creators_ids: None,
+        key_dates_ids: None,
         keywords_ids: None,
         languages_ids: None,
         subject_headings_ids: None,

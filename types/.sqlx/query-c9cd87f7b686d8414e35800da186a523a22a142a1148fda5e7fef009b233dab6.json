@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert the new set of key date IDs\ninsert into document_key_date (document_id, key_date_id)\nselect $1, unnest($2::uuid[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c9cd87f7b686d8414e35800da186a523a22a142a1148fda5e7fef009b233dab6"
+}

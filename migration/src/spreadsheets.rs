@@ -1007,6 +1007,7 @@ impl SheetInterpretation {
             collection: source.pop().filter(|s| !s.trim().is_empty()),
             contributors: Some(people),
             genre_id: None,
+            key_dates_ids: None,
             keywords_ids: None, // for now
             languages_ids: None,
             subject_headings_ids: None,
