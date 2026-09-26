@@ -1,7 +1,7 @@
 import "@reach/dialog/styles.css"
 import React, { Fragment, useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
-import { MdClose } from "react-icons/md"
+import { FiX } from "react-icons/fi"
 import { unstable_Form as Form } from "reakit"
 import { UserRole, useCredentials, useUserRole } from "src/auth"
 import { IconButton, Link } from "src/components"
@@ -174,9 +174,19 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 
       await reexecuteQuery({ requestPolicy: "network-only" })
       setIsEditing(false)
+
+      setMessage({
+        type: "success",
+        message: "Document metadata updated successfully.",
+      })
     } catch (error) {
       console.error("Failed to update document:", error)
       setIsEditing(false)
+
+      setMessage({
+        type: "error",
+        message: "Failed to update document metadata.",
+      })
     }
   }
 
@@ -395,7 +405,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
               onClick={() => setMessage(null)}
               aria-label="Close message"
             >
-              <MdClose size={18} />
+              <FiX size={18} />
             </IconButton>
           </div>
         </div>

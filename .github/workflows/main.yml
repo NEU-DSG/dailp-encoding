@@ -102,7 +102,7 @@ jobs:
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Build and test project
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
-        env: 
+        env:
           BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L

@@ -2,8 +2,8 @@ import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
+import { FiX } from "react-icons/fi"
 import { FiInfo } from "react-icons/fi/index"
-import { MdClose } from "react-icons/md"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
 import { IconButton } from "src/components"
@@ -695,7 +695,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
           onClick={onClose}
           aria-label="Close modal"
         >
-          <MdClose size={32} />
+          <FiX size={32} />
         </IconButton>
         <h2 className={styles.title}>Editing Document Information</h2>
         <p className={styles.subtitle}>* indicates a required field</p>
