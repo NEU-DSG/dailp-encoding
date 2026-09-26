@@ -2,18 +2,22 @@ import "@fontsource/charis-sil/400.css"
 import "@fontsource/charis-sil/700.css"
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
+import { rgba } from "polished"
 import React from "react"
 import { Helmet } from "react-helmet"
+import { MdOutlineBookmark } from "react-icons/md/index"
 import Link from "src/components/link"
 import "src/style/global.css"
 import { themeClass } from "src/theme.css"
 import { LayoutClient } from "./client/layout"
+import { IconButton } from "./components"
 import NavBar from "./components/nav-bar"
 import { Environment, deploymentEnvironment } from "./env"
 import Footer from "./footer"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
+import * as styles from "./mode.css"
 import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
 import { PreferencesProvider } from "./preferences-context"
 import "./wordpress.css"
@@ -45,6 +49,7 @@ const Layout: React.FC = ({ children }) => {
               </span>
             </div>
             <LoginHeaderButton />
+            <DashboardButton color="black" />
             <HeaderPrefDrawer />
           </div>
           {/* <NavMenu menuID={2} /> */}
@@ -58,3 +63,19 @@ const Layout: React.FC = ({ children }) => {
 }
 
 export default Layout
+
+type DashboardButtonProps = {
+  color?: string
+}
+
+export const DashboardButton = ({ color }: DashboardButtonProps) => {
+  return (
+    <div className={css.wrapper} style={{ color }}>
+      <Link href="/dashboard" className={css.iconLink} aria-label="Dashboard">
+        <MdOutlineBookmark size={32} />
+      </Link>
+
+      <div className={css.tooltip}>Go to my dashboard</div>
+    </div>
+  )
+}
