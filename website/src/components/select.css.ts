@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { fonts, hspace, vspace } from "src/style/constants"
+import { fonts, hspace, vspace } from "src/style/design-tokens"
 
 const spaceToSide = hspace.halfEdge
 

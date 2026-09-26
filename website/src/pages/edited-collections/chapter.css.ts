@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { hspace, mediaQueries } from "src/style/constants"
+import { hspace, mediaQueries } from "src/style/design-tokens"
 import { paddingX, paddingY } from "src/style/utils"
 import { std } from "src/style/utils.css"
 
