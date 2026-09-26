@@ -2,16 +2,13 @@ import { plugins } from "@citation-js/core"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import DatePicker from "react-date-picker"
-import { FiX } from "react-icons/fi"
 import { FiInfo } from "react-icons/fi/index"
 import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
-import { IconButton } from "src/components"
 import { InfoTooltip } from "src/components/info-tooltip"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
-import * as css from "../../mode.css"
 import Cite from "../../utils/citation-config"
 import { buildCitationMetadata } from "../../utils/document-metadata"
 import { Dropdown } from "./dropdown"
@@ -590,7 +587,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setIsEditing(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     // Format date for submission
@@ -690,13 +687,6 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <IconButton
-          className={css.closeButton}
-          onClick={onClose}
-          aria-label="Close modal"
-        >
-          <FiX size={32} />
-        </IconButton>
         <h2 className={styles.title}>Editing Document Information</h2>
         <p className={styles.subtitle}>* indicates a required field</p>
 
