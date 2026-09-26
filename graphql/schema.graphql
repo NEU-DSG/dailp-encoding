@@ -370,6 +370,12 @@ type AudioSlice {
 
 
 """
+Enum to represent whether a chapter in a collection's table of contents is a page or a document
+"""
+enum ChapterContents {
+	DOCUMENT
+	PAGE
+	UNKNOWN
 Input for updating a single chapter's order
 """
 input ChapterOrderInput {
@@ -456,6 +462,7 @@ type CollectionChapter {
 	Breadcrumbs from the top-level archive down to where this document lives.
 	"""
 	breadcrumbs: [DocumentCollection!]!
+	contentType: ChapterContents!
 }
 
 """

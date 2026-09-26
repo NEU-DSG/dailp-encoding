@@ -306,6 +306,11 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Enum to represent whether a chapter in a collection's table of contents is a page or a document */
+export enum ChapterContents {
+  Document = "DOCUMENT",
+  Page = "PAGE",
+  Unknown = "UNKNOWN",
 /** Input for updating a single chapter's order */
 export type ChapterOrderInput = {
   /** The id of the chapter */
@@ -347,6 +352,7 @@ export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
   /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
+  readonly contentType: ChapterContents
   readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
   readonly id: Scalars["UUID"]
@@ -2350,7 +2356,13 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "id" | "title" | "indexInParent" | "section" | "path" | "slug"
+              | "id"
+              | "title"
+              | "indexInParent"
+              | "section"
+              | "path"
+              | "slug"
+              | "contentType"
             >
           >
         >
@@ -2732,7 +2744,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "id" | "title" | "wordpressId" | "slug"
+      "id" | "title" | "wordpressId" | "slug" | "contentType"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -4101,6 +4113,7 @@ export const EditedCollectionDocument = gql`
         section
         path
         slug
+        contentType
       }
     }
   }
@@ -4434,6 +4447,7 @@ export const CollectionChapterDocument = gql`
       title
       wordpressId
       slug
+      contentType
       breadcrumbs {
         name
         slug
