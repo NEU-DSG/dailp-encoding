@@ -311,6 +311,8 @@ export enum ChapterContents {
   Document = "DOCUMENT",
   Page = "PAGE",
   Unknown = "UNKNOWN",
+}
+
 /** Input for updating a single chapter's order */
 export type ChapterOrderInput = {
   /** The id of the chapter */

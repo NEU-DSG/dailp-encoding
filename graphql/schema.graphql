@@ -376,6 +376,9 @@ enum ChapterContents {
 	DOCUMENT
 	PAGE
 	UNKNOWN
+}
+
+"""
 Input for updating a single chapter's order
 """
 input ChapterOrderInput {
