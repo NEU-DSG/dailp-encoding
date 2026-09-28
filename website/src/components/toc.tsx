@@ -107,24 +107,22 @@ const TOC = ({ section, chapters }: TOCProps) => {
         block: "center",
       })
     }
-  }, [chapters])
+  }, [chapters, chapterSlug])
 
   return (
     <>
       <ol className={listStyle}>
         {chapters.map((item) => (
-          <li
-            key={item.slug}
-            className={listItemStyle}
-            ref={lastSelected(item) ? selectedRef : undefined}
-          >
-            <Link
-              href={chapterRoute(collectionSlug!, item.slug)}
-              className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => onSelect(item)}
-            >
-              {item.title}
-            </Link>
+          <li key={item.slug} className={listItemStyle}>
+            <span ref={lastSelected(item) ? selectedRef : undefined}>
+              <Link
+                href={chapterRoute(collectionSlug!, item.slug)}
+                className={lastSelected(item) ? css.selectedLink : css.link}
+                onClick={() => onSelect(item)}
+              >
+                {item.title}
+              </Link>
+            </span>
 
             {(isSelected(item) || isActiveParent(item)) && item.children ? (
               <TOC section={section} chapters={item.children} />
