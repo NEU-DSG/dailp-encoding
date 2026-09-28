@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n    dp.document_id,\n    p.id,\n    p.name\nfrom associated_person p\njoin document_associated_person dp on p.id = dp.associated_person_id\nwhere dp.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "984951ae7358623527c6c28434a7360ba86c62e3f498295b035ccb3baf095b2f"
+}

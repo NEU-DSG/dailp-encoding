@@ -3,8 +3,8 @@ use crate::doc_metadata::{
     LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{
-    Contributor, ContributorAttributionInput, ContributorRole, Creator, CreatorUpdate,
-    SourceAttribution,
+    AssociatedPerson, AssociatedPersonUpdate, Contributor, ContributorAttributionInput,
+    ContributorRole, Creator, CreatorUpdate, SourceAttribution,
 };
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
@@ -14,8 +14,8 @@ use crate::{
 use itertools::Itertools;
 
 use crate::{
-    CreatorsForDocument, KeywordsForDocument, LanguagesForDocument, SpatialCoverageForDocument,
-    SubjectHeadingsForDocument,
+    AssociatedPeopleForDocument, CreatorsForDocument, KeywordsForDocument, LanguagesForDocument,
+    SpatialCoverageForDocument, SubjectHeadingsForDocument,
 };
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -300,6 +300,18 @@ impl AnnotatedDoc {
             .unwrap_or_default())
     }
 
+    /// People associated with this document
+    async fn associated_people(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AssociatedPerson>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(AssociatedPeopleForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -442,6 +454,8 @@ pub struct DocumentMetadataUpdate {
     pub spatial_coverage: MaybeUndefined<Vec<SpatialCoverageUpdate>>,
     /// The creator(s) of the document
     pub creators: MaybeUndefined<Vec<CreatorUpdate>>,
+    /// The people associated with a document
+    pub associated_people: MaybeUndefined<Vec<AssociatedPersonUpdate>>,
     /// The format of the original artifact
     pub format: MaybeUndefined<FormatUpdate>,
     /// Term that contextualizes the social practice surrounding the document
@@ -608,6 +622,8 @@ pub struct DocumentMetadata {
     pub contributors: Option<Vec<Contributor>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage_ids: Option<Vec<Uuid>>,
+    /// The people associated with a document
+    pub associated_people_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -802,6 +818,29 @@ impl DocumentMetadata {
         Ok(rows
             .into_iter()
             .map(|row| Creator {
+                id: row.id,
+                name: row.name,
+            })
+            .collect())
+    }
+
+    /// Fetch all people associated with this document
+    async fn associated_people<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<AssociatedPerson>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            AssociatedPerson,
+            "queries/get_associated_people_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| AssociatedPerson {
                 id: row.id,
                 name: row.name,
             })
@@ -1009,6 +1048,13 @@ pub struct SpatialCoverageWithDocId {
 
 #[derive(Debug, Clone)]
 pub struct CreatorWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct AssociatedPersonWithDocId {
     pub document_id: Uuid,
     pub id: Uuid,
     pub name: String,

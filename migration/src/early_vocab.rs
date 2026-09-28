@@ -126,6 +126,7 @@ async fn parse_early_vocab(
         //.map(Contributor::new_author)
         //.collect(),
         spatial_coverage_ids: None,
+        associated_people_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,

@@ -4,6 +4,7 @@ use crate::{user::User, Database, PersonFullName};
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
+use uuid::Uuid;
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -171,4 +172,29 @@ pub struct SourceAttribution {
     pub name: String,
     /// URL of this source's homepage, i.e. "https://www.newberry.org/"
     pub link: String,
+}
+
+// Stores a person associated with a document (e.g., a person mentioned in the document)
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+pub struct AssociatedPerson {
+    // UUID for the person
+    pub id: Uuid,
+    // The person's name as a string
+    pub name: String,
+}
+
+// For updating people associated with a document
+#[derive(async_graphql::InputObject, Debug)]
+pub struct AssociatedPersonUpdate {
+    // UUID for the person
+    pub id: Uuid,
+    // Name of the person
+    pub name: String,
+}
+
+// Converts AssociatedPerson struct to corresponding Uuid
+impl From<&AssociatedPerson> for Uuid {
+    fn from(p: &AssociatedPerson) -> Self {
+        p.id
+    }
 }
