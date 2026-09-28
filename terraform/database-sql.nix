@@ -4,8 +4,6 @@ let
 in {
   options.servers.database = with lib;
     with types; {
-      availability_zone = mkOption { type = str; };
-      password = mkOption { type = str; };
       security_group_ids = mkOption { type = listOf str; };
       tags = mkOption { type = attrsOf str; };
     };
@@ -35,11 +33,11 @@ in {
       allow_major_version_upgrade = false;
       auto_minor_version_upgrade = true;
       username = "dailp";
-      password = config.servers.database.password;
+      password = "\${var.db_password}";
 
       publicly_accessible = false;
       multi_az = false;
-      availability_zone = config.servers.database.availability_zone;
+      availability_zone = "\${var.primary_az}"
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
       final_snapshot_identifier = "${name}-primary-final-snapshot";
@@ -63,14 +61,14 @@ in {
 
     aws_security_group.nixos_test = {
       name = prefixName "nixos-test";
-      vpc_id = config.setup.vpc;
+      vpc_id = "\${var.vpc_id}";
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
       name = prefixName "mongodb-access";
-      vpc_id = config.setup.vpc;
+      vpc_id = "\${var.vpc_id}";
       description = "Access DAILP MongoDB servers";
       ingress = [ ];
       egress = [{

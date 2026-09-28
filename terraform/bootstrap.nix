@@ -7,9 +7,7 @@ with lib; {
     };
     access_log_bucket = mkOption { type = str; };
     stage = mkOption { type = enum [ "dev" "prod" "uat"]; };
-    vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
-    bastion_subnet = mkOption { type = str; };
     global_tags = mkOption {
       type = attrsOf str;
       default = { };

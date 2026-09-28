@@ -71,6 +71,7 @@ in {
       deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
       stage_name = config.setup.stage;
+      lifecycle.create_before_destroy = true;
     };
   };
 

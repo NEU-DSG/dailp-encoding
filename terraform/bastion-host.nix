@@ -122,9 +122,9 @@ in {
     # mean. The bastion is reached over SSM; see the bastion_ip note below.
     assign_eip_address = false;
     associate_public_ip_address = false;
-    vpc_id = config.setup.vpc;
+    vpc_id = "\${var.vpc_id}";
     subnets = [
-      config.setup.bastion_subnet
+      "\${var.subnet_bastion}"
       # config.setup.subnets.primary
       # config.setup.subnets.secondary
       # config.setup.subnets.tertiary
