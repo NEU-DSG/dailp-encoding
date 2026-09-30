@@ -663,7 +663,7 @@ export const BookmarkButton = (props: {
 
               <div className={css.messageButtonGroup}>
                 <a
-                  href="https://dailp.northeastern.edu/dashboard"
+                  href="/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.actionButton}
