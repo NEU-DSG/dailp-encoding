@@ -52,23 +52,9 @@ export const numberedListItem = style([
   },
 ])
 
-// export const listItem = style([
-//   numberedListItem,
-//   {
-//     display: "block",
-//     ":before": {
-//       content: 'counters(item, ".") " "',
-//       counterIncrement: "item",
-//     },
-//   },
-// ])
-
 export const listItem = style([
   numberedListItem,
   {
-    // display: "flex",
-    // alignItems: "center",
-    // justifyContent: "space-between",
     display: "block",
 
     selectors: {
