@@ -100,7 +100,7 @@ export const message = style({
   zIndex: 9999,
   fontSize: "16px",
   background: "white",
-  color: "#black",
+  color: "black",
   boxShadow: "0 6px 14px rgba(0,0,0,0.3)",
 })
 
