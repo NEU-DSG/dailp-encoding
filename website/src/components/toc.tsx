@@ -8,12 +8,14 @@ import {
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
+import { DropdownToggle } from "./dropdown-toggle"
 import Link from "./link"
 import * as css from "./toc.css"
 
 type TOCProps = {
   section: CollectionSection
   chapters: Chapter[]
+  prefix?: number[]
 }
 
 const CollectionTOC = () => {
@@ -79,9 +81,9 @@ const CollectionTOC = () => {
   )
 }
 
-const TOC = ({ section, chapters }: TOCProps) => {
+const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
   const { collectionSlug, chapterSlug } = useRouteParams()
-  const { onSelect, isSelected, lastSelected } = useFunctions()
+  const { onToggle, isSelected, lastSelected } = useFunctions()
 
   // Returns if current route chapter is a subchapter with parent to fix issue with
   // children not being displayed when active
@@ -100,22 +102,63 @@ const TOC = ({ section, chapters }: TOCProps) => {
 
   return (
     <>
-      <ol className={listStyle}>
-        {chapters.map((item) => (
-          <li key={item.slug} className={listItemStyle}>
-            <Link
-              href={chapterRoute(collectionSlug!, item.slug)}
-              className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => onSelect(item)}
-            >
-              {item.title}
-            </Link>
+      <ol
+        className={
+          prefix.length === 0
+            ? listStyle
+            : section === CollectionSection.Body
+            ? css.nestedList
+            : css.nestedOrderedList
+        }
+      >
+        {chapters.map((item, i) => {
+          const number = [...prefix, i + 1].join(".")
 
-            {(isSelected(item) || isActiveParent(item)) && item.children ? (
-              <TOC section={section} chapters={item.children} />
-            ) : null}
-          </li>
-        ))}
+          return (
+            <li key={item.slug} className={listItemStyle}>
+              <div
+                className={
+                  section === CollectionSection.Body ? css.row : css.simpleRow
+                }
+              >
+                {section === CollectionSection.Body && (
+                  <span className={css.number}>{number}</span>
+                )}
+                <div
+                  className={[
+                    css.linkGroup,
+                    isSelected(item) ? css.selectedRow : "",
+                  ].join(" ")}
+                >
+                  <Link
+                    href={chapterRoute(collectionSlug!, item.slug)}
+                    className={isSelected(item) ? css.selectedLink : css.link}
+                    onClick={() => onToggle(item)}
+                  >
+                    {item.title}
+                  </Link>
+                  {item.children?.length ? (
+                    <DropdownToggle
+                      label=""
+                      isOpen={isSelected(item)}
+                      onToggle={() => onToggle(item)}
+                    />
+                  ) : (
+                    <span className={css.toggleSpacer} />
+                  )}
+                </div>
+              </div>
+
+              {isSelected(item) && item.children ? (
+                <TOC
+                  section={section}
+                  chapters={item.children}
+                  prefix={[...prefix, i + 1]}
+                />
+              ) : null}
+            </li>
+          )
+        })}
       </ol>
     </>
   )
