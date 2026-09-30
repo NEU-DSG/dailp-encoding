@@ -1,33 +1,73 @@
 import React from "react"
-import { Button, Group } from "reakit"
-import {
-  actionButton,
-  cardContent,
-  collectionCard,
-  collectionCardHeader,
-  collectionCardImage,
-  collectionCardText,
-} from "./collection-card.css"
+import { BiHide } from "react-icons/bi/index"
+import { IoCheckmarkCircle } from "react-icons/io5/index"
+import { Group } from "reakit"
+import { UserRole, useUserRole } from "src/auth"
+import * as Dailp from "src/graphql/dailp"
+import * as css from "./collection-card.css"
 
 export const CollectionCard = (props: {
   thumbnail: string
   header: { text: string; link: string | undefined }
   description: string
   buttonLabel: string
+  collectionId?: string
+  isHidden?: boolean
 }) => {
+  const [, toggleVisibility] = Dailp.useToggleCollectionVisibilityMutation()
+
+  const userRole = useUserRole()
+  const canToggleCollections =
+    userRole === UserRole.Admin || userRole === UserRole.Editor
+  const canViewHiddenCollections =
+    canToggleCollections || userRole === UserRole.Contributor
+
+  const handleToggle = async () => {
+    if (!props.collectionId) return
+    await toggleVisibility({ collectionId: props.collectionId })
+  }
+
   return (
-    <Group className={collectionCard}>
-      <img src={props.thumbnail} className={collectionCardImage} />
-      <div className={cardContent}>
-        <h2 className={collectionCardHeader}>
-          {props.header.link ? (
-            <a href={props.header.link}>{props.header.text}</a>
-          ) : (
-            props.header.text
+    <Group className={css.collectionCard}>
+      <div className={css.collectionCardImageContainer}>
+        <img src={props.thumbnail} className={css.collectionCardImage} />
+        {canToggleCollections && (
+          <button
+            onClick={handleToggle}
+            className={css.toggleButton}
+            aria-label={
+              props.isHidden ? "Publish collection" : "Hide collection"
+            }
+          >
+            {props.isHidden ? "Publish Collection" : "Hide Collection"}
+          </button>
+        )}
+      </div>
+      <div className={css.cardContent}>
+        <div className={css.titleWrapper}>
+          <h2 className={css.collectionCardHeader}>
+            {props.header.link ? (
+              <a href={props.header.link}>{props.header.text}</a>
+            ) : (
+              props.header.text
+            )}
+          </h2>
+          {canViewHiddenCollections && (
+            <div>
+              {props.isHidden ? (
+                <span className={css.hiddenBadge}>
+                  <BiHide size={16} /> Hidden
+                </span>
+              ) : (
+                <span className={css.publishedBadge}>
+                  <IoCheckmarkCircle size={16} /> Published
+                </span>
+              )}
+            </div>
           )}
-        </h2>
-        <p className={collectionCardText}>{props.description}</p>
-        <a href={props.header.link} className={actionButton}>
+        </div>
+        <p className={css.collectionCardText}>{props.description}</p>
+        <a href={props.header.link} className={css.actionButton}>
           {props.buttonLabel}
         </a>
       </div>
