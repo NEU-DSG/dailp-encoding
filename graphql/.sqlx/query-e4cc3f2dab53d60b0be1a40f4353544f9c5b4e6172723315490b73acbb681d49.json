@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n    l.id, \n    l.name, \n    l.status as \"status: ApprovalStatus\"\nfrom language l\njoin document_language dl on l.id = dl.language_id\nwhere dl.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e4cc3f2dab53d60b0be1a40f4353544f9c5b4e6172723315490b73acbb681d49"
+}

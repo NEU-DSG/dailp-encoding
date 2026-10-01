@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select c.* \nfrom creator c \njoin document_creator dc \non dc.creator_id = c.id \nwhere dc.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "c0cef7d704075f0154e3f22cdca0667d65e70bb6c2da5ed3a3b32d1ca97364a6"
+}

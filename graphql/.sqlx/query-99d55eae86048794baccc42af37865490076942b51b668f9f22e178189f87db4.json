@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select \n    sc.id, \n    sc.name, \n    sc.status as \"status: ApprovalStatus\"\nfrom spatial_coverage sc\njoin document_spatial_coverage dsc on sc.id = dsc.spatial_coverage_id\nwhere dsc.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "99d55eae86048794baccc42af37865490076942b51b668f9f22e178189f87db4"
+}

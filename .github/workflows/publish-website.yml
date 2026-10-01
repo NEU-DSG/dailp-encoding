@@ -15,6 +15,12 @@ jobs:
       AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      # No per-stage selection here: this job resolves to a single stage whose
+      # environment scopes the secret (cf. main.yml, where uat shares dev's
+      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
+      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}

@@ -20,6 +20,31 @@ import { DailpPageContents } from "./dailp.page"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
+  // Block vite-plugin-ssr's scroll restoration on the homepage.
+  // The framework calls window.scrollTo to restore the previous position
+  // after render, so we temporarily intercept it to only allow scroll-to-top.
+  React.useEffect(() => {
+    const originalScrollTo = window.scrollTo
+    window.scrollTo = ((...args: unknown[]) => {
+      const isScrollToTop =
+        (args[0] === 0 && args[1] === 0) ||
+        (typeof args[0] === "object" &&
+          args[0] !== null &&
+          (args[0] as ScrollToOptions).top === 0)
+      if (isScrollToTop) {
+        originalScrollTo.call(window, 0, 0)
+      }
+    }) as typeof window.scrollTo
+    originalScrollTo.call(window, 0, 0)
+    const timer = setTimeout(() => {
+      window.scrollTo = originalScrollTo
+    }, 200)
+    return () => {
+      clearTimeout(timer)
+      window.scrollTo = originalScrollTo
+    }
+  }, [])
+
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
   const userRole = useUserRole()
 
@@ -28,6 +53,11 @@ const IndexPage = () => {
   // Fetch stories
   const stories = data?.allPages?.filter(
     (p) => p.path?.includes("/stories/") || p.path?.includes("/spotlights/")
+  )
+
+  // Determine which collections are visible to user
+  const visibleCollections = dailp?.allEditedCollections.filter(
+    (c) => !(userRole === UserRole.Reader && c.isHidden)
   )
 
   // Show loading state while determining user role
@@ -116,8 +146,20 @@ const IndexPage = () => {
                 </button>
               </div>
             )}
+            {visibleCollections?.length === 0 && (
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingTop: "50px",
+                }}
+              >
+                <p>Edited collections forthcoming, please check back soon.</p>
+              </div>
+            )}
             <ul className={cardGroup}>
-              {dailp?.allEditedCollections.map((collection) => (
+              {visibleCollections?.map((collection) => (
                 <CollectionCard
                   key={collection.slug}
                   thumbnail={collection.thumbnailUrl ?? cwkwLogo}
@@ -130,6 +172,8 @@ const IndexPage = () => {
                     "A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."
                   }
                   buttonLabel="View the collection"
+                  collectionId={collection.id}
+                  isHidden={collection.isHidden}
                 />
               ))}
             </ul>

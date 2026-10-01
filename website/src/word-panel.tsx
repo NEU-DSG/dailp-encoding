@@ -183,7 +183,7 @@ export const WordPanel = (p: {
       {(p.word.englishGloss.length > 0 ||
         p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
-          title={"English Gloss"}
+          title={"Translation"}
           content={englishGlossContent}
           icon={
             <IoBookmarks size={24} className={css.wordPanelButton.colpleft} />
@@ -319,9 +319,13 @@ const EditSegmentation = (p: {
                             index.toString(),
                             "morpheme",
                           ]}
+                          style={{ width: "100px" }}
                         />
                       </td>
-                      <td className={css.editGlossCells}>
+                      <td
+                        className={css.editGlossCells}
+                        style={{ maxWidth: "175px" }}
+                      >
                         {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
                         <EditWordPartGloss
                           // TODO: this key will need to be changed later since a morpheme can be changed
@@ -482,7 +486,7 @@ const EditWordPartGloss = (props: {
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditEnglishGloss = () => {
-  return <EditWordFeature feature={"englishGloss"} label="English Gloss" />
+  return <EditWordFeature feature={"englishGloss"} label="Translation" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
