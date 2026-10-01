@@ -288,10 +288,12 @@ export const DocumentInfo = ({
           </div>
         )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>FORMAT</div>
-          <div className={styles.value}>
-            {docData.format?.name || iiifFormat}
+        {showField("Format") && (
+          <div className={styles.field}>
+            <div className={styles.label}>FORMAT</div>
+            <div className={styles.value}>
+              {docData.format?.name || iiifFormat}
+            </div>
           </div>
         )}
 
