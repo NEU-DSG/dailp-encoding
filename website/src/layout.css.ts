@@ -22,7 +22,6 @@ export const header = style([
   hideOnPrint,
   {
     backgroundColor: colors.secondary,
-    fontFamily: fonts.header,
     position: "sticky",
     top: 0,
     zIndex: layers.second,
@@ -46,6 +45,8 @@ export const subHeader = style({
   display: "none",
   color: colors.secondaryContrast,
   paddingLeft: hspace.edge,
+  fontFamily: fonts.header,
+  fontWeight: "600",
   "@media": {
     [mediaQueries.medium]: {
       display: "initial",
@@ -58,6 +59,8 @@ export const siteTitle = style([
   media(mediaQueries.medium, marginY(vspace.one)),
   {
     // runningHead: "title",
+    fontFamily: "Philosopher, sans-serif",
+    fontSize: "2.5rem",
   },
 ])
 

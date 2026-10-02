@@ -124,7 +124,7 @@ const NewPage = () => {
   const isHtml = content.charAt(0) === "<"
 
   return (
-    <AuthGuard requiredRole={UserRole.Editor}>
+    <AuthGuard requiredRoles={[UserRole.Editor]}>
       <Layout>
         <main>
           <h1>

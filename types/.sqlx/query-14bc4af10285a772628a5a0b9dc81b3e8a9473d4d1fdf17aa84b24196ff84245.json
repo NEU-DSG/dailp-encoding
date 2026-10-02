@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- Return chapter path of chapter by its id\r\nselect chapter_path::text\r\nfrom collection_chapter\r\nwhere id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "chapter_path",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "14bc4af10285a772628a5a0b9dc81b3e8a9473d4d1fdf17aa84b24196ff84245"
+}
