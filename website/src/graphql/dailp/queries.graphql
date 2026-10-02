@@ -295,6 +295,7 @@ query EditedCollection($slug: String!) {
       section
       path
       slug
+      contentType
     }
   }
 }
@@ -501,6 +502,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     title
     wordpressId
     slug
+    contentType
     breadcrumbs {
       name
       slug
