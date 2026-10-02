@@ -1414,8 +1414,6 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
-  /** Retrieves the IIIF image source URL of a document */
-  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /**
    * The ancestor trail of a folder path, root first, including the folder
    * itself. The empty string (the library root) has no trail.
@@ -1427,6 +1425,8 @@ export type Query = {
    * "partners.logos"; the empty string lists the root of the library.
    */
   readonly folderContents: FolderContents
+  /** Retrieves the IIIF image source URL of a document */
+  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /**
    * Everything in the asset library's trash - the outermost soft-deleted
    * folders and images. Anything inside a deleted folder is omitted, since
@@ -1513,16 +1513,16 @@ export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryIiifSourceForDocumentMetadataArgs = {
-  documentId: Scalars["UUID"]
-}
-
 export type QueryFolderBreadcrumbsArgs = {
   path: Scalars["String"]
 }
 
 export type QueryFolderContentsArgs = {
   path: Scalars["String"]
+}
+
+export type QueryIiifSourceForDocumentMetadataArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type QueryMenuBySlugArgs = {
@@ -1625,14 +1625,6 @@ export type SubjectHeadingUpdate = {
   readonly name: Scalars["String"]
 }
 
-/** Input for bulk updating collection chapter order */
-export type UpdateCollectionChapterOrderInput = {
-  /** Ordered list of chapters with their new indices */
-  readonly chapters: ReadonlyArray<ChapterOrderInput>
-  /** The slug of the collection */
-  readonly collectionSlug: Scalars["String"]
-}
-
 /**
  * Everything currently in the trash: the outermost soft-deleted folders and
  * images. Contents of a deleted folder are omitted, since restoring that folder
@@ -1644,6 +1636,14 @@ export type TrashContents = {
   readonly folders: ReadonlyArray<Folder>
   /** Soft-deleted images whose folder is the root or is still live */
   readonly images: ReadonlyArray<Image>
+}
+
+/** Input for bulk updating collection chapter order */
+export type UpdateCollectionChapterOrderInput = {
+  /** Ordered list of chapters with their new indices */
+  readonly chapters: ReadonlyArray<ChapterOrderInput>
+  /** The slug of the collection */
+  readonly collectionSlug: Scalars["String"]
 }
 
 /** Update the contributor attribution for a document */
