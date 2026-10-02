@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- Updates the chapter path, index, section, title, and optionally document id\r\n--- so that it is properly updated within the toc\r\nupdate collection_chapter\r\nset\r\n    chapter_path = $1,\r\n    index_in_parent = $2,\r\n    section = $3,\r\n    title = $4,\r\n    document_id = $5\r\nwhere id = $6\r\nreturning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        },
+        "Int8",
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1eb8c4d5668c8b8302c25e05bd5c694139ef382302672021c5510729d84102b1"
+}
