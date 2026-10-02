@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Soft-delete the given folders by id (the original subtree after a move).\n-- Already soft-deleted rows keep their original deleted_at. $1 = folder ids (uuid[]).\nupdate folders\nset deleted_at = now()\nwhere id = any($1::uuid[]) and deleted_at is null;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f7755679706e97a45a7c8db7751032d674dbe1fc749b8c75e9f51539b430c71d"
+}

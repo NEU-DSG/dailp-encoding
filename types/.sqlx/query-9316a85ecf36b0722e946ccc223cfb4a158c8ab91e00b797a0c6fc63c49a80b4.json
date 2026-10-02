@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- The ancestor trail of the folder at path $1, root first, including the folder\n-- itself. `@>` selects every folder whose path is a prefix of $1, so ordering by\n-- depth yields the breadcrumbs directly -- no recursion, and it works from any\n-- entry point rather than only from walking down.\nselect id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n       size_bytes\nfrom folders\nwhere path @> $1::ltree and deleted_at is null\norder by nlevel(path);\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "9316a85ecf36b0722e946ccc223cfb4a158c8ab91e00b797a0c6fc63c49a80b4"
+}
