@@ -1,0 +1,108 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Soft-deleted images at the outermost layer of the trash: those whose folder is\n-- the root or is still live. An image inside a deleted folder is omitted, because\n-- restoring that folder restores everything inside it.\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images i\nwhere i.deleted_at is not null\n  and not exists (\n    select 1\n    from folders parent\n    where parent.id = i.folder_id and parent.deleted_at is not null\n  )\norder by filename;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "folder_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "uploaded_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "width",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "height",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "caption",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "s3_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "scope: ImageScope",
+        "type_info": {
+          "Custom": {
+            "name": "image_scope",
+            "kind": {
+              "Enum": [
+                "Site",
+                "Collection"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "39bd61a8d7a05d70211ac8daf7964574efbab2ba79b4ec3cc8806fb93fce0054"
+}

@@ -861,3 +861,112 @@ mutation UpdateMenu($menu: MenuUpdate!) {
 mutation ValidateTurnstileToken($token: String!) {
   validateTurnstileToken(token: $token)
 }
+
+fragment FolderFields on Folder {
+  id
+  parentId
+  name
+  path
+  createdAt
+  deletedAt
+  sizeBytes
+}
+
+fragment ImageFields on Image {
+  id
+  folderId
+  createdAt
+  deletedAt
+  uploadedBy
+  filename
+  mimeType
+  sizeBytes
+  width
+  height
+  altText
+  caption
+  s3Url
+  scope
+  variants {
+    width
+    height
+    s3Url
+    mimeType
+  }
+}
+
+query FolderContents($path: String!) {
+  folderContents(path: $path) {
+    folders {
+      ...FolderFields
+    }
+    images {
+      ...ImageFields
+    }
+  }
+}
+
+query FolderBreadcrumbs($path: String!) {
+  folderBreadcrumbs(path: $path) {
+    ...FolderFields
+  }
+}
+
+query ListTrash {
+  listTrash {
+    folders {
+      ...FolderFields
+    }
+    images {
+      ...ImageFields
+    }
+  }
+}
+
+mutation CreateFolder($parentId: UUID, $name: String!) {
+  createFolder(parentId: $parentId, name: $name) {
+    ...FolderFields
+  }
+}
+
+mutation CreateImage($image: NewImage!) {
+  createImage(image: $image) {
+    ...ImageFields
+  }
+}
+
+mutation RenameFolder($id: UUID!, $name: String!) {
+  renameFolder(id: $id, name: $name) {
+    ...FolderFields
+  }
+}
+
+mutation RenameImage($id: UUID!, $filename: String!) {
+  renameImage(id: $id, filename: $filename) {
+    ...ImageFields
+  }
+}
+
+mutation MoveFolder($id: UUID!, $parentId: UUID) {
+  moveFolder(id: $id, parentId: $parentId) {
+    ...FolderFields
+  }
+}
+
+mutation MoveImage($id: UUID!, $folderId: UUID) {
+  moveImage(id: $id, folderId: $folderId) {
+    ...ImageFields
+  }
+}
+
+mutation DeleteFolder($id: UUID!) {
+  deleteFolder(id: $id) {
+    ...FolderFields
+  }
+}
+
+mutation DeleteImage($id: UUID!) {
+  deleteImage(id: $id) {
+    ...ImageFields
+  }
+}
