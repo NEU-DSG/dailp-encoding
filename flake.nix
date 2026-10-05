@@ -462,6 +462,7 @@
         '';
 
         apps.tf-output = mkBashApp "tf-output" ''
+          ${tfInit}
           ${tf} output $1 | xargs
         '';
 
