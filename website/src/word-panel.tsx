@@ -213,17 +213,18 @@ export const WordPanel = (p: {
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
-
-      <CollapsiblePanel
-        title={"Discussion"}
-        content={discussionContent}
-        icon={
-          <MdOutlineComment
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
+      {p.panel === PanelType.WordPanel && (
+        <CollapsiblePanel
+          title={"Discussion"}
+          content={discussionContent}
+          icon={
+            <MdOutlineComment
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
     </>
   )
 }
