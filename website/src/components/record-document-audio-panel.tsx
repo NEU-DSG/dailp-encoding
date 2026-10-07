@@ -1,15 +1,11 @@
-import cx from "classnames"
-import { ReactElement, ReactNode } from "react"
-import { IconType } from "react-icons"
 import { FaMicrophone } from "react-icons/fa/index"
 import * as Dailp from "src/graphql/dailp"
 import { CollapsiblePanel } from "src/word-panel"
 import * as css from "../panel-layout.css"
-import {
-  ContributeAudioComponent,
-  ContributeAudioSection,
-} from "./contribute-audio-section"
+import { ContributeAudioSection } from "./contribute-audio-section"
 import { RecordAudioContent } from "./edit-word-audio/record"
+
+const ALLOWED_FORMATS = ["mp3", "wav", "m4a"]
 
 export function RecordDocumentAudioPanel(p: {
   document: Dailp.DocumentFieldsFragment
@@ -21,7 +17,9 @@ export function RecordDocumentAudioPanel(p: {
       title="Record Audio"
       content={
         <ContributeAudioSection
-          Component={RecordAudioContent}
+          Component={(props) => (
+            <RecordAudioContent {...props} allowFileUpload />
+          )}
           processUploadedAudio={async (resourceUrl: string) => {
             const result = await contributeAudio({
               input: {
