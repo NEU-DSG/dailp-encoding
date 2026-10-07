@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react"
 import Markdown from "react-markdown"
+import { DialogDisclosure, useDialogState } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
+import { Button } from "src/components"
+import { AssetLibraryModal } from "src/components/asset-library/asset-library-modal"
 import { AuthGuard } from "src/components/auth-guard"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -29,6 +32,8 @@ const NewPage = () => {
   const [path, setPath] = useState(location.search["path"] ?? "/")
 
   const [isNew, setIsNew] = useState(true)
+
+  const assetLibrary = useDialogState({ animated: true })
 
   const formatPath = (path: string) => {
     let regularizedPath = path
@@ -175,6 +180,12 @@ const NewPage = () => {
               }}
             />
             <br />
+            <div style={{ width: "50%", alignSelf: "center" }}>
+              <DialogDisclosure {...assetLibrary} as={Button} type="button">
+                Asset Library
+              </DialogDisclosure>
+            </div>
+            <AssetLibraryModal dialog={assetLibrary} />
             <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               <textarea
                 style={{ width: "50%" }}

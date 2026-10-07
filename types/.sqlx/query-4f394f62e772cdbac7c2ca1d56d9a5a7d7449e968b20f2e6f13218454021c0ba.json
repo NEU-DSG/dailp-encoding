@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Record one resized copy of an image that has already been uploaded to S3.\n-- $1 image_id, $2 width, $3 height, $4 s3_url, $5 mime_type.\n-- Nothing is returned: the caller already holds every value it wrote.\ninsert into image_variant (image_id, width, height, s3_url, mime_type)\nvalues ($1, $2, $3, $4, $5);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4f394f62e772cdbac7c2ca1d56d9a5a7d7449e968b20f2e6f13218454021c0ba"
+}
