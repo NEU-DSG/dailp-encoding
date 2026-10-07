@@ -9,7 +9,7 @@ import {
   hspace,
   mediaQueries,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"

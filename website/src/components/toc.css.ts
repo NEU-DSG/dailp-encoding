@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { colors, hsize, hspace, vspace } from "src/style/constants"
+import { colors, hsize, hspace, vspace } from "src/style/design-tokens"
 import { marginY, onHover, paddingX, paddingY } from "src/style/utils"
 import { button } from "./button.css"
 
