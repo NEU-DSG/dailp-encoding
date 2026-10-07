@@ -1636,6 +1636,24 @@ type PageImage {
 }
 
 """
+A content page that refers to a library image.
+"""
+type PageUsage {
+	"""
+	UUID of the page
+	"""
+	pageId: UUID!
+	"""
+	Path the page is served at, e.g. "/our-team"
+	"""
+	path: String!
+	"""
+	Display title of the page
+	"""
+	title: String!
+}
+
+"""
 A paragraph in an annotated document that can be edited.
 """
 input ParagraphUpdate {
@@ -1824,6 +1842,26 @@ type Query {
 	restored on their own.
 	"""
 	listTrash: TrashContents!
+	"""
+	Folders and images anywhere in the asset library whose name contains `query`,
+	case-insensitively. Searches the whole library rather than one folder,
+	since finding something you cannot locate by browsing is the point.
+	For a reference point, Google Drive also does it this way.
+	"""
+	searchLibrary(query: String!): FolderContents!
+	"""
+	Content pages whose body refers to this image, by title.
+	
+	Derived from what each page actually contains and refreshed whenever a
+	page is saved, so an empty list means no page uses this image right now.
+	"""
+	pagesReferencedByImage(imageId: UUID!): [PageUsage!]!
+	"""
+	Library images referred to by the body of the page at `path`, by
+	filename. Soft-deleted images are included, since a page still pointing
+	at one is worth seeing rather than hiding.
+	"""
+	imagesReferencedByPage(path: String!): [Image!]!
 }
 
 """

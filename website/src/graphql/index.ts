@@ -7,7 +7,7 @@ import {
   ssrExchange,
 } from "@urql/core"
 import { devtoolsExchange } from "@urql/devtools"
-import { cacheExchange } from "@urql/exchange-graphcache"
+import { UpdateResolver, cacheExchange } from "@urql/exchange-graphcache"
 import fetch from "isomorphic-unfetch"
 import { Environment, deploymentEnvironment } from "../env"
 import { cognitoAuthExchange } from "./authExchange"
@@ -15,12 +15,36 @@ import { cognitoAuthExchange } from "./authExchange"
 export const GRAPHQL_URL_READ = process.env["DAILP_API_URL"] + "/graphql"
 export const GRAPHQL_URL_WRITE = process.env["DAILP_API_URL"] + "/graphql-edit"
 
+// Asset library listings are cached per path, and graphcache can't tell which
+// listing a created, renamed, moved or deleted item now belongs in. Drop them
+// all so each is refetched the next time it is shown.
+const invalidateAssetListings: UpdateResolver = (_result, _args, cache) => {
+  const listings = ["folderContents", "searchLibrary", "folderBreadcrumbs"]
+  for (const field of cache.inspectFields("Query")) {
+    if (listings.includes(field.fieldName)) {
+      cache.invalidate("Query", field.fieldName, field.arguments)
+    }
+  }
+}
+
 export const sharedCache = cacheExchange({
   schema: {
     __schema: {
       queryType: { name: "Query" },
       mutationType: { name: "Mutation" },
       subscriptionType: null,
+    },
+  },
+  updates: {
+    Mutation: {
+      createFolder: invalidateAssetListings,
+      createImage: invalidateAssetListings,
+      renameFolder: invalidateAssetListings,
+      renameImage: invalidateAssetListings,
+      moveFolder: invalidateAssetListings,
+      moveImage: invalidateAssetListings,
+      deleteFolder: invalidateAssetListings,
+      deleteImage: invalidateAssetListings,
     },
   },
   resolvers: {

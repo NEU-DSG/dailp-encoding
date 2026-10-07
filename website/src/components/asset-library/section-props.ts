@@ -1,5 +1,6 @@
+import type React from "react"
 import type * as Dailp from "src/graphql/dailp"
-import type { Selection } from "./types"
+import type { SelectedItem } from "./types"
 
 /**
  * What both layouts receive. Folders and images arrive as separate arrays
@@ -9,8 +10,9 @@ import type { Selection } from "./types"
 export interface AssetSectionProps {
   folders: readonly Dailp.FolderFieldsFragment[]
   images: readonly Dailp.ImageFieldsFragment[]
-  selected: Selection | null
-  onSelect: (selection: Selection) => void
+  isSelected: (id: string) => boolean
+  onSelect: (item: SelectedItem) => void
+  onContextMenu: (item: SelectedItem, event: React.MouseEvent) => void
   onOpenFolder: (folder: Dailp.FolderFieldsFragment) => void
   onInsertImage: (image: Dailp.ImageFieldsFragment) => void
 }

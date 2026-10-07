@@ -15,7 +15,12 @@ with target as (
 updated as (
   update folders f
   set name = case when f.id = $1 then $2 else f.name end,
-      path = t.new_path || subpath(f.path, nlevel(t.old_path))
+      -- `<@` includes the folder itself, where there is nothing below
+      -- `old_path` to keep, and `subpath` rejects an offset at the end.
+      path = case
+        when f.path = t.old_path then t.new_path
+        else t.new_path || subpath(f.path, nlevel(t.old_path))
+      end
   from target t
   where f.path <@ t.old_path
   returning f.*

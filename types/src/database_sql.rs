@@ -11,7 +11,7 @@ use std::str::FromStr;
 use user::UserUpdate;
 
 use crate::asset_library::{
-    Folder, FolderContents, Image, ImageScope, ImageVariant, NewImage, TrashContents,
+    Folder, FolderContents, Image, ImageScope, ImageVariant, NewImage, PageUsage, TrashContents,
 };
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
@@ -46,6 +46,27 @@ use crate::person::{Contributor, ContributorDetails, ContributorRole};
 pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
+/// Raised instead of letting `folders_live_path` reject the write, whose
+/// message names a Postgres index rather than telling a user what to do.
+///
+/// The second sentence matters: names are compared by slug, so a clash can
+/// happen between two names that do not look alike, and without saying so the
+/// refusal reads like a bug.
+fn folder_name_clash(name: &str) -> Error {
+    anyhow::anyhow!(
+        "A folder named \"{name}\" already exists in that location. Folder names ignore \
+         case, spacing and punctuation, so \"Partner Logos\" and \"partner-logos\" count \
+         as the same name."
+    )
+}
+
+/// The image equivalent of [`folder_name_clash`], for `images_live_child_name`
+/// and `images_live_root_name`. Filenames are compared exactly, so there is no
+/// slug caveat.
+fn image_name_clash(filename: &str) -> Error {
+    anyhow::anyhow!("An image named \"{filename}\" already exists in that location.")
+}
+
 impl Database {
     pub async fn genre_for_document(&self, doc_id: Uuid) -> Result<Option<Genre>, sqlx::Error> {
         let genre = sqlx::query_file_as!(Genre, "queries/get_genre_by_document_id.sql", doc_id)
@@ -703,10 +724,40 @@ impl Database {
 
     // --- Asset library: folders ---
 
+    /// One folder by id, live or soft-deleted.
+    pub async fn folder_by_id(&self, id: Uuid) -> Result<Option<Folder>> {
+        Ok(query_file_as!(Folder, "queries/folder_by_id.sql", id)
+            .fetch_optional(&self.client)
+            .await?)
+    }
+
+    /// Whether a live folder under `parent_id` already goes by `name`.
+    ///
+    /// Compared by slug, because that is what `folders_live_path` is built
+    /// from: "Partner Logos" and "partner-logos" are one name as far as the
+    /// index is concerned. `except` is the folder being renamed or moved, which
+    /// is allowed to keep its own name.
+    async fn folder_name_taken(
+        &self,
+        parent_id: Option<Uuid>,
+        name: &str,
+        except: Option<Uuid>,
+    ) -> Result<bool> {
+        let slug = crate::slugify_ltree(name);
+        Ok(self.list_folders(parent_id).await?.iter().any(|folder| {
+            folder.deleted_at.is_none()
+                && Some(folder.id) != except
+                && crate::slugify_ltree(&folder.name) == slug
+        }))
+    }
+
     /// Create a folder. `parent_id` of `None` places it at the root. The path is
     /// the parent's path plus this folder's slug, built in SQL so the path and
     /// `parent_id` are always written together.
     pub async fn insert_folder(&self, parent_id: Option<Uuid>, name: &str) -> Result<Folder> {
+        if self.folder_name_taken(parent_id, name, None).await? {
+            return Err(folder_name_clash(name));
+        }
         // Parsing here rejects a bad label before it reaches Postgres.
         let slug = PgLTree::from_str(&crate::slugify_ltree(name))?;
         Ok(
@@ -719,6 +770,16 @@ impl Database {
     /// Rename a folder. The folder's own path label changes with it, so every
     /// descendant's path is rebuilt on the new prefix in the same statement.
     pub async fn rename_folder(&self, id: Uuid, name: &str) -> Result<Folder> {
+        let folder = self
+            .folder_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
+        if self
+            .folder_name_taken(folder.parent_id, name, Some(id))
+            .await?
+        {
+            return Err(folder_name_clash(name));
+        }
         let slug = PgLTree::from_str(&crate::slugify_ltree(name))?;
         Ok(
             query_file_as!(Folder, "queries/rename_folder.sql", id, name, slug)
@@ -763,6 +824,16 @@ impl Database {
                     "Cannot move a folder into itself or one of its descendants"
                 ));
             }
+        }
+        let folder = self
+            .folder_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
+        if self
+            .folder_name_taken(parent_id, &folder.name, Some(id))
+            .await?
+        {
+            return Err(folder_name_clash(&folder.name));
         }
         Ok(
             query_file_as!(Folder, "queries/move_folder.sql", id, parent_id)
@@ -811,9 +882,40 @@ impl Database {
 
     // --- Asset library: images ---
 
+    /// One image by id, live or soft-deleted.
+    pub async fn image_by_id(&self, id: Uuid) -> Result<Option<Image>> {
+        Ok(query_file_as!(Image, "queries/image_by_id.sql", id)
+            .fetch_optional(&self.client)
+            .await?)
+    }
+
+    /// Whether a live image in `folder_id` already goes by `filename`.
+    ///
+    /// Compared exactly, unlike folders: `images_live_child_name` indexes the
+    /// raw filename, so "Photo.jpg" and "photo.jpg" are two different images.
+    /// `except` is the image being renamed or moved, which is allowed to keep
+    /// its own name.
+    async fn image_name_taken(
+        &self,
+        folder_id: Option<Uuid>,
+        filename: &str,
+        except: Option<Uuid>,
+    ) -> Result<bool> {
+        Ok(self.list_images(folder_id).await?.iter().any(|image| {
+            image.deleted_at.is_none() && Some(image.id) != except && image.filename == filename
+        }))
+    }
+
     /// Record an image that has already been uploaded to S3. `folder_id` of `None`
     /// places it at the root. `uploaded_by` is the acting user, when known.
     pub async fn insert_image(&self, image: NewImage, uploaded_by: Option<Uuid>) -> Result<Image> {
+        if self
+            .image_name_taken(image.folder_id, &image.filename, None)
+            .await?
+        {
+            return Err(image_name_clash(&image.filename));
+        }
+
         let mut tx = self.client.begin().await?;
 
         let inserted = query_file_as!(
@@ -856,6 +958,16 @@ impl Database {
 
     /// Rename an image.
     pub async fn rename_image(&self, id: Uuid, filename: &str) -> Result<Image> {
+        let image = self
+            .image_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
+        if self
+            .image_name_taken(image.folder_id, filename, Some(id))
+            .await?
+        {
+            return Err(image_name_clash(filename));
+        }
         Ok(
             query_file_as!(Image, "queries/rename_image.sql", id, filename)
                 .fetch_one(&self.client)
@@ -866,6 +978,16 @@ impl Database {
     /// Move an image into another folder (`None` = root) by re-assigning its
     /// `folder_id`.
     pub async fn move_image(&self, id: Uuid, folder_id: Option<Uuid>) -> Result<Image> {
+        let image = self
+            .image_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
+        if self
+            .image_name_taken(folder_id, &image.filename, Some(id))
+            .await?
+        {
+            return Err(image_name_clash(&image.filename));
+        }
         Ok(
             query_file_as!(Image, "queries/move_image.sql", id, folder_id)
                 .fetch_one(&self.client)
@@ -893,6 +1015,21 @@ impl Database {
         Ok(FolderContents {
             folders: self.list_folders(folder_id).await?,
             images: self.list_images(folder_id).await?,
+        })
+    }
+
+    /// Folders and images anywhere in the asset library whose name contains `query`,
+    /// case-insensitively. Searches the whole library rather than one folder,
+    /// since finding something you cannot locate by browsing is the point.
+    /// For a reference point, Google Drive also does it this way.
+    pub async fn search_library(&self, query: &str) -> Result<FolderContents> {
+        Ok(FolderContents {
+            folders: query_file_as!(Folder, "queries/search_folders.sql", query)
+                .fetch_all(&self.client)
+                .await?,
+            images: query_file_as!(Image, "queries/search_images.sql", query)
+                .fetch_all(&self.client)
+                .await?,
         })
     }
 
@@ -2870,10 +3007,81 @@ impl Database {
             _ => return Err(anyhow::anyhow!("input body is empty")),
         };
 
-        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
-            .execute(&self.client)
+        // The page and its image references are written together so the two can
+        // never disagree about what the page contains.
+        let mut tx = self.client.begin().await?;
+        let page_id = query_file_scalar!("queries/upsert_page.sql", slug, input.path, title, body)
+            .fetch_one(&mut *tx)
             .await?;
+        self.sync_page_image_references_tx(&mut tx, page_id, &body)
+            .await?;
+        tx.commit().await?;
+
         Ok(input.path)
+    }
+
+    /// Rewrite which library images a page refers to, from its current content.
+    ///
+    /// Used on its own to repair references after content changes outside the
+    /// app (eg. a direct edit or a bulk import). Since only saving through
+    /// `upsert_page` keeps them current by itself.
+    pub async fn sync_page_image_references(&self, page_id: Uuid, content: &str) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+        self.sync_page_image_references_tx(&mut tx, page_id, content)
+            .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// Content pages whose body refers to `image_id`, by title.
+    pub async fn pages_referenced_by_image(&self, image_id: Uuid) -> Result<Vec<PageUsage>> {
+        Ok(
+            query_file_as!(PageUsage, "queries/pages_referenced_by_image.sql", image_id)
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
+    /// Library images referred to by the body of the page at `path`, by filename.
+    pub async fn images_referenced_by_page(&self, path: &str) -> Result<Vec<Image>> {
+        Ok(
+            query_file_as!(Image, "queries/images_referenced_by_page.sql", path)
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
+    /// The body of [`Self::sync_page_image_references`], for callers that are
+    /// already inside a transaction.
+    pub async fn sync_page_image_references_tx<'a>(
+        &self,
+        tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
+        page_id: Uuid,
+        content: &str,
+    ) -> Result<()> {
+        let image_ids: Vec<Uuid> = query_file_scalar!("queries/image_ids_in_content.sql", content)
+            .fetch_all(&mut **tx)
+            .await?;
+
+        // Stale rows go first, then the current set is inserted ignoring
+        // conflicts, so a reference that survives an edit keeps the
+        // `inserted_at` it was first recorded with.
+        query_file!(
+            "queries/delete_stale_page_image_references.sql",
+            page_id,
+            &image_ids
+        )
+        .execute(&mut **tx)
+        .await?;
+        query_file!(
+            "queries/insert_page_image_references.sql",
+            page_id,
+            &image_ids
+        )
+        .execute(&mut **tx)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {

@@ -2,26 +2,38 @@ import React from "react"
 import * as css from "./asset-library.css"
 import { useFolderDisplay } from "./folder-item"
 import { useImageDisplay } from "./image-item"
-import type { Selection } from "./types"
+import type { SelectedItem } from "./types"
 
-/**
- * Details for the selected item.
- *
- * Stubbed for this iteration
- */
-export const AssetLibrarySidePanel = (p: { selected: Selection | null }) => (
+export const AssetLibrarySidePanel = (p: {
+  selected: readonly SelectedItem[]
+}) => (
   <aside className={css.sidePanel} aria-label="Item details">
-    {p.selected === null ? (
+    <PanelContent selected={p.selected} />
+  </aside>
+)
+
+const PanelContent = ({ selected }: { selected: readonly SelectedItem[] }) => {
+  const [item] = selected
+  if (!item) {
+    return (
       <p className={css.sidePanelPlaceholder}>
         Select an item to see its details.
       </p>
-    ) : p.selected.kind === "folder" ? (
-      <FolderPanel folder={p.selected.folder} />
-    ) : (
-      <ImagePanel image={p.selected.image} />
-    )}
-  </aside>
-)
+    )
+  }
+  if (selected.length > 1) {
+    return (
+      <p className={css.sidePanelPlaceholder}>
+        {selected.length} items selected.
+      </p>
+    )
+  }
+  return item.kind === "folder" ? (
+    <FolderPanel folder={item.folder} />
+  ) : (
+    <ImagePanel image={item.image} />
+  )
+}
 
 const FolderPanel = (p: { folder: Parameters<typeof useFolderDisplay>[0] }) => {
   const display = useFolderDisplay(p.folder)

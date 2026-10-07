@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into page (slug, path, title, content)\nvalues ($1, $2, $3, $4)\non conflict (path) do update set\ntitle = excluded.title,\ncontent = excluded.content\nreturning page_id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "page_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f48569dadd01a83b77aaf9e7c156cddc80412ba71a9b2fc1bfdef309aa4599d0"
+}

@@ -65,3 +65,20 @@ pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+/// Rebuilds `page_image_reference` from the current content of every page.
+///
+/// Saving a page keeps its references current by itself, so this is only needed
+/// when content changes some other way: a direct edit to the database, or a
+/// rewrite of the URLs images are served from.
+pub async fn rescan_page_images(db: &Database) -> anyhow::Result<()> {
+    for page in db.all_pages().await? {
+        // Every page is stored as a single markdown block; anything else has no
+        // body to search.
+        if let Some(ContentBlock::Markdown(body)) = page.body.first() {
+            db.sync_page_image_references(page.id, &body.content)
+                .await?;
+        }
+    }
+    Ok(())
+}

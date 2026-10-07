@@ -869,6 +869,17 @@ query FolderContents($path: String!) {
   }
 }
 
+query SearchLibrary($query: String!) {
+  searchLibrary(query: $query) {
+    folders {
+      ...FolderFields
+    }
+    images {
+      ...ImageFields
+    }
+  }
+}
+
 query FolderBreadcrumbs($path: String!) {
   folderBreadcrumbs(path: $path) {
     ...FolderFields

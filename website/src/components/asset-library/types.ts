@@ -3,13 +3,8 @@ import type * as Dailp from "src/graphql/dailp"
 // How the browser lays out a folder's contents.
 export type ViewMode = "grid" | "list"
 
-/**
- * The item highlighted in the browser, which drives the side panel.
- *
- * Folders and images are rendered as separate sections, so the lists
- * themselves need no tagging -- but a single selection can be either type, so
- * it carries a discriminant.
- */
-export type Selection =
+// Folders and images render as separate sections, but a selection can hold
+// both, so each item carries a discriminant.
+export type SelectedItem =
   | { kind: "folder"; folder: Dailp.FolderFieldsFragment }
   | { kind: "image"; image: Dailp.ImageFieldsFragment }

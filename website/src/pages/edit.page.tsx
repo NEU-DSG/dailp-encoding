@@ -185,7 +185,6 @@ const NewPage = () => {
                 Asset Library
               </DialogDisclosure>
             </div>
-            <AssetLibraryModal dialog={assetLibrary} />
             <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               <textarea
                 style={{ width: "50%" }}
@@ -213,6 +212,9 @@ const NewPage = () => {
               Save
             </button>
           </form>
+          {/* Outside the form: events from the modal's own forms would otherwise
+              bubble up and submit the page. */}
+          <AssetLibraryModal dialog={assetLibrary} />
         </main>
       </Layout>
     </AuthGuard>

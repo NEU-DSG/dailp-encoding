@@ -39,8 +39,9 @@ export const AssetLibraryBrowser = (p: AssetLibraryBrowserProps) => {
       <Layout
         folders={folders}
         images={images}
-        selected={p.selected}
+        isSelected={p.isSelected}
         onSelect={p.onSelect}
+        onContextMenu={p.onContextMenu}
         onOpenFolder={p.onOpenFolder}
         onInsertImage={p.onInsertImage}
       />

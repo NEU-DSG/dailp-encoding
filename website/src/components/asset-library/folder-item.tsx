@@ -9,6 +9,7 @@ interface FolderItemProps {
   selected: boolean
   onSelect: () => void
   onOpen: () => void
+  onContextMenu: (event: React.MouseEvent) => void
 }
 
 /**
@@ -35,6 +36,7 @@ export const FolderGridCard = (p: FolderItemProps) => {
       }
       onClick={p.onSelect}
       onDoubleClick={p.onOpen}
+      onContextMenu={p.onContextMenu}
       aria-label={`Folder ${display.label}`}
     >
       <MdFolder size={22} aria-hidden />
@@ -50,6 +52,7 @@ export const FolderListRow = (p: FolderItemProps) => {
       className={p.selected ? css.listRow.selected : css.listRow.unselected}
       onClick={p.onSelect}
       onDoubleClick={p.onOpen}
+      onContextMenu={p.onContextMenu}
     >
       <td className={css.listCell}>
         <div className={css.listNameCell}>

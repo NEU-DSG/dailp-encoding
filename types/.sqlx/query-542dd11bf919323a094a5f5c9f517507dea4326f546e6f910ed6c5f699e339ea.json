@@ -1,0 +1,110 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Library images referred to by the body of the page at path $1.\n--\n-- Keyed on the path rather than the page id because that is how a page is\n-- identified everywhere else on the front end, and it saves the caller a\n-- lookup just to turn one into the other.\n--\n-- Soft-deleted images are returned too, following the other image listings: a\n-- page still pointing at a deleted image is worth showing rather than hiding.\nselect\n  i.id,\n  i.folder_id,\n  i.created_at,\n  i.deleted_at,\n  i.uploaded_by,\n  i.filename,\n  i.mime_type,\n  i.size_bytes,\n  i.width,\n  i.height,\n  i.alt_text,\n  i.caption,\n  i.s3_url,\n  i.scope as \"scope: ImageScope\"\nfrom page_image_reference r\ninner join images i on i.id = r.image_id\ninner join page p on p.page_id = r.page_id\nwhere p.path = $1\norder by i.filename;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "folder_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "uploaded_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "width",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "height",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "caption",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "s3_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "scope: ImageScope",
+        "type_info": {
+          "Custom": {
+            "name": "image_scope",
+            "kind": {
+              "Enum": [
+                "Site",
+                "Collection"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "542dd11bf919323a094a5f5c9f517507dea4326f546e6f910ed6c5f699e339ea"
+}

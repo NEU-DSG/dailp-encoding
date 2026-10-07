@@ -1309,6 +1309,17 @@ export type PageImage = {
   readonly url: Scalars["String"]
 }
 
+/** A content page that refers to a library image. */
+export type PageUsage = {
+  readonly __typename?: "PageUsage"
+  /** UUID of the page */
+  readonly pageId: Scalars["UUID"]
+  /** Path the page is served at, e.g. "/our-team" */
+  readonly path: Scalars["String"]
+  /** Display title of the page */
+  readonly title: Scalars["String"]
+}
+
 /** A paragraph in an annotated document that can be edited. */
 export type ParagraphUpdate = {
   /** Unique identifier of the form */
@@ -1398,6 +1409,12 @@ export type Query = {
    */
   readonly folderContents: FolderContents
   /**
+   * Library images referred to by the body of the page at `path`, by
+   * filename. Soft-deleted images are included, since a page still pointing
+   * at one is worth seeing rather than hiding.
+   */
+  readonly imagesReferencedByPage: ReadonlyArray<Image>
+  /**
    * Everything in the asset library's trash - the outermost soft-deleted
    * folders and images. Anything inside a deleted folder is omitted, since
    * restoring that folder restores its whole subtree and children cannot be
@@ -1428,8 +1445,22 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
   readonly pageByPath: Maybe<Page>
+  /**
+   * Content pages whose body refers to this image, by title.
+   *
+   * Derived from what each page actually contains and refreshed whenever a
+   * page is saved, so an empty list means no page uses this image right now.
+   */
+  readonly pagesReferencedByImage: ReadonlyArray<PageUsage>
   /** Get a single paragraph given the paragraph ID */
   readonly paragraphById: DocumentParagraph
+  /**
+   * Folders and images anywhere in the asset library whose name contains `query`,
+   * case-insensitively. Searches the whole library rather than one folder,
+   * since finding something you cannot locate by browsing is the point.
+   * For a reference point, Google Drive also does it this way.
+   */
+  readonly searchLibrary: FolderContents
   /**
    * Search for words with the exact same syllabary string, or with very
    * similar looking characters.
@@ -1487,6 +1518,10 @@ export type QueryFolderContentsArgs = {
   path: Scalars["String"]
 }
 
+export type QueryImagesReferencedByPageArgs = {
+  path: Scalars["String"]
+}
+
 export type QueryMenuBySlugArgs = {
   slug: Scalars["String"]
 }
@@ -1519,8 +1554,16 @@ export type QueryPageByPathArgs = {
   path: Scalars["String"]
 }
 
+export type QueryPagesReferencedByImageArgs = {
+  imageId: Scalars["UUID"]
+}
+
 export type QueryParagraphByIdArgs = {
   id: Scalars["UUID"]
+}
+
+export type QuerySearchLibraryArgs = {
+  query: Scalars["String"]
 }
 
 export type QuerySyllabarySearchArgs = {
@@ -3833,6 +3876,53 @@ export type FolderContentsQuery = { readonly __typename?: "Query" } & {
   }
 }
 
+export type SearchLibraryQueryVariables = Exact<{
+  query: Scalars["String"]
+}>
+
+export type SearchLibraryQuery = { readonly __typename?: "Query" } & {
+  readonly searchLibrary: { readonly __typename?: "FolderContents" } & {
+    readonly folders: ReadonlyArray<
+      { readonly __typename?: "Folder" } & Pick<
+        Folder,
+        | "id"
+        | "parentId"
+        | "name"
+        | "path"
+        | "createdAt"
+        | "deletedAt"
+        | "sizeBytes"
+      >
+    >
+    readonly images: ReadonlyArray<
+      { readonly __typename?: "Image" } & Pick<
+        Image,
+        | "id"
+        | "folderId"
+        | "createdAt"
+        | "deletedAt"
+        | "uploadedBy"
+        | "filename"
+        | "mimeType"
+        | "sizeBytes"
+        | "width"
+        | "height"
+        | "altText"
+        | "caption"
+        | "s3Url"
+        | "scope"
+      > & {
+          readonly variants: ReadonlyArray<
+            { readonly __typename?: "ImageVariant" } & Pick<
+              ImageVariant,
+              "width" | "height" | "s3Url" | "mimeType"
+            >
+          >
+        }
+    >
+  }
+}
+
 export type FolderBreadcrumbsQueryVariables = Exact<{
   path: Scalars["String"]
 }>
@@ -5447,6 +5537,29 @@ export function useFolderContentsQuery(
 ) {
   return Urql.useQuery<FolderContentsQuery, FolderContentsQueryVariables>({
     query: FolderContentsDocument,
+    ...options,
+  })
+}
+export const SearchLibraryDocument = gql`
+  query SearchLibrary($query: String!) {
+    searchLibrary(query: $query) {
+      folders {
+        ...FolderFields
+      }
+      images {
+        ...ImageFields
+      }
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useSearchLibraryQuery(
+  options: Omit<Urql.UseQueryArgs<SearchLibraryQueryVariables>, "query">
+) {
+  return Urql.useQuery<SearchLibraryQuery, SearchLibraryQueryVariables>({
+    query: SearchLibraryDocument,
     ...options,
   })
 }

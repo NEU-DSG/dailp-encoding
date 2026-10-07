@@ -18,12 +18,12 @@ export const AssetGrid = (p: AssetSectionProps) => (
             <FolderGridCard
               key={folder.id}
               folder={folder}
-              selected={
-                p.selected?.kind === "folder" &&
-                p.selected.folder.id === folder.id
-              }
+              selected={p.isSelected(folder.id)}
               onSelect={() => p.onSelect({ kind: "folder", folder })}
               onOpen={() => p.onOpenFolder(folder)}
+              onContextMenu={(event) =>
+                p.onContextMenu({ kind: "folder", folder }, event)
+              }
             />
           ))}
         </div>
@@ -38,11 +38,12 @@ export const AssetGrid = (p: AssetSectionProps) => (
             <ImageGridCard
               key={image.id}
               image={image}
-              selected={
-                p.selected?.kind === "image" && p.selected.image.id === image.id
-              }
+              selected={p.isSelected(image.id)}
               onSelect={() => p.onSelect({ kind: "image", image })}
               onInsert={() => p.onInsertImage(image)}
+              onContextMenu={(event) =>
+                p.onContextMenu({ kind: "image", image }, event)
+              }
             />
           ))}
         </div>

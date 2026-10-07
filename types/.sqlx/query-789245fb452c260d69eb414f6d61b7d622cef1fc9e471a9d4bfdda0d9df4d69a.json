@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Drop a page's references to images its content no longer mentions.\n-- $1 page_id, $2 the image ids the content still refers to. An empty array\n-- clears every reference, which is what a page with no images left needs.\ndelete from page_image_reference\nwhere page_id = $1\n  and image_id <> all ($2::uuid[]);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "789245fb452c260d69eb414f6d61b7d622cef1fc9e471a9d4bfdda0d9df4d69a"
+}

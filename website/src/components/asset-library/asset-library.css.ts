@@ -1,5 +1,6 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { rgba } from "polished"
+import { button } from "src/components/button.css"
 import {
   colors,
   fontSize,
@@ -67,6 +68,52 @@ export const closeButton = style({
   color: colors.primaryContrast,
 })
 
+// --- Breadcrumbs -----------------------------------------------------------
+
+const crumbBase = {
+  padding: "2px 4px",
+  borderRadius: radii.medium,
+  fontFamily: fonts.body,
+  fontSize: fontSize.small,
+} as const
+
+export const breadcrumbs = style({
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "2px",
+  listStyle: "none",
+  margin: 0,
+  padding: `${vspace.eighth} ${hspace.edge}`,
+  borderBottom: border,
+})
+
+export const crumbItem = style({
+  display: "flex",
+  alignItems: "center",
+  margin: 0,
+})
+
+export const crumb = style({
+  ...crumbBase,
+  background: "none",
+  border: "none",
+  cursor: "pointer",
+  color: colors.link,
+  ":hover": { textDecoration: "underline" },
+})
+
+export const crumbCurrent = style({
+  ...crumbBase,
+  color: colors.text,
+  fontWeight: "bold",
+})
+
+export const crumbSeparator = style([
+  crumbItem,
+  { color: colors.borders, userSelect: "none" },
+])
+
 // --- Toolbar ---------------------------------------------------------------
 
 export const toolbar = style({
@@ -77,6 +124,15 @@ export const toolbar = style({
   borderBottom: border,
   flexWrap: "wrap",
 })
+
+export const toolbarButton = style([
+  button,
+  {
+    padding: "0.5rem 0.75rem",
+    marginLeft: "0.25rem",
+    marginRight: "0.25rem",
+  },
+])
 
 export const search = style({
   flex: 1,
@@ -116,6 +172,161 @@ export const viewToggleButton = styleVariants({
       color: colors.primaryContrast,
     },
   ],
+})
+
+// --- Selection toolbar -----------------------------------------------------
+
+export const selectionToolbar = style({
+  display: "flex",
+  alignItems: "center",
+  gap: hspace.halfEdge,
+  padding: `${vspace.eighth} ${hspace.edge}`,
+  borderBottom: border,
+  backgroundColor: colors.bodyDark,
+  fontFamily: fonts.body,
+})
+
+export const selectionCount = style({
+  marginRight: hspace.halfEdge,
+})
+
+export const selectionAction = style({
+  padding: `4px ${hspace.halfEdge}`,
+  borderRadius: radii.large,
+  fontFamily: fonts.body,
+  color: colors.text,
+  selectors: {
+    "&:hover:not(:disabled)": { backgroundColor: rgba(0, 0, 0, 0.06) },
+    "&:disabled": { opacity: 0.5, cursor: "default" },
+  },
+})
+
+// --- Popup menus -----------------------------------------------------------
+
+export const popupMenu = style({
+  display: "flex",
+  flexDirection: "column",
+  minWidth: "160px",
+  padding: "4px 0",
+  zIndex: layers.second,
+  border,
+  borderRadius: radii.large,
+  backgroundColor: colors.body,
+  boxShadow: `0 4px 16px ${rgba(0, 0, 0, 0.2)}`,
+})
+
+export const popupMenuItem = style({
+  padding: `6px ${hspace.halfEdge}`,
+  border: "none",
+  backgroundColor: "transparent",
+  textAlign: "left",
+  cursor: "pointer",
+  fontFamily: fonts.body,
+  color: colors.text,
+  selectors: {
+    "&:hover, &:focus": { backgroundColor: rgba(0, 0, 0, 0.06) },
+    "&[aria-disabled='true']": { cursor: "default", opacity: 0.5 },
+  },
+})
+
+// --- Small dialogs ---------------------------------------------------------
+
+export const smallBackdrop = style({
+  position: "fixed",
+  inset: 0,
+  // Nested inside the library modal's portal, so it must clear that backdrop.
+  zIndex: layers.top + 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: hspace.edge,
+  backgroundColor: rgba(0, 0, 0, 0.3),
+})
+
+export const smallDialog = style({
+  width: "100%",
+  maxWidth: "400px",
+  padding: hspace.edge,
+  borderRadius: radii.large,
+  backgroundColor: colors.body,
+  color: colors.text,
+  boxShadow: `0 8px 32px ${rgba(0, 0, 0, 0.35)}`,
+})
+
+export const smallDialogTitle = style({
+  margin: `0 0 ${vspace.quarter}`,
+  fontFamily: fonts.header,
+})
+
+export const smallDialogLabel = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: vspace.eighth,
+  fontFamily: fonts.body,
+  fontSize: fontSize.small,
+})
+
+export const smallDialogInput = style({
+  padding: `6px ${hspace.halfEdge}`,
+  border,
+  borderRadius: radii.large,
+  fontFamily: fonts.body,
+  fontSize: "1rem",
+})
+
+export const smallDialogActions = style({
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  gap: hspace.halfEdge,
+  marginTop: vspace.half,
+})
+
+// --- Move picker -----------------------------------------------------------
+
+export const pickerList = style({
+  listStyle: "none",
+  margin: `${vspace.eighth} 0 0`,
+  padding: 0,
+  height: "16rem",
+  overflowY: "auto",
+  border,
+  borderRadius: radii.large,
+})
+
+const pickerItemBase = {
+  display: "flex",
+  alignItems: "center",
+  gap: hspace.halfEdge,
+  width: "100%",
+  padding: `6px ${hspace.halfEdge}`,
+  border: "none",
+  textAlign: "left",
+  cursor: "pointer",
+  fontFamily: fonts.body,
+  color: colors.text,
+  selectors: {
+    "&:disabled": { cursor: "not-allowed", opacity: 0.4 },
+  },
+} as const
+
+export const pickerItem = styleVariants({
+  idle: [
+    {
+      ...pickerItemBase,
+      backgroundColor: "transparent",
+      selectors: {
+        ...pickerItemBase.selectors,
+        "&:hover:not(:disabled)": { backgroundColor: rgba(0, 0, 0, 0.06) },
+      },
+    },
+  ],
+  picked: [{ ...pickerItemBase, backgroundColor: rgba(0, 0, 0, 0.12) }],
+})
+
+export const pickerMessage = style({
+  margin: `${vspace.quarter} 0 0`,
+  fontFamily: fonts.body,
 })
 
 // --- Body: browser + side panel -------------------------------------------
@@ -174,6 +385,13 @@ const cardBase = {
   color: colors.text,
 } as const
 
+// Doubles the selected border without widening it: a wider border would grow
+// the card and shift every row below it on each click.
+const selectedRing = {
+  borderColor: colors.primary,
+  boxShadow: `0 0 0 ${thickness.thick} black`,
+}
+
 // Compact folder card, like Google Drive's folder chips.
 export const folderCard = styleVariants({
   unselected: [
@@ -190,7 +408,7 @@ export const folderCard = styleVariants({
       alignItems: "center",
       gap: hspace.halfEdge,
       padding: "10px",
-      borderColor: colors.primary,
+      ...selectedRing,
       backgroundColor: rgba(0, 0, 0, 0.06),
     },
   ],
@@ -204,7 +422,7 @@ export const imageCard = styleVariants({
       ...cardBase,
       flexDirection: "column",
       padding: 0,
-      borderColor: colors.primary,
+      ...selectedRing,
     },
   ],
 })
@@ -320,6 +538,9 @@ export const dismissButton = style({
   alignItems: "center",
   flexShrink: 0,
   color: colors.text,
+  selectors: {
+    "&:disabled": { opacity: 0.5, cursor: "default" },
+  },
 })
 
 export const uploadStatus = styleVariants({

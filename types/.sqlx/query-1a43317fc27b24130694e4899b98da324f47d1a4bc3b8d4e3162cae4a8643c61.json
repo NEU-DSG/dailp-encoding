@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Record that a page refers to each of these images. $1 page_id, $2 image ids.\n-- References that already exist are left alone so they keep their original\n-- `inserted_at` across an edit.\ninsert into page_image_reference (page_id, image_id)\nselect $1, unnest($2::uuid[])\non conflict (page_id, image_id) do nothing;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1a43317fc27b24130694e4899b98da324f47d1a4bc3b8d4e3162cae4a8643c61"
+}

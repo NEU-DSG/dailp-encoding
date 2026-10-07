@@ -3,3 +3,4 @@ values ($1, $2, $3, $4)
 on conflict (path) do update set
 title = excluded.title,
 content = excluded.content
+returning page_id;

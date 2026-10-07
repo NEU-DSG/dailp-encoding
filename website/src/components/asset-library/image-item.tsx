@@ -9,6 +9,7 @@ interface ImageItemProps {
   selected: boolean
   onSelect: () => void
   onInsert: () => void
+  onContextMenu: (event: React.MouseEvent) => void
 }
 
 /**
@@ -37,6 +38,7 @@ export const ImageGridCard = (p: ImageItemProps) => {
       className={p.selected ? css.imageCard.selected : css.imageCard.unselected}
       onClick={p.onSelect}
       onDoubleClick={p.onInsert}
+      onContextMenu={p.onContextMenu}
       aria-label={`Image ${display.label}`}
     >
       <img
@@ -60,6 +62,7 @@ export const ImageListRow = (p: ImageItemProps) => {
       className={p.selected ? css.listRow.selected : css.listRow.unselected}
       onClick={p.onSelect}
       onDoubleClick={p.onInsert}
+      onContextMenu={p.onContextMenu}
     >
       <td className={css.listCell}>
         <div className={css.listNameCell}>

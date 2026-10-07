@@ -1,16 +1,35 @@
 import React, { useState } from "react"
 import { MdClose } from "react-icons/md/index"
-import { Dialog, DialogBackdrop, DialogStateReturn } from "reakit"
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogStateReturn,
+  useDialogState,
+} from "reakit"
 import { IconButton } from "src/components"
-import type * as Dailp from "src/graphql/dailp"
+import * as Dailp from "src/graphql/dailp"
 import { AssetLibraryBrowser } from "./asset-library-browser"
 import { AssetLibrarySidePanel } from "./asset-library-side-panel"
 import { AssetLibraryToolbar } from "./asset-library-toolbar"
 import * as css from "./asset-library.css"
-import type { Selection, ViewMode } from "./types"
+import { ContextMenu, useContextMenu } from "./context-menu"
+import { MoveModal } from "./move-modal"
+import { NameModal } from "./name-modal"
+import { SelectionToolbar } from "./selection-toolbar"
+import type { SelectedItem, ViewMode } from "./types"
 import { UploadPanel } from "./upload-panel"
 import { useImageUpload } from "./use-image-upload"
 import { useLibraryContents } from "./use-library-contents"
+import { useSelection } from "./use-selection"
+
+// An image's extension is kept out of rename so it always matches its contents.
+// A leading dot (".hidden") is part of the name, not an extension.
+const splitExtension = (filename: string) => {
+  const dot = filename.lastIndexOf(".")
+  return dot > 0
+    ? { base: filename.slice(0, dot), extension: filename.slice(dot) }
+    : { base: filename, extension: "" }
+}
 
 interface AssetLibraryModalProps {
   // From `useDialogState` in the opening component.
@@ -35,11 +54,12 @@ export const AssetLibraryModal = ({
   // already has both.
   const [currentFolder, setCurrentFolder] =
     useState<Dailp.FolderFieldsFragment | null>(null)
-  const [selected, setSelected] = useState<Selection | null>(null)
+  const selection = useSelection()
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
+  const [search, setSearch] = useState("")
 
   const currentPath = currentFolder?.path ?? ""
-  const contents = useLibraryContents(currentPath)
+  const contents = useLibraryContents(currentPath, search)
 
   const upload = useImageUpload({
     folderId: currentFolder?.id ?? null,
@@ -49,10 +69,81 @@ export const AssetLibraryModal = ({
     onRejected: (messages) => window.alert(messages.join("\n")),
   })
 
-  const openFolder = (folder: Dailp.FolderFieldsFragment) => {
+  const [, createFolder] = Dailp.useCreateFolderMutation()
+
+  const handleCreateFolder = async (name: string) => {
+    const result = await createFolder({
+      parentId: currentFolder?.id ?? null,
+      name,
+    })
+    if (result.error) window.alert(result.error.message)
+    else contents.refetch()
+  }
+
+  // Null is the library root, which only the breadcrumbs can navigate to.
+  const openFolder = (folder: Dailp.FolderFieldsFragment | null) => {
     setCurrentFolder(folder)
-    // The previous selection lives in a folder we just left.
-    setSelected(null)
+    // Select mode gathers items across folders; otherwise the selection
+    // belonged to the folder just left.
+    if (!selection.selecting) selection.clear()
+    // Opening a result is how you leave a search: the listing has to show the
+    // folder you just entered rather than the matches you came from.
+    setSearch("")
+  }
+
+  const renameDialog = useDialogState()
+  const moveDialog = useDialogState()
+  const [, renameFolder] = Dailp.useRenameFolderMutation()
+  const [, renameImage] = Dailp.useRenameImageMutation()
+  const [, moveFolder] = Dailp.useMoveFolderMutation()
+  const [, moveImage] = Dailp.useMoveImageMutation()
+
+  // Held items carry stale names and parents once an action lands.
+  const afterAction = () => {
+    selection.reset()
+    contents.refetch()
+  }
+
+  const [only] = selection.items
+  const currentName =
+    only?.kind === "folder"
+      ? only.folder.name
+      : splitExtension(only?.image.filename ?? "").base
+
+  const handleRename = async (name: string) => {
+    if (!only) return
+    const result =
+      only.kind === "folder"
+        ? await renameFolder({ id: only.folder.id, name })
+        : await renameImage({
+            id: only.image.id,
+            filename: name + splitExtension(only.image.filename).extension,
+          })
+    if (result.error) window.alert(result.error.message)
+    else afterAction()
+  }
+
+  const handleMove = async (target: Dailp.FolderFieldsFragment | null) => {
+    const parentId = target?.id ?? null
+    const failures: string[] = []
+    // One at a time, so items bound for the same folder clash predictably.
+    for (const item of selection.items) {
+      const result =
+        item.kind === "folder"
+          ? await moveFolder({ id: item.folder.id, parentId })
+          : await moveImage({ id: item.image.id, folderId: parentId })
+      if (result.error) failures.push(result.error.message)
+    }
+    if (failures.length) window.alert(failures.join("\n"))
+    afterAction()
+  }
+
+  const contextMenu = useContextMenu()
+
+  const openItemMenu = (item: SelectedItem, event: React.MouseEvent) => {
+    event.preventDefault()
+    selection.ensureSelected(item)
+    contextMenu.openAt(event.clientX, event.clientY)
   }
 
   // Insertion into the page is a later deliverable, so without a handler this
@@ -89,9 +180,20 @@ export const AssetLibraryModal = ({
           path={currentPath}
           onOpenFolder={openFolder}
           onFilesSelected={upload.upload}
-          uploading={upload.items.some(
-            (item) => item.status !== "done" && item.status !== "failed"
-          )}
+          onCreateFolder={handleCreateFolder}
+          selecting={selection.selecting}
+          onToggleSelecting={selection.toggleSelecting}
+          search={search}
+          onSearchChange={setSearch}
+        />
+
+        {/* Always shown: appearing on the first click would shift the grid
+            under the second click of a double-click. */}
+        <SelectionToolbar
+          count={selection.items.length}
+          onClear={selection.clear}
+          onRename={renameDialog.show}
+          onMove={moveDialog.show}
         />
 
         <UploadPanel
@@ -108,13 +210,35 @@ export const AssetLibraryModal = ({
             fetching={contents.fetching}
             error={contents.error}
             viewMode={viewMode}
-            selected={selected}
-            onSelect={setSelected}
+            isSelected={selection.isSelected}
+            onSelect={selection.select}
+            onContextMenu={openItemMenu}
             onOpenFolder={openFolder}
             onInsertImage={insertImage}
           />
-          <AssetLibrarySidePanel selected={selected} />
+          <AssetLibrarySidePanel selected={selection.items} />
         </div>
+
+        {/* Before the dialogs, so their focus lands after the menu hands it back. */}
+        <ContextMenu
+          menu={contextMenu.menu}
+          count={selection.items.length}
+          onRename={renameDialog.show}
+          onMove={moveDialog.show}
+        />
+        <NameModal
+          dialog={renameDialog}
+          title="Rename"
+          label="Name"
+          initialValue={currentName}
+          onConfirm={handleRename}
+        />
+        <MoveModal
+          dialog={moveDialog}
+          items={selection.items}
+          startFolder={currentFolder}
+          onConfirm={handleMove}
+        />
       </Dialog>
     </DialogBackdrop>
   )

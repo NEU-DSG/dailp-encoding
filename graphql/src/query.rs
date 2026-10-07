@@ -1,7 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    asset_library::{Folder, FolderContents, Image, NewImage, TrashContents},
+    asset_library::{Folder, FolderContents, Image, NewImage, PageUsage, TrashContents},
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
     collection,
@@ -463,6 +463,56 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .list_trash()
+            .await?)
+    }
+
+    /// Folders and images anywhere in the asset library whose name contains `query`,
+    /// case-insensitively. Searches the whole library rather than one folder,
+    /// since finding something you cannot locate by browsing is the point.
+    /// For a reference point, Google Drive also does it this way.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn search_library(
+        &self,
+        context: &Context<'_>,
+        query: String,
+    ) -> FieldResult<FolderContents> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .search_library(&query)
+            .await?)
+    }
+
+    /// Content pages whose body refers to this image, by title.
+    ///
+    /// Derived from what each page actually contains and refreshed whenever a
+    /// page is saved, so an empty list means no page uses this image right now.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn pages_referenced_by_image(
+        &self,
+        context: &Context<'_>,
+        image_id: Uuid,
+    ) -> FieldResult<Vec<PageUsage>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .pages_referenced_by_image(image_id)
+            .await?)
+    }
+
+    /// Library images referred to by the body of the page at `path`, by
+    /// filename. Soft-deleted images are included, since a page still pointing
+    /// at one is worth seeing rather than hiding.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn images_referenced_by_page(
+        &self,
+        context: &Context<'_>,
+        path: String,
+    ) -> FieldResult<Vec<Image>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .images_referenced_by_page(&path)
             .await?)
     }
 }

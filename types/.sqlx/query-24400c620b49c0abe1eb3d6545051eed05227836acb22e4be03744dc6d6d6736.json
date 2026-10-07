@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Which library images a page's content refers to. $1 is the whole page body.\n--\n-- A page holding a srcset contains several URLs for one image, the original\n-- plus its resized copies, so `union` collapses them to one id per image.\nselect id as \"id!\"\nfrom images\nwhere position(s3_url in $1) > 0\nunion\nselect image_id as \"id!\"\nfrom image_variant\nwhere position(s3_url in $1) > 0;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "24400c620b49c0abe1eb3d6545051eed05227836acb22e4be03744dc6d6d6736"
+}

@@ -82,6 +82,17 @@ pub struct Image {
     pub scope: ImageScope,
 }
 
+/// A content page that refers to a library image.
+#[derive(Debug, Clone, async_graphql::SimpleObject)]
+pub struct PageUsage {
+    /// UUID of the page
+    pub page_id: Uuid,
+    /// Path the page is served at, e.g. "/our-team"
+    pub path: String,
+    /// Display title of the page
+    pub title: String,
+}
+
 #[async_graphql::ComplexObject]
 impl Image {
     /// Resized copies of this image, smallest first. Empty for GIFs and for

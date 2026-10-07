@@ -50,6 +50,10 @@ async fn main() -> Result<()> {
     println!("Migrating pages...");
     pages::migrate_pages(&db).await?;
 
+    // Only needed when page content or image URLs change outside the app.
+    println!("Rescanning pages for image references...");
+    pages::rescan_page_images(&db).await?;
+
     //migrate_data(&db).await?;
 
     // println!("Migrating connections...");
