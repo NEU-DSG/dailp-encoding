@@ -7,5 +7,5 @@ output "bucket_name" {
 
 output "bucket_arn" {
   description = "ARN of the backup S3 bucket which is needed to grant access."
-  value       = aws_s3_bucket.backups.arn
+  value = aws_s3_bucket.backups.arn
 }

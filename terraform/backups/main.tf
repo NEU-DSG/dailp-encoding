@@ -2,7 +2,7 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = ">= 5.0"
     }
   }
@@ -10,7 +10,7 @@ terraform {
 
 # Bucket name string 
 locals {
-  bucket_name = "dailp-${var.env_prefix}-backups"
+  bucket_name = "dailp-backups-${var.env_prefix}"
 }
 
 # Bucket creation
