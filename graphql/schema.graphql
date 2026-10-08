@@ -963,6 +963,55 @@ type EditedCollection {
 
 
 """
+A folder in the shared asset library. Folders form a tree; a folder with no
+parent sits at the root of the library.
+"""
+type Folder {
+	"""
+	UUID for the folder
+	"""
+	id: UUID!
+	"""
+	Folder this one sits inside, or null at the root of the library
+	"""
+	parentId: UUID
+	"""
+	Display name of the folder
+	"""
+	name: String!
+	"""
+	Slugified path from the root, e.g. "partners.logos".
+	"""
+	path: String!
+	"""
+	When this folder was created
+	"""
+	createdAt: NaiveDateTime!
+	"""
+	When this folder was soft-deleted, or null if it is still live
+	"""
+	deletedAt: NaiveDateTime
+	"""
+	Total size of this folder's contents, in bytes
+	"""
+	sizeBytes: Int!
+}
+
+"""
+Everything directly inside a single folder (one level) like the unix `ls` command.
+"""
+type FolderContents {
+	"""
+	Subfolders directly inside this folder
+	"""
+	folders: [Folder!]!
+	"""
+	Images directly inside this folder
+	"""
+	images: [Image!]!
+}
+
+"""
 Stores the physical or digital medium associated with a document
 """
 type Format {
@@ -1067,6 +1116,76 @@ type IiifImages {
 	List of urls for all the images in this collection
 	"""
 	urls: [String!]!
+}
+
+"""
+An image in the shared asset library, pointing at an object in S3.
+"""
+type Image {
+	"""
+	UUID for the image
+	"""
+	id: UUID!
+	"""
+	Folder holding this image, or null at the root of the library
+	"""
+	folderId: UUID
+	"""
+	When this image was created
+	"""
+	createdAt: NaiveDateTime!
+	"""
+	When this image was soft-deleted, or null if it is still live
+	"""
+	deletedAt: NaiveDateTime
+	"""
+	User who uploaded this image, if known
+	"""
+	uploadedBy: UUID
+	"""
+	Display name of the image
+	"""
+	filename: String!
+	"""
+	MIME type of the underlying object, e.g. "image/png"
+	"""
+	mimeType: String!
+	"""
+	Size of the underlying object, in bytes
+	"""
+	sizeBytes: Int!
+	"""
+	Pixel width of the image
+	"""
+	width: Int!
+	"""
+	Pixel height of the image
+	"""
+	height: Int!
+	"""
+	Alternative text describing the image, for screen readers
+	"""
+	altText: String
+	"""
+	Caption displayed alongside the image
+	"""
+	caption: String
+	"""
+	URL that the image's bytes are served from
+	"""
+	s3Url: String!
+	"""
+	Where this image is meant to be used
+	"""
+	scope: ImageScope!
+}
+
+"""
+Where an image is meant to be used across the site.
+"""
+enum ImageScope {
+	SITE
+	COLLECTION
 }
 
 type ImageSource {
@@ -1412,6 +1531,96 @@ type Mutation {
 	Inverts associated collection's visiblity
 	"""
 	toggleCollectionVisibility(collectionId: UUID!): EditedCollection!
+	"""
+	Create an asset-library folder. A null `parentId` places it at the root.
+	"""
+	createFolder(parentId: UUID, name: String!): Folder!
+	"""
+	Record an image that has already been uploaded to S3. A null `folderId`
+	places it at the root. The uploader is taken from the signed-in user.
+	"""
+	createImage(image: NewImage!): Image!
+	"""
+	Rename a folder.
+	"""
+	renameFolder(id: UUID!, name: String!): Folder!
+	"""
+	Rename an image.
+	"""
+	renameImage(id: UUID!, filename: String!): Image!
+	"""
+	Move a folder under a new parent. Descendants follow automatically since
+	they reference the folder's id. A null `parentId` moves it to the root.
+	"""
+	moveFolder(id: UUID!, parentId: UUID): Folder!
+	"""
+	Move an image into another folder. A null `folderId` moves it to the root.
+	"""
+	moveImage(id: UUID!, folderId: UUID): Image!
+	"""
+	Soft-delete a folder and its whole subtree (stamps `deleted_at` on the
+	folder and all descendant folders and files; the rows stay for history).
+	"""
+	deleteFolder(id: UUID!): Folder!
+	"""
+	Soft-delete an image (stamps `deleted_at`; the row stays for history).
+	"""
+	deleteImage(id: UUID!): Image!
+}
+
+"""
+ISO 8601 combined date and time without timezone.
+
+# Examples
+
+* `2015-07-01T08:59:60.123`,
+"""
+scalar NaiveDateTime
+
+"""
+Input for recording an image that has already been uploaded to S3.
+"""
+input NewImage {
+	"""
+	Folder to place the image in, or null for the root
+	"""
+	folderId: UUID
+	"""
+	Display name of the image
+	"""
+	filename: String!
+	"""
+	MIME type of the underlying object, e.g. "image/png"
+	"""
+	mimeType: String!
+	"""
+	Size of the underlying object, in bytes
+	"""
+	sizeBytes: Int!
+	"""
+	Pixel width of the image
+	"""
+	width: Int!
+	"""
+	Pixel height of the image
+	"""
+	height: Int!
+	"""
+	Alternative text describing the image, for screen readers
+	"""
+	altText: String
+	"""
+	Caption displayed alongside the image
+	"""
+	caption: String
+	"""
+	URL the uploaded bytes live at
+	"""
+	s3Url: String!
+	"""
+	Where this image is meant to be used
+	"""
+	scope: ImageScope!
 }
 
 """
@@ -1637,6 +1846,24 @@ type Query {
 	Returns a chapter slug info for all unassigned chapters in a given chatper
 	"""
 	allChapterSlugs(collectionSlug: String!): [ChapterSlugInfo!]!
+	"""
+	Everything directly inside an asset-library folder - subfolders and images
+	one level deep. `path` is a slugified folder path such as
+	"partners.logos"; the empty string lists the root of the library.
+	"""
+	folderContents(path: String!): FolderContents!
+	"""
+	The ancestor trail of a folder path, root first, including the folder
+	itself. The empty string (the library root) has no trail.
+	"""
+	folderBreadcrumbs(path: String!): [Folder!]!
+	"""
+	Everything in the asset library's trash - the outermost soft-deleted
+	folders and images. Anything inside a deleted folder is omitted, since
+	restoring that folder restores its whole subtree and children cannot be
+	restored on their own.
+	"""
+	listTrash: TrashContents!
 }
 
 """
@@ -1713,6 +1940,22 @@ input SubjectHeadingUpdate {
 	Name of the subject heading
 	"""
 	name: String!
+}
+
+"""
+Everything currently in the trash: the outermost soft-deleted folders and
+images. Contents of a deleted folder are omitted, since restoring that folder
+restores everything inside it.
+"""
+type TrashContents {
+	"""
+	Soft-deleted folders whose parent is the root or is still live
+	"""
+	folders: [Folder!]!
+	"""
+	Soft-deleted images whose folder is the root or is still live
+	"""
+	images: [Image!]!
 }
 
 """
