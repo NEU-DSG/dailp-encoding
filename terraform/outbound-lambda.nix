@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (builtins) getEnv toJSON;
+  inherit (builtins) toJSON;
   prefixName = import ./utils.nix { stage = config.setup.stage; };
 in {
   # Turnstile siteverify proxy. Deliberately has NO vpc_config: it runs in
@@ -19,7 +19,7 @@ in {
     timeout = 30;
     publish = false;
     environment.variables = {
-      TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
+      TURNSTILE_SECRET_KEY = "\${var.turnstile_secret_key}";
     };
     tags = config.setup.global_tags // config.functions.tags;
   };
