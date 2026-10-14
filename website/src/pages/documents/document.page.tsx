@@ -272,80 +272,26 @@ export const TabSet = ({
       </TabPanel>
 
       {/* Hidden Print Design Components */}
-      {(pendingPrint === Tabs.ANNOTATION ||
-        pendingPrint === "annotation-info" ||
-        (pendingPrint === null && tabs.selectedId === Tabs.ANNOTATION)) && (
-        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
-          <PrintLegend levelOfDetail={levelOfDetail} />
-          <h2 className={css.printSectionHeading}>
-            Translation
-            <span className={css.printSectionHeadingRule} />
-          </h2>
-          <div
-            className={[
-              css.printBodyContent,
-              levelOfDetail >= LevelOfDetail.Pronunciation &&
-                css.printHideParagraphTranslation,
-              levelOfDetail === LevelOfDetail.Pronunciation &&
-                css.printPronunciationMode,
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <EditWordCheckProvider>
-              <FormProvider>
-                <FormProviderParagraph>
-                  <DocumentContents
-                    doc={doc}
-                    levelOfDetail={levelOfDetail}
-                    cherokeeRepresentation={printOptions.cherokeeStyle}
-                    openDetails={() => {}}
-                    wordPanelDetails={{
-                      currContents: null,
-                      setCurrContents: () => {},
-                    }}
-                  />
-                </FormProviderParagraph>
-              </FormProvider>
-            </EditWordCheckProvider>
-          </div>
-        </PrintLayout>
-      )}
-      {pendingPrint === null && tabs.selectedId === Tabs.IMAGES && (
-        <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
-          {doc.translatedPages
-            ?.filter((page) => !!page.image)
-            .map((page, i) => (
-              <React.Fragment key={i}>
-                <h2 className={css.printSectionHeading}>
-                  Original Document
-                  <span className={css.printSectionHeadingRule} />
-                </h2>
-                {/* <div className={css.printImageSource}>
-                  Image Source: {page.image!.url}
-                </div> */}
-                <img
-                  className={pageImageCss.pageImage}
-                  src={`${page.image!.url}/full/max/0/default.jpg`}
-                  alt={`Manuscript Page ${i + 1}`}
-                />
-              </React.Fragment>
-            ))}
-        </PrintLayout>
-      )}
       {(() => {
+        const showTranslation =
+          pendingPrint === Tabs.ANNOTATION ||
+          pendingPrint === "annotation-info" ||
+          (pendingPrint === null && tabs.selectedId === Tabs.ANNOTATION)
+        // The original text is printed alongside the translation, or on its own
+        // from the Original Text tab.
+        const showImages =
+          showTranslation ||
+          (pendingPrint === null && tabs.selectedId === Tabs.IMAGES)
         const showGlossary =
-          (pendingPrint === Tabs.ANNOTATION ||
-            pendingPrint === "annotation-info" ||
-            (pendingPrint === null && tabs.selectedId === Tabs.ANNOTATION)) &&
-          printOptions.includeMorphemeGlossary
+          showTranslation && printOptions.includeMorphemeGlossary
         const showMetadata =
           pendingPrint === "annotation-info" ||
           (pendingPrint === null && tabs.selectedId === Tabs.INFO)
-        if (!showGlossary && !showMetadata) return null
+        const pageImages =
+          doc.translatedPages?.filter((page) => !!page.image) ?? []
+        if (!showTranslation && !showImages && !showMetadata) return null
         return (
           <PrintLayout doc={doc} breadcrumbString={breadcrumbString}>
-            {showGlossary && <PrintGlossary />}
             {showMetadata && (
               <>
                 <h2 className={css.printSectionHeading}>
@@ -364,6 +310,67 @@ export const TabSet = ({
                 </EditingProvider>
               </>
             )}
+            {showImages &&
+              pageImages.map((page, i) => (
+                <React.Fragment key={i}>
+                  {showMetadata && i === 0 && (
+                    <div className={css.printPageBreak} />
+                  )}
+                  <h2 className={css.printSectionHeading}>
+                    Original Document
+                    <span className={css.printSectionHeadingRule} />
+                  </h2>
+                  {/* <div className={css.printImageSource}>
+                    Image Source: {page.image!.url}
+                  </div> */}
+                  <img
+                    className={pageImageCss.pageImage}
+                    src={`${page.image!.url}/full/max/0/default.jpg`}
+                    alt={`Manuscript Page ${i + 1}`}
+                  />
+                </React.Fragment>
+              ))}
+            {showTranslation && (
+              <>
+                {(showMetadata || pageImages.length > 0) && (
+                  <div className={css.printPageBreak} />
+                )}
+                <PrintLegend levelOfDetail={levelOfDetail} />
+                <h2 className={css.printSectionHeading}>
+                  Translation
+                  <span className={css.printSectionHeadingRule} />
+                </h2>
+                <div
+                  className={[
+                    css.printBodyContent,
+                    levelOfDetail >= LevelOfDetail.Pronunciation &&
+                      css.printHideParagraphTranslation,
+                    levelOfDetail === LevelOfDetail.Pronunciation &&
+                      css.printPronunciationMode,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <EditWordCheckProvider>
+                    <FormProvider>
+                      <FormProviderParagraph>
+                        <DocumentContents
+                          doc={doc}
+                          levelOfDetail={levelOfDetail}
+                          cherokeeRepresentation={printOptions.cherokeeStyle}
+                          openDetails={() => {}}
+                          wordPanelDetails={{
+                            currContents: null,
+                            setCurrContents: () => {},
+                          }}
+                        />
+                      </FormProviderParagraph>
+                    </FormProvider>
+                  </EditWordCheckProvider>
+                </div>
+              </>
+            )}
+            {showGlossary && <PrintGlossary />}
           </PrintLayout>
         )
       })()}

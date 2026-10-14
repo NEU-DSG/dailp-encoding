@@ -388,6 +388,16 @@ export const printSectionHeadingRule = style({
   },
 })
 
+export const printPageBreak = style({
+  display: "none",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "block",
+      breakBefore: "page",
+    },
+  },
+})
+
 export const printImageSource = style({
   display: "none",
   "@media": {
