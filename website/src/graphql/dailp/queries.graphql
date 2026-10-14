@@ -769,8 +769,24 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
-mutation UpdatePagePath($oldPath: String!, $newPath: String!) {
-  updatePagePath(oldPath: $oldPath, newPath: $newPath)
+mutation UpdatePagePath(
+  $oldPath: String!
+  $newPath: String!
+  $menu: MenuUpdate!
+) {
+  updatePagePath(oldPath: $oldPath, newPath: $newPath, menu: $menu) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
+  }
 }
 
 query AllPages {
@@ -782,6 +798,7 @@ query AllPages {
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
+    path
     body {
       __typename
       ... on Markdown {

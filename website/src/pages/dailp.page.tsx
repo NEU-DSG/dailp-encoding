@@ -33,6 +33,60 @@ const DailpPage = (props: DailpPageProps) => (
 
 export const Page = DailpPage
 
+type Menu = NonNullable<Dailp.MenuBySlugQuery["menuBySlug"]>
+
+/** Turns a menu label into a URL segment, e.g. "Stories & Voices" -> "stories-voices". */
+const slugify = (value: string) =>
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
+const stripTrailingSlash = (value: string) =>
+  value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value
+
+/** Adds the menu header to the front of a path, unless it's already there. */
+const buildPublishedPath = (menuLabel: string, currentPath: string) => {
+  const prefix = `/${slugify(menuLabel)}`
+  const normalized = stripTrailingSlash(currentPath)
+  return normalized.startsWith(prefix + "/")
+    ? normalized
+    : `${prefix}${normalized}`
+}
+
+/** Removes the menu header from the front of a path, if it's there. */
+const buildUnpublishedPath = (menuLabel: string, currentPath: string) => {
+  const prefix = `/${slugify(menuLabel)}`
+  const normalized = stripTrailingSlash(currentPath)
+  return normalized.startsWith(prefix + "/") || normalized === prefix
+    ? normalized.slice(prefix.length) || "/"
+    : normalized
+}
+
+/** Label of the menu header that has this page as a sub-item. */
+const findParentMenuLabel = (menu: Menu | null | undefined, path: string) => {
+  const normalized = stripTrailingSlash(path)
+  const parent = menu?.items?.find((item) =>
+    item.items?.some(
+      (subItem) => stripTrailingSlash(subItem.path) === normalized
+    )
+  )
+  return parent?.label ?? null
+}
+
+/** Label of the menu entry this page is published under, either as a sub-item or as a top-level item. */
+const findCurrentMenuLabel = (menu: Menu | null | undefined, path: string) => {
+  const parent = findParentMenuLabel(menu, path)
+  if (parent) return parent
+  const normalized = stripTrailingSlash(path)
+  const topLevel = menu?.items?.find(
+    (item) => stripTrailingSlash(item.path) === normalized
+  )
+  return topLevel?.label ?? null
+}
+
 export const DailpPageContents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: props.path },
@@ -85,26 +139,12 @@ export const DailpPageContents = (props: { path: string }) => {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
-  const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
-  const [updatePagePathResult, updatePagePath] =
-    Dailp.useUpdatePagePathMutation()
+  const [, updatePagePath] = Dailp.useUpdatePagePathMutation()
 
+  // Default the dropdown to wherever the page is currently published.
   useEffect(() => {
     if (!menu) return
-    const strip = (v: string) =>
-      v.length > 1 && v.endsWith("/") ? v.slice(0, -1) : v
-    const normalized = strip(props.path)
-    const parent = menu.items?.find((item) =>
-      item.items?.some((subItem) => strip(subItem.path) === normalized)
-    )
-    if (parent?.label) {
-      setSelectedLocation(parent.label)
-      return
-    }
-    const topLevel = menu.items?.find((item) => strip(item.path) === normalized)
-    if (topLevel?.label) {
-      setSelectedLocation(topLevel.label)
-    }
+    setSelectedLocation(findCurrentMenuLabel(menu, props.path) ?? "")
   }, [menu, props.path])
 
   const isInCollection =
@@ -119,48 +159,9 @@ export const DailpPageContents = (props: { path: string }) => {
     return <Alert>Page content not found. {props.path}</Alert>
   }
 
-  const slugify = (value: string) =>
-    value.toLowerCase().trim().split(" ").join("-")
-
-  const stripTrailingSlash = (value: string) =>
-    value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value
-
-  const buildPublishedPath = (menuLabel: string, currentPath: string) => {
-    const prefix = slugify(menuLabel)
-    return `/${prefix}${stripTrailingSlash(currentPath)}`
-  }
-
-  const buildUnpublishedPath = (menuLabel: string, currentPath: string) => {
-    const prefix = `/${slugify(menuLabel)}`
-    const normalized = stripTrailingSlash(currentPath)
-    return normalized.startsWith(prefix + "/") || normalized === prefix
-      ? normalized.slice(prefix.length) || "/"
-      : normalized
-  }
-
-  const findParentMenuLabel = (path: string) => {
-    const normalized = stripTrailingSlash(path)
-    const parent = menu?.items?.find((item) =>
-      item.items?.some(
-        (subItem) => stripTrailingSlash(subItem.path) === normalized
-      )
-    )
-    return parent?.label ?? null
-  }
-
-  const findCurrentMenuLabel = (path: string) => {
-    const parent = findParentMenuLabel(path)
-    if (parent) return parent
-    const normalized = stripTrailingSlash(path)
-    const topLevel = menu?.items?.find(
-      (item) => stripTrailingSlash(item.path) === normalized
-    )
-    return topLevel?.label ?? null
-  }
-
-  const currentLocation = findCurrentMenuLabel(props.path)
+  const currentLocation = findCurrentMenuLabel(menu, props.path)
   const isTopLevelMenuPage =
-    currentLocation !== null && findParentMenuLabel(props.path) === null
+    currentLocation !== null && findParentMenuLabel(menu, props.path) === null
 
   const handlePublishClick = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -168,8 +169,27 @@ export const DailpPageContents = (props: { path: string }) => {
   ) => {
     const verb =
       action === "unpublish" ? "unpublish" : isPublished ? "move" : "publish"
+
+    const parentLabel = findParentMenuLabel(menu, props.path)
+    const isMove = action === "publish" && isPublished && parentLabel !== null
+
+    const sourcePath = parentLabel
+      ? buildUnpublishedPath(parentLabel, props.path)
+      : props.path
+
+    const targetPath =
+      action === "unpublish"
+        ? sourcePath
+        : buildPublishedPath(selectedLocation, sourcePath)
+
+    // Old URLs don't redirect yet, so let the editor know links will break.
+    const pathWarning =
+      !isInCollection && targetPath !== page.path
+        ? `\n\nThis page's URL will change from ${page.path} to ${targetPath}. ` +
+          `Links to ${page.path} (bookmarks, links in other pages, etc.) will stop working.`
+        : ""
     const confirm = window.confirm(
-      `Are you sure you want to ${verb} this page?`
+      `Are you sure you want to ${verb} this page?${pathWarning}`
     )
     if (!confirm) {
       e.preventDefault()
@@ -190,38 +210,15 @@ export const DailpPageContents = (props: { path: string }) => {
         })) as ReadonlyArray<Dailp.MenuItemInput>
       }
 
-      const parentLabel = findParentMenuLabel(props.path)
-      const isMove = action === "publish" && isPublished && parentLabel !== null
-
-      const sourcePath = parentLabel
-        ? buildUnpublishedPath(parentLabel, props.path)
-        : props.path
-
-      const targetPath =
-        action === "unpublish"
-          ? sourcePath
-          : action === "publish"
-          ? buildPublishedPath(selectedLocation, sourcePath)
-          : props.path
-
-      if (targetPath !== props.path) {
-        const res = await updatePagePath({
-          oldPath: props.path,
-          newPath: targetPath,
-        })
-        if (res.error) {
-          const verb = isMove ? "move" : action
-          window.alert(`Failed to ${verb} page: ${res.error.message}`)
-          return
-        }
-      }
-
       const updatedItems =
         menu?.items?.map((item) => {
           const stripped =
             action === "unpublish" || isMove
-              ? item.items?.filter((subItem) => subItem.path !== props.path) ??
-                null
+              ? item.items?.filter(
+                  (subItem) =>
+                    stripTrailingSlash(subItem.path) !==
+                    stripTrailingSlash(props.path)
+                ) ?? null
               : item.items ?? null
 
           if (action === "publish" && item.label === selectedLocation) {
@@ -248,11 +245,24 @@ export const DailpPageContents = (props: { path: string }) => {
         items: itemsInput,
       }
 
-      await updateMenu({ menu: menuUpdate })
-      // reset dropdown to "None" after action
-      setSelectedLocation("")
+      // Moves the page and saves the menu together, so a failure leaves both unchanged.
+      const res = await updatePagePath({
+        oldPath: page.path,
+        newPath: targetPath,
+        menu: menuUpdate,
+      })
+      if (res.error) {
+        const verb = isMove ? "move" : action
+        window.alert(
+          `Failed to ${verb} page: ${res.error.message.replace(
+            "[GraphQL] ",
+            ""
+          )}`
+        )
+        return
+      }
 
-      if (targetPath !== props.path) {
+      if (targetPath !== page.path) {
         navigate(targetPath)
       }
     }
