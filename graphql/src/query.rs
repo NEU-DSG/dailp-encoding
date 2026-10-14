@@ -971,7 +971,8 @@ impl Mutation {
             .await?)
     }
 
-    /// Move an existing page from `old_path` to `new_path`.
+    /// Move an existing page from `old_path` to `new_path` and save `menu`
+    /// in the same transaction.
     /// Used when publishing a page under a menu so its URL reflects the
     /// menu header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
@@ -980,11 +981,12 @@ impl Mutation {
         context: &Context<'_>,
         old_path: String,
         new_path: String,
-    ) -> FieldResult<String> {
+        menu: MenuUpdate,
+    ) -> FieldResult<Menu> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_page_path(&old_path, &new_path)
+            .update_page_path(&old_path, &new_path, menu)
             .await?)
     }
 

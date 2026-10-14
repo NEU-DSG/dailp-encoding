@@ -2649,18 +2649,30 @@ impl Database {
         Ok(input.path)
     }
 
-    /// Move an existing page record from `old_path` to `new_path`.
+    /// Move an existing page from `old_path` to `new_path` and save `menu`
+    /// in the same transaction, so the page and the menu never disagree.
     /// Used when publishing a page under a menu so its URL reflects the menu
     /// header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
-    /// Returns an error if no page exists at `old_path`.
-    pub async fn update_page_path(&self, old_path: &str, new_path: &str) -> Result<String> {
-        let record = query_file!("queries/update_page_path.sql", old_path, new_path)
-            .fetch_optional(&self.client)
-            .await?;
-        match record {
-            Some(row) => Ok(row.path),
-            None => Err(anyhow::anyhow!("no page found at path {}", old_path)),
-        }
+    pub async fn update_page_path(
+        &self,
+        old_path: &str,
+        new_path: &str,
+        menu: MenuUpdate,
+    ) -> Result<Menu> {
+        let mut tx = self.client.begin().await?;
+        query_file!("queries/update_page_path.sql", old_path, new_path)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(|e| match e.as_database_error() {
+                Some(db_err) if db_err.is_unique_violation() => {
+                    anyhow::anyhow!("a page already exists at {}", new_path)
+                }
+                _ => e.into(),
+            })?
+            .ok_or_else(|| anyhow::anyhow!("no page found at path {}", old_path))?;
+        let menu = Self::update_menu_with(&mut *tx, menu).await?;
+        tx.commit().await?;
+        Ok(menu)
     }
 
     pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
@@ -2697,6 +2709,13 @@ impl Database {
     }
 
     pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        Self::update_menu_with(&self.client, menu).await
+    }
+
+    async fn update_menu_with<'e>(
+        executor: impl sqlx::PgExecutor<'e>,
+        menu: MenuUpdate,
+    ) -> Result<Menu> {
         let menu = query_file!(
             "queries/update_menu.sql",
             menu.id,
@@ -2705,7 +2724,7 @@ impl Database {
             menu.items
                 .map(|items| serde_json::to_value(items).unwrap_or_default())
         )
-        .fetch_one(&self.client)
+        .fetch_one(executor)
         .await?;
         let items: Vec<MenuItem> = serde_json::from_value(menu.items).unwrap_or_default();
         Ok(Menu {
