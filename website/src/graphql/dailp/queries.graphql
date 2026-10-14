@@ -811,6 +811,7 @@ query pageByPath($path: String!) {
         mediaUrls
       }
     }
+    createdAt
   }
 }
 query MenuBySlug($slug: String!) {
