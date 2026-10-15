@@ -85,6 +85,7 @@ export type AnnotatedDoc = {
    * same as the ingested audio track, if one is available.
    */
   readonly editedAudio: ReadonlyArray<AudioSlice>
+  readonly editedCollection: Maybe<EditedCollection>
   readonly formCount: Scalars["Int"]
   /** The format of the original artifact */
   readonly format: Maybe<Format>
@@ -2384,11 +2385,27 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
       | "englishGloss"
       | "index"
     > & {
+        readonly position: {
+          readonly __typename?: "PositionInDocument"
+        } & Pick<PositionInDocument, "index" | "pageNumber">
         readonly document: Maybe<
           { readonly __typename?: "AnnotatedDoc" } & Pick<
             AnnotatedDoc,
-            "id" | "slug" | "isReference"
-          >
+            "title" | "id" | "slug" | "isReference"
+          > & {
+              readonly collection: Maybe<
+                { readonly __typename?: "DocumentCollection" } & Pick<
+                  DocumentCollection,
+                  "name"
+                >
+              >
+              readonly editedCollection: Maybe<
+                { readonly __typename?: "EditedCollection" } & Pick<
+                  EditedCollection,
+                  "id" | "title" | "isHidden"
+                >
+              >
+            }
         >
       }
   >
@@ -4138,10 +4155,23 @@ export const WordSearchDocument = gql`
       romanizedSource(system: LEARNER)
       englishGloss
       index
+      position {
+        index
+        pageNumber
+      }
       document {
+        title
         id
         slug
         isReference
+        collection {
+          name
+        }
+        editedCollection {
+          id
+          title
+          isHidden
+        }
       }
     }
   }

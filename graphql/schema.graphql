@@ -65,6 +65,7 @@ type AnnotatedDoc {
 	Where the source document came from, maybe the name of a collection
 	"""
 	collection: DocumentCollection
+	editedCollection: EditedCollection
 	"""
 	Images of each source document page, in order
 	"""
