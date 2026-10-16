@@ -487,7 +487,7 @@
               nasm
               terraform
               rust-toolchain
-              nodejs-18_x
+              nodejs_22
               yarn
               act
               postgresql_14
