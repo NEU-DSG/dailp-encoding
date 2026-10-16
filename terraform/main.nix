@@ -30,6 +30,11 @@ in {
     ./outbound-lambda.nix
   ];
 
+  module.backups_bucket = {
+    source = "${./backups}";
+    env_prefix = "dailp-${stage}";
+  };
+
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
   setup.stage = stage;
