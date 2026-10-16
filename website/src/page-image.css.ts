@@ -23,6 +23,9 @@ export const pageNav = style([
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    "@media": {
+      print: { display: "none" },
+    },
   },
 ])
 
@@ -30,6 +33,27 @@ export const pageImage = style({
   width: "100%",
   height: "auto",
   marginBottom: vspace.small,
+  "@media": {
+    [mediaQueries.print]: {
+      WebkitPrintColorAdjust: "exact",
+      printColorAdjust: "exact",
+      width: "482px",
+      height: "auto",
+      maxHeight: "600px",
+      objectFit: "contain",
+      display: "block",
+      margin: "0 auto",
+      breakAfter: "page",
+    },
+  },
+})
+
+globalStyle(`.${pageImage}:last-of-type`, {
+  "@media": {
+    [mediaQueries.print]: {
+      breakAfter: "auto",
+    },
+  },
 })
 
 export const caption = style({
