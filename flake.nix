@@ -1,6 +1,6 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    pkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
