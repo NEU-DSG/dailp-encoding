@@ -471,7 +471,6 @@
             name = "dailp-dev";
             unpackPhase = "true";
             RUST_LOG = "info";
-            LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
