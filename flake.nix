@@ -1,6 +1,6 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    pkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -471,7 +471,6 @@
             name = "dailp-dev";
             unpackPhase = "true";
             RUST_LOG = "info";
-            LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
@@ -487,7 +486,7 @@
               nasm
               terraform
               rust-toolchain
-              nodejs-18_x
+              nodejs_22
               yarn
               act
               postgresql_14
