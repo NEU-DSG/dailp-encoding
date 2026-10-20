@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}"
 in {
   config.import = [
     {

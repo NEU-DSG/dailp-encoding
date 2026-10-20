@@ -4,7 +4,7 @@
   config.resource = {
     aws_s3_bucket.media_storage = {
       bucket = let 
-        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+        prefixName = base: "dailp-${config.setup.stage}-${base}"
       in prefixName "media-storage";
       lifecycle.prevent_destroy = true;
     };
