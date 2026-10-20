@@ -106,30 +106,11 @@ jobs:
           BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L
-      - name: Deploy back-end to AWS via terraform
-        env:
-          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
-        run: |
-          nix run --impure -L .#tf-apply-now
-          SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
-          echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
-      - name: Update database schema
-        env: 
-          BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
-          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
-        run: |
-          echo "Retrieving terraform outputs..."
-          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
-          echo "Connecting to bastion via SSM..."
-          aws ssm start-session \
-          --target ${{ env.BASTION_ID }} \
-          --document-name AWS-StartPortForwardingSessionToRemoteHost \
-          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
-          echo "Updating shell variables..."
-          export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
-          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
-          echo "Migrating schema..."
-          nix run --impure .#migrate-schema
+      # This stage of the output used to include applying Terraform
+      # and running the database migrations before publishing the
+      # frontend. These actions are running on other triggers for now;
+      # if you want to see what actions used to happen here check
+      # commit 285bd38c4b58088463bbbc4dfc737728f69f5018
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
