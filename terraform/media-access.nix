@@ -1,5 +1,5 @@
 { config, lib, pkgs, ...} : let 
-  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}"
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {

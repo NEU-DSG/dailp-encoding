@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let 
-  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}"
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
   config.resource = {
     # User Pool Setup

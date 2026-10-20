@@ -5,7 +5,7 @@ let
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
- prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}"
+ prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
   # Policy Documents
   config.data.aws_iam_policy_document = {

@@ -3,7 +3,7 @@
 with lib;
 with builtins; 
 let 
-  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}"
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
   config.resource = {
     aws_iam_role.amplify_role = {
