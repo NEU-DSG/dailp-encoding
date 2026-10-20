@@ -246,17 +246,18 @@ export const WordPanel = (p: {
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
-
-      <CollapsiblePanel
-        title={"Discussion"}
-        content={discussionContent}
-        icon={
-          <MdOutlineComment
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
+      {p.panel === PanelType.WordPanel && (
+        <CollapsiblePanel
+          title={"Discussion"}
+          content={discussionContent}
+          icon={
+            <MdOutlineComment
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
     </>
   )
 }
@@ -352,9 +353,13 @@ const EditSegmentation = (p: {
                             index.toString(),
                             "morpheme",
                           ]}
+                          style={{ width: "100px" }}
                         />
                       </td>
-                      <td className={css.editGlossCells}>
+                      <td
+                        className={css.editGlossCells}
+                        style={{ maxWidth: "175px" }}
+                      >
                         {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
                         <EditWordPartGloss
                           // TODO: this key will need to be changed later since a morpheme can be changed
