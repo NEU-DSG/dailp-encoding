@@ -108,8 +108,6 @@ export function useImageUpload({
             height: processed.height,
             s3Url: resourceUrl,
             scope: Dailp.ImageScope.Site,
-            altText: null,
-            caption: null,
             variants,
           },
         })

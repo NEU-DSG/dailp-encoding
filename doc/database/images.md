@@ -17,8 +17,6 @@ Editors browse these through the asset library and insert them into content page
 | `size_bytes`  | `bigint`               | Size of the underlying object                                                |
 | `width`       | `integer`              | Pixel width                                                                  |
 | `height`      | `integer`              | Pixel height                                                                 |
-| `alt_text`    | `text?`                | Alternative text describing the image, for screen readers                    |
-| `caption`     | `text?`                | Caption displayed alongside the image                                        |
 | `s3_url`      | `text`                 | URL the image's bytes are served from                                        |
 | `scope`       | `image_scope`          | Where this image is meant to be used                                         |
 

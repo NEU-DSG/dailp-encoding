@@ -883,8 +883,6 @@ fragment ImageFields on Image {
   sizeBytes
   width
   height
-  altText
-  caption
   s3Url
   scope
   variants {

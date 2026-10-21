@@ -13,6 +13,8 @@ import { AssetLibrarySidePanel } from "./asset-library-side-panel"
 import { AssetLibraryToolbar } from "./asset-library-toolbar"
 import * as css from "./asset-library.css"
 import { ContextMenu, useContextMenu } from "./context-menu"
+import { buildEmbed } from "./embed"
+import { EmbedModal } from "./embed-modal"
 import { MoveModal } from "./move-modal"
 import { NameModal } from "./name-modal"
 import { SelectionToolbar } from "./selection-toolbar"
@@ -34,8 +36,11 @@ const splitExtension = (filename: string) => {
 interface AssetLibraryModalProps {
   // From `useDialogState` in the opening component.
   dialog: DialogStateReturn
-  // Called when the user picks an image to place in the page.
-  onInsertImage?: (image: Dailp.ImageFieldsFragment) => void
+  // Receives the markup for an image to place in the page. Without it, the
+  // library can be browsed but nothing can be inserted.
+  onInsert?: (markup: string) => void
+  // Where focus goes when the library closes, such as the editor's textarea.
+  finalFocusRef?: React.RefObject<HTMLElement>
 }
 
 /**
@@ -46,7 +51,8 @@ interface AssetLibraryModalProps {
  */
 export const AssetLibraryModal = ({
   dialog,
-  onInsertImage,
+  onInsert,
+  finalFocusRef,
 }: AssetLibraryModalProps) => {
   // The folder being browsed, or null at the root of the library. Held as the
   // whole folder rather than just its path because uploads are recorded against
@@ -146,11 +152,20 @@ export const AssetLibraryModal = ({
     contextMenu.openAt(event.clientX, event.clientY)
   }
 
-  // Insertion into the page is a later deliverable, so without a handler this
-  // is deliberately inert rather than closing the modal for no reason.
-  const insertImage = (image: Dailp.ImageFieldsFragment) => {
-    if (!onInsertImage) return
-    onInsertImage(image)
+  const embedDialog = useDialogState()
+  const [embedding, setEmbedding] = useState<Dailp.ImageFieldsFragment | null>(
+    null
+  )
+
+  const startEmbed = (image: Dailp.ImageFieldsFragment) => {
+    setEmbedding(image)
+    embedDialog.show()
+  }
+
+  const handleEmbed = (altText: string, caption: string) => {
+    if (!embedding || !onInsert) return
+    onInsert(buildEmbed(embedding, altText, caption))
+    selection.reset()
     dialog.hide()
   }
 
@@ -162,6 +177,7 @@ export const AssetLibraryModal = ({
         aria-label="Asset library"
         // The browser owns focus management for its own items.
         preventBodyScroll
+        unstable_finalFocusRef={finalFocusRef}
       >
         <header className={css.header}>
           <h2 className={css.headerTitle}>Asset Library</h2>
@@ -214,9 +230,12 @@ export const AssetLibraryModal = ({
             onSelect={selection.select}
             onContextMenu={openItemMenu}
             onOpenFolder={openFolder}
-            onInsertImage={insertImage}
+            onInsertImage={onInsert ? startEmbed : () => {}}
           />
-          <AssetLibrarySidePanel selected={selection.items} />
+          <AssetLibrarySidePanel
+            selected={selection.items}
+            onInsertImage={onInsert && startEmbed}
+          />
         </div>
 
         {/* Before the dialogs, so their focus lands after the menu hands it back. */}
@@ -239,6 +258,7 @@ export const AssetLibraryModal = ({
           startFolder={currentFolder}
           onConfirm={handleMove}
         />
+        <EmbedModal dialog={embedDialog} onConfirm={handleEmbed} />
       </Dialog>
     </DialogBackdrop>
   )

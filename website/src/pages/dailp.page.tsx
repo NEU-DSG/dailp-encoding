@@ -1,6 +1,7 @@
 import React from "react"
 import { useState } from "react"
 import Markdown from "react-markdown"
+import rehypeRaw from "rehype-raw"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
@@ -192,7 +193,7 @@ export const DailpPageContents = (props: { path: string }) => {
         {content.charAt(0) === "<" ? (
           <div dangerouslySetInnerHTML={{ __html: content }} />
         ) : (
-          <Markdown>{content}</Markdown>
+          <Markdown rehypePlugins={[rehypeRaw]}>{content}</Markdown>
         )}
       </>
     )
@@ -243,7 +244,7 @@ export const DailpPageContents = (props: { path: string }) => {
       {content.charAt(0) === "<" ? (
         <div dangerouslySetInnerHTML={{ __html: content }} />
       ) : (
-        <Markdown>{content}</Markdown>
+        <Markdown rehypePlugins={[rehypeRaw]}>{content}</Markdown>
       )}
     </>
   )

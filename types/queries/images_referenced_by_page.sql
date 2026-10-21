@@ -17,8 +17,6 @@ select
   i.size_bytes,
   i.width,
   i.height,
-  i.alt_text,
-  i.caption,
   i.s3_url,
   i.scope as "scope: ImageScope"
 from page_image_reference r

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- One image by id, live or soft-deleted.\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images\nwhere id = $1;\n",
+  "query": "-- One image by id, live or soft-deleted.\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images\nwhere id = $1;\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -100,11 +90,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "0b2573afe62f7d1d4d8141e181a6d5a0ef5272cf58c0b440a2cf51186d758e59"
+  "hash": "8fd2819407c6a536b7900f2cd88f930862d541509a485765058798281a31f181"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Move an image into another folder. $1 id, $2 new folder_id (null = root).\nupdate images\nset folder_id = $2\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n          scope as \"scope: ImageScope\";\n",
+  "query": "-- Rename an image. $1 id, $2 new filename\nupdate images\nset filename = $2\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, s3_url,\n          scope as \"scope: ImageScope\";\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -87,7 +77,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -101,11 +91,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "1d56e6d8a44be50043dd53f0f1ed70605c59f2d4f19a3e0eb327d43c7b217e49"
+  "hash": "11d39d1bc3a391d424b59748976612eddee763b28ab50bbdf16fcb4487beb53d"
 }

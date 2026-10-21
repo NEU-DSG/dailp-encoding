@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import Markdown from "react-markdown"
 import { DialogDisclosure, useDialogState } from "reakit"
+import rehypeRaw from "rehype-raw"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { Button } from "src/components"
@@ -34,6 +35,7 @@ const NewPage = () => {
   const [isNew, setIsNew] = useState(true)
 
   const assetLibrary = useDialogState({ animated: true })
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const formatPath = (path: string) => {
     let regularizedPath = path
@@ -123,6 +125,23 @@ const NewPage = () => {
 
   const isHtml = content.charAt(0) === "<"
 
+  const insertAtCursor = (markup: string) => {
+    // A textarea keeps its selection after losing focus, so this is where the
+    // editor was before opening the library. Never clicked, it's the end.
+    const start = textareaRef.current?.selectionStart ?? content.length
+    const end = textareaRef.current?.selectionEnd ?? content.length
+    // Markdown only treats HTML as a block when blank lines surround it, and
+    // they keep "<" from becoming the first character, which would switch the
+    // whole page to HTML rendering.
+    const text = isHtml ? markup : `\n\n${markup}\n\n`
+    setContent(content.slice(0, start) + text + content.slice(end))
+    // Focus itself comes back when the library closes (`finalFocusRef`).
+    const caret = start + text.length
+    requestAnimationFrame(() =>
+      textareaRef.current?.setSelectionRange(caret, caret)
+    )
+  }
+
   return (
     <AuthGuard requiredRoles={[UserRole.Editor]}>
       <Layout>
@@ -187,6 +206,7 @@ const NewPage = () => {
             </div>
             <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               <textarea
+                ref={textareaRef}
                 style={{ width: "50%" }}
                 placeholder="content"
                 value={content}
@@ -204,7 +224,7 @@ const NewPage = () => {
                 {isHtml ? (
                   <div dangerouslySetInnerHTML={{ __html: content }} />
                 ) : (
-                  <Markdown>{content}</Markdown>
+                  <Markdown rehypePlugins={[rehypeRaw]}>{content}</Markdown>
                 )}
               </div>
             </div>
@@ -214,7 +234,11 @@ const NewPage = () => {
           </form>
           {/* Outside the form: events from the modal's own forms would otherwise
               bubble up and submit the page. */}
-          <AssetLibraryModal dialog={assetLibrary} />
+          <AssetLibraryModal
+            dialog={assetLibrary}
+            onInsert={insertAtCursor}
+            finalFocusRef={textareaRef}
+          />
         </main>
       </Layout>
     </AuthGuard>

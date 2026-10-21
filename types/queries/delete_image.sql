@@ -3,5 +3,5 @@ update images
 set deleted_at = now()
 where id = $1
 returning id, folder_id, created_at, deleted_at, uploaded_by, filename,
-          mime_type, size_bytes, width, height, alt_text, caption, s3_url,
+          mime_type, size_bytes, width, height, s3_url,
           scope as "scope: ImageScope";

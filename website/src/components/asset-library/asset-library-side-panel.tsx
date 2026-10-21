@@ -1,18 +1,23 @@
 import React from "react"
+import type * as Dailp from "src/graphql/dailp"
 import * as css from "./asset-library.css"
 import { useFolderDisplay } from "./folder-item"
 import { useImageDisplay } from "./image-item"
 import type { SelectedItem } from "./types"
 
-export const AssetLibrarySidePanel = (p: {
+interface SidePanelProps {
   selected: readonly SelectedItem[]
-}) => (
+  // Absent when the library was opened somewhere with nothing to insert into.
+  onInsertImage?: (image: Dailp.ImageFieldsFragment) => void
+}
+
+export const AssetLibrarySidePanel = (p: SidePanelProps) => (
   <aside className={css.sidePanel} aria-label="Item details">
-    <PanelContent selected={p.selected} />
+    <PanelContent {...p} />
   </aside>
 )
 
-const PanelContent = ({ selected }: { selected: readonly SelectedItem[] }) => {
+const PanelContent = ({ selected, onInsertImage }: SidePanelProps) => {
   const [item] = selected
   if (!item) {
     return (
@@ -31,7 +36,10 @@ const PanelContent = ({ selected }: { selected: readonly SelectedItem[] }) => {
   return item.kind === "folder" ? (
     <FolderPanel folder={item.folder} />
   ) : (
-    <ImagePanel image={item.image} />
+    <ImagePanel
+      image={item.image}
+      onInsert={onInsertImage && (() => onInsertImage(item.image))}
+    />
   )
 }
 
@@ -52,7 +60,10 @@ const FolderPanel = (p: { folder: Parameters<typeof useFolderDisplay>[0] }) => {
   )
 }
 
-const ImagePanel = (p: { image: Parameters<typeof useImageDisplay>[0] }) => {
+const ImagePanel = (p: {
+  image: Parameters<typeof useImageDisplay>[0]
+  onInsert?: () => void
+}) => {
   const display = useImageDisplay(p.image)
   return (
     <>
@@ -72,6 +83,11 @@ const ImagePanel = (p: { image: Parameters<typeof useImageDisplay>[0] }) => {
         <dt>Created</dt>
         <dd>{display.created}</dd>
       </dl>
+      {p.onInsert && (
+        <button type="button" className={css.insertButton} onClick={p.onInsert}>
+          Insert at cursor
+        </button>
+      )}
     </>
   )
 }

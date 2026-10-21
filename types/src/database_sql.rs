@@ -967,8 +967,6 @@ impl Database {
             image.size_bytes,
             image.width,
             image.height,
-            image.alt_text,
-            image.caption,
             image.s3_url,
             image.scope as _,
             uploaded_by

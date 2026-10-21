@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Soft-delete an image: stamp deleted_at rather than removing the row. $1 id\nupdate images\nset deleted_at = now()\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n          scope as \"scope: ImageScope\";\n",
+  "query": "-- Move an image into another folder. $1 id, $2 new folder_id (null = root).\nupdate images\nset folder_id = $2\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, s3_url,\n          scope as \"scope: ImageScope\";\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -86,6 +76,7 @@
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid"
       ]
     },
@@ -100,11 +91,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "1df06bbe861089ff555d0c6b62885205a4e46b72e079441ec0a08e33a58ce346"
+  "hash": "aab0ac13fafdb8ca074097d71c67b54674c884601c8d0b6aca920519c7e18776"
 }

@@ -274,6 +274,17 @@ export const smallDialogInput = style({
   fontSize: "1rem",
 })
 
+export const smallDialogFields = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: vspace.quarter,
+})
+
+export const smallDialogWarning = style({
+  fontSize: fontSize.tiny,
+  color: "#8a5300",
+})
+
 export const smallDialogActions = style({
   display: "flex",
   justifyContent: "flex-end",
@@ -558,6 +569,11 @@ export const sidePanel = style({
   overflowY: "auto",
   backgroundColor: colors.body,
 })
+
+export const insertButton = style([
+  button,
+  { width: "80%", marginTop: vspace.half, padding: "0.5rem 0.75rem" },
+])
 
 export const sidePanelPlaceholder = style({
   color: colors.text,

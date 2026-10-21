@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Record an image that has already been uploaded to S3.\n-- $1 folder_id (null = root), $2 filename, $3 mime_type, $4 size_bytes,\n-- $5 width, $6 height, $7 alt_text, $8 caption, $9 s3_url, $10 scope,\n-- $11 uploaded_by (null when the uploader is not known).\n-- deleted_at is left null: a new row is, by definition, not deleted.\ninsert into images (\n  folder_id, filename, mime_type, size_bytes, width, height,\n  alt_text, caption, s3_url, scope, uploaded_by\n)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n          scope as \"scope: ImageScope\";\n",
+  "query": "-- Library images referred to by the body of the page at path $1.\n--\n-- Keyed on the path rather than the page id because that is how a page is\n-- identified everywhere else on the front end, and it saves the caller a\n-- lookup just to turn one into the other.\n--\n-- Soft-deleted images are returned too, following the other image listings: a\n-- page still pointing at a deleted image is worth showing rather than hiding.\nselect\n  i.id,\n  i.folder_id,\n  i.created_at,\n  i.deleted_at,\n  i.uploaded_by,\n  i.filename,\n  i.mime_type,\n  i.size_bytes,\n  i.width,\n  i.height,\n  i.s3_url,\n  i.scope as \"scope: ImageScope\"\nfrom page_image_reference r\ninner join images i on i.id = r.image_id\ninner join page p on p.page_id = r.page_id\nwhere p.path = $1\norder by i.filename;\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -86,27 +76,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text",
-        "Text",
-        "Int8",
-        "Int4",
-        "Int4",
-        "Text",
-        "Text",
-        "Text",
-        {
-          "Custom": {
-            "name": "image_scope",
-            "kind": {
-              "Enum": [
-                "Site",
-                "Collection"
-              ]
-            }
-          }
-        },
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -120,11 +90,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "75763bb9837ec21e9378c2ed1a3ab84a28541b46cb37f4c7c857856fdafe9230"
+  "hash": "ad969742aa508b7ea97b8a7d7a82558e91c8270fdcb2d32419c71b24441a5c7d"
 }

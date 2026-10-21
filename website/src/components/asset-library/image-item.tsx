@@ -19,7 +19,7 @@ interface ImageItemProps {
 export function useImageDisplay(image: Dailp.ImageFieldsFragment) {
   return {
     label: image.filename,
-    alt: image.altText || image.filename,
+    alt: image.filename,
     // Smallest variant, so browsing a folder of photos does not download every
     // full-size original.
     thumbnailSrc: image.variants[0]?.s3Url ?? image.s3Url,

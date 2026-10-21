@@ -27,8 +27,6 @@ create table images (
   size_bytes  bigint not null,
   width       integer not null,
   height      integer not null,
-  alt_text    text,
-  caption     text,
   s3_url      text not null,
   scope       image_scope not null
 );

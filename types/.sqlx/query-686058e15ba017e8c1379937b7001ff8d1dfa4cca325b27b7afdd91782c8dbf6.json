@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Soft-deleted images at the outermost layer of the trash: those whose folder is\n-- the root or is still live. An image inside a deleted folder is omitted, because\n-- restoring that folder restores everything inside it.\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images i\nwhere i.deleted_at is not null\n  and not exists (\n    select 1\n    from folders parent\n    where parent.id = i.folder_id and parent.deleted_at is not null\n  )\norder by filename;\n",
+  "query": "-- All images directly inside folder $1, including soft-deleted ones - callers\n-- filter out `deleted_at` rows in code. Pass null to list the root (`is not\n-- distinct from` so a null $1 matches the root's null folder_id).\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images\nwhere folder_id is not distinct from $1\norder by filename;\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -85,7 +75,9 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false,
@@ -98,11 +90,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "39bd61a8d7a05d70211ac8daf7964574efbab2ba79b4ec3cc8806fb93fce0054"
+  "hash": "686058e15ba017e8c1379937b7001ff8d1dfa4cca325b27b7afdd91782c8dbf6"
 }

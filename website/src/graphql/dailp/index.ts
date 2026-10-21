@@ -835,10 +835,6 @@ export type IiifImages = {
 /** An image in the shared asset library, pointing at an object in S3. */
 export type Image = {
   readonly __typename?: "Image"
-  /** Alternative text describing the image, for screen readers */
-  readonly altText: Maybe<Scalars["String"]>
-  /** Caption displayed alongside the image */
-  readonly caption: Maybe<Scalars["String"]>
   /** When this image was created */
   readonly createdAt: Scalars["NaiveDateTime"]
   /** When this image was soft-deleted, or null if it is still live */
@@ -1316,10 +1312,6 @@ export type MutationValidateTurnstileTokenArgs = {
 
 /** Input for recording an image that has already been uploaded to S3. */
 export type NewImage = {
-  /** Alternative text describing the image, for screen readers */
-  readonly altText: InputMaybe<Scalars["String"]>
-  /** Caption displayed alongside the image */
-  readonly caption: InputMaybe<Scalars["String"]>
   /** Display name of the image */
   readonly filename: Scalars["String"]
   /** Folder to place the image in, or null for the root */
@@ -1464,8 +1456,6 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
-  /** Retrieves the IIIF image source URL of a document */
-  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /**
    * The ancestor trail of a folder path, root first, including the folder
    * itself. The empty string (the library root) has no trail.
@@ -1477,6 +1467,8 @@ export type Query = {
    * "partners.logos"; the empty string lists the root of the library.
    */
   readonly folderContents: FolderContents
+  /** Retrieves the IIIF image source URL of a document */
+  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
   /**
    * Library images referred to by the body of the page at `path`, by
    * filename. Soft-deleted images are included, since a page still pointing
@@ -1583,16 +1575,16 @@ export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryIiifSourceForDocumentMetadataArgs = {
-  documentId: Scalars["UUID"]
-}
-
 export type QueryFolderBreadcrumbsArgs = {
   path: Scalars["String"]
 }
 
 export type QueryFolderContentsArgs = {
   path: Scalars["String"]
+}
+
+export type QueryIiifSourceForDocumentMetadataArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type QueryImagesReferencedByPageArgs = {
@@ -1707,14 +1699,6 @@ export type SubjectHeadingUpdate = {
   readonly name: Scalars["String"]
 }
 
-/** Input for bulk updating collection chapter order */
-export type UpdateCollectionChapterOrderInput = {
-  /** Ordered list of chapters with their new indices */
-  readonly chapters: ReadonlyArray<ChapterOrderInput>
-  /** The slug of the collection */
-  readonly collectionSlug: Scalars["String"]
-}
-
 /**
  * Everything currently in the trash: the outermost soft-deleted folders and
  * images. Contents of a deleted folder are omitted, since restoring that folder
@@ -1726,6 +1710,14 @@ export type TrashContents = {
   readonly folders: ReadonlyArray<Folder>
   /** Soft-deleted images whose folder is the root or is still live */
   readonly images: ReadonlyArray<Image>
+}
+
+/** Input for bulk updating collection chapter order */
+export type UpdateCollectionChapterOrderInput = {
+  /** Ordered list of chapters with their new indices */
+  readonly chapters: ReadonlyArray<ChapterOrderInput>
+  /** The slug of the collection */
+  readonly collectionSlug: Scalars["String"]
 }
 
 /** Update the contributor attribution for a document */
@@ -3976,8 +3968,6 @@ export type ImageFieldsFragment = { readonly __typename?: "Image" } & Pick<
   | "sizeBytes"
   | "width"
   | "height"
-  | "altText"
-  | "caption"
   | "s3Url"
   | "scope"
 > & {
@@ -4020,8 +4010,6 @@ export type FolderContentsQuery = { readonly __typename?: "Query" } & {
         | "sizeBytes"
         | "width"
         | "height"
-        | "altText"
-        | "caption"
         | "s3Url"
         | "scope"
       > & {
@@ -4067,8 +4055,6 @@ export type SearchLibraryQuery = { readonly __typename?: "Query" } & {
         | "sizeBytes"
         | "width"
         | "height"
-        | "altText"
-        | "caption"
         | "s3Url"
         | "scope"
       > & {
@@ -4131,8 +4117,6 @@ export type ListTrashQuery = { readonly __typename?: "Query" } & {
         | "sizeBytes"
         | "width"
         | "height"
-        | "altText"
-        | "caption"
         | "s3Url"
         | "scope"
       > & {
@@ -4182,8 +4166,6 @@ export type CreateImageMutation = { readonly __typename?: "Mutation" } & {
     | "sizeBytes"
     | "width"
     | "height"
-    | "altText"
-    | "caption"
     | "s3Url"
     | "scope"
   > & {
@@ -4232,8 +4214,6 @@ export type RenameImageMutation = { readonly __typename?: "Mutation" } & {
     | "sizeBytes"
     | "width"
     | "height"
-    | "altText"
-    | "caption"
     | "s3Url"
     | "scope"
   > & {
@@ -4282,8 +4262,6 @@ export type MoveImageMutation = { readonly __typename?: "Mutation" } & {
     | "sizeBytes"
     | "width"
     | "height"
-    | "altText"
-    | "caption"
     | "s3Url"
     | "scope"
   > & {
@@ -4330,8 +4308,6 @@ export type DeleteImageMutation = { readonly __typename?: "Mutation" } & {
     | "sizeBytes"
     | "width"
     | "height"
-    | "altText"
-    | "caption"
     | "s3Url"
     | "scope"
   > & {
@@ -4583,8 +4559,6 @@ export const ImageFieldsFragmentDoc = gql`
     sizeBytes
     width
     height
-    altText
-    caption
     s3Url
     scope
     variants {

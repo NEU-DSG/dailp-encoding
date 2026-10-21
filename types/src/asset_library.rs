@@ -72,10 +72,6 @@ pub struct Image {
     pub width: i32,
     /// Pixel height of the image
     pub height: i32,
-    /// Alternative text describing the image, for screen readers
-    pub alt_text: Option<String>,
-    /// Caption displayed alongside the image
-    pub caption: Option<String>,
     /// URL that the image's bytes are served from
     pub s3_url: String,
     /// Where this image is meant to be used
@@ -153,10 +149,6 @@ pub struct NewImage {
     pub width: i32,
     /// Pixel height of the image
     pub height: i32,
-    /// Alternative text describing the image, for screen readers
-    pub alt_text: Option<String>,
-    /// Caption displayed alongside the image
-    pub caption: Option<String>,
     /// URL the uploaded bytes live at
     pub s3_url: String,
     /// Where this image is meant to be used

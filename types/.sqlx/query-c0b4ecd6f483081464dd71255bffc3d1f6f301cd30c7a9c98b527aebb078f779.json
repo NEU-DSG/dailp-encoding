@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- All images directly inside folder $1, including soft-deleted ones - callers\n-- filter out `deleted_at` rows in code. Pass null to list the root (`is not\n-- distinct from` so a null $1 matches the root's null folder_id).\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images\nwhere folder_id is not distinct from $1\norder by filename;\n",
+  "query": "-- Soft-delete an image: stamp deleted_at rather than removing the row. $1 id\nupdate images\nset deleted_at = now()\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, s3_url,\n          scope as \"scope: ImageScope\";\n",
   "describe": {
     "columns": [
       {
@@ -55,21 +55,11 @@
       },
       {
         "ordinal": 10,
-        "name": "alt_text",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 11,
-        "name": "caption",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 12,
         "name": "s3_url",
         "type_info": "Text"
       },
       {
-        "ordinal": 13,
+        "ordinal": 11,
         "name": "scope: ImageScope",
         "type_info": {
           "Custom": {
@@ -100,11 +90,9 @@
       false,
       false,
       false,
-      true,
-      true,
       false,
       false
     ]
   },
-  "hash": "efac28b240a59668c6d84fd0611e46395c73a4320ddd620b42221d3514237bb5"
+  "hash": "c0b4ecd6f483081464dd71255bffc3d1f6f301cd30c7a9c98b527aebb078f779"
 }

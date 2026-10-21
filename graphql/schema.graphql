@@ -1163,14 +1163,6 @@ type Image {
 	"""
 	height: Int!
 	"""
-	Alternative text describing the image, for screen readers
-	"""
-	altText: String
-	"""
-	Caption displayed alongside the image
-	"""
-	caption: String
-	"""
 	URL that the image's bytes are served from
 	"""
 	s3Url: String!
@@ -1657,14 +1649,6 @@ input NewImage {
 	Pixel height of the image
 	"""
 	height: Int!
-	"""
-	Alternative text describing the image, for screen readers
-	"""
-	altText: String
-	"""
-	Caption displayed alongside the image
-	"""
-	caption: String
 	"""
 	URL the uploaded bytes live at
 	"""
