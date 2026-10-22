@@ -398,6 +398,10 @@ export const palette = {
     easeInOut: "ease-in-out",
   },
 
+  /**
+   * The z-index controls how elements overlap on a page, where an element with a higher
+   * z-index will sit in front of an element with a lower z-index.
+   */
   zIndices: {
     z1: 1,
     z2: 2,
