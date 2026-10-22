@@ -1,94 +1,102 @@
 // palette.ts
 import { darken, lighten, rgba } from "polished"
 
+/**
+ * Color token naming conventions used:
+ *   hex{RRGGBB}               Solid base color, uppercase hex digits
+ *   hex{RRGGBB}_light{NN}     lighten(NN / 100, base)
+ *   hex{RRGGBB}_dark{NN}      darken(NN / 100, base)
+ *   hex{RRGGBB}_alpha{NN}     base at NN% opacity
+ */
+
 export const palette = {
   colors: {
     // Transparent
     transparent: "transparent",
 
     // White
-    white: "#ffffff", // also "white" and "#ffffffff"
-    whiteAlpha25: rgba(255, 255, 255, 0.2),
-    whiteAlpha65: rgba(255, 255, 255, 0.65),
-    offWhite: "#fbf6ec",
-    darkOffWhite: darken(0.1, "#fbf6ec"),
-    subtleWhite: "#eee",
-    luxuryWhite: "#fafafa",
+    hexFFFFFF: "#FFFFFF", // also "white" and "#ffffffff"
+    hexFFFFFF_alpha20: rgba("#FFFFFF", 0.2), // rgba(255, 255, 255, 0.2)
+    hexFFFFFF_alpha65: rgba("#FFFFFF", 0.65), // rgba(255, 255, 255, 0.65)
+    hexFBF6EC: "#FBF6EC",
+    hexFBF6EC_dark10: darken(0.1, "#FBF6EC"),
+    hexEEEEEE: "#EEEEEE",
+    hexFAFAFA: "#FAFAFA",
 
     // Black
-    black: "#000000", // also "#000000ff"
-    darkCharcoal: "#333333", // also #333
-    blackAlpha10: rgba(0, 0, 0, 0.1),
-    blackAlpha15: rgba("black", 0.15),
-    blackAlpha25: rgba(0, 0, 0, 0.25),
-    blackAlpha20: rgba(0, 0, 0, 0.2),
-    blackAlpha30: rgba(0, 0, 0, 0.3),
-    blackAlpha40: rgba(0, 0, 0, 0.4),
-    blackAlpha95: rgba("black", 0.95),
-    clayBlack: "#222d3d",
+    hex000000: "#000000", // also "#000000ff"
+    hex000000_alpha10: rgba("#000000", 0.1), // rgba(0, 0, 0, 0.1)
+    hex000000_alpha15: rgba("#000000", 0.15), // rgba("black", 0.15)
+    hex000000_alpha20: rgba("#000000", 0.2), // rgba(0, 0, 0, 0.2)
+    hex000000_alpha25: rgba("#000000", 0.25), // rgba(0, 0, 0, 0.25)
+    hex000000_alpha30: rgba("#000000", 0.3), // rgba(0, 0, 0, 0.3)
+    hex000000_alpha40: rgba("#000000", 0.4), // rgba(0, 0, 0, 0.4)
+    hex000000_alpha95: rgba("#000000", 0.95), // rgba("black", 0.95)
+    hex333333: "#333333", // also "#333"
+    hex222D3D: "#222D3D",
 
     // Gray
-    gray: "#808080", // appears as "gray" and "grey"
-    boldGray: "#666666", // also "#666"
-    chaliceGray: "#ADADAD",
-    darkGray: "darkgray", // also "#a9a9a9"
-    lightGray: "lightgray", // also "lightgrey"
-    marbleGray: "#e8e8e8ff",
-    smoothGray: "#ccc",
-    silverGrayAlpha65: rgba(207, 205, 205, 0.65),
-    offWhiteGray: "#f0f0f0",
-    offWhiteGrayAlpha90: rgba(240, 240, 240, 0.9),
-    brightGray: "#ECECEC",
-    mediumGray: "#aaa",
-    atomicGray: "#555",
-    lightSilverGray: "#e0e0e0",
-    doctorGray: "#f9f9f9",
-    gainsboroGray: "#ddd",
-    superGray: "#999",
-    sharkGray: "#6c757d",
-    brownGray: "#585858",
-    graphiteGray: "#444444",
-    colorlessGray: "#d7d7d7ff",
+    hex808080: "#808080", // also "gray" and "grey"
+    hex666666: "#666666", // also "#666"
+    hexADADAD: "#ADADAD",
+    hexA9A9A9: "#A9A9A9", // also "darkgray"
+    hexD3D3D3: "#D3D3D3", // also "lightgray" and "lightgrey"
+    hexE8E8E8: "#E8E8E8", // also "#e8e8e8ff"
+    hexCCCCCC: "#CCCCCC", // also "#ccc"
+    hexCFCDCD_alpha65: rgba("#CFCDCD", 0.65), // rgba(207, 205, 205, 0.65)
+    hexF0F0F0: "#F0F0F0",
+    hexF0F0F0_alpha90: rgba("#F0F0F0", 0.9), // rgba(240, 240, 240, 0.9)
+    hexECECEC: "#ECECEC",
+    hexAAAAAA: "#AAAAAA", // also "#aaa"
+    hex555555: "#555555", // also "#555"
+    hexE0E0E0: "#E0E0E0",
+    hexF9F9F9: "#F9F9F9",
+    hexDDDDDD: "#DDDDDD", // also "#ddd"
+    hex999999: "#999999", // also "#999"
+    hex6C757D: "#6C757D",
+    hex585858: "#585858",
+    hex444444: "#444444",
+    hexD7D7D7: "#D7D7D7", // also "#d7d7d7ff"
 
     // Blue
-    rockBlue: "#A4B3D1",
-    cosmicNavyBlue: "#405372",
-    newtonBlue: "#497CC7",
-    dartFrogBlue: "#3867AD",
-    grottoBlue: "#0771D4",
-    zenBlue: "#6F85A9",
-    seashellBlue: "#DFEFFE",
-    lagoonBlue: "#4A90E2",
-    solitudeBlue: "#e8f2ff",
-    crystalBlue: "#c6ddff",
-    lightBlue: "#C3E0EE",
+    hexA4B3D1: "#A4B3D1",
+    hex405372: "#405372",
+    hex497CC7: "#497CC7",
+    hex3867AD: "#3867AD",
+    hex0771D4: "#0771D4",
+    hex6F85A9: "#6F85A9",
+    hexDFEFFE: "#DFEFFE",
+    hex4A90E2: "#4A90E2",
+    hexE8F2FF: "#E8F2FF",
+    hexC6DDFF: "#C6DDFF",
+    hexC3E0EE: "#C3E0EE",
 
     // Brown
-    cocoaBrown: "#5C3A37",
-    nutmegBrown: "#8D6660",
-    blushBrown: "#AD7D77",
-    redBrown: "#823E2D",
+    hex5C3A37: "#5C3A37",
+    hex8D6660: "#8D6660",
+    hexAD7D77: "#AD7D77",
+    hex823E2D: "#823E2D",
 
     // Red
-    red: "red",
-    lightZuriRed: lighten(0.6, "#9d2832"),
-    darkZuriRed: darken(0.2, "#9d2832"),
-    satinRed: "#b72d3b",
-    berryRed: "#b00020",
-    maroonRed: "maroon",
+    hexFF0000: "#FF0000", // also "red"
+    hex9D2832_light60: lighten(0.6, "#9D2832"),
+    hex9D2832_dark20: darken(0.2, "#9D2832"),
+    hexB72D3B: "#B72D3B",
+    hexB00020: "#B00020",
+    hex800000: "#800000", // also "maroon"
 
     // Orange
-    goldOrange: "#E6B469",
-    lightPeachAlpha80: rgba(247, 238, 237, 0.8),
-    bisqueOrange: "#F0D6C1",
+    hexE6B469: "#E6B469",
+    hexF7EEED_alpha80: rgba("#F7EEED", 0.8), // rgba(247, 238, 237, 0.8)
+    hexF0D6C1: "#F0D6C1",
 
     // Green
-    retroGreen: "#28a745",
-    honeydewGreen: "#f0fff4",
-    apostleGreen: "#C3EEDE",
+    hex28A745: "#28A745",
+    hexF0FFF4: "#F0FFF4",
+    hexC3EEDE: "#C3EEDE",
 
     // Pink
-    blushPink: "#ffebee",
+    hexFFEBEE: "#FFEBEE",
   },
 
   fontSizes: {
@@ -359,7 +367,7 @@ export const palette = {
 
   transform: {
     scale1_02: "scale(1.02)",
-    scale1_03: "scale(1.03)", // could replace scale: 1.03 with transform: s1_03
+    scale1_03: "scale(1.03)",
     translateYNeg3px: "translateY(-3px)",
   },
 
