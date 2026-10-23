@@ -30,6 +30,11 @@ in {
     ./outbound-lambda.nix
   ];
 
+  variable.turnstile_site_key = {
+    type = "string";
+    sensitive = true;
+  };
+
   module.backups_bucket = {
     source = "${./backups}";
     env_prefix = "dailp-${stage}";
