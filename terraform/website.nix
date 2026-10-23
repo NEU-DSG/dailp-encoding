@@ -3,7 +3,7 @@
 with lib;
 with builtins; 
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
   config.resource = {
     aws_iam_role.amplify_role = {
@@ -69,7 +69,7 @@ in {
             TF_STAGE = config.setup.stage;
             VITE_DEPLOYMENT_ENV = config.setup.stage;
             CF_URL = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
-            TURNSTILE_SITE_KEY = builtins.getEnv "TURNSTILE_SITE_KEY";
+            TURNSTILE_SITE_KEY = "\${var.turnstile_site_key}";
           };
           frontend = {
             artifacts = {

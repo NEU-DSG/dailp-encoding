@@ -30,6 +30,11 @@ in {
     ./outbound-lambda.nix
   ];
 
+  variable.turnstile_site_key = {
+    type = "string";
+    sensitive = true;
+  };
+
   module.backups_bucket = {
     source = "${./backups}";
     env_prefix = "dailp-${stage}";
@@ -57,7 +62,7 @@ in {
     # for the current environment.
     # Use dev bucket for uat
     state = let 
-      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else base: "dailp-${config.setup.stage}-${base}";
     in {
       bucket = prefixName "terraform-state-bucket";
       table = prefixName "terraform-state-locks";
@@ -94,7 +99,7 @@ in {
 
   functions = 
   let 
-    prefixName = import ./utils.nix { stage = config.setup.stage; };
+    prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
   in {
     bucket = prefixName "functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];

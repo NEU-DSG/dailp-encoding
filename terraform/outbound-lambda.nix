@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   inherit (builtins) getEnv toJSON;
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
 in {
   # Turnstile siteverify proxy. Deliberately has NO vpc_config: it runs in
   # the Lambda-managed network, which has direct outbound internet access,
