@@ -8,7 +8,7 @@ import {
   radii,
   rootFontSize,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { closeButton } from "./morpheme.css"
 import { marginX, paddingX, paddingY } from "./style/utils"
 

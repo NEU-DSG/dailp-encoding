@@ -6,7 +6,7 @@ import {
   radii,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { hideOnPrint } from "src/style/utils.css"
 
 export const accountMenuDisclosure = style([

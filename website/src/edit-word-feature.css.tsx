@@ -7,7 +7,7 @@ import {
   hspace,
   radii,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { paddingX, paddingY } from "src/style/utils"
 
 export const form = style({

@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { vspace } from "src/style/constants"
+import { vspace } from "src/style/design-tokens"
 import { fullWidth, paddedWidth } from "src/style/utils.css"
 
 export const apaCitation = style({

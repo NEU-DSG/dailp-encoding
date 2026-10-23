@@ -6,7 +6,7 @@ import {
   radii,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { onFocus, onHover } from "src/style/utils"
 import { centeredColumn, edgePadded, fullWidth } from "src/style/utils.css"
 

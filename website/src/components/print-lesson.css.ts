@@ -5,8 +5,13 @@ import {
   style,
 } from "@vanilla-extract/css"
 import { important, margin } from "polished"
-import { colors, mediaQueries, thickness, vspace } from "src/style/constants"
-import { hsize } from "src/style/constants"
+import {
+  colors,
+  mediaQueries,
+  thickness,
+  vspace,
+} from "src/style/design-tokens"
+import { hsize } from "src/style/design-tokens"
 import { media } from "src/style/utils"
 
 // Parent class defining a Wordpress page.
