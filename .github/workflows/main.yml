@@ -1,0 +1,116 @@
+name: Infrastructure Deployment
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
+on:
+  release:
+    types: [released, prereleased]
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/README.md"
+      - "**/readme.md"
+      - "doc/**/*.md"
+
+concurrency:
+  group: infra-${{ github.ref }}
+  # Cancelling terraform deployments will screw up terraform's own locking mechanism
+  cancel-in-progress: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    environment: ${{ github.event_name == 'release' && ( github.event.action == 'released' && 'Production' || 'Development') || 'Development' }}
+    env:
+      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
+      # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
+      #
+      # Selected per stage, because the bastions genuinely live in different
+      # subnets (dev subnet-08452f5a8b4ff8085, uat subnet-0a39453d94ed889d6) and
+      # uat shares the Development environment with dev -- so a single secret
+      # would declare uat's bastion in dev's subnet and force its replacement on
+      # the next prerelease apply, which is auto-approved. Matches the
+      # DATABASE_PASSWORD selection above; job-level env cannot read
+      # env.TF_STAGE, hence the repeated event expression rather than the
+      # step-level form used for BASTION_ID below.
+      AWS_SUBNET_BASTION: ${{ github.event.action == 'prereleased' && secrets.UAT_AWS_SUBNET_BASTION || secrets.AWS_SUBNET_BASTION }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
+      TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Push to release branch
+        if: ${{ github.event_name == 'release' }}
+        uses: ad-m/github-push-action@master
+        with:
+          branch: ${{ github.event.action == 'prereleased' && 'uat' || 'release' }}
+          force: true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            backend:
+              - 'types/**'
+              - 'graphql/**'
+              - 'flake.nix'
+              - 'flake.lock'
+              - 'terraform/**'
+            data:
+              - 'types/**'
+              - 'migration/**'
+              - 'graphql/**'
+            rust:
+              - '**/*.rs'
+              - 'Cargo.lock'
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-21.11
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v12
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Build and test project
+        # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+        run: |
+          nix build --impure -L
+      # This stage of the output used to include applying Terraform
+      # and running the database migrations before publishing the
+      # frontend. These actions are running on other triggers for now;
+      # if you want to see what actions used to happen here check
+      # commit 285bd38c4b58088463bbbc4dfc737728f69f5018
+      - name: Publish website
+        run: |
+          curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"

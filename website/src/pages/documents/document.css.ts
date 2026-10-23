@@ -174,9 +174,9 @@ export const morphemeDialogBackdrop = style({
 
 export const annotatedDocument = style({
   alignItems: "center",
-  "@media": {
-    [mediaQueries.medium]: paddingX(hspace.edge),
-  },
+  width: "72%",
+  marginLeft: "auto",
+  marginRight: "auto",
 })
 
 export const audioContainer = style([
