@@ -17,6 +17,7 @@ jobs:
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
       TF_VAR_aws_subnet_primary: ${{ secrets.AWS_SUBNET_PRIMARY }}
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      TF_VAR_availability_zone_primary: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       TF_VAR_aws_subnet_secondary: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}

@@ -31,6 +31,7 @@ in {
   ];
 
   variable = {
+    availability_zone_primary = { type = "string"; };
     aws_vpc_id = { type = "string"; };
     aws_subnet_primary = { type = "string"; };
     aws_subnet_secondary = { type = "string"; };
@@ -129,7 +130,7 @@ in {
 
   servers.database = {
     password = "\${var.database_password}";
-    availability_zone = getEnv "AWS_ZONE_PRIMARY";
+    availability_zone = "\${var.availability_zone_primary}";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
 
