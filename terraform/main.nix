@@ -50,7 +50,7 @@ in {
     };
   };
   locals = {
-    stage = "\${var.tf_stage == \"\" || var.tf_stage == \"local\" ? \"dev\" : var.tf_stage}"
+    stage = "\${var.tf_stage == \"\" || var.tf_stage == \"local\" ? \"dev\" : var.tf_stage}";
   };
 
   module.backups_bucket = {
