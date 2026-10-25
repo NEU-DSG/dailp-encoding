@@ -28,6 +28,8 @@ jobs:
       AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
       TF_VAR_aws_subnet_bastion: ${{ secrets.AWS_SUBNET_BASTION }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TF_VAR_turnstile_secret_key: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TF_VAR_turnstile_site_key: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info

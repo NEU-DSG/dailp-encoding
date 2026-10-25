@@ -36,6 +36,11 @@ in {
     aws_subnet_secondary = { type = "string"; };
     aws_subnet_tertiary = { type = "string"; };
     aws_subnet_bastion = { type = "string"; };
+    turnstile_site_key = { type = "string"; };
+    turnstile_secret_key = {
+      type = "string";
+      sensitive = true;
+    };
   };
 
   module.backups_bucket = {
@@ -92,7 +97,7 @@ in {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
-        TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
+        TURNSTILE_SECRET_KEY = "\${var.turnstile_secret_key}";
         OUTBOUND_LAMBDA_NAME = "\${aws_lambda_function.outbound_turnstile.function_name}";
       };
       endpoints = [
