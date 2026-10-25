@@ -30,6 +30,7 @@ in {
   ];
 
   variable = {
+    tf_stage = { type = "string"; };
     availability_zone_primary = { type = "string"; };
     aws_vpc_id = { type = "string"; };
     aws_subnet_primary = { type = "string"; };
@@ -48,10 +49,13 @@ in {
       sensitive = true;
     };
   };
+  locals = {
+    stage = "\${var.tf_stage == \"\" || var.tf_stage == \"local\" ? \"dev\" : var.tf_stage}"
+  };
 
   module.backups_bucket = {
     source = "${./backups}";
-    env_prefix = "dailp-${stage}";
+    env_prefix = "dailp-\${local.stage}";
   };
 
   # Gives all modules access to which stage we're deploying to, while also

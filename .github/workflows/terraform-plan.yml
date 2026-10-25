@@ -36,6 +36,7 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
+      TF_VAR_tf_stage: dev
       # terraform/import.nix renders the bastion's import block from this, so
       # without it PR plans carry `import { id = "" }` and cannot show a bastion
       # diff at all -- which makes this job useless as the review gate for any
