@@ -100,7 +100,7 @@ in {
 
   functions = 
   let 
-    prefixName = import ./utils.nix { stage = config.setup.stage; };
+    prefixName = (let hide = true && (config.setup.stage) == "prod"; in base: "dailp${if hide then "" else "-${(config.setup.stage)}"}-${base}");
   in {
     bucket = prefixName "functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
