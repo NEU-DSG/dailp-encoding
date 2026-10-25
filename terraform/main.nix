@@ -44,6 +44,10 @@ in {
       type = "string";
       sensitive = true;
     };
+    oauth_token = {
+      type = "string";
+      sensitive = true;
+    };
     database_password = {
       type = "string";
       sensitive = true;

@@ -34,6 +34,7 @@ jobs:
       TF_VAR_turnstile_site_key: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      TF_VAR_oath_token: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
       TF_VAR_tf_stage: dev
