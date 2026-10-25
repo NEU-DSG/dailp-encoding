@@ -72,11 +72,11 @@ in {
     };
     vpc = "\${var.aws_vpc_id}";
     subnets = {
-      primary = "\${TF_VAR_aws_subnet_primary}";
-      secondary = "\${TF_VAR_aws_subnet_secondary}";
-      tertiary = "\${TF_VAR_aws_subnet_tertiary}";
+      primary = "\${var.aws_subnet_primary}";
+      secondary = "\${var.aws_subnet_secondary}";
+      tertiary = "\${var.aws_subnet_tertiary}";
     };
-    bastion_subnet = "\${TF_VAR_aws_subnet_bastion}";
+    bastion_subnet = "\${var.aws_subnet_bastion}";
   };
 
   functions = 
