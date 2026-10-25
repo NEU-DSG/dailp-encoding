@@ -11,9 +11,8 @@
 # - File names in this folder should be "kebab-case.nix"
 let
   inherit (builtins) getEnv;
-  stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" || stage_var == "local" then "dev" else stage_var;
+  stage = if (getEnv "TF_STAGE") == "" || (getEnv "TF_STAGE") == "local" then "dev" else (getEnv "TF_STAGE");
 in {
   imports = [
     ./bootstrap.nix
