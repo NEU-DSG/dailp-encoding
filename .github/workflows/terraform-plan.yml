@@ -35,7 +35,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       TF_VAR_git_repository_url: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
-      TF_VAR_oath_token: ${{ secrets.OAUTH_TOKEN }}
+      TF_VAR_oauth_token: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
       TF_VAR_tf_stage: dev
