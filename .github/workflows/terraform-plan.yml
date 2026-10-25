@@ -41,6 +41,7 @@ jobs:
       # diff at all -- which makes this job useless as the review gate for any
       # change to terraform/bastion-host.nix.
       BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      TF_VAR_bastion_id: ${{ secrets.DEV_EC2_INSTANCE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

@@ -37,6 +37,8 @@ in {
     aws_subnet_secondary = { type = "string"; };
     aws_subnet_tertiary = { type = "string"; };
     aws_subnet_bastion = { type = "string"; };
+    bastion_id = { type = "string"; };
+
     turnstile_site_key = { type = "string"; };
     turnstile_secret_key = {
       type = "string";
