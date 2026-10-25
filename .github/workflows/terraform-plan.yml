@@ -10,6 +10,7 @@ jobs:
         deployment: false
     env:
       DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      TF_VAR_database_password: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       TF_VAR_aws_vpc_id: ${{ secrets.AWS_VPC_ID }}

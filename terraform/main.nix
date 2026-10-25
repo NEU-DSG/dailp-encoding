@@ -41,6 +41,10 @@ in {
       type = "string";
       sensitive = true;
     };
+    database_password = {
+      type = "string";
+      sensitive = true;
+    };
   };
 
   module.backups_bucket = {
@@ -124,7 +128,7 @@ in {
   };
 
   servers.database = {
-    password = getEnv "DATABASE_PASSWORD";
+    password = "\${var.database_password}";
     availability_zone = getEnv "AWS_ZONE_PRIMARY";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
