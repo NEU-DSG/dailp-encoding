@@ -98,15 +98,12 @@ in {
     bastion_subnet = "\${var.aws_subnet_bastion}";
   };
 
-  functions = 
-  let 
-    prefixName = (let hide = true && (config.setup.stage) == "prod"; in base: "dailp${if hide then "" else "-${(config.setup.stage)}"}-${base}");
-  in {
-    bucket = prefixName "functions-bucket";
+  functions = {
+    bucket = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-functions-bucket");
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = prefixName "graphql";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-graphql");
       env = {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
