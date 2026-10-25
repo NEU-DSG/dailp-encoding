@@ -12,10 +12,14 @@ jobs:
       DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      TF_VAR_aws_vpc_id: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      TF_VAR_aws_subnet_primary: ${{ secrets.AWS_SUBNET_PRIMARY }}
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      TF_VAR_aws_subnet_secondary: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      TF_VAR_aws_subnet_tertiary: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
       # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
       # No per-stage selection here: this job resolves to a single stage whose
