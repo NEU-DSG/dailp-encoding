@@ -80,10 +80,7 @@ in {
     # for the current environment.
     # Use dev bucket for uat
     state = {
-      bucket =
-          if config.setup.stage == "uat"
-	  then "dailp-dev-terraform-state-bucket"
-	  else "dailp${"-${config.setup.stage}"}-terraform-state-bucket";
+      bucket = "\${ local.stage == \"uat\" ?  \"dailp-dev-terraform-state-bucket\" : \"dailp-\${config.setup.stage}-terraform-state-bucket\" }";
       table =
           if config.setup.stage == "uat"
 	  then "dailp-dev-terraform-state-locks"
