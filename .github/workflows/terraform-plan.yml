@@ -26,6 +26,7 @@ jobs:
       # environment scopes the secret (cf. main.yml, where uat shares dev's
       # environment and therefore needs UAT_AWS_SUBNET_BASTION).
       AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
+      TF_VAR_aws_subnet_bastion: ${{ secrets.AWS_SUBNET_BASTION }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
