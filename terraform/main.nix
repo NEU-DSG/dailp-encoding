@@ -38,9 +38,14 @@ in {
     aws_subnet_tertiary = { type = "string"; };
     aws_subnet_bastion = { type = "string"; };
     bastion_id = { type = "string"; };
+    git_repository_url = { type = "string"; };
 
     turnstile_site_key = { type = "string"; };
     turnstile_secret_key = {
+      type = "string";
+      sensitive = true;
+    };
+    oauth_token = {
       type = "string";
       sensitive = true;
     };
