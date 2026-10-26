@@ -89,7 +89,7 @@ in {
     enabled = true;
     instance_type = "t4g.micro";
 
-    ami = "\${ local.stage == \"prod\" ? \"ami-037d882b31eae26a2\" : ( local.stage == \"uat\" ? \"ami-03190fe20ef6b1419\" : \"ami-0c2fab8ab93985c9b\" }"
+    ami = "\${ local.stage == \"prod\" ? \"ami-037d882b31eae26a2\" : ( local.stage == \"uat\" ? \"ami-03190fe20ef6b1419\" : \"ami-0c2fab8ab93985c9b\" }";
 
     # Headroom, not a compatibility requirement. The module default is 8 GiB and
     # the AL2023 arm64 snapshots are also 8 GiB, so the "cannot be smaller than
