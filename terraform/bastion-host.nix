@@ -89,10 +89,7 @@ in {
     enabled = true;
     instance_type = "t4g.micro";
 
-    # Dynamic attribute select rather than an if/else chain: setup.stage is an
-    # enum (see ./bootstrap.nix), so a stage with no pinned ami is an eval
-    # error instead of silently falling through to dev's image.
-    ami = amis.${config.setup.stage};
+    ami = "\${ local.stage == \"prod\" ? \"ami-037d882b31eae26a2\" : ( local.stage == \"uat\" ? \"ami-03190fe20ef6b1419\" : \"ami-0c2fab8ab93985c9b\" }"
 
     # Headroom, not a compatibility requirement. The module default is 8 GiB and
     # the AL2023 arm64 snapshots are also 8 GiB, so the "cannot be smaller than
@@ -110,7 +107,7 @@ in {
 
     # ID will be constructed from these namespace, stage, and name for some reason.
     namespace = "dailp";
-    stage = config.setup.stage;
+    stage = "\${local.stage}";
     name = "bastion";
 
     key_name = "dailp-dev-2024";
