@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }: 
-let 
-  
-in {
+{
   options.servers.database = with lib;
     with types; {
       availability_zone = mkOption { type = str; };

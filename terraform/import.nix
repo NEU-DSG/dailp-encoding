@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }:
-let 
-  
-in {
+{
   config.import = [
     {
       to = "module.bastion_host.aws_iam_role.default[0]";

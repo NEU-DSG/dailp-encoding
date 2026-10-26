@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }:
-let 
-  
-in {
+{
   config.resource = {
     aws_iam_role.lambda_exec = {
       name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-lambda-execution");

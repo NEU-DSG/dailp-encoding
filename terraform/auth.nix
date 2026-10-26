@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }:
-let 
-  
-in {
+{
   config.resource = {
     # User Pool Setup
     aws_cognito_user_pool.main = {

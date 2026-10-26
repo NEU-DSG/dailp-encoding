@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }:
-let
-  
-in {
+{
   # Turnstile siteverify proxy. Deliberately has NO vpc_config: it runs in
   # the Lambda-managed network, which has direct outbound internet access,
   # so it can reach Cloudflare without a NAT gateway.

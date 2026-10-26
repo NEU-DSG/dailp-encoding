@@ -1,6 +1,4 @@
-{ config, lib, pkgs, ...} : let 
-  
-in {
+{ config, lib, pkgs, ...} : {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
     name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-media-storage.s3.${config.provider.aws.region}.amazonaws.com");
