@@ -128,17 +128,17 @@ in {
       dailp_user = {
         assume_role_policy = trust-policy;
         description = "A basic unauthenticated DAILP user";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user");
       };
       dailp_user_contributor = {
         assume_role_policy = authed-trust-policy;
         description = "A DAILP user with basic read/update permissions.";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-contributor");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-contributor");
       };
       dailp_user_editor = {
         assume_role_policy = authed-trust-policy;
         description = "A user with editorial permissions on DAILP";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-editor");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-editor");
       };
     };
     # Bind permissions policies to roles
