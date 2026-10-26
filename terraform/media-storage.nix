@@ -26,7 +26,7 @@
     aws_s3_bucket_logging.media_storage_logging = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/${if config.setup.stage == "uat" then "dailp-dev" else "dailp-${config.setup.stage}"}-media-storage";
+      target_prefix = "/\${local.stage == \"uat\" ? \"dailp-dev\" : \"dailp-\${local.stage}\"}-media-storage";
     };
     aws_s3_bucket_server_side_encryption_configuration.media_storage_encryption = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
