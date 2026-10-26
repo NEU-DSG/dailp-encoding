@@ -449,7 +449,7 @@
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
           ${tf} plan -out=tfplan
-          ${tf} show -json tfplan
+          ${tf} show -json tfplan | jq
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
