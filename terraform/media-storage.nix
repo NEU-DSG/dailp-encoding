@@ -93,11 +93,7 @@
       effect = "Allow";
       principals = {
         type = "AWS";
-        identifiers = 
-          if config.setup.stage == "dev" then 
-            [ "arn:aws:iam::783177801354:user/dailp-deployment" ]
-          else
-            [ "arn:aws:iam::363539660090:user/dialp-deployment" ];
+        identifiers = [ "\${ local.stage == \"dev\" ? \"arn:aws:iam::783177801354:user/dailp-deployment\" : \"arn:aws:iam::363539660090:user/dialp-deployment\" }" ];
       };
       actions = [
         "s3:GetObject"
@@ -132,11 +128,7 @@
         type = "AWS";
         # Role name from the module output so it tracks namespace/stage/name;
         # account id hardcoded per stage, matching the deploy principal above.
-        identifiers =
-          if config.setup.stage == "dev" then
-            [ "arn:aws:iam::783177801354:role/$\{module.bastion_host.role}" ]
-          else
-            [ "arn:aws:iam::363539660090:role/$\{module.bastion_host.role}" ];
+        identifiers = [ "\${ local.stage == \"dev\" ? \"arn:aws:iam::783177801354:role/$\{module.bastion_host.role}\" : \"arn:aws:iam::363539660090:role/$\{module.bastion_host.role}\" }" ];
       };
       actions = [
         "s3:PutObject"
