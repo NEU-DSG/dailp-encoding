@@ -5,7 +5,7 @@ with builtins;
 {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-amplify-role");
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-amplify-role");
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";
@@ -32,7 +32,7 @@ with builtins;
       let apiUrl = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
-        name = "dailp${if config.setup.stage == "prod" then "" else "-${config.setup.stage}"}";
+        name = "dailp\${local.stage == \"prod\" ? \"\" : \"-\${local.stage}\"}"
         description = "Digital Archive of Indigenous Language Persistence";
         repository = "\${var.git_repository_url}";
         oauth_token = "\${var.oauth_token}";
