@@ -14,7 +14,7 @@
           
           Your confirmation code is {####}. Please enter this code on the confirmation page.
           
-          You can access the confirmation page at https://''${(local.stage == "prod" ? "" : (local.stage + "."))}dailp.northeastern.edu/auth/confirmation
+          You can access the confirmation page at https://''${(local.stage == "prod" ? "" : "''${local.stage}.")}dailp.northeastern.edu/auth/confirmation
         '';
       };
     };
