@@ -68,7 +68,7 @@
     aws_api_gateway_stage.functions_api_stage = {
       deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
-      stage_name = config.setup.stage;
+      stage_name = "\${ local.stage }";
     };
   };
 

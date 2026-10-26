@@ -8,17 +8,16 @@
       tags = mkOption { type = attrsOf str; };
     };
 
-  config.resource = let name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-database");
-  in {
+  config.resource = {
     aws_db_subnet_group.sql_database = {
-      name = name;
+      name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database");
       subnet_ids = lib.attrValues config.setup.subnets;
       tags = { Name = "Subnet Group for DAILP"; };
       lifecycle.create_before_destroy = true;
     };
 
     aws_db_instance.sql_database = {
-      identifier = "${name}-primary";
+      identifier = "\${(\"dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database\")}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
       storage_type = "gp2";
@@ -38,9 +37,9 @@
       publicly_accessible = false;
       multi_az = false;
       availability_zone = config.servers.database.availability_zone;
-      db_subnet_group_name = name;
+      db_subnet_group_name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database");
       vpc_security_group_ids = config.servers.database.security_group_ids;
-      final_snapshot_identifier = "${name}-primary-final-snapshot";
+      final_snapshot_identifier = "\${(\"dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database\")}-primary-final-snapshot";
       backup_retention_period = 14;
       backup_window = "07:00-07:59";
 

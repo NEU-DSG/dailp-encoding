@@ -32,7 +32,7 @@ with builtins;
       let apiUrl = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
-        name = "dailp${if config.setup.stage == "prod" then "" else "-${config.setup.stage}"}";
+        name = "dailp\${local.stage == \"prod\" ? \"\" : \"-\${local.stage}\"}";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = "\${var.git_repository_url}";
         oauth_token = "\${var.oauth_token}";
@@ -96,15 +96,11 @@ with builtins;
         };
       };
 
-    aws_amplify_branch = let
-      branchName = if config.setup.stage == "dev" then "main" else if config.setup.stage == "uat" then "uat" else "release";
-      stageName =
-        if config.setup.stage == "prod" then "PRODUCTION" else "DEVELOPMENT";
-    in {
+    aws_amplify_branch = {
       current_stage = {
         app_id = "\${aws_amplify_app.dailp.id}";
-        branch_name = branchName;
-        stage = stageName;
+        branch_name = "\${ local.stage == \"dev\" ? \"main\" : ( local.stage == \"uat\" ? \"uat\" : \"release\" ) }";
+        stage = "\${ local.stage == \"prod\" ? \"PRODUCTION\" : \"DEVELOPMENT\" }";
         enable_auto_build = false;
         enable_pull_request_preview = true;
         framework = "Web";
@@ -114,9 +110,7 @@ with builtins;
 
     aws_amplify_domain_association.current_stage_domain = {
       app_id = "\${aws_amplify_app.dailp.id}";
-      domain_name = let 
-        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
-      in "${subdomain}dailp.northeastern.edu";
+      domain_name = "\${ local.stage == \"prod\" ? \"\" : \"\${local.stage}.\"}dailp.northeastern.edu";
       sub_domain = {
         branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
         prefix = "";
