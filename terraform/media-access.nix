@@ -1,7 +1,7 @@
 { config, lib, pkgs, ...} : {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
-    name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-media-storage.s3.\${config.provider.aws.region}.amazonaws.com");
+    name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-media-storage.s3.${config.provider.aws.region}.amazonaws.com");
     description = "Cloudfront DAILP media access";
     origin_access_control_origin_type = "s3";
     signing_behavior = "always";
