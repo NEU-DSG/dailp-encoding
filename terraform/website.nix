@@ -110,7 +110,7 @@ with builtins;
 
     aws_amplify_domain_association.current_stage_domain = {
       app_id = "\${aws_amplify_app.dailp.id}";
-      domain_name = "\${ local.stage == \"prod\" ? \"\" : (local.stage + \".\")}dailp.northeastern.edu";
+      domain_name = "\${ local.stage == \"prod\" ? \"\" : \"\${local.stage}.\"}dailp.northeastern.edu";
       sub_domain = {
         branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
         prefix = "";
