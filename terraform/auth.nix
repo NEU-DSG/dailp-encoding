@@ -21,7 +21,7 @@
       };
     };
     aws_cognito_user_pool_client.main = {
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-pool-client");
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-user-pool-client");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       allowed_oauth_flows = [ "implicit" ];
       allowed_oauth_flows_user_pool_client = true;
@@ -34,7 +34,7 @@
       supported_identity_providers = [ "COGNITO" ];
     };
     aws_cognito_user_pool_domain.main = {
-      domain = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}");
+      domain = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
 
@@ -57,7 +57,7 @@
   };
   # Identity Pool
   aws_cognito_identity_pool.main = {
-    identity_pool_name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-identities");
+    identity_pool_name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-user-identities");
     allow_unauthenticated_identities = true; 
     cognito_identity_providers = {
       client_id = "\${aws_cognito_user_pool_client.main.id}";
