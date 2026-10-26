@@ -5,7 +5,7 @@ with builtins;
 {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-amplify-role");
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-amplify-role");
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";
