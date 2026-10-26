@@ -105,17 +105,17 @@ in {
     aws_iam_policy = {
       dailp_basic_user_policy = {
         policy = "$\{data.aws_iam_policy_document.basic_user_policy.json}";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-basic-user-policy");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-basic-user-policy");
         description = "Allows minimal S3 read permissions for unauthenticated users.";
       };
       dailp_editor_policy = {
         policy = "$\{data.aws_iam_policy_document.editor_user_policy.json}";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-editor-policy");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-editor-policy");
         description = "A policy giving editors permission to read and write to DAILPs S3 media bucket";
       };
       dailp_user_contributor_policy = {
         policy = "$\{data.aws_iam_policy_document.contributor_user_policy.json}";
-        name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-contributor-policy");
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-contributor-policy");
         description = "Permissions for DAILP users at the Contributor level.";
       };
     };
