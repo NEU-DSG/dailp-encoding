@@ -104,13 +104,13 @@ in {
   };
 
   functions = {
-    bucket = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-functions-bucket");
+    bucket = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-${local.stage}\"}-functions-bucket");
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-graphql");
+      name = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-${local.stage}\"}-graphql");
       env = {
-        VITE_DEPLOYMENT_ENV = config.setup.stage;
+        VITE_DEPLOYMENT_ENV = "\${local.stage}";
         DATABASE_URL =
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
         TURNSTILE_SECRET_KEY = "\${var.turnstile_secret_key}";
