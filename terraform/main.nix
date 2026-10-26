@@ -104,11 +104,11 @@ in {
   };
 
   functions = {
-    bucket = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-${local.stage}\"}-functions-bucket");
+    bucket = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-\${local.stage}\"}-functions-bucket");
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-${local.stage}\"}-graphql");
+      name = ("dailp\${if (local.stage == \"prod\") then \"\" else \"-\${local.stage}\"}-graphql");
       env = {
         VITE_DEPLOYMENT_ENV = "\${local.stage}";
         DATABASE_URL =
