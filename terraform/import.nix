@@ -1,17 +1,19 @@
 { config, lib, pkgs, ... }:
-{
+let 
+  prefixName = base: "dailp${if (config.setup.stage == "prod") then "" else "-${config.setup.stage}"}-${base}";
+in {
   config.import = [
     {
       to = "module.bastion_host.aws_iam_role.default[0]";
-      id = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion");
+      id = "${prefixName "bastion"}";
     }
     {
       to = "module.bastion_host.aws_iam_role_policy.main[0]";
-      id = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion}:${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion");
+      id = "${prefixName "bastion"}:${prefixName "bastion"}";
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";
-      id = "\${var.bastion_id}";
+      id = builtins.getEnv "BASTION_ID";
     }
   ];
 }

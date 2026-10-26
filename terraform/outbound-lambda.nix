@@ -6,7 +6,7 @@
   resource.aws_lambda_function.outbound_turnstile = {
     lifecycle.prevent_destroy = false;
     lifecycle.create_before_destroy = true;
-    function_name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-outbound-turnstile");
+    function_name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-outbound-turnstile");
     filename = "${config.functions.package_path}/dailp-outbound.zip";
     runtime = "provided.al2";
     architectures = [ "x86_64" ];

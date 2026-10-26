@@ -60,14 +60,14 @@
     };
 
     aws_security_group.nixos_test = {
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-nixos-test");
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-nixos-test");
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-mongodb-access");
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-mongodb-access");
       vpc_id = config.setup.vpc;
       description = "Access DAILP MongoDB servers";
       ingress = [ ];
