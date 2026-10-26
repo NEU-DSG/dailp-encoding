@@ -32,7 +32,7 @@ with builtins;
       let apiUrl = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
-        name = "dailp\${local.stage == \"prod\" ? \"\" : \"-\${local.stage}\"}";
+        name = "dailp${if config.setup.stage == "prod" then "" else "-${config.setup.stage}"}";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = "\${var.git_repository_url}";
         oauth_token = "\${var.oauth_token}";
