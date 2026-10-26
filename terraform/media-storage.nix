@@ -3,9 +3,7 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = let 
-        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-      in prefixName "media-storage";
+      bucket = if config.setup.stage == "uat" then "dailp-dev-media-storage" else "dailp${"-${config.setup.stage}"}-media-storage";
       lifecycle.prevent_destroy = true;
     };
     aws_s3_bucket_cors_configuration.media_storage_cors = {
@@ -28,7 +26,7 @@
     aws_s3_bucket_logging.media_storage_logging = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/dailp-${config.setup.stage}-media-storage";
+      target_prefix = "/${if config.setup.stage == "uat" then "dailp-dev" else "dailp-${config.setup.stage}"}-media-storage";
     };
     aws_s3_bucket_server_side_encryption_configuration.media_storage_encryption = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";

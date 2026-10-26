@@ -1,10 +1,10 @@
 { config, lib, pkgs, ... }:
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   config.resource = {
     aws_iam_role.lambda_exec = {
-      name = prefixName "lambda-execution";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-lambda-execution");
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
@@ -33,7 +33,7 @@ in {
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
     aws_api_gateway_rest_api.functions_api = {
-      name = prefixName "api";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-api");
       description = "DAILP API for GraphQL endpoints and REST endpoints";
       lifecycle.prevent_destroy = false;
     };

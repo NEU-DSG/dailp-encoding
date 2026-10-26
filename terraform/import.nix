@@ -1,15 +1,15 @@
 { config, lib, pkgs, ... }:
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   config.import = [
     {
       to = "module.bastion_host.aws_iam_role.default[0]";
-      id = "${prefixName "bastion"}";
+      id = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion");
     }
     {
       to = "module.bastion_host.aws_iam_role_policy.main[0]";
-      id = "${prefixName "bastion"}:${prefixName "bastion"}";
+      id = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion}:${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-bastion";
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";

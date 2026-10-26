@@ -3,11 +3,11 @@
 with lib;
 with builtins; 
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = prefixName "amplify-role";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-amplify-role");
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";

@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   config.resource = {
     # User Pool Setup
@@ -23,7 +23,7 @@ in {
       };
     };
     aws_cognito_user_pool_client.main = {
-      name = prefixName "user-pool-client";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-pool-client");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       allowed_oauth_flows = [ "implicit" ];
       allowed_oauth_flows_user_pool_client = true;
@@ -38,7 +38,7 @@ in {
     aws_cognito_user_pool_domain.main = {
       domain = 
       let
-        buildUri = prefixName "-";
+        buildUri = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-");
         cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
       in cleanUri buildUri;
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
@@ -63,7 +63,7 @@ in {
   };
   # Identity Pool
   aws_cognito_identity_pool.main = {
-    identity_pool_name = prefixName "user-identities";
+    identity_pool_name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-user-identities");
     allow_unauthenticated_identities = true; 
     cognito_identity_providers = {
       client_id = "\${aws_cognito_user_pool_client.main.id}";

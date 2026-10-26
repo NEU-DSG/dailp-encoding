@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   # Turnstile siteverify proxy. Deliberately has NO vpc_config: it runs in
   # the Lambda-managed network, which has direct outbound internet access,
@@ -8,7 +8,7 @@ in {
   resource.aws_lambda_function.outbound_turnstile = {
     lifecycle.prevent_destroy = false;
     lifecycle.create_before_destroy = true;
-    function_name = prefixName "outbound-turnstile";
+    function_name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-outbound-turnstile");
     filename = "${config.functions.package_path}/dailp-outbound.zip";
     runtime = "provided.al2";
     architectures = [ "x86_64" ];

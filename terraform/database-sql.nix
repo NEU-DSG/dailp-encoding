@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }: 
 let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
+  
 in {
   options.servers.database = with lib;
     with types; {
@@ -10,7 +10,7 @@ in {
       tags = mkOption { type = attrsOf str; };
     };
 
-  config.resource = let name = prefixName "database";
+  config.resource = let name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-database");
   in {
     aws_db_subnet_group.sql_database = {
       name = name;
@@ -62,14 +62,14 @@ in {
     };
 
     aws_security_group.nixos_test = {
-      name = prefixName "nixos-test";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-nixos-test");
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = prefixName "mongodb-access";
+      name = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-mongodb-access");
       vpc_id = config.setup.vpc;
       description = "Access DAILP MongoDB servers";
       ingress = [ ];
