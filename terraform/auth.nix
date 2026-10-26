@@ -34,11 +34,7 @@
       supported_identity_providers = [ "COGNITO" ];
     };
     aws_cognito_user_pool_domain.main = {
-      domain = 
-      let
-        buildUri = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}-");
-        cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
-      in cleanUri buildUri;
+      domain = ("dailp${if ((config.setup.stage) == "prod") then "" else "-${(config.setup.stage)}"}");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
 
