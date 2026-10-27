@@ -72,7 +72,9 @@
     };
   };
 
-  config.output.functions_url = {
-    value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
+  config.output = {
+    functions_url = {
+      value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
+    };
   };
 }

@@ -85,10 +85,12 @@
     };
   };
 
-  config.output.database_address = {
-    value = "\${aws_db_instance.sql_database.address}";
-  };
-  config.output.access_security_group_id = {
-    value = "\${aws_security_group.nixos_test.id}";
+  config.output = {
+    database_address = {
+      value = "\${aws_db_instance.sql_database.address}";
+    };
+    access_security_group_id = {
+      value = "\${aws_security_group.nixos_test.id}";
+    };
   };
 }

@@ -52,7 +52,9 @@ config.resource = {
   };
 };
   # Output the distribution URL for use in backend logic
-  config.output.cloudfront_distro_url = {
-    value = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
+  config.output = {
+    cloudfront_distro_url = {
+      value = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
+    };
   };
 }
