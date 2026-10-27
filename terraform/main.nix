@@ -102,6 +102,11 @@
       tertiary = "\${var.aws_subnet_tertiary}";
     };
     bastion_subnet = "\${var.aws_subnet_bastion}";
+    # These logging buckets are externally managed.
+    access_log_bucket = if config.setup.stage == "prod" then
+      "s3-server-access-logs-363539660090"
+    else
+      "s3-server-access-logs-783177801354";
   };
 
   functions = {
@@ -147,9 +152,4 @@
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
 
-  # These logging buckets are externally managed.
-  setup.access_log_bucket = if config.setup.stage == "prod" then
-    "s3-server-access-logs-363539660090"
-  else
-    "s3-server-access-logs-783177801354";
 }
