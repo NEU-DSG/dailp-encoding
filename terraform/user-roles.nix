@@ -100,6 +100,7 @@ in {
             resources = ["${media-storage}/*"];
           };
     };
+  };
 
   config.resource = {
     # Policy Resource Definitions
