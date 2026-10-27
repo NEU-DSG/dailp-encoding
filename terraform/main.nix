@@ -54,29 +54,34 @@
     stage = "\${var.tf_stage == \"\" || var.tf_stage == \"local\" ? \"dev\" : var.tf_stage}";
   };
 
-  module.backups_bucket = {
-    source = "${./backups}";
-    env_prefix = "dailp-\${local.stage}";
+  module = {
+    backups_bucket = {
+      source = "${./backups}";
+      env_prefix = "dailp-\${local.stage}";
+    };
   };
 
-  # Gives all modules access to which stage we're deploying to, while also
-  # verifying that its one of the stages we actually use.
-  setup.stage = (if (builtins.getEnv "TF_STAGE") == "" || (builtins.getEnv "TF_STAGE") == "local" then "dev" else (builtins.getEnv "TF_STAGE"));
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
     version = "<= 6.2";
   };
 
-  # Setup AWS credentials depending on whether we are in the development or
-  # production account.
-  provider.aws = {
-    # profile = "neu-${config.setup.stage}";
-    region = "us-east-1";
-    default_tags.tags = config.setup.global_tags;
+  provider = {
+    # Setup AWS credentials depending on whether we are in the development or
+    # production account.
+    aws = {
+      # profile = "neu-${config.setup.stage}";
+      region = "us-east-1";
+      default_tags.tags = config.setup.global_tags;
+    };
   };
 
   setup = {
+    # Gives all modules access to which stage we're deploying to, while also
+    # verifying that its one of the stages we actually use.
+    stage = (if (builtins.getEnv "TF_STAGE") == "" || (builtins.getEnv "TF_STAGE") == "local" then "dev" else (builtins.getEnv "TF_STAGE"));
+
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
     # Use dev bucket for uat
