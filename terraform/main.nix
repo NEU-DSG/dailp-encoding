@@ -61,7 +61,7 @@
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
-  setup.stage = (if (getEnv "TF_STAGE") == "" || (getEnv "TF_STAGE") == "local" then "dev" else (getEnv "TF_STAGE"));
+  setup.stage = (if (builtins.getEnv "TF_STAGE") == "" || (builtins.getEnv "TF_STAGE") == "local" then "dev" else (builtins.getEnv "TF_STAGE"));
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
@@ -149,7 +149,7 @@
       timeout = 30;
       publish = false;
       vpc_config = {
-        subnet_ids = attrValues config.setup.subnets;
+        subnet_ids = lib.attrValues config.setup.subnets;
         security_group_ids = config.functions.security_group_ids;
       };
       environment.variables = {
