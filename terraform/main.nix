@@ -9,11 +9,7 @@
 #   with Terraform property names.
 # - Functions should be in "camelCase" because that aligns with Nix standard practice.
 # - File names in this folder should be "kebab-case.nix"
-let
-  inherit (builtins) getEnv;
-  # Default to the 'dev' environment unless specified.
-  stage = if (getEnv "TF_STAGE") == "" || (getEnv "TF_STAGE") == "local" then "dev" else (getEnv "TF_STAGE");
-in {
+{
   imports = [
     ./bootstrap.nix
     ./functions.nix
@@ -65,7 +61,7 @@ in {
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
-  setup.stage = stage;
+  setup.stage = (if (getEnv "TF_STAGE") == "" || (getEnv "TF_STAGE") == "local" then "dev" else (getEnv "TF_STAGE"));
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
