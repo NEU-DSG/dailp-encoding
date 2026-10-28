@@ -450,7 +450,7 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  changes=$(${tf} show -json "$plan" | jq '.resource_changes')
+	  changes=$(${tf} show -json "$plan" | jq 'del(.prior_state, .planned_values)')
 
 	  echo "Proposed changes:"
 	  echo "$changes"
