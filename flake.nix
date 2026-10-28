@@ -455,7 +455,7 @@
             | select(.change.actions != ["no-op"] and .change.actions != ["read"])
             | "\(.change.actions | join("/"))\t\(.address)"
           ')
-          
+
           if [[ -n "$changes" ]]; then
             echo "Plan '$plan' contains resource changes:" >&2
             echo "$changes" >&2
