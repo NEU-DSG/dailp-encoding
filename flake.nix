@@ -448,7 +448,15 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} plan
+          ${tf} plan -out=tfplan
+
+          expected="{}"
+          plan="$(${tf} show -json tfplan)"
+          if [[ "''${plan} != "''${expected}" ]]; then
+                  echo "unexpected plan"
+            echo "''${plan}"
+            exit 1
+          fi
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
