@@ -3,9 +3,7 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = let 
-        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-      in prefixName "media-storage";
+      bucket = "\${ local.stage == \"uat\" ? \"dailp-dev-media-storage\" : \"dailp\${\"-\${local.stage}\"}-media-storage\" }";
       lifecycle.prevent_destroy = true;
     };
     aws_s3_bucket_cors_configuration.media_storage_cors = {
@@ -28,7 +26,7 @@
     aws_s3_bucket_logging.media_storage_logging = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
       target_bucket = config.setup.access_log_bucket;
-      target_prefix = "/dailp-${config.setup.stage}-media-storage";
+      target_prefix = "/\${local.stage == \"uat\" ? \"dailp-dev\" : \"dailp-\${local.stage}\"}-media-storage";
     };
     aws_s3_bucket_server_side_encryption_configuration.media_storage_encryption = {
       bucket = "$\{aws_s3_bucket.media_storage.id}";
@@ -40,17 +38,18 @@
   };
   };
 
-  config.data.aws_iam_policy_document = {
-    media_storage_policy_document = {
-      policy_id = "PolicyForCloudFrontPrivateContent";
-      source_policy_documents =
-        let reference_policy = name: "$\{data.aws_iam_policy_document.${name}.json}";
-        in [
-          (reference_policy "allow_cloudfront_service_principal")
-          (reference_policy "allow_dailp_user_principals")
-          (reference_policy "allow_dailp_deploy_principal")
-          (reference_policy "allow_bastion_backup_writes")
-        ];
+  config.data = {
+    aws_iam_policy_document = {
+      media_storage_policy_document = {
+        policy_id = "PolicyForCloudFrontPrivateContent";
+        source_policy_documents =
+          let reference_policy = name: "$\{data.aws_iam_policy_document.${name}.json}";
+          in [
+            (reference_policy "allow_cloudfront_service_principal")
+            (reference_policy "allow_dailp_user_principals")
+            (reference_policy "allow_dailp_deploy_principal")
+            (reference_policy "allow_bastion_backup_writes")
+          ];
     };
     allow_cloudfront_service_principal.statement = {
       sid = "AllowCloudFrontServicePrincipal";
@@ -95,11 +94,7 @@
       effect = "Allow";
       principals = {
         type = "AWS";
-        identifiers = 
-          if config.setup.stage == "dev" then 
-            [ "arn:aws:iam::783177801354:user/dailp-deployment" ]
-          else
-            [ "arn:aws:iam::363539660090:user/dialp-deployment" ];
+        identifiers = [ "\${ local.stage == \"dev\" ? \"arn:aws:iam::783177801354:user/dailp-deployment\" : \"arn:aws:iam::363539660090:user/dialp-deployment\" }" ];
       };
       actions = [
         "s3:GetObject"
@@ -134,11 +129,7 @@
         type = "AWS";
         # Role name from the module output so it tracks namespace/stage/name;
         # account id hardcoded per stage, matching the deploy principal above.
-        identifiers =
-          if config.setup.stage == "dev" then
-            [ "arn:aws:iam::783177801354:role/$\{module.bastion_host.role}" ]
-          else
-            [ "arn:aws:iam::363539660090:role/$\{module.bastion_host.role}" ];
+        identifiers = [ "\${ local.stage == \"dev\" ? \"arn:aws:iam::783177801354:role/$\{module.bastion_host.role}\" : \"arn:aws:iam::363539660090:role/$\{module.bastion_host.role}\" }" ];
       };
       actions = [
         "s3:PutObject"
@@ -147,4 +138,5 @@
       resources = [ "$\{aws_s3_bucket.media_storage.arn}/db-backups/*" ];
     };
   };
+};
 }

@@ -5,117 +5,119 @@ let
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
- prefixName = import ./utils.nix { stage = config.setup.stage; };
+ 
 in {
   # Policy Documents
-  config.data.aws_iam_policy_document = {
-    assume_role_policy.statement = {
-      effect = "Allow";
-      principals = {
-        type = "Federated";
-        identifiers = [
-          "cognito-identity.amazonaws.com"
-          ];
-      };
-      actions = [ "sts:AssumeRoleWithWebIdentity" ];
-      condition = {
-        test = "StringEquals";
-        variable = "cognito-identity.amazonaws.com:aud";
-        values = [
-          "$\{aws_cognito_identity_pool.main.id}"
-        ];
-      };
-    };
-
-    trusted_assume_role_policy.statement = {
-      effect = "Allow";
-      principals = {
-        type = "Federated";
-        identifiers = [
-          "cognito-identity.amazonaws.com"
-          ];
-      };
-      actions = [ "sts:AssumeRoleWithWebIdentity" ];
-      condition = [
-        {
-        test = "StringEquals";
-        variable = "cognito-identity.amazonaws.com:aud";
-        values = [
-          "$\{aws_cognito_identity_pool.main.id}"
-          ];
-      }
-      {
-        test = "ForAnyValue:StringLike";
-        variable = "cognito-identity.amazonaws.com:amr";
-        values = [
-          "authenticated"
-          ];
-      }
-      ];
-    };
-
-    basic_user_policy.statement = {
-      sid = "DailpBasicUserPolicy";
-      effect = "Allow";
-      actions = [
-        "s3:GetObject"
-        "s3:GetObjectAttributes"
-        "s3:GetObjectVersion"
-        ];
-      resources = [
-        "${media-storage}/${document-audio}"
-        "${media-storage}/${word-annotations}"
-        "${media-storage}/${user-audio}"
-        ];
+  config.data = {
+    aws_iam_policy_document = {
+      assume_role_policy.statement = {
+        effect = "Allow";
+        principals = {
+          type = "Federated";
+          identifiers = [
+            "cognito-identity.amazonaws.com"
+            ];
+        };
+        actions = [ "sts:AssumeRoleWithWebIdentity" ];
+        condition = {
+          test = "StringEquals";
+          variable = "cognito-identity.amazonaws.com:aud";
+          values = [
+            "$\{aws_cognito_identity_pool.main.id}"
+            ];
+        };
       };
 
-    contributor_user_policy = {
-      # Inherit basic permissions
-      source_policy_documents = [
-        "$\{data.aws_iam_policy_document.basic_user_policy.json}"
-      ];
-      # Add contributor permissions
-      statement = {
-        sid = "DailpContributorUserUploadPolicy";
-        actions = [
-          "s3:PutObject"
-        ];
-        resources = [
-          "${media-storage}/${user-audio}"
-        ];
-      };
-    };
-    editor_user_policy.statement = {
-        sid = "DailpEditorUserPolicy";
-        actions = [
-          "s3:PutObject"
-          "s3:GetObject"
-          "s3:DeleteObjectVersion"
-          "s3:GetObjectAttributes"
-          "s3:DeleteObject"
-          "s3:GetObjectVersionAttributes"
-          "s3:GetObjectVersion"
+      trusted_assume_role_policy.statement = {
+        effect = "Allow";
+        principals = {
+          type = "Federated";
+          identifiers = [
+            "cognito-identity.amazonaws.com"
+            ];
+        };
+        actions = [ "sts:AssumeRoleWithWebIdentity" ];
+        condition = [
+          {
+          test = "StringEquals";
+          variable = "cognito-identity.amazonaws.com:aud";
+          values = [
+            "$\{aws_cognito_identity_pool.main.id}"
+            ];
+          }
+          {
+          test = "ForAnyValue:StringLike";
+          variable = "cognito-identity.amazonaws.com:amr";
+          values = [
+            "authenticated"
+            ];
+          }
           ];
-        resources = ["${media-storage}/*"];
-      };
+        };
+
+        basic_user_policy.statement = {
+          sid = "DailpBasicUserPolicy";
+          effect = "Allow";
+          actions = [
+            "s3:GetObject"
+            "s3:GetObjectAttributes"
+            "s3:GetObjectVersion"
+            ];
+          resources = [
+            "${media-storage}/${document-audio}"
+            "${media-storage}/${word-annotations}"
+            "${media-storage}/${user-audio}"
+            ];
+        };
+
+        contributor_user_policy = {
+          # Inherit basic permissions
+          source_policy_documents = [
+            "$\{data.aws_iam_policy_document.basic_user_policy.json}"
+          ];
+          # Add contributor permissions
+          statement = {
+            sid = "DailpContributorUserUploadPolicy";
+            actions = [
+              "s3:PutObject"
+            ];
+            resources = [
+              "${media-storage}/${user-audio}"
+            ];
+          };
+        };
+        editor_user_policy.statement = {
+            sid = "DailpEditorUserPolicy";
+            actions = [
+              "s3:PutObject"
+              "s3:GetObject"
+              "s3:DeleteObjectVersion"
+              "s3:GetObjectAttributes"
+              "s3:DeleteObject"
+              "s3:GetObjectVersionAttributes"
+              "s3:GetObjectVersion"
+              ];
+            resources = ["${media-storage}/*"];
+          };
     };
+  };
 
   config.resource = {
     # Policy Resource Definitions
     aws_iam_policy = {
       dailp_basic_user_policy = {
         policy = "$\{data.aws_iam_policy_document.basic_user_policy.json}";
-        name = prefixName "basic-user-policy";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-basic-user-policy");
         description = "Allows minimal S3 read permissions for unauthenticated users.";
       };
       dailp_editor_policy = {
         policy = "$\{data.aws_iam_policy_document.editor_user_policy.json}";
-        name = prefixName "editor-policy";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-editor-policy");
         description = "A policy giving editors permission to read and write to DAILPs S3 media bucket";
       };
       dailp_user_contributor_policy = {
         policy = "$\{data.aws_iam_policy_document.contributor_user_policy.json}";
-        name = prefixName "user-contributor-policy";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-contributor-policy");
         description = "Permissions for DAILP users at the Contributor level.";
       };
     };
@@ -128,17 +130,17 @@ in {
       dailp_user = {
         assume_role_policy = trust-policy;
         description = "A basic unauthenticated DAILP user";
-        name = prefixName "user";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user");
       };
       dailp_user_contributor = {
         assume_role_policy = authed-trust-policy;
         description = "A DAILP user with basic read/update permissions.";
-        name = prefixName "user-contributor";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-contributor");
       };
       dailp_user_editor = {
         assume_role_policy = authed-trust-policy;
         description = "A user with editorial permissions on DAILP";
-        name = prefixName "user-editor";
+        name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${(local.stage)}\"}-user-editor");
       };
     };
     # Bind permissions policies to roles

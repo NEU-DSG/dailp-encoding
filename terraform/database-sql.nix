@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }: 
-let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+{
   options.servers.database = with lib;
     with types; {
       availability_zone = mkOption { type = str; };
@@ -10,17 +8,16 @@ in {
       tags = mkOption { type = attrsOf str; };
     };
 
-  config.resource = let name = prefixName "database";
-  in {
+  config.resource = {
     aws_db_subnet_group.sql_database = {
-      name = name;
+      name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database");
       subnet_ids = lib.attrValues config.setup.subnets;
       tags = { Name = "Subnet Group for DAILP"; };
       lifecycle.create_before_destroy = true;
     };
 
     aws_db_instance.sql_database = {
-      identifier = "${name}-primary";
+      identifier = "\${(\"dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database\")}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
       storage_type = "gp2";
@@ -40,9 +37,9 @@ in {
       publicly_accessible = false;
       multi_az = false;
       availability_zone = config.servers.database.availability_zone;
-      db_subnet_group_name = name;
+      db_subnet_group_name = ("dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database");
       vpc_security_group_ids = config.servers.database.security_group_ids;
-      final_snapshot_identifier = "${name}-primary-final-snapshot";
+      final_snapshot_identifier = "\${(\"dailp\${((local.stage) == \"prod\") ? \"\" : \"-\${local.stage}\"}-database\")}-primary-final-snapshot";
       backup_retention_period = 14;
       backup_window = "07:00-07:59";
 
@@ -62,14 +59,14 @@ in {
     };
 
     aws_security_group.nixos_test = {
-      name = prefixName "nixos-test";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-nixos-test");
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = prefixName "mongodb-access";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-mongodb-access");
       vpc_id = config.setup.vpc;
       description = "Access DAILP MongoDB servers";
       ingress = [ ];
@@ -88,10 +85,12 @@ in {
     };
   };
 
-  config.output.database_address = {
-    value = "\${aws_db_instance.sql_database.address}";
-  };
-  config.output.access_security_group_id = {
-    value = "\${aws_security_group.nixos_test.id}";
+  config.output = {
+    database_address = {
+      value = "\${aws_db_instance.sql_database.address}";
+    };
+    access_security_group_id = {
+      value = "\${aws_security_group.nixos_test.id}";
+    };
   };
 }

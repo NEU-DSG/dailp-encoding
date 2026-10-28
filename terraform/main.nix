@@ -9,12 +9,7 @@
 #   with Terraform property names.
 # - Functions should be in "camelCase" because that aligns with Nix standard practice.
 # - File names in this folder should be "kebab-case.nix"
-let
-  inherit (builtins) getEnv;
-  stage_var = getEnv "TF_STAGE";
-  # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" || stage_var == "local" then "dev" else stage_var;
-in {
+{
   imports = [
     ./bootstrap.nix
     ./functions.nix
@@ -30,82 +25,101 @@ in {
     ./outbound-lambda.nix
   ];
 
-  module.backups_bucket = {
-    source = "${./backups}";
-    env_prefix = "dailp-${stage}";
+  variable = {
+    tf_stage = { type = "string"; };
+    availability_zone_primary = { type = "string"; };
+    aws_vpc_id = { type = "string"; };
+    aws_subnet_primary = { type = "string"; };
+    aws_subnet_secondary = { type = "string"; };
+    aws_subnet_tertiary = { type = "string"; };
+    aws_subnet_bastion = { type = "string"; };
+    bastion_id = { type = "string"; };
+    git_repository_url = { type = "string"; };
+
+    turnstile_site_key = { type = "string"; };
+    turnstile_secret_key = {
+      type = "string";
+      sensitive = true;
+    };
+    oauth_token = {
+      type = "string";
+      sensitive = true;
+    };
+    database_password = {
+      type = "string";
+      sensitive = true;
+    };
+  };
+  locals = {
+    stage = "\${var.tf_stage == \"\" || var.tf_stage == \"local\" ? \"dev\" : var.tf_stage}";
   };
 
-  # Gives all modules access to which stage we're deploying to, while also
-  # verifying that its one of the stages we actually use.
-  setup.stage = stage;
+  module = {
+    backups_bucket = {
+      source = "${./backups}";
+      env_prefix = "dailp-\${local.stage}";
+    };
+  };
+
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
     version = "<= 6.2";
   };
 
-  # Setup AWS credentials depending on whether we are in the development or
-  # production account.
-  provider.aws = {
-    # profile = "neu-${config.setup.stage}";
-    region = "us-east-1";
-    default_tags.tags = config.setup.global_tags;
+  provider = {
+    # Setup AWS credentials depending on whether we are in the development or
+    # production account.
+    aws = {
+      # profile = "neu-${config.setup.stage}";
+      region = "us-east-1";
+      default_tags.tags = config.setup.global_tags;
+    };
   };
 
   setup = {
+    # Gives all modules access to which stage we're deploying to, while also
+    # verifying that its one of the stages we actually use.
+    stage = (if (builtins.getEnv "TF_STAGE") == "" || (builtins.getEnv "TF_STAGE") == "local" then "dev" else (builtins.getEnv "TF_STAGE"));
+
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
     # Use dev bucket for uat
-    state = let 
-      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-    in {
-      bucket = prefixName "terraform-state-bucket";
-      table = prefixName "terraform-state-locks";
+    state = {
+      bucket =
+          if config.setup.stage == "uat"
+	  then "dailp-dev-terraform-state-bucket"
+	  else "dailp${"-${config.setup.stage}"}-terraform-state-bucket";
+      table =
+          if config.setup.stage == "uat"
+	  then "dailp-dev-terraform-state-locks"
+	  else "dailp${"-${config.setup.stage}"}-terraform-state-locks";
     };
-    # getEnv returns "" for anything unset, which terraform then cannot
-    # distinguish from "not configured" for Optional+Computed attributes like
-    # aws_instance.subnet_id -- so a missing variable produces a clean plan
-    # against an existing resource and a wrong-VPC launch against a new one.
-    # Warn rather than throw: `nix build --impure` and a local tf-init are both
-    # run without these today, and terranix does not evaluate module-system
-    # `assertions`, so a hard failure would be hostile and easy to regress.
-    vpc = lib.warnIf (getEnv "AWS_VPC_ID" == "")
-      "AWS_VPC_ID is unset; vpc_id will be empty. Set it in the workflow env / your .env."
-      (getEnv "AWS_VPC_ID");
-    # These three are NOT in .env -- they exist only as GitHub secrets -- so they
-    # are empty in every local shell unless exported by hand. That is not
-    # cosmetic: they populate aws_db_subnet_group.sql_database.subnet_ids, and a
-    # local `terraform apply` with them unset plans to swap the database's three
-    # real subnets for a single "". Warn loudly, and see the -target guidance in
-    # terraform/docs/sops.md before running any apply from a workstation.
-    subnets = let
-      warnEmpty = name: lib.warnIf (getEnv name == "")
-        "${name} is unset; it will be emitted as \"\". A local terraform apply would rewrite aws_db_subnet_group subnet_ids to [\"\"] -- export it or use -target. See terraform/docs/sops.md."
-        (getEnv name);
-    in {
-      primary = warnEmpty "AWS_SUBNET_PRIMARY";
-      secondary = warnEmpty "AWS_SUBNET_SECONDARY0";
-      tertiary = warnEmpty "AWS_SUBNET_SECONDARY1";
+    vpc = "\${var.aws_vpc_id}";
+    subnets = {
+      primary = "\${var.aws_subnet_primary}";
+      secondary = "\${var.aws_subnet_secondary}";
+      tertiary = "\${var.aws_subnet_tertiary}";
     };
-    bastion_subnet = lib.warnIf (getEnv "AWS_SUBNET_BASTION" == "")
-      "AWS_SUBNET_BASTION is unset; the bastion's subnet_id will be empty. Set it in the workflow env / your .env before any change that could replace the instance -- see terraform/docs/sops.md."
-      (getEnv "AWS_SUBNET_BASTION");
+    bastion_subnet = "\${var.aws_subnet_bastion}";
+    # These logging buckets are externally managed.
+    access_log_bucket = if config.setup.stage == "prod" then
+      "s3-server-access-logs-363539660090"
+    else
+      "s3-server-access-logs-783177801354";
   };
 
-  functions = 
-  let 
-    prefixName = import ./utils.nix { stage = config.setup.stage; };
-  in {
-    bucket = prefixName "functions-bucket";
+  functions = {
+    bucket = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-functions-bucket");
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = prefixName "graphql";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-graphql");
       env = {
-        VITE_DEPLOYMENT_ENV = config.setup.stage;
+        VITE_DEPLOYMENT_ENV = "\${local.stage}";
         DATABASE_URL =
           "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
-        TURNSTILE_SECRET_KEY = getEnv "TURNSTILE_SECRET_KEY";
+        TURNSTILE_SECRET_KEY = "\${var.turnstile_secret_key}";
         OUTBOUND_LAMBDA_NAME = "\${aws_lambda_function.outbound_turnstile.function_name}";
       };
       endpoints = [
@@ -129,17 +143,13 @@ in {
         # }
       ];
     }];
+
   };
 
   servers.database = {
-    password = getEnv "DATABASE_PASSWORD";
-    availability_zone = getEnv "AWS_ZONE_PRIMARY";
+    password = "\${var.database_password}";
+    availability_zone = "\${var.availability_zone_primary}";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
 
-  # These logging buckets are externally managed.
-  setup.access_log_bucket = if config.setup.stage == "prod" then
-    "s3-server-access-logs-363539660090"
-  else
-    "s3-server-access-logs-783177801354";
 }

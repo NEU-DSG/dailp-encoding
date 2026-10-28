@@ -89,10 +89,7 @@ in {
     enabled = true;
     instance_type = "t4g.micro";
 
-    # Dynamic attribute select rather than an if/else chain: setup.stage is an
-    # enum (see ./bootstrap.nix), so a stage with no pinned ami is an eval
-    # error instead of silently falling through to dev's image.
-    ami = amis.${config.setup.stage};
+    ami = "\${ local.stage == \"prod\" ? \"ami-037d882b31eae26a2\" : ( local.stage == \"uat\" ? \"ami-03190fe20ef6b1419\" : \"ami-0c2fab8ab93985c9b\" ) }";
 
     # Headroom, not a compatibility requirement. The module default is 8 GiB and
     # the AL2023 arm64 snapshots are also 8 GiB, so the "cannot be smaller than
@@ -110,7 +107,7 @@ in {
 
     # ID will be constructed from these namespace, stage, and name for some reason.
     namespace = "dailp";
-    stage = config.setup.stage;
+    stage = "\${local.stage}";
     name = "bastion";
 
     key_name = "dailp-dev-2024";
@@ -147,15 +144,16 @@ in {
   # set associate_public_ip_address = false above, so no EIP is created and
   # `public_ip` falls through to "". The bastion is reached over SSM, not by IP
   # -- see the copy-to-bastion / run-on-bastion apps in flake.nix.
-  config.output.bastion_ip = { value = "\${module.bastion_host.public_ip}"; };
+  config.output = {
+    bastion_ip = { value = "\${module.bastion_host.public_ip}"; };
 
-  # Referenced by flake.nix's bastion apps as
-  # `nix run --impure .#tf-output bastion_id`. Only resolves after an apply,
-  # and note import.nix reads BASTION_ID from the environment, so you need the
-  # id before terraform can tell it to you -- this is for confirmation, not
-  # discovery. To look it up cold:
-  #   aws ec2 describe-instances \
-  #     --filters Name=tag:Name,Values=dailp-<stage>-bastion \
-  #     --query 'Reservations[].Instances[].InstanceId'
-  config.output.bastion_id = { value = "\${module.bastion_host.instance_id}"; };
-}
+    # Referenced by flake.nix's bastion apps as
+    # `nix run --impure .#tf-output bastion_id`. Only resolves after an apply,
+    # and note import.nix reads BASTION_ID from the environment, so you need the
+    # id before terraform can tell it to you -- this is for confirmation, not
+    # discovery. To look it up cold:
+    #   aws ec2 describe-instances \
+    #     --filters Name=tag:Name,Values=dailp-<stage>-bastion \
+    #     --query 'Reservations[].Instances[].InstanceId'
+    bastion_id = { value = "\${module.bastion_host.instance_id}"; };
+  };}

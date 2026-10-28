@@ -1,10 +1,8 @@
 { config, lib, pkgs, ... }:
-let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+{
   config.resource = {
     aws_iam_role.lambda_exec = {
-      name = prefixName "lambda-execution";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-lambda-execution");
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
@@ -33,7 +31,7 @@ in {
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
     aws_api_gateway_rest_api.functions_api = {
-      name = prefixName "api";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-api");
       description = "DAILP API for GraphQL endpoints and REST endpoints";
       lifecycle.prevent_destroy = false;
     };
@@ -70,11 +68,13 @@ in {
     aws_api_gateway_stage.functions_api_stage = {
       deployment_id = "\${aws_api_gateway_deployment.functions_api.id}";
       rest_api_id = "\${aws_api_gateway_rest_api.functions_api.id}";
-      stage_name = config.setup.stage;
+      stage_name = "\${ local.stage }";
     };
   };
 
-  config.output.functions_url = {
-    value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
+  config.output = {
+    functions_url = {
+      value = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
+    };
   };
 }

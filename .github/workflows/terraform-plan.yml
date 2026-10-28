@@ -10,28 +10,41 @@ jobs:
         deployment: false
     env:
       DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      TF_VAR_database_password: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      TF_VAR_aws_vpc_id: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      TF_VAR_aws_subnet_primary: ${{ secrets.AWS_SUBNET_PRIMARY }}
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      TF_VAR_availability_zone_primary: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      TF_VAR_aws_subnet_secondary: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      TF_VAR_aws_subnet_tertiary: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
       # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
       # No per-stage selection here: this job resolves to a single stage whose
       # environment scopes the secret (cf. main.yml, where uat shares dev's
       # environment and therefore needs UAT_AWS_SUBNET_BASTION).
       AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
+      TF_VAR_aws_subnet_bastion: ${{ secrets.AWS_SUBNET_BASTION }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TF_VAR_turnstile_secret_key: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TF_VAR_turnstile_site_key: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      TF_VAR_git_repository_url: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      TF_VAR_oauth_token: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: dev
+      TF_VAR_tf_stage: dev
       # terraform/import.nix renders the bastion's import block from this, so
       # without it PR plans carry `import { id = "" }` and cannot show a bastion
       # diff at all -- which makes this job useless as the review gate for any
       # change to terraform/bastion-host.nix.
       BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      TF_VAR_bastion_id: ${{ secrets.DEV_EC2_INSTANCE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

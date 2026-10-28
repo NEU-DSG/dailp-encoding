@@ -448,7 +448,7 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} plan
+          ${tf} plan -out=tfplan
         '';
 
         apps.tf-apply = mkBashApp "apply" ''

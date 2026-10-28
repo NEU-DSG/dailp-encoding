@@ -1,7 +1,5 @@
 { config, lib, pkgs, ... }:
-let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+{
   config.resource = {
     # User Pool Setup
     aws_cognito_user_pool.main = {
@@ -9,21 +7,19 @@ in {
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = false;  
-      verification_message_template = let 
-        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
-      in {
+      verification_message_template = {
         email_subject = "Your DAILP account confirmation code";
         email_message = ''
           Hello, thank you for signing up for a DAILP account!
           
           Your confirmation code is {####}. Please enter this code on the confirmation page.
           
-          You can access the confirmation page at https://${subdomain}dailp.northeastern.edu/auth/confirmation
+          You can access the confirmation page at https://''${(local.stage == "prod" ? "" : "''${local.stage}.")}dailp.northeastern.edu/auth/confirmation
         '';
       };
     };
     aws_cognito_user_pool_client.main = {
-      name = prefixName "user-pool-client";
+      name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-user-pool-client");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       allowed_oauth_flows = [ "implicit" ];
       allowed_oauth_flows_user_pool_client = true;
@@ -36,11 +32,7 @@ in {
       supported_identity_providers = [ "COGNITO" ];
     };
     aws_cognito_user_pool_domain.main = {
-      domain = 
-      let
-        buildUri = prefixName "-";
-        cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
-      in cleanUri buildUri;
+      domain = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}");
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
 
@@ -63,7 +55,7 @@ in {
   };
   # Identity Pool
   aws_cognito_identity_pool.main = {
-    identity_pool_name = prefixName "user-identities";
+    identity_pool_name = ("dailp\${(local.stage == \"prod\") ? \"\" : \"-\${local.stage}\"}-user-identities");
     allow_unauthenticated_identities = true; 
     cognito_identity_providers = {
       client_id = "\${aws_cognito_user_pool_client.main.id}";
