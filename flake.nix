@@ -450,11 +450,15 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-          expected="{}"
-          plan="$(${tf} show -json tfplan)"
-          if [[ "''${plan}" != "''${expected}" ]]; then
-                  echo "unexpected plan"
-            echo "''${plan}"
+	  changes=$(terraform show -json "$plan" | jq -r '
+            .resource_changes[]?
+            | select(.change.actions != ["no-op"] and .change.actions != ["read"])
+            | "\(.change.actions | join("/"))\t\(.address)"
+          ')
+          
+          if [[ -n "$changes" ]]; then
+            echo "Plan '$plan' contains resource changes:" >&2
+            echo "$changes" >&2
             exit 1
           fi
         '';
