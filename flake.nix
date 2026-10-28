@@ -450,11 +450,7 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  changes=$(${tf} show -json "$plan" | jq -r '
-            .resource_changes[]?
-            | select(.change.actions != ["no-op"] and .change.actions != ["read"])
-            | "\(.change.actions | join("/"))\t\(.address)"
-          ')
+	  changes=$(${tf} show -json "$plan" | jq '.resource_changes')
 
 	  echo "Proposed changes:"
 	  echo "$changes"
