@@ -8,8 +8,7 @@
     "nu:creator" = "sysna.trevino";
     "nu:department" = "library";
     "nu:project" = "dailp";
-    "nu:environment" =
-      if config.setup.stage == "dev" then "development" else if config.setup.stage == "uat" then "staging" else "production";
+    "nu:environment" = "$\${local.stage == \"dev\" ? \"development\" : local.stage == \"uat\" ? \"staging\" : \"production\"}";
     "nu:application" = "dailp-app";
     "nu:notification" = "n.trevino@northeastern.edu";
     "nu:index-division" = "0000000";
