@@ -456,10 +456,15 @@
             | "\(.change.actions | join("/"))\t\(.address)"
           ')
 
+	  echo "Proposed changes:"
+	  echo "$changes"
+
           if [[ -n "$changes" ]]; then
             echo "Plan '$plan' contains resource changes:" >&2
             echo "$changes" >&2
             exit 1
+	  else
+            echo "Changes match expectation"
           fi
         '';
 
