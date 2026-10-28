@@ -450,7 +450,7 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  changes=$(terraform show -json "$plan" | jq -r '
+	  changes=$(${tf} show -json "$plan" | jq -r '
             .resource_changes[]?
             | select(.change.actions != ["no-op"] and .change.actions != ["read"])
             | "\(.change.actions | join("/"))\t\(.address)"
