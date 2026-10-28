@@ -452,7 +452,7 @@
 
           expected="{}"
           plan="$(${tf} show -json tfplan)"
-          if [[ "''${plan} != "''${expected}" ]]; then
+          if [[ "''${plan}" != "''${expected}" ]]; then
                   echo "unexpected plan"
             echo "''${plan}"
             exit 1
