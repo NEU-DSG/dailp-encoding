@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useState } from "react"
 import { UserRole, useUserRole } from "src/auth"
 import { CollectionSection } from "src/graphql/dailp"
 import {
@@ -9,6 +9,11 @@ import {
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import { DropdownToggle } from "./dropdown-toggle"
+import {
+  NumberedChapter,
+  assignNumbers,
+  filterNumberedChapters,
+} from "src/utils/toc"
 import Link from "./link"
 import * as css from "./toc.css"
 
@@ -16,12 +21,38 @@ type TOCProps = {
   section: CollectionSection
   chapters: Chapter[]
   prefix?: number[]
+  isFiltering?: boolean // Prevent dups when searching similar titles to active chapter
+}
+
+// When a user is typing in a requested chapter, this takes over a section
+// and genrates the list of filtered chapters
+const FilteredTOC = ({ chapterTuple }: { chapterTuple: NumberedChapter[] }) => {
+  const { collectionSlug } = useRouteParams()
+  const { onSelect, lastSelected } = useFunctions()
+
+  return (
+    <ul className={css.filteredList}>
+      {chapterTuple.map(([chapter, index]) => (
+        <li key={chapter.slug} className={css.filteredListItem}>
+          <Link
+            href={chapterRoute(collectionSlug!, chapter.slug)}
+            className={lastSelected(chapter) ? css.selectedLink : css.link}
+            onClick={() => onSelect(chapter)}
+          >
+            {index}. {chapter.title}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 const CollectionTOC = () => {
   const userRole = useUserRole()
   const chapters = useChapters()
   const { collectionSlug } = useRouteParams()
+
+  const [searchedChapter, setSearchedChapter] = useState("")
 
   if (!chapters || !collectionSlug) {
     return null
@@ -50,10 +81,31 @@ const CollectionTOC = () => {
       [introChapters, bodyChapters, creditChapters]
     )
 
+  const isUserFiltering = searchedChapter.trim().length > 0
+
+  const tupleIntro = assignNumbers(introChapters, CollectionSection.Intro)
+  const tupleBody = assignNumbers(bodyChapters, CollectionSection.Body)
+  const tupleCredit = assignNumbers(creditChapters, CollectionSection.Credit)
+
   const collection = [
-    { section: CollectionSection.Intro, chapters: introChapters },
-    { section: CollectionSection.Body, chapters: bodyChapters },
-    { section: CollectionSection.Credit, chapters: creditChapters },
+    {
+      section: CollectionSection.Intro,
+      chapters: introChapters,
+      numbered: tupleIntro,
+      filtered: filterNumberedChapters(tupleIntro, searchedChapter),
+    },
+    {
+      section: CollectionSection.Body,
+      chapters: bodyChapters,
+      numbered: tupleBody,
+      filtered: filterNumberedChapters(tupleBody, searchedChapter),
+    },
+    {
+      section: CollectionSection.Credit,
+      chapters: creditChapters,
+      numbered: tupleCredit,
+      filtered: filterNumberedChapters(tupleCredit, searchedChapter),
+    },
   ]
 
   const canEditTOC = userRole === UserRole.Editor || userRole === UserRole.Admin
@@ -69,21 +121,50 @@ const CollectionTOC = () => {
         </a>
       )}
 
+      <input
+        className={css.searchBar}
+        type="text"
+        placeholder="Search by Title..."
+        value={searchedChapter}
+        onChange={(e) => setSearchedChapter(e.target.value)}
+      />
+
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
-            <h3 className={css.title}>{coll.section}</h3>
-            <TOC section={coll.section} chapters={coll.chapters} />
+            {isUserFiltering ? (
+              coll.filtered.length > 0 ? (
+                <>
+                  <h3 className={css.title}>{coll.section}</h3>
+                  <FilteredTOC chapterTuple={coll.filtered} />
+                </>
+              ) : null
+            ) : (
+              <>
+                <h3 className={css.title}>{coll.section}</h3>
+                <TOC
+                  section={coll.section}
+                  chapters={coll.chapters}
+                  isFiltering={false}
+                />
+              </>
+            )}
           </Fragment>
         ) : null
+      )}
+      {isUserFiltering && collection.every((c) => c.chapters.length === 0) && (
+        <div className={css.noMatchTextContainer}>
+          <p className={css.noMatchText}>No matching chapters found</p>
+        </div>
       )}
     </>
   )
 }
 
-const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
+const TOC = ({ section, chapters, prefix = [], isFiltering = false }: TOCProps) => {
   const { collectionSlug, chapterSlug } = useRouteParams()
-  const { onToggle, isSelected, lastSelected } = useFunctions()
+
+  const { onSelect, isSelected, lastSelected } = useFunctions()
 
   // Returns if current route chapter is a subchapter with parent to fix issue with
   // children not being displayed when active
@@ -113,6 +194,8 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
       >
         {chapters.map((item, i) => {
           const number = [...prefix, i + 1].join(".")
+          const isExpanded = isSelected(item) || isActiveParent(item)
+          const hasChildren = !!item.children?.length
 
           return (
             <li key={item.slug} className={listItemStyle}>
@@ -127,20 +210,20 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
                 <div
                   className={[
                     css.linkGroup,
-                    isSelected(item) ? css.selectedRow : "",
+                    lastSelected(item) ? css.selectedRow : "",
                   ].join(" ")}
                 >
                   <Link
                     href={chapterRoute(collectionSlug!, item.slug)}
-                    className={isSelected(item) ? css.selectedLink : css.link}
-                    onClick={() => onToggle(item)}
+                    className={lastSelected(item) ? css.selectedLink : css.link}
+                    onClick={() => onSelect(item)}
                   >
                     {item.title}
                   </Link>
-                  {item.children?.length ? (
+                  {hasChildren && !isFiltering ? (
                     <DropdownToggle
                       label=""
-                      isOpen={isSelected(item)}
+                      isOpen={isExpanded}
                       onToggle={() => onToggle(item)}
                     />
                   ) : (
@@ -149,11 +232,12 @@ const TOC = ({ section, chapters, prefix = [] }: TOCProps) => {
                 </div>
               </div>
 
-              {isSelected(item) && item.children ? (
+              {!isFiltering && isExpanded && item.children ? (
                 <TOC
                   section={section}
                   chapters={item.children}
                   prefix={[...prefix, i + 1]}
+                  isFiltering={isFiltering}
                 />
               ) : null}
             </li>

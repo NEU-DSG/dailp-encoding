@@ -93,6 +93,36 @@ export const title = style([
     fontWeight: "bolder",
   },
 ])
+export const filteredList = style({
+  listStyle: "none",
+  padding: 0,
+  margin: 0,
+})
+
+export const filteredListItem = style({
+  listStyle: "none",
+  counterIncrement: "none",
+})
+
+export const searchBar = style([
+  {
+    marginBottom: "15px",
+    width: "100%",
+  },
+])
+
+export const noMatchTextContainer = style([
+  {
+    display: "flex",
+    justifyContent: "center",
+  },
+])
+
+export const noMatchText = style([
+  {
+    color: colors.primaryText,
+  },
+])
 
 // Collapsible parent chapter toggle styling
 export const chapterToggle = style({
