@@ -475,13 +475,21 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-          # This is a hacky way to get a sanity check on Terraform changes.
-          # Terraform's guidance is to keep humans in the loop for terraform
-          # apply steps instead of running this in automation.
-          # This is a rough approximation to make automated tf apply
-          # a little less dangerous. This looks at the actions that
-          # executing the plan will take and validates that we do not
-          # see any unexpected changes being applied.
+          # This is a hacky way to get a sanity check on Terraform
+          # changes. Terraform's guidance is to keep humans in the
+          # loop for terraform apply steps instead of running this in
+          # automation. This is a rough approximation to make
+          # automated tf apply a little less dangerous. This looks at
+          # the actions that executing the plan will take and
+          # validates that we do not see any unexpected changes being
+          # applied.
+          #
+          # We should not make a habit out of this; there are a lot
+          # of rough edges with this, e.g. this assumes that the
+          # expected change set is identical across all environments,
+          # and it will only be valid on the single commit where we
+          # make the changes. Once the changes are applied, the
+          # expected changes should be empty.
 	  expected_changes="4 create"
 	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
