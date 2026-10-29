@@ -473,7 +473,24 @@
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
           ${tfInit}
-          ${tf} apply -auto-approve
+          ${tf} plan -out=tfplan
+
+	  expected_changes="4 create 1 update"
+	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
+
+          if [[ "$expected_changes" != "$changes" ]]; then
+            echo "Plan contains unexpected resource changes:"
+            echo "$changes"
+	    echo
+	    echo "Expected changes:"
+	    echo "$expected_changes"
+
+            exit 1
+	  else
+            echo "Changes match expectation"
+          fi
+
+          ${tf} apply -auto-approve tfplan
         '';
 
         apps.tf-output = mkBashApp "tf-output" ''
