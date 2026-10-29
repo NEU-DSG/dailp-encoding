@@ -450,18 +450,18 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  expected_changes="4 create"
-	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
+          expected_changes="4 create"
+          changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
             echo "Plan contains unexpected resource changes:"
             echo "$changes"
-	    echo
-	    echo "Expected changes:"
-	    echo "$expected_changes"
+            echo
+            echo "Expected changes:"
+            echo "$expected_changes"
 
             exit 1
-	  else
+          else
             echo "Changes match expectation"
           fi
         '';
