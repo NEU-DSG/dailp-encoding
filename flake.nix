@@ -450,7 +450,8 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  changes=$(${tf} show -json "$plan" | jq 'del(.prior_state, .planned_values)')
+          plan=""
+	  changes=$(${tf} show -json "$plan" | jq 'del(.prior_state, .planned_values, .values)')
 
           if [[ -n "$changes" ]]; then
             echo "Plan '$plan' contains unexpected resource changes:"
