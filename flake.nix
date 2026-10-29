@@ -452,12 +452,9 @@
 
 	  changes=$(${tf} show -json "$plan" | jq 'del(.prior_state, .planned_values)')
 
-	  echo "Proposed changes:"
-	  echo "$changes"
-
           if [[ -n "$changes" ]]; then
-            echo "Plan '$plan' contains resource changes:" >&2
-            echo "$changes" >&2
+            echo "Plan '$plan' contains unexpected resource changes:"
+            echo "$changes"
             exit 1
 	  else
             echo "Changes match expectation"
