@@ -450,7 +450,7 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  expected_changes="4 create 1 updated\n"
+	  expected_changes="4 create 1 updated"
 	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
