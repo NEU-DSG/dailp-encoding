@@ -161,7 +161,12 @@ const CollectionTOC = () => {
   )
 }
 
-const TOC = ({ section, chapters, prefix = [], isFiltering = false }: TOCProps) => {
+const TOC = ({
+  section,
+  chapters,
+  prefix = [],
+  isFiltering = false,
+}: TOCProps) => {
   const { collectionSlug, chapterSlug } = useRouteParams()
 
   const { onSelect, isSelected, lastSelected } = useFunctions()
@@ -188,8 +193,8 @@ const TOC = ({ section, chapters, prefix = [], isFiltering = false }: TOCProps) 
           prefix.length === 0
             ? listStyle
             : section === CollectionSection.Body
-            ? css.nestedList
-            : css.nestedOrderedList
+              ? css.nestedList
+              : css.nestedOrderedList
         }
       >
         {chapters.map((item, i) => {
