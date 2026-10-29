@@ -450,7 +450,7 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  expected_changes="4 create 1 update"
+	  expected_changes="4 create"
 	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
@@ -475,7 +475,14 @@
           ${tfInit}
           ${tf} plan -out=tfplan
 
-	  expected_changes="4 create 1 update"
+          # This is a hacky way to get a sanity check on Terraform changes.
+          # Terraform's guidance is to keep humans in the loop for terraform
+          # apply steps instead of running this in automation.
+          # This is a rough approximation to make automated tf apply
+          # a little less dangerous. This looks at the actions that
+          # executing the plan will take and validates that we do not
+          # see any unexpected changes being applied.
+	  expected_changes="4 create"
 	  changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
@@ -490,6 +497,10 @@
             echo "Changes match expectation"
           fi
 
+          # Supplying a plan file to terraform apply ensures that
+          # only the planned changes. If any state has changed in
+          # the Terraform backend between generating the plan and
+          # applying, it will abort before taking action.
           ${tf} apply -auto-approve tfplan
         '';
 
