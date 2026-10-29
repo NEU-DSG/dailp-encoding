@@ -23,6 +23,7 @@ jobs:
       # environment and therefore needs UAT_AWS_SUBNET_BASTION).
       AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
