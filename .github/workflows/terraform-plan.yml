@@ -4,14 +4,15 @@ name: Terraform Plan
 # events but only for the main branch
 on:
   workflow_dispatch:
-    dailp_env:
-      description: 'The environment to which we should run terraform apply'
-      required: true
-      type: choice
-      options:
-      - dev
-      - prod
-      - uat
+    inputs:
+      dailp_env:
+        description: 'The environment to which we should run terraform apply'
+        required: true
+        type: choice
+        options:
+        - dev
+        - prod
+        - uat
 
 concurrency:
   group: infra-${{ github.ref }}
