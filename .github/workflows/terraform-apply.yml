@@ -22,7 +22,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    environment: ${{ inputs.dailp_env != "dev" && ( inputs.dailp_env == 'prod' && 'Production' || 'Development') || 'Development' }}
+    environment: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'prod' && 'Production' || 'Development') || 'Development' }}
     env:
       DATABASE_PASSWORD: ${{ inputs.dailp_env == 'uat' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -52,7 +52,7 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
-      TF_STAGE: ${{ inputs.dailp_env != "dev" && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
+      TF_STAGE: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
