@@ -490,7 +490,7 @@
           # and it will only be valid on the single commit where we
           # make the changes. Once the changes are applied, the
           # expected changes should be empty.
-          expected_changes="4 create"
+          expected_changes="6 create 3 delete 4 update"
           changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
