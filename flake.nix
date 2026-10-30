@@ -448,7 +448,22 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} plan
+          ${tf} plan -out=tfplan
+
+          expected_changes="4 create"
+          changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
+
+          if [[ "$expected_changes" != "$changes" ]]; then
+            echo "Plan contains unexpected resource changes:"
+            echo "$changes"
+            echo
+            echo "Expected changes:"
+            echo "$expected_changes"
+
+            exit 1
+          else
+            echo "Changes match expectation"
+          fi
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
@@ -458,7 +473,43 @@
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
           ${tfInit}
-          ${tf} apply -auto-approve
+          ${tf} plan -out=tfplan
+
+          # This is a hacky way to get a sanity check on Terraform
+          # changes. Terraform's guidance is to keep humans in the
+          # loop for terraform apply steps instead of running this in
+          # automation. This is a rough approximation to make
+          # automated tf apply a little less dangerous. This looks at
+          # the actions that executing the plan will take and
+          # validates that we do not see any unexpected changes being
+          # applied.
+          #
+          # We should not make a habit out of this; there are a lot
+          # of rough edges with this, e.g. this assumes that the
+          # expected change set is identical across all environments,
+          # and it will only be valid on the single commit where we
+          # make the changes. Once the changes are applied, the
+          # expected changes should be empty.
+          expected_changes="4 create"
+          changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
+
+          if [[ "$expected_changes" != "$changes" ]]; then
+            echo "Plan contains unexpected resource changes:"
+            echo "$changes"
+            echo
+            echo "Expected changes:"
+            echo "$expected_changes"
+
+            exit 1
+          else
+            echo "Changes match expectation"
+          fi
+
+          # Supplying a plan file to terraform apply ensures that
+          # only the planned changes. If any state has changed in
+          # the Terraform backend between generating the plan and
+          # applying, it will abort before taking action.
+          ${tf} apply -auto-approve tfplan
         '';
 
         apps.tf-output = mkBashApp "tf-output" ''
