@@ -1,41 +1,95 @@
 name: Terraform Plan
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
 on:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    dailp_env:
+      description: 'The environment to which we should run terraform apply'
+      required: true
+      type: choice
+      options:
+      - dev
+      - prod
+      - uat
+
+concurrency:
+  group: infra-${{ github.ref }}
+  # Cancelling terraform deployments will screw up terraform's own locking mechanism
+  cancel-in-progress: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  plan:
+  build:
     runs-on: ubuntu-22.04
-    environment:
-        name: Development
-        deployment: false
+    environment: ${{ inputs.dailp_env != "dev" && ( inputs.dailp_env == 'prod' && 'Production' || 'Development') || 'Development' }}
     env:
-      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      DATABASE_PASSWORD: ${{ inputs.dailp_env == 'uat' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
       AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
       # Read by setup.bastion_subnet in terraform/main.nix. Unset means the
       # bastion is declared with an empty subnet_id -- see terraform/docs/sops.md.
-      # No per-stage selection here: this job resolves to a single stage whose
-      # environment scopes the secret (cf. main.yml, where uat shares dev's
-      # environment and therefore needs UAT_AWS_SUBNET_BASTION).
-      AWS_SUBNET_BASTION: ${{ secrets.AWS_SUBNET_BASTION }}
+      #
+      # Selected per stage, because the bastions genuinely live in different
+      # subnets (dev subnet-08452f5a8b4ff8085, uat subnet-0a39453d94ed889d6) and
+      # uat shares the Development environment with dev -- so a single secret
+      # would declare uat's bastion in dev's subnet and force its replacement on
+      # the next prerelease apply, which is auto-approved. Matches the
+      # DATABASE_PASSWORD selection above; job-level env cannot read
+      # env.TF_STAGE, hence the repeated event expression rather than the
+      # step-level form used for BASTION_ID below.
+      AWS_SUBNET_BASTION: ${{ github.event.action == 'prereleased' && secrets.UAT_AWS_SUBNET_BASTION || secrets.AWS_SUBNET_BASTION }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: dev
-      # terraform/import.nix renders the bastion's import block from this, so
-      # without it PR plans carry `import { id = "" }` and cannot show a bastion
-      # diff at all -- which makes this job useless as the review gate for any
-      # change to terraform/bastion-host.nix.
-      BASTION_ID: ${{ secrets.DEV_EC2_INSTANCE }}
+      # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
+      TF_STAGE: ${{ inputs.dailp_env != "dev" && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # - name: Push to release branch
+      #   if: ${{ github.event_name == 'release' }}
+      #   uses: ad-m/github-push-action@master
+      #   with:
+      #     branch: ${{ github.event.action == 'prereleased' && 'uat' || 'release' }}
+      #     force: true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            backend:
+              - 'types/**'
+              - 'graphql/**'
+              - 'flake.nix'
+              - 'flake.lock'
+              - 'terraform/**'
+            data:
+              - 'types/**'
+              - 'migration/**'
+              - 'graphql/**'
+            rust:
+              - '**/*.rs'
+              - 'Cargo.lock'
       - name: Install Nix
         uses: cachix/install-nix-action@v20
         with:
@@ -47,26 +101,19 @@ jobs:
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
-      - name: Check code quality
+      - name: Build and test project
+        # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
-          echo "::group::Checking Rust format"
-          cargofmt="$(cargo fmt --check)"
-          if [[ -n $cargofmt ]]; then
-            echo $cargofmt
-            echo "Please fix the formatting errors above by running 'cargo fmt'."
-            exit 1
-          fi
-          echo "::endgroup"
-          echo "::group::Checking format for frontend code"
-          cd website
-          yarn add prettier@^2.6.2 --dev
-          yarn prettier -c --config package.json src
-          echo "::endgroup"
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - name: Build and test back-end
-        run: nix run --impure -L .#tf-plan
+          nix build --impure -L
+      - name: Deploy back-end to AWS via terraform
+        env:
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+        run: |
+          nix run --impure -L .#tf-plan
+      #     SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
+      #     echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
+      # - name: Publish website
+      #   run: |
+      #     curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
