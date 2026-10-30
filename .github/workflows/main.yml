@@ -5,12 +5,12 @@ name: Infrastructure Deployment
 on:
   release:
     types: [released, prereleased]
-  push:
-    branches: [main]
-    paths-ignore:
-      - "**/README.md"
-      - "**/readme.md"
-      - "doc/**/*.md"
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - "**/README.md"
+  #     - "**/readme.md"
+  #     - "doc/**/*.md"
 
 concurrency:
   group: infra-${{ github.ref }}
