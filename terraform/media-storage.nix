@@ -49,8 +49,8 @@
           (reference_policy "allow_cloudfront_service_principal")
           (reference_policy "allow_dailp_user_principals")
           (reference_policy "allow_dailp_deploy_principal")
-          (reference_policy "allow_bastion_backup_writes")
-        ];
+        ] ++ lib.optional (config.setup.stage == "dev")
+          (reference_policy "allow_bastion_backup_writes");
     };
     allow_cloudfront_service_principal.statement = {
       sid = "AllowCloudFrontServicePrincipal";
