@@ -66,7 +66,7 @@ jobs:
         run: |
           echo "Retrieving terraform outputs..."
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
-          BACKUP_BUCKET=$(nix run --impure #.tf-output backup_bucket_name)
+          BACKUP_BUCKET=$(nix run --impure .#tf-output backup_bucket_name)
           BACKUP_TIMESTAMP=$(date +%s)
           echo "Connecting to bastion via SSM..."
           aws ssm start-session \
