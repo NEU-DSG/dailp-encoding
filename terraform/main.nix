@@ -34,6 +34,9 @@ in {
     source = "${./backups}";
     env_prefix = "dailp-${stage}";
   };
+  output.backup_bucket_name = {
+    value = "\${module.backups_bucket.bucket_name}"
+  }
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
@@ -43,6 +46,7 @@ in {
     source = "hashicorp/aws";
     version = "<= 6.2";
   };
+  
 
   # Setup AWS credentials depending on whether we are in the development or
   # production account.

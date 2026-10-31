@@ -1,0 +1,83 @@
+name: Data Backup v2
+on:
+  workflow_dispatch:
+    inputs:
+      dailp_env:
+        description: 'The environment to which we should run terraform apply'
+        required: true
+        type: choice
+        options:
+        - dev
+        - prod
+        - uat
+
+jobs:
+  backup:
+    runs-on: ubuntu-22.04
+    environment: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'prod' && 'Production' || 'Development') || 'Development' }}
+    env:
+      DATABASE_PASSWORD: ${{ inputs.dailp_env == 'uat' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      PGPASSWORD: ${{ inputs.dailp_env == 'uat' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      AWS_SUBNET_BASTION: ${{ github.event.action == 'prereleased' && secrets.UAT_AWS_SUBNET_BASTION || secrets.AWS_SUBNET_BASTION }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=channel:nixos-21.11
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v12
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Build and test project
+        # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+        run: |
+          nix build --impure -L
+      - name: Generate XML backup bundle
+        run: |
+          echo "Retrieving terraform outputs..."
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          BACKUP_BUCKET=$(nix run --impure #.tf-output backup_bucket_name)
+          BACKUP_TIMESTAMP=$(date +%s)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+            --target ${{ env.BASTION_ID }} \
+            --document-name AWS-StartPortForwardingSessionToRemoteHost \
+            --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          SSM_PID=$!
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          for i in $(seq 1 15); do
+            (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
+            sleep 1
+          done
+          echo "Beginning backup, pushing to S3 bucket $BACKUP_BUCKET..."
+          pg_dump -h localhost:5432 -U dailp postgres | gzip | aws s3 cp - s3://$BACKUP_BUCKET/backups/dailp-${{ inputs.dailp_env }}-$(date +%F).sql.gz --content-type application/gzip
