@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet"
 import { CreativeCommonsBy, Link } from "src/components"
 import Sidebar, { MobileSidebar } from "src/components/sidebar"
 import { useMediaQuery } from "src/custom-hooks"
+import { DashboardButton } from "src/layout"
 import { HeaderPrefDrawer } from "src/mode"
 import { PreferencesProvider } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
@@ -61,8 +62,11 @@ const CWKWLayout: React.FC = ({ children }) => {
               </Link>
             </h1>
           </div>
-          <LoginHeaderButton className={css.loginHeader} />
-          <HeaderPrefDrawer color={colors.body} />
+          <div className={css.navButtons}>
+            <LoginHeaderButton className={css.loginHeader} />
+            <DashboardButton color={colors.body} />
+            <HeaderPrefDrawer color={colors.body} />
+          </div>
         </div>
       </header>
       {children}
