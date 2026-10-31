@@ -66,11 +66,11 @@ jobs:
         run: |
           echo "Retrieving terraform outputs..."
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          BASTION_HOST=$(    nix run --impure .#tf-output bastion_id)
           BACKUP_BUCKET="dailp-backups-dailp-${{ inputs.dailp_env }}"
           BACKUP_TIMESTAMP=$(date +%s)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           echo "Connecting to bastion via SSM..."
-          BASTION_HOST="$(nix run --impure .#tf-output bastion_id)"
           echo "Bastion host id is '${BASTION_HOST}'"
           aws ssm start-session \
             --target "$BASTION_HOST" \
