@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select page_id, title, content, path from page;",
+  "query": "select page_id, title, content, path, created_at from page;",
   "describe": {
     "columns": [
       {
@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "path",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Date"
       }
     ],
     "parameters": {
@@ -31,8 +36,9 @@
       false,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "202e3b5ddb772a5b637ac29d49feb97ad13e871b48f6de117d98dd7a58514e2e"
+  "hash": "9b17a4dd4566612cd8b3cf31df269cf3cf88d40e411cc3f147f889701dbb8f9f"
 }
