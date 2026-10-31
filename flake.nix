@@ -448,7 +448,7 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} plan -out=tfplan
+          ${tf} plan -target=module.backups_bucket -out=tfplan
 
           expected_changes="4 create"
           changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
@@ -473,7 +473,7 @@
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
           ${tfInit}
-          ${tf} plan -out=tfplan
+          ${tf} plan -target=module.backups_bucket -out=tfplan
 
           # This is a hacky way to get a sanity check on Terraform
           # changes. Terraform's guidance is to keep humans in the
@@ -490,7 +490,7 @@
           # and it will only be valid on the single commit where we
           # make the changes. Once the changes are applied, the
           # expected changes should be empty.
-          expected_changes="6 create 3 delete 4 update"
+          expected_changes="4 create"
           changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
 
           if [[ "$expected_changes" != "$changes" ]]; then
