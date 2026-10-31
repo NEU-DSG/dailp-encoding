@@ -68,13 +68,14 @@ jobs:
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
           BACKUP_BUCKET="dailp-backups-dailp-${{ inputs.dailp_env }}"
           BACKUP_TIMESTAMP=$(date +%s)
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           echo "Connecting to bastion via SSM..."
           aws ssm start-session \
             --target "$(nix run --impure .$tf-output bastion_id)" \
             --document-name AWS-StartPortForwardingSessionToRemoteHost \
-            --parameters "{\"host\": [ \"${DATABASE_ADDRESS}\" ], \"portNumber\": [\"5423\"], \"localPortNumber\": [\"5432\"]}" &
+            --parameters "$(jq -cn --arg h "$DATABASE_ADDRESS" \
+                '{host:[$h], portNumber:["5432"], localPortNumber:["5432"]}')" &
           SSM_PID=$!
-          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           for i in $(seq 1 15); do
             (echo > /dev/tcp/localhost/5432) >/dev/null 2>&1 && break
             sleep 1
