@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Add a new associated person to the database\ninsert into associated_person (id, name)\nvalues ($1::uuid, $2)\non conflict (name) do update set name = excluded.name\nreturning id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2c572e4e997b1a625ae4dcaa0593c7a665c6561464065311cab40fb28fcc465f"
+}
