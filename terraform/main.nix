@@ -36,7 +36,7 @@ in {
   };
   output.backup_bucket_name = {
     value = "\${module.backups_bucket.bucket_name}"
-  }
+  };
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
