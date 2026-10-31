@@ -80,4 +80,4 @@ jobs:
             sleep 1
           done
           echo "Beginning backup, pushing to S3 bucket $BACKUP_BUCKET..."
-          pg_dump -h localhost:5432 -U dailp postgres | gzip | aws s3 cp - s3://$BACKUP_BUCKET/backups/dailp-${{ inputs.dailp_env }}-$(date +%F).sql.gz --content-type application/gzip
+          pg_dump "$DATABASE_URL" | gzip | aws s3 cp - s3://$BACKUP_BUCKET/backups/dailp-${{ inputs.dailp_env }}-$(date +%F).sql.gz --content-type application/gzip
