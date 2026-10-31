@@ -64,6 +64,8 @@ jobs:
           nix build --impure -L
       - name: Run backup
         run: |
+          nix build --impure -L
+          nix run --impure -L .#tf-init
           echo "Retrieving terraform outputs..."
           DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
           BASTION_HOST=$(    nix run --impure .#tf-output bastion_id)
