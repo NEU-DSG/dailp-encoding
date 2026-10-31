@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select kd.* \nfrom key_date kd\njoin document_key_date dkd\non dkd.key_date_id = kd.id \nwhere dkd.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e35dc834ce9e97ba1b4843c9c8b5ce27df798c1d6e9d9fea6b7ed1d433be0fb8"
+}

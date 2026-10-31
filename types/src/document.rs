@@ -1,6 +1,7 @@
 use crate::doc_metadata::{
-    ApprovalStatus, Format, FormatUpdate, Genre, GenreUpdate, Keyword, KeywordUpdate, Language,
-    LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate, SubjectHeading, SubjectHeadingUpdate,
+    ApprovalStatus, Format, FormatUpdate, Genre, GenreUpdate, KeyDate, KeyDateUpdate, Keyword,
+    KeywordUpdate, Language, LanguageUpdate, SpatialCoverage, SpatialCoverageUpdate,
+    SubjectHeading, SubjectHeadingUpdate,
 };
 use crate::person::{
     Contributor, ContributorAttributionInput, ContributorRole, Creator, CreatorUpdate,
@@ -14,8 +15,8 @@ use crate::{
 use itertools::Itertools;
 
 use crate::{
-    CreatorsForDocument, KeywordsForDocument, LanguagesForDocument, SpatialCoverageForDocument,
-    SubjectHeadingsForDocument,
+    CreatorsForDocument, KeyDatesForDocument, KeywordsForDocument, LanguagesForDocument,
+    SpatialCoverageForDocument, SubjectHeadingsForDocument,
 };
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -300,6 +301,15 @@ impl AnnotatedDoc {
             .unwrap_or_default())
     }
 
+    /// Key dates for this document
+    async fn key_dates(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<KeyDate>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(KeyDatesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
     /// The audio for this document that was ingested from GoogleSheets, if there is any.
     async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
         Ok(self.meta.audio_recording.to_owned())
@@ -430,6 +440,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The key dates associated with the document
+    pub key_dates: MaybeUndefined<Vec<KeyDateUpdate>>,
     /// The key terms associated with the document
     pub keywords: MaybeUndefined<Vec<KeywordUpdate>>,
     /// The languages present in the document
@@ -600,6 +612,8 @@ pub struct DocumentMetadata {
     pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The languages present in the document
     pub languages_ids: Option<Vec<Uuid>>,
+    /// The key dates associated with the document (temporal coverage)
+    pub key_dates_ids: Option<Vec<Uuid>>,
     /// The key terms associated with the document
     pub keywords_ids: Option<Vec<Uuid>>,
     /// The creator(s) of the document
@@ -785,6 +799,7 @@ impl DocumentMetadata {
             })
             .collect())
     }
+
     /// Fetch all creators linked to this document
     async fn creators<'a>(
         &'a self,
@@ -802,6 +817,29 @@ impl DocumentMetadata {
         Ok(rows
             .into_iter()
             .map(|row| Creator {
+                id: row.id,
+                name: row.name,
+            })
+            .collect())
+    }
+
+    /// Fetch all key dates linked to this document
+    async fn key_dates<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<KeyDate>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            KeyDate,
+            "queries/get_key_dates_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| KeyDate {
                 id: row.id,
                 name: row.name,
             })
@@ -1009,6 +1047,13 @@ pub struct SpatialCoverageWithDocId {
 
 #[derive(Debug, Clone)]
 pub struct CreatorWithDocId {
+    pub document_id: Uuid,
+    pub id: Uuid,
+    pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct KeyDateWithDocId {
     pub document_id: Uuid,
     pub id: Uuid,
     pub name: String,
