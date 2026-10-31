@@ -451,7 +451,7 @@
           ${tf} plan -target=module.backups_bucket -out=tfplan
 
           expected_changes="4 create"
-          changes=$(${tf} show -json tfplan | jq '.resource_changes[].change.actions[]' | grep -v no-op | sort | uniq -c | xargs)
+          changes=$(${tf} show -json tfplan | jq '.resource_changes[]')
 
           if [[ "$expected_changes" != "$changes" ]]; then
             echo "Plan contains unexpected resource changes:"
