@@ -70,7 +70,7 @@ jobs:
           BACKUP_TIMESTAMP=$(date +%s)
           echo "Connecting to bastion via SSM..."
           aws ssm start-session \
-            --target ${{ env.BASTION_ID }} \
+            --target "$(nix run --impure .$tf-output bastion_id)" \
             --document-name AWS-StartPortForwardingSessionToRemoteHost \
             --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
           SSM_PID=$!
