@@ -71,7 +71,7 @@ jobs:
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           echo "Connecting to bastion via SSM..."
           aws ssm start-session \
-            --target "$(nix run --impure .$tf-output bastion_id)" \
+            --target "$(nix run --impure .#tf-output bastion_id)" \
             --document-name AWS-StartPortForwardingSessionToRemoteHost \
             --parameters "$(jq -cn --arg h "$DATABASE_ADDRESS" \
                 '{host:[$h], portNumber:["5432"], localPortNumber:["5432"]}')" &
