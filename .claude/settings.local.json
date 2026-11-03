@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git -c safe.directory='*' --no-optional-locks log --format=\"%h %ad %an %s\" --date=short -G \"amplify_webhook\" -- terraform/website.nix .github/workflows)"
-    ]
-  }
-}
