@@ -37,7 +37,7 @@ jobs:
       # Database address, backup bucket, and bastion id pulled from the current terraform state.
       # These could change, don't depend on this too much.
       DATABASE_ADDRESS: ${{ inputs.dailp_env == 'dev' && ('dailp-dev-database-primary.crrytz26uak5.us-east-1.rds.amazonaws.com') || (inputs.dailp_env == 'uat' && 'dailp-uat-database-primary.crrytz26uak5.us-east-1.rds.amazonaws.com' || 'dailp-database-primary.crqylxrmqoen.us-east-1.rds.amazonaws.com' ) }}
-      BASTION_ID: ${{ inputs.dailp_env == 'dev' && 'i-07da42e266053f63d' || (inputs.dailp_env == 'uat' && 'i-05b72e20f6d56981b' || 'i-02432c662f428ddac') }}
+      BASTION_HOST: ${{ inputs.dailp_env == 'dev' && 'i-07da42e266053f63d' || (inputs.dailp_env == 'uat' && 'i-05b72e20f6d56981b' || 'i-02432c662f428ddac') }}
       BACKUP_BUCKET: ${{ inputs.dailp_env == 'dev' && 'dailp-backups-dailp-dev' || (inputs.dailp_env == 'uat' && 'dailp-backups-dailp-uat' || 'dailp-backups-dailp-prod') }}
     steps:
       - name: Checkout code
