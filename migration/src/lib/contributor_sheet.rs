@@ -2,7 +2,7 @@ use dailp::{ContributorDetails, Database, Date, SheetResult};
 
 /// Represents a validated row of the Contributor Sheet
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Contributor_Row {
+pub struct ContributorRow {
     /// User's full name of from column "Full Name"
     pub full_name: String,
     /// Name not currently used from column "Alternate Name"
@@ -18,15 +18,17 @@ pub struct Contributor_Row {
 
 /// Represnts a parsed, validated Contributor Sheet
 #[derive(Debug, Clone)]
-pub struct Contributor_Sheet {
-    pub rows: Vec<Contributor_Row>,
+pub struct ContributorSheet {
+    pub rows: Vec<ContributorRow>,
 }
 
 /// Represents the operations performed on the Toc_Sheet from spreadsheets
-impl Contributor_Sheet {
+impl ContributorSheet {
     /// Parses the raw sheet rows into a validated `Contributor_Sheet`
     pub fn from_spreadsheet(rows: Vec<Vec<String>>) -> Result<Self, anyhow::Error> {
-        if rows.is_empty() return Err(anyhow::anyhow!("Contributor sheet has no rows"));
+        if rows.is_empty() {
+            return Err(anyhow::anyhow!("Contributor sheet has no rows"));
+        }
 
         let mut contributor_rows = Vec::new();
 
@@ -34,22 +36,24 @@ impl Contributor_Sheet {
         for (offset, raw_row) in rows.into_iter().skip(1).enumerate() {
             let row_number = offset + 2;
 
-            if raw_row.iter().all(|cell| cell.trim().is_empty()) /// Skipping empty rows
+            if raw_row.iter().all(|cell| cell.trim().is_empty()) { /// Skipping empty rows
                 continue;
+            }
 
-            contributor_rows.push(Contributor_Row::from_row(raw_row, row_number)?);
+            contributor_rows.push(ContributorRow::from_row(raw_row, row_number)?);
         }
 
-        if contributor_rows.is_empty()
+        if contributor_rows.is_empty() {
             return Err(anyhow::anyhow!("Contributor sheet has no contributor rows"));
+        }
 
         Self::validate_no_duplicate_emails(&contributor_rows)?;
 
-        Ok(Contributor_Sheet { rows: contributor_rows })
+        Ok(ContributorSheet { rows: contributor_rows })
     }
 
     /// Validates that there are no dulpicate emails to prevent overlapping users being ingested
-    fn validate_no_duplicate_emails(rows: &[Contributor_Row]) -> Result<(), anyhow::Error> {
+    fn validate_no_duplicate_emails(rows: &[ContributorRow]) -> Result<(), anyhow::Error> {
         let mut seen_emails = std::collections::HashSet::new();
         for row in rows {
             if let Some(email) = &row.email {
@@ -69,7 +73,7 @@ impl Contributor_Sheet {
     pub fn into_contributor_details_list(self) -> Vec<ContributorDetails> {
         self.rows
             .into_iter()
-            .map(Contributor_Row::into_contributor_details)
+            .map(ContributorRow::into_contributor_details)
             .collect()
     }
 
@@ -78,7 +82,7 @@ impl Contributor_Sheet {
         db: &Database,
         rows: Vec<Vec<String>>,
     ) -> Result<Vec<anyhow::Error>, anyhow::Error> {
-        let contributor_sheet = Contributor_Sheet::from_spreadsheet(rows)
+        let contributor_sheet = ContributorSheet::from_spreadsheet(rows)
             .map_err(|e| anyhow::anyhow!("Failed to parse Contributor sheet: {}", e))?;
 
         let mut failures = Vec::new();
@@ -106,14 +110,15 @@ impl Contributor_Sheet {
     }
 }
 
-impl Contributor_Row {
+impl ContributorRow {
     /// Builds one `Contributor_Row` from a raw sheet row
     fn from_row(raw_row: Vec<String>, row_number: usize) -> Result<Self, anyhow::Error> {
         let mut cols = raw_row.into_iter();
 
         let full_name = cols.next().unwrap_or_default();
-        if full_name.trim().is_empty()
+        if full_name.trim().is_empty() {
             return Err(anyhow::anyhow!("Row {} is missing a Full Name", row_number));
+        }
         let full_name = full_name.trim().to_string();
 
         let alternate_name = cols
@@ -136,7 +141,7 @@ impl Contributor_Row {
             .filter(|raw| !raw.trim().is_empty())
             .map(|raw| raw.trim().to_string());
 
-        Ok(Contributor_Row {
+        Ok(ContributorRow {
             full_name,
             alternate_name,
             date_of_birth,
@@ -177,7 +182,7 @@ mod tests {
             &["Jane Doe", "J. Doe", "1990-01-01", "translator", "ex2@example.com"],
         ]);
 
-        let sheet = Contributor_Sheet::from_spreadsheet(sheet).expect("should parse");
+        let sheet = ContributorSheet::from_spreadsheet(sheet).expect("should parse");
         assert_eq!(sheet.rows.len(), 2);
 
         assert_eq!(sheet.rows[0].full_name, "John Doe");
@@ -193,7 +198,7 @@ mod tests {
     #[test]
     fn parsing_an_empty_sheet_fails() {
         let sheet = rows(&[]);
-        assert!(Contributor_Sheet::from_spreadsheet(sheet).is_err());
+        assert!(ContributorSheet::from_spreadsheet(sheet).is_err());
     }
 
     /// Mock sheet parsed fails on empty sheet
@@ -203,7 +208,7 @@ mod tests {
             &["Full Name", "Alternate Name", "Date of Birth", "Role", "Email"],
             &["", "", "", "contributor", "ex@gmail.edu"],
         ]);
-        assert!(Contributor_Sheet::from_spreadsheet(sheet).is_err());
+        assert!(ContributorSheet::from_spreadsheet(sheet).is_err());
     }
 
     /// Mock sheet parsed fails on sheet with duplicate emails
@@ -214,7 +219,7 @@ mod tests {
             &["John Doe", "", "", "contributor", "ex@gmail.edu"],
             &["Someone Else", "", "", "editor", "ex@gmail.edu"],
         ]);
-        assert!(Contributor_Sheet::from_spreadsheet(sheet).is_err());
+        assert!(ContributorSheet::from_spreadsheet(sheet).is_err());
     }
 
     /// Mock sheet parsed fails on sheet with duplicate emails
@@ -225,14 +230,14 @@ mod tests {
             &["John Doe", "", "", "contributor", "ex@gmail.edu"],
             &["", "", "", "", ""],
         ]);
-        let sheet = Contributor_Sheet::from_spreadsheet(sheet).expect("should parse");
+        let sheet = ContributorSheet::from_spreadsheet(sheet).expect("should parse");
         assert_eq!(sheet.rows.len(), 1);
     }
     
     /// Inserting peroperly maps name
     #[test]
     fn into_contributor_maps_name() {
-        let row = Contributor_Row {
+        let row = ContributorRow {
             full_name: "John Doe".to_string(),
             alternate_name: None,
             date_of_birth: None,
@@ -249,7 +254,7 @@ mod tests {
     /// Inserting properly parses birthday to valid one
     #[test]
     fn into_contributor_parses_birth_date() {
-        let row = Contributor_Row {
+        let row = ContributorRow {
             full_name: "Jess Doe".to_string(),
             alternate_name: None,
             date_of_birth: Some("1990-01-01".to_string()),
@@ -264,7 +269,7 @@ mod tests {
     /// Inserting on birthday doesn't throw and silently skips
     #[test]
     fn into_contributor_skips_birth_date() {
-        let row = Contributor_Row {
+        let row = ContributorRow {
             full_name: "Someone".to_string(),
             alternate_name: None,
             date_of_birth: Some("not a real date".to_string()),
