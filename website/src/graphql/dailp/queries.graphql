@@ -582,6 +582,12 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   curateWordAudio(input: $input) {
     # ...FormFields
     id
+    editedAudio {
+      ...AudioSliceFields
+    }
+    ingestedAudioTrack {
+      ...AudioSliceFields
+    }
     userContributedAudio {
       ...AudioSliceFields
       recordedBy {

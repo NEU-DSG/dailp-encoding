@@ -91,7 +91,7 @@ export function EditorPublishedWordAudio(p: {
       )}
       {otherPublishedAudios.length > 0 && (
         <>
-          {otherPublishedAudios.length > 0 && <hr />}
+          {ownPublishedAudios.length > 0 && <hr />}
           <strong>Other Published Contributions</strong>
           {otherPublishedAudios.map((audio) => (
             <AudioTrackRow
@@ -144,7 +144,7 @@ export function EditorUnpublishedWordAudio(p: {
       )}
       {otherUnpublishedAudios.length > 0 && (
         <>
-          {otherUnpublishedAudios.length > 0 && <hr />}
+          {ownUnpublishedAudios.length > 0 && <hr />}
           <strong>Other Unpublished Contributions</strong>
           <ul style={{ margin: 0, padding: 0 }}>
             {otherUnpublishedAudios.map((audio) => (
