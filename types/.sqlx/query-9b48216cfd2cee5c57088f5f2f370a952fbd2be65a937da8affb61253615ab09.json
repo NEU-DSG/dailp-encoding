@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "/*\nUpdate chapter order and section without touching the title.\nOnly updates index_in_parent and section for the given chapter id.\n*/\nUPDATE collection_chapter\nSET \n    section = $2::collection_section,\n    index_in_parent = $3\nWHERE id = $1::uuid\n\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "collection_section",
+            "kind": {
+              "Enum": [
+                "Intro",
+                "Body",
+                "Credit"
+              ]
+            }
+          }
+        },
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9b48216cfd2cee5c57088f5f2f370a952fbd2be65a937da8affb61253615ab09"
+}

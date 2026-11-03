@@ -1,6 +1,8 @@
 .DS_Store
 .idea
 *.log
+*.dump
+backups/
 tmp/
 .postgres/
 
@@ -17,6 +19,9 @@ target/
 .direnv/
 .mongo/
 *.tfstate
+vite.config.ts.timestamp*
+/yarn.lock
+/backups
 
 public/
 

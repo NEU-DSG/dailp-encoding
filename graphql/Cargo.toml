@@ -4,9 +4,18 @@ version = "0.2.1"
 authors = ["Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
+[lib]
+name = "dailp_graphql"
+path = "src/lib.rs"
+
 [[bin]]
 name = "dailp-graphql"
 path = "src/lambda.rs"
+
+[[bin]]
+name = "dailp-outbound"
+path = "src/outbound_lambda.rs"
+
 
 [[bin]]
 name = "dailp-graphql-local"
@@ -38,6 +47,13 @@ async-graphql-tide = "4"
 tide = "0.16"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 jsonwebtoken = "8"
+aws-config = "1.1.7"
+# TODO this is a very old version; using this to resolve comptability
+# conflicts between the Rust toolchain version, our current Rust edition,
+# this dependency, and several other dependencies. We'll want to
+# do work to ensure our dependencies are reasonably up-to-date but that's
+# not the issue I'm solving at this moment.
+aws-sdk-lambda = "1.3.0"
 
 dailp = {path = "../types"}
 reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }

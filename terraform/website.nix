@@ -16,20 +16,22 @@ in {
         }];
         Version = "2008-10-17";
       };
-      inline_policy = {
-        name = "Amplify";
-        policy = toJSON {
+    };
+
+    aws_iam_role_policy.amplify_role_policy = {
+      role = "\${aws_iam_role.amplify_role.id}";
+      name = "Amplify";
+      policy = toJSON {
           Statement = [{
             Effect = "Allow";
             Action = "amplify:*";
             Resource = "*";
           }];
         };
-      };
     };
 
     aws_amplify_app.dailp =
-      let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
+      let apiUrl = "\${aws_api_gateway_stage.functions_api_stage.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
         name = "dailp${if config.setup.stage == "prod" then "" else "-${config.setup.stage}"}";
@@ -124,14 +126,14 @@ in {
       wait_for_verification = false;
     };
 
-    aws_amplify_webhook.current_stage = {
-      app_id = "\${aws_amplify_app.dailp.id}";
-      branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
-      description = "Build front-end environment";
-    };
+    # aws_amplify_webhook.current_stage = {
+    #   app_id = "\${aws_amplify_app.dailp.id}";
+    #   branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
+    #   description = "Build front-end environment";
+    # };
   };
 
-  config.output.amplify_webhook = {
-    value = "\${aws_amplify_webhook.current_stage.url}";
-  };
+  # config.output.amplify_webhook = {
+  #   value = "\${aws_amplify_webhook.current_stage.url}";
+  # };
 }
