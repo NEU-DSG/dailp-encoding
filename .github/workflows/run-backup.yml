@@ -34,6 +34,11 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
+      # Database address, backup bucket, and bastion id pulled from the current terraform state.
+      # These could change, don't depend on this too much.
+      DATABASE_ADDRESS: ${{ inputs.dailp_env == 'dev' && ('dailp-dev-database-primary.crrytz26uak5.us-east-1.rds.amazonaws.com') || (inputs.dailp_env == 'uat' && 'dailp-uat-database-primary.crrytz26uak5.us-east-1.rds.amazonaws.com' || 'dailp-database-primary.crqylxrmqoen.us-east-1.rds.amazonaws.com' ) }}
+      BASTION_ID: ${{ inputs.dailp_env == 'dev' && 'i-07da42e266053f63d' || (inputs.dailp_env == 'uat' && 'i-05b72e20f6d56981b' || 'i-02432c662f428ddac') }}
+      BACKUP_BUCKET: ${{ inputs.dailp_env == 'dev' && 'dailp-backups-dailp-dev' || (inputs.dailp_env == 'uat' && 'dailp-backups-dailp-uat' || 'dailp-backups-dailp-prod') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -67,9 +72,6 @@ jobs:
           nix build --impure -L
           nix run --impure -L .#tf-init
           echo "Retrieving terraform outputs..."
-          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
-          BASTION_HOST=$(    nix run --impure .#tf-output bastion_id)
-          BACKUP_BUCKET="dailp-backups-dailp-${{ inputs.dailp_env }}"
           BACKUP_TIMESTAMP=$(date +%s)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           echo "Connecting to bastion via SSM..."
