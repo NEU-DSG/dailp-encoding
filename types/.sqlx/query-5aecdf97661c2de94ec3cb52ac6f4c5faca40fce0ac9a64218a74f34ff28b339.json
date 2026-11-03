@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n  page_id,\n  title,\n  path,\n  slug,\n  content as body\nfrom page\nwhere path = $1;",
+  "query": "select\n  page_id,\n  title,\n  path,\n  slug,\n  content as body,\n  created_at\nfrom page\nwhere path = $1;",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "body",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Date"
       }
     ],
     "parameters": {
@@ -39,8 +44,9 @@
       false,
       false,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "c20fa09d88d5c220c2d9740229c13876f5a7cf8ae114170a5ceaa0e357b61006"
+  "hash": "5aecdf97661c2de94ec3cb52ac6f4c5faca40fce0ac9a64218a74f34ff28b339"
 }
