@@ -35,7 +35,7 @@ This file must never be committed on Git.
 
 To get started with a development environment, you only need to install Nix by following [these instructions](https://nixos.org/download.html#nix-quick-install).
 After that, the `nix` command will be available in a terminal.
-We use an unstable feature of `nix` called "flakes," so you also need to [enable this feature](https://nixos.wiki/wiki/Flakes).
+We use an unstable feature of `nix` called "flakes," which is enabled by default with the .envrc[feature](https://nixos.wiki/wiki/Flakes).
 
 Then, you can start a shell which has all the tools needed to work on this project:
 
