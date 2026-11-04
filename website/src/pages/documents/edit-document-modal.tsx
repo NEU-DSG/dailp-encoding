@@ -7,6 +7,7 @@ import TextareaAutosize from "react-textarea-autosize"
 import { v4 as uuidv4 } from "uuid"
 import { InfoTooltip } from "src/components/info-tooltip"
 import * as Dailp from "src/graphql/dailp"
+import { KeyDate } from "src/graphql/dailp"
 import { UserRole, useUserRole } from "../../auth"
 import { useTagSelector } from "../../hooks/use-tag-selector"
 import Cite from "../../utils/citation-config"
@@ -113,6 +114,8 @@ const approvedSpatialCoverages = [
   "Dubai, UAE",
 ]
 
+const approvedKeyDates: string[] = []
+
 export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
   isOpen,
   onClose,
@@ -165,6 +168,11 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     [documentMetadata.spatialCoverage]
   )
 
+  const keyDateStrings = useMemo(
+    () => (documentMetadata.keyDates ?? []).map((kd) => kd.name),
+    [documentMetadata.keyDates]
+  )
+
   const [title, setTitle] = useState(documentMetadata.title ?? "")
 
   const [date, setDate] = useState<Date | null>(null)
@@ -191,6 +199,26 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       details: c.details ? { ...c.details } : null,
     }))
   )
+
+  const [keyDates, setKeyDates] = useState(documentMetadata.keyDates ?? [])
+  const [newKeyDate, setNewKeyDate] = useState("")
+  const [selectedDates, setSelectedDates] = useState<KeyDate[]>([
+    ...(documentMetadata.keyDates ?? []),
+  ])
+  const [newDates, setNewDates] = useState(new Set<string>())
+
+  const handleAddKeyDate = () => {
+    const value = newKeyDate.trim()
+    if (!value) return
+
+    setSelectedDates((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), name: value },
+    ])
+
+    setNewDates((prev) => new Set(prev).add(value))
+    setNewKeyDate("")
+  }
 
   // Changes for pulling and creating new subject headings
   const [{ data: allSubjectsData }, refetchSubjects] =
@@ -388,6 +416,13 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     removeTag: removeCoverage,
   } = useTagSelector(spatialCoverageStrings, approvedSpatialCoverages)
 
+  const {
+    tags: selectedKeyDates,
+    newTags: newKeyDates,
+    addTag: addKeyDate,
+    removeTag: removeKeyDate,
+  } = useTagSelector(keyDateStrings, approvedKeyDates)
+
   const [backupState, setBackupState] = useState<null | {
     title: string
     date: Date | null
@@ -404,6 +439,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     subjectHeadings: Dailp.SubjectHeading[]
     languages: Dailp.Language[]
     spatialCoverages: Dailp.SpatialCoverage[]
+    keyDates: Dailp.KeyDate[]
   }>(null)
 
   useEffect(() => {
@@ -423,6 +459,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         subjectHeadings: [...subjectHeadings],
         languages: [...languages],
         spatialCoverages: [...spatialCoverage],
+        keyDates: [...keyDates],
       })
     }
   }, [isOpen])
@@ -452,6 +489,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setLanguages(dm.languages ?? [])
     setSubjectHeadings(dm.subjectHeadings ?? [])
     setSpatialCoverage(dm.spatialCoverage ?? [])
+    setKeyDates(dm.keyDates ?? [])
 
     const formattedContributors = (dm.contributors ?? []).map((c) => ({
       ...c,
@@ -483,6 +521,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: [...(dm.subjectHeadings ?? [])],
       languages: [...(dm.languages ?? [])],
       spatialCoverages: [...(dm.spatialCoverage ?? [])],
+      keyDates: [...(dm.keyDates ?? [])],
     })
   }, [documentMetadata, iiifFormat])
 
@@ -570,6 +609,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
     setLanguages(backupState.languages)
     setSubjectHeadings(backupState.subjectHeadings)
     setSpatialCoverage(backupState.spatialCoverages)
+    setKeyDates(backupState.keyDates)
     //setSource(backupState.source)
     //setDOI(backupState.doi)
 
@@ -578,6 +618,9 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
 
     // Reset new contributors tracking
     setNewContributors(new Set())
+
+    // Reset new key dates tracking
+    setNewDates(new Set())
 
     // Reset temp form fields
     setTempName("")
@@ -634,7 +677,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       }
     })
 
-    // Languages to be submitted
+    // Spatial coverages to be submitted
     const spatialCoverageToSubmit = selectedSpatialCoverages.map((name) => {
       // Find existing spatial coverages by name to get id, otherwise generate new UUID
       const existing = spatialCoverage.find((sc) => sc.name === name)
@@ -642,6 +685,16 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
         id: existing?.id ?? uuidv4(),
         name,
         //status: existing?.status ?? Dailp.ApprovalStatus.Approved,
+      }
+    })
+
+    // Key dates to be submitted
+    const keyDatesToSubmit = selectedDates.map((keyDate) => {
+      // Find existing key dates by name to get id, otherwise generate new UUID
+      const existing = keyDates.find((kd) => kd.name === keyDate.name)
+      return {
+        id: existing?.id ?? keyDate.id,
+        name: keyDate.name,
       }
     })
 
@@ -663,6 +716,7 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
       subjectHeadings: subjectHeadingsToSubmit,
       languages: languagesToSubmit,
       spatialCoverage: spatialCoverageToSubmit,
+      keyDates: keyDatesToSubmit,
       citeFormat: citeFormat,
     }
 
@@ -1028,6 +1082,62 @@ export const EditDocumentModal: React.FC<EditDocumentModalProps> = ({
             onRemove={isEditing ? removeCoverage : undefined}
             addButtonLabel="Add Spatial Coverage"
             tooltipInfo={TOOLTIP_TEXT.spatialCoverage}
+          />
+
+          <TagSelector
+            label="Key Dates (dates used within the story)"
+            selectedTags={selectedDates.map((k) => k.name)}
+            newTags={newDates}
+            onRemove={(index) => {
+              setSelectedDates((prev) => prev.filter((_, i) => i !== index))
+            }}
+            additionalForm={
+              isEditing && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    width: "100%",
+                    marginTop: "0.25rem",
+                  }}
+                >
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Add a key date (e.g. 1951-02-07, February 1951)..."
+                    value={newKeyDate}
+                    onChange={(e) => setNewKeyDate(e.target.value)}
+                    style={{
+                      flex: 1,
+                      height: "2.625rem",
+                      marginBottom: 0,
+                      boxSizing: "border-box",
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleAddKeyDate()
+                      }
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleAddKeyDate}
+                    className={styles.addTagButton}
+                    style={{
+                      height: "2.625rem",
+                      marginTop: 0,
+                      whiteSpace: "nowrap",
+                      padding: "0 1.25rem",
+                    }}
+                  >
+                    Add Key Date
+                  </button>
+                </div>
+              )
+            }
           />
 
           {/* Might need to pull the creator(s) from creator or contributors w/ author role */}
