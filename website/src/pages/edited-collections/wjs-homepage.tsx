@@ -2,8 +2,7 @@ import { Link } from "src/components"
 import Sidebar, { MobileSidebar } from "src/components/sidebar"
 import { useMediaQuery } from "src/custom-hooks"
 import { HeaderPrefDrawer } from "src/mode"
-import { useRouteParams } from "src/renderer/PageShell"
-import { collectionRoute } from "src/routes"
+import { chapterRoute, collectionRoute } from "src/routes"
 import { colors, mediaQueries } from "src/style/constants"
 import { LoginHeaderButton } from "../auth/user-auth-layout"
 import * as styles from "../cwkw/cwkw-layout.css"
@@ -12,10 +11,13 @@ import * as css from "./wjs-homepage.css"
 import WJSQuickNav from "./wjs-quick-nav"
 import WJSTitleCard from "./wjs-title-card"
 
-export const WJSHomepage = () => {
+export const WJSHomepage = (props: {
+  collectionSlug: string
+  firstChapterSlug?: string | null
+}) => {
   const isDesktop = useMediaQuery(mediaQueries.medium)
   const dialog = useDialog()
-  const { collectionSlug } = useRouteParams()
+  const { collectionSlug, firstChapterSlug } = props
 
   return (
     <div>
@@ -39,7 +41,7 @@ export const WJSHomepage = () => {
             <h1 className={styles.siteTitle}>
               <Link
                 className={styles.siteLink}
-                href={collectionRoute(collectionSlug!)}
+                href={collectionRoute(collectionSlug)}
               >
                 {/* Add logo */}
                 WJS
@@ -52,19 +54,36 @@ export const WJSHomepage = () => {
       </header>
 
       <WJSTitleCard
-        button={{
-          text: "Start Reading",
-          link: "/acknowledgements",
-        }}
+        button={
+          firstChapterSlug
+            ? {
+                text: "Start Reading",
+                link: chapterRoute(collectionSlug, firstChapterSlug),
+              }
+            : undefined
+        }
       />
-
       <WJSQuickNav />
 
-      <section id="about">...</section>
-      <section id="getting-started">...</section>
-      <section id="chapters">...</section>
-      <section id="featured-stories">...</section>
-      <section id="credit">...</section>
+      <main className={css.contentColumn}>
+        <section id="about" className={css.section}>
+          <h2 className={css.sectionHeading}>About</h2>
+        </section>
+        <section id="getting-started" className={css.section}>
+          <h2 className={css.sectionHeading}>Getting Started</h2>
+        </section>
+        <section id="chapters" className={css.section}>
+          <h2 className={css.sectionHeading}>Chapters</h2>
+        </section>
+        <section id="featured-stories" className={css.section}>
+          <h2 className={css.sectionHeading}>Featured Stories</h2>
+        </section>
+        <section id="credit" className={css.section}>
+          <h2 className={css.sectionHeading}>Credit &amp; Reuse</h2>
+        </section>
+      </main>
     </div>
   )
 }
+
+export default WJSHomepage
