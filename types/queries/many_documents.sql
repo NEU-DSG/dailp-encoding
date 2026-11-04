@@ -93,7 +93,18 @@ select
     from document_creator dcr
     join creator cr on cr.id = dcr.creator_id
     where dcr.document_id = d.id
-  ) as creators
+  ) as creators,
+    ( -- Associated people
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', p.id,
+          'name', p.name
+    )), '[]')
+    from document_associated_person dp
+    join associated_person p on p.id = dp.associated_person_id
+    where dp.document_id = d.id
+  ) as associated_people
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
