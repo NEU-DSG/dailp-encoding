@@ -10,7 +10,7 @@ import {
   rhythm,
   thickness,
   vspace,
-} from "./constants"
+} from "./design-tokens"
 import { media, paddingX } from "./utils"
 
 export const hideOnPrint = style(media(mediaQueries.print, { display: "none" }))

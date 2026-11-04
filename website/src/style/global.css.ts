@@ -8,7 +8,7 @@ import {
   rootFontSize,
   thickness,
   typography,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { paddingY } from "src/style/utils"
 
 const t: Record<string, any> = typography.toJSON()

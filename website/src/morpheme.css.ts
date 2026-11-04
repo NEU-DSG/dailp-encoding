@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin, padding } from "polished"
-import { hspace, vspace } from "src/style/constants"
+import { hspace, vspace } from "src/style/design-tokens"
 
 export const margined = style(margin(vspace.half, hspace.edge))
 
