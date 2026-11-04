@@ -1,5 +1,5 @@
 import "@reach/dialog/styles.css"
-import React, { Fragment } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
@@ -30,7 +30,9 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const { isEditing, setIsEditing } = useEditing()
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
 
-  const [citation, setCitation] = React.useState<string>("")
+  const [citation, setCitation] = React.useState<string>(
+    "Format Not Yet Available."
+  )
 
   // Initialize citation format from localStorage
   const [citeFormat, setCiteFormat] = React.useState(() => {
@@ -41,6 +43,35 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   })
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
+
+  // Query IIIF link for format type of this document
+  const [{ data: iiifData }] = Dailp.useIiifSourceForDocumentMetadataQuery({
+    variables: { documentId: doc.id },
+    pause: !doc.id,
+  })
+
+  const [iiifFormat, setIiifFormat] = useState<string>(
+    "Format Not Yet Available."
+  )
+
+  // When URL is accessible, grab format type from IIIF url info.json
+  useEffect(() => {
+    if (!iiifData?.iiifSourceForDocumentMetadata) return
+
+    fetch(iiifData.iiifSourceForDocumentMetadata)
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        return res.json()
+      })
+      .then((info) => {
+        const formats = info?.profile?.[1]?.formats
+        if (Array.isArray(formats) && formats.length > 0) {
+          setIiifFormat(formats[0])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [iiifData])
 
   // if (!docData) {
   //   return null
@@ -232,7 +263,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <div className={styles.field}>
           <div className={styles.label}>FORMAT</div>
           <div className={styles.value}>
-            {docData.format?.name || "Format Not Yet Available."}
+            {docData.format?.name || iiifFormat}
           </div>
         </div>
 
