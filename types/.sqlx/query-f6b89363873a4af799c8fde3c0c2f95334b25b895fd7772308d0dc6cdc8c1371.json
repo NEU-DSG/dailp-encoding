@@ -1,12 +1,12 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into edited_collection(title, slug, description, thumbnail_url)\nvalues ($1, $2, $3, $4)\nreturning id\n",
+  "query": "insert into edited_collection(title, slug, description, thumbnail_url)\nvalues ($1, $2, $3, $4)\nreturning slug\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
-        "type_info": "Uuid"
+        "name": "slug",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -21,5 +21,5 @@
       false
     ]
   },
-  "hash": "26fb16ba5cc531729a4e24aa202c2c4aba2ea7895d20b129dbe7c330e08270c8"
+  "hash": "f6b89363873a4af799c8fde3c0c2f95334b25b895fd7772308d0dc6cdc8c1371"
 }
