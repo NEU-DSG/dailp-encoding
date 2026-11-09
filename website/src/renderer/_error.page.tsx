@@ -5,6 +5,7 @@ import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { DailpPageContents } from "src/pages/dailp.page"
 import { useLocation } from "src/renderer/PageShell"
+import { edgePadded, fullWidth } from "src/style/utils.css"
 
 /* import { EditablePageContents } from "../templates/editable-page" */
 
@@ -14,7 +15,13 @@ import { useLocation } from "src/renderer/PageShell"
  */
 export const Page = () => {
   const content = useHasMounted() ? <ClientPage /> : <NotFound />
-  return <Layout>{content}</Layout>
+  return (
+    <Layout>
+      <main className={edgePadded}>
+        <article className={fullWidth}>{content}</article>
+      </main>
+    </Layout>
+  )
 }
 
 const ClientPage = () => {
@@ -40,11 +47,11 @@ const ClientPage = () => {
 }
 
 const NotFound = () => (
-  <main>
+  <>
     <h1>Page Not Found</h1>
     <p>
       We aren't sure what page you were looking for.{" "}
       <Link href="/">View our collection of Cherokee manuscripts</Link>
     </p>
-  </main>
+  </>
 )
