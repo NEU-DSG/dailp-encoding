@@ -26,6 +26,7 @@ import { IconTextButton } from "src/components/button"
 import { CollectionAuthGuard } from "src/components/collection-auth-guard"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
+import { UploadAudioPanel } from "src/components/edit-word-audio/upload"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
@@ -588,7 +589,10 @@ export const DocumentTitleHeader = (p: {
             </>
           )}
           {(role === UserRole.Editor || role === UserRole.Contributor) && (
-            <RecordDocumentAudioPanel document={p.doc} />
+            <>
+              <RecordDocumentAudioPanel document={p.doc} />
+              <UploadAudioPanel uploadTo={p.doc}></UploadAudioPanel>
+            </>
           )}
         </div>
       </div>
