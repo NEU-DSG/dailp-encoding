@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- All folders in the subtree rooted at $1 (including $1), live and soft-deleted\n-- alike. Used to soft-delete a whole folder subtree. With ltree this is a single\n-- descendant test (`<@`), replacing the previous recursive CTE -- so the\n-- nullability overrides that a recursive CTE forced are no longer needed.\nselect f.id, f.parent_id, f.name, f.path::text as \"path!\", f.created_at,\n       f.deleted_at, f.size_bytes\nfrom folders f\nwhere f.path <@ (select path from folders where id = $1)\norder by f.path;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "affd2acb8f72ff980d051223fd4c7985ce92fb4fcf4545e6b8e4f0074a4f59ca"
+}

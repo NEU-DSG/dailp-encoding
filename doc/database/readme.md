@@ -64,4 +64,6 @@ Most of our columns are `not null`, which is long to write so we introduced shor
 - [collections](./collections.md): Edited collections tables
 - [words](./words.md): Words, word parts, and abbreviation systems
 - [media](./media.md): Audio and image resources
+- [folders](./folders.md): Asset library folder tree
+- [images](./images.md): Asset library images and page references
 - [user](./user.md): User account records

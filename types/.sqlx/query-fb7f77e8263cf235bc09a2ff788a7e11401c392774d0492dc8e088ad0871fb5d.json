@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Soft-delete a folder: stamp deleted_at rather than removing the row. $1 id\nupdate folders\nset deleted_at = now()\nwhere id = $1\nreturning id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n          size_bytes;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "fb7f77e8263cf235bc09a2ff788a7e11401c392774d0492dc8e088ad0871fb5d"
+}

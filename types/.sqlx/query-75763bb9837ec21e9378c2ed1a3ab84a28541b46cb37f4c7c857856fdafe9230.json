@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Record an image that has already been uploaded to S3.\n-- $1 folder_id (null = root), $2 filename, $3 mime_type, $4 size_bytes,\n-- $5 width, $6 height, $7 alt_text, $8 caption, $9 s3_url, $10 scope,\n-- $11 uploaded_by (null when the uploader is not known).\n-- deleted_at is left null: a new row is, by definition, not deleted.\ninsert into images (\n  folder_id, filename, mime_type, size_bytes, width, height,\n  alt_text, caption, s3_url, scope, uploaded_by\n)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, alt_text, caption, s3_url,\n          scope as \"scope: ImageScope\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "folder_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "uploaded_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "width",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "height",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "alt_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "caption",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "s3_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "scope: ImageScope",
+        "type_info": {
+          "Custom": {
+            "name": "image_scope",
+            "kind": {
+              "Enum": [
+                "Site",
+                "Collection"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Int8",
+        "Int4",
+        "Int4",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "image_scope",
+            "kind": {
+              "Enum": [
+                "Site",
+                "Collection"
+              ]
+            }
+          }
+        },
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "75763bb9837ec21e9378c2ed1a3ab84a28541b46cb37f4c7c857856fdafe9230"
+}

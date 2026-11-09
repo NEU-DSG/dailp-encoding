@@ -28,6 +28,7 @@ mod audio;
 /// based on the user making the request.
 pub mod auth;
 
+pub mod asset_library;
 mod cherokee;
 pub mod collection;
 pub mod comment;

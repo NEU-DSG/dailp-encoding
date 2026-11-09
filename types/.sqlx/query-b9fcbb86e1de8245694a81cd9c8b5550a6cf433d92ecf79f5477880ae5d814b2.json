@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Soft-delete every live image whose folder is in the given set (used when a\n-- folder subtree is deleted); already-deleted rows keep their deleted_at.\n-- $1 = folder ids (uuid[]).\nupdate images\nset deleted_at = now()\nwhere folder_id = any($1::uuid[]) and deleted_at is null;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b9fcbb86e1de8245694a81cd9c8b5550a6cf433d92ecf79f5477880ae5d814b2"
+}
