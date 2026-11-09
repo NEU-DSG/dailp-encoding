@@ -107,6 +107,8 @@ export const AdminToolsTab = () => {
         <br />
         {/* TODO allow creation of pages at /edit/new-page */}
         <Link href="/edit/?path=/new-page">New Page</Link>
+        <br />
+        <Link href="/admin/manage-pages">Manage Site Pages</Link>
       </div>
     </>
   )
