@@ -7,7 +7,7 @@ import * as Dailp from "src/graphql/dailp"
  * `path` is a slugified folder path such as "partners.logos"; the empty string
  * is the root of the library. A non-empty `search` replaces the folder listing
  * with matches from anywhere in the library, and `trash` replaces either with
- * what is in the trash.
+ * what is in the trash. Nothing is fetched while `open` is false.
  *
  * Everything the browser renders comes through here, which matters for one
  * reason in particular: `list_folders.sql` / `list_images.sql` deliberately
@@ -19,21 +19,31 @@ import * as Dailp from "src/graphql/dailp"
 export function useLibraryContents(
   path: string,
   search: string,
-  trash = false
+  trash = false,
+  open = true
 ) {
   const query = search.trim()
   const searching = query.length > 0
 
-  // Only one of these runs at a time; the others stay paused.
+  // Only one of these runs at a time; the others stay paused. Whichever is
+  // shown checks the server each time, so opening the library, a folder, a
+  // search or the trash never shows a listing from before changes made
+  // elsewhere. The cached rows stay up until the server's arrive.
+  const requestPolicy = "cache-and-network"
   const [browse, reexecuteBrowse] = Dailp.useFolderContentsQuery({
     variables: { path },
-    pause: trash || searching,
+    pause: !open || trash || searching,
+    requestPolicy,
   })
   const [results, reexecuteSearch] = Dailp.useSearchLibraryQuery({
     variables: { query },
-    pause: trash || !searching,
+    pause: !open || trash || !searching,
+    requestPolicy,
   })
-  const [trashed, reexecuteTrash] = Dailp.useListTrashQuery({ pause: !trash })
+  const [trashed, reexecuteTrash] = Dailp.useListTrashQuery({
+    pause: !open || !trash,
+    requestPolicy,
+  })
 
   const active = trash ? trashed : searching ? results : browse
   const contents = trash

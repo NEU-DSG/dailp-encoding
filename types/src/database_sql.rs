@@ -975,6 +975,11 @@ impl Database {
             .folder_by_id(id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
+        // Already restored, e.g. by someone else: the only live folder by that
+        // name is this one.
+        if folder.deleted_at.is_none() {
+            return Ok(None);
+        }
         self.live_folder_named(folder.parent_id, &folder.name, None)
             .await
     }
@@ -1198,6 +1203,11 @@ impl Database {
             .image_by_id(id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
+        // Already restored, e.g. by someone else: the only live image by that
+        // name is this one.
+        if image.deleted_at.is_none() {
+            return Ok(None);
+        }
         self.live_image_named(image.folder_id, &image.filename, None)
             .await
     }

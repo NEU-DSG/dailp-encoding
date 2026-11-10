@@ -22,8 +22,7 @@ interface MoveModalProps {
 export const MoveModal = (p: MoveModalProps) => (
   <DialogBackdrop {...p.dialog} className={css.smallBackdrop}>
     <Dialog {...p.dialog} className={css.smallDialog} aria-label="Move">
-      {/* Only mounted while open. A listing left running would refetch after
-          every action, and a reply overtaken by the next one would undo it. */}
+      {/* Only mounted while open, so its folders are fetched fresh each time. */}
       {p.dialog.visible && <MovePicker {...p} />}
     </Dialog>
   </DialogBackdrop>

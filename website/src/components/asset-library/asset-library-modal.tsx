@@ -60,7 +60,12 @@ export const AssetLibraryModal = ({
   const [trash, setTrash] = useState(false)
 
   const currentPath = currentFolder?.path ?? ""
-  const contents = useLibraryContents(currentPath, search, trash)
+  const contents = useLibraryContents(
+    currentPath,
+    search,
+    trash,
+    dialog.visible
+  )
 
   const upload = useImageUpload({
     folderId: currentFolder?.id ?? null,

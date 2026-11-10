@@ -54,7 +54,11 @@ const DeletedDate = (p: { deletedAt: string | null }) =>
 
 const FolderPanel = (p: { folder: Parameters<typeof useFolderDisplay>[0] }) => {
   const display = useFolderDisplay(p.folder)
-  const [size] = Dailp.useFolderSizeQuery({ variables: { id: p.folder.id } })
+  // Added up again on every selection, since the contents can change elsewhere.
+  const [size] = Dailp.useFolderSizeQuery({
+    variables: { id: p.folder.id },
+    requestPolicy: "cache-and-network",
+  })
   return (
     <>
       <h3 className={css.sectionHeading}>{display.label}</h3>
