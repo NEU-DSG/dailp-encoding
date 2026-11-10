@@ -8,9 +8,7 @@ create table folders (
   -- Slugified full path from the root, e.g. `partners.logos`. 
   path        ltree not null,
   created_at  timestamp not null default now(),
-  deleted_at  timestamp,
-  -- Sum of the sizes of this folder's contents.
-  size_bytes  bigint not null default 0
+  deleted_at  timestamp
 );
 
 create table images (

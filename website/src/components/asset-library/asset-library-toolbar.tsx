@@ -25,6 +25,8 @@ interface AssetLibraryToolbarProps {
   onToggleSelecting: () => void
   search: string
   onSearchChange: (search: string) => void
+  trash: boolean
+  onToggleTrash: () => void
 }
 
 export const AssetLibraryToolbar = (p: AssetLibraryToolbarProps) => {
@@ -49,6 +51,7 @@ export const AssetLibraryToolbar = (p: AssetLibraryToolbarProps) => {
           aria-label="Search the asset library"
           value={p.search}
           onChange={(event) => p.onSearchChange(event.target.value)}
+          disabled={p.trash}
         />
 
         <input
@@ -67,7 +70,12 @@ export const AssetLibraryToolbar = (p: AssetLibraryToolbarProps) => {
         >
           {p.selecting ? "Cancel" : "Select"}
         </button>
-        <MenuButton {...newMenu} className={css.toolbarButton} type="button">
+        <MenuButton
+          {...newMenu}
+          className={css.toolbarButton}
+          type="button"
+          disabled={p.trash}
+        >
           New
         </MenuButton>
         <Menu {...newMenu} aria-label="New" className={css.popupMenu}>
@@ -105,6 +113,13 @@ export const AssetLibraryToolbar = (p: AssetLibraryToolbarProps) => {
           label="Folder name"
           onConfirm={p.onCreateFolder}
         />
+        <button
+          type="button"
+          className={css.toolbarButton}
+          onClick={p.onToggleTrash}
+        >
+          {p.trash ? "Library" : "Trash"}
+        </button>
 
         <div className={css.viewToggle} role="group" aria-label="View mode">
           <button
@@ -136,9 +151,16 @@ export const AssetLibraryToolbar = (p: AssetLibraryToolbarProps) => {
         </div>
       </div>
 
-      {/* Search results come from the whole library, so a trail describing the
-          folder you left would be describing something you are not looking at. */}
-      {!p.search && <Breadcrumbs path={p.path} onOpenFolder={p.onOpenFolder} />}
+      {/* Search results and the trash come from the whole library, so a trail
+          describing the folder you left would be describing something you are
+          not looking at. */}
+      {p.trash ? (
+        <div className={css.breadcrumbs}>
+          <span className={css.crumbCurrent}>Trash</span>
+        </div>
+      ) : (
+        !p.search && <Breadcrumbs path={p.path} onOpenFolder={p.onOpenFolder} />
+      )}
     </>
   )
 }

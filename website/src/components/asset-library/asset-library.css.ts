@@ -143,6 +143,7 @@ export const search = style({
   backgroundColor: colors.bodyDark,
   color: colors.text,
   fontFamily: fonts.body,
+  ":disabled": { opacity: 0.5 },
 })
 
 export const viewToggle = style({
@@ -258,6 +259,12 @@ export const smallDialogTitle = style({
   fontFamily: fonts.header,
 })
 
+export const smallDialogText = style({
+  margin: `0 0 ${vspace.quarter}`,
+  fontFamily: fonts.body,
+  fontSize: fontSize.small,
+})
+
 export const smallDialogLabel = style({
   display: "flex",
   flexDirection: "column",
@@ -291,6 +298,37 @@ export const smallDialogActions = style({
   alignItems: "center",
   gap: hspace.halfEdge,
   marginTop: vspace.half,
+})
+
+// --- Delete warning --------------------------------------------------------
+
+export const usageWarning = style([
+  smallDialogWarning,
+  { margin: 0, fontFamily: fonts.body, fontSize: fontSize.small },
+])
+
+export const usageList = style({
+  listStyle: "none",
+  margin: `${vspace.eighth} 0 0`,
+  padding: 0,
+  maxHeight: "16rem",
+  overflowY: "auto",
+  overflowWrap: "anywhere",
+  fontFamily: fonts.body,
+  fontSize: fontSize.small,
+})
+
+export const usageImage = style({
+  margin: `0 0 ${vspace.eighth}`,
+})
+
+export const usagePages = style({
+  margin: 0,
+  paddingLeft: hspace.edge,
+})
+
+export const usagePage = style({
+  margin: 0,
 })
 
 // --- Move picker -----------------------------------------------------------

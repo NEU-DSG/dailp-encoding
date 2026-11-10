@@ -3,7 +3,7 @@
 -- descendant test (`<@`), replacing the previous recursive CTE -- so the
 -- nullability overrides that a recursive CTE forced are no longer needed.
 select f.id, f.parent_id, f.name, f.path::text as "path!", f.created_at,
-       f.deleted_at, f.size_bytes
+       f.deleted_at
 from folders f
 where f.path <@ (select path from folders where id = $1)
 order by f.path;

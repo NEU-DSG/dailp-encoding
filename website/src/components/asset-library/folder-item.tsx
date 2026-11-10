@@ -2,7 +2,7 @@ import React from "react"
 import { MdFolder } from "react-icons/md/index"
 import type * as Dailp from "src/graphql/dailp"
 import * as css from "./asset-library.css"
-import { formatBytes, formatDate } from "./format"
+import { formatDate } from "./format"
 
 interface FolderItemProps {
   folder: Dailp.FolderFieldsFragment
@@ -21,7 +21,6 @@ export function useFolderDisplay(folder: Dailp.FolderFieldsFragment) {
   return {
     label: folder.name,
     type: "Folder",
-    size: formatBytes(folder.sizeBytes),
     created: formatDate(folder.createdAt),
   }
 }
@@ -61,7 +60,8 @@ export const FolderListRow = (p: FolderItemProps) => {
         </div>
       </td>
       <td className={css.listMetaCell}>{display.type}</td>
-      <td className={css.listMetaCell}>{display.size}</td>
+      {/* Added up only for the selected folder, in the side panel. */}
+      <td className={css.listMetaCell}>—</td>
       <td className={css.listMetaCell}>{display.created}</td>
     </tr>
   )

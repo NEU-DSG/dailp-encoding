@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Content pages whose body refers to each of images $1, by title. Batching\n-- keeps a delete warning to one query instead of one per image.\nselect r.image_id, p.page_id, p.path, p.title\nfrom page_image_reference r\ninner join page p on p.page_id = r.page_id\nwhere r.image_id = any($1::uuid[])\norder by p.title;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "image_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "page_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "path",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a9a2b33473d232b96d5323c1e0d911433dad01f50049aaaf1c4aa782a5e2b3f6"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- The total size of the images in folder $1 and its subfolders.\n-- Everything in a folder shares its `deleted_at`: null while it's live, or the\n-- stamp from when it was deleted. Anything removed on its own beforehand has an\n-- older stamp, and is no longer part of the folder.\nselect coalesce(sum(i.size_bytes), 0)::bigint as \"size_bytes!\"\nfrom folders top\njoin folders f\n  on f.path <@ top.path and f.deleted_at is not distinct from top.deleted_at\njoin images i\n  on i.folder_id = f.id and i.deleted_at is not distinct from top.deleted_at\nwhere top.id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "size_bytes!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1b53f5cc56576027688c31f5439a2ba09d34b0d9626216cf8620d5708252d4fe"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Permanently remove images past the trash retention period, along with any\n-- inside a folder that is. $1 retention in days. Their copies and page\n-- references go too, through `on delete cascade`; the S3 objects stay.\ndelete from images\nwhere deleted_at < now() - make_interval(days => $1::int)\n   or folder_id in (\n     select id from folders\n     where deleted_at < now() - make_interval(days => $1::int)\n   );\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a6551cc7180da2f61eef5d5034e4891f02961f8056523a8c778f70f0c900083"
+}

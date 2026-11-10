@@ -1,7 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    asset_library::{Folder, FolderContents, Image, NewImage, PageUsage, TrashContents},
+    asset_library::{
+        Folder, FolderContents, Image, ImageUsage, NewImage, PageUsage, TrashContents,
+    },
     async_graphql::InputType,
     auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
@@ -453,7 +455,9 @@ impl Query {
     /// Everything directly inside an asset-library folder - subfolders and images
     /// one level deep. `path` is a slugified folder path such as
     /// "partners.logos"; the empty string lists the root of the library.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn folder_contents(
         &self,
         context: &Context<'_>,
@@ -466,7 +470,9 @@ impl Query {
 
     /// The ancestor trail of a folder path, root first, including the folder
     /// itself. The empty string (the library root) has no trail.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn folder_breadcrumbs(
         &self,
         context: &Context<'_>,
@@ -486,7 +492,9 @@ impl Query {
     /// folders and images. Anything inside a deleted folder is omitted, since
     /// restoring that folder restores its whole subtree and children cannot be
     /// restored on their own.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn list_trash(&self, context: &Context<'_>) -> FieldResult<TrashContents> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -499,7 +507,9 @@ impl Query {
     /// case-insensitively. Searches the whole library rather than one folder,
     /// since finding something you cannot locate by browsing is the point.
     /// For a reference point, Google Drive also does it this way.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn search_library(
         &self,
         context: &Context<'_>,
@@ -516,7 +526,9 @@ impl Query {
     ///
     /// Derived from what each page actually contains and refreshed whenever a
     /// page is saved, so an empty list means no page uses this image right now.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn pages_referenced_by_image(
         &self,
         context: &Context<'_>,
@@ -525,14 +537,18 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .pages_referenced_by_image(image_id)
-            .await?)
+            .pages_referenced_by_images(&[image_id])
+            .await?
+            .remove(&image_id)
+            .unwrap_or_default())
     }
 
     /// Library images referred to by the body of the page at `path`, by
     /// filename. Soft-deleted images are included, since a page still pointing
     /// at one is worth seeing rather than hiding.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn images_referenced_by_page(
         &self,
         context: &Context<'_>,
@@ -542,6 +558,74 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .images_referenced_by_page(&path)
+            .await?)
+    }
+
+    /// Live images that deleting these folders and images would send to the
+    /// trash, including everything inside the folders, each with the content
+    /// pages that refer to it. Images no page refers to are left out, so an
+    /// empty list means the delete breaks no page.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn images_in_use(
+        &self,
+        context: &Context<'_>,
+        folder_ids: Vec<Uuid>,
+        image_ids: Vec<Uuid>,
+    ) -> FieldResult<Vec<ImageUsage>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .images_in_use(&folder_ids, &image_ids)
+            .await?)
+    }
+
+    /// The total size in bytes of the images in this folder and its subfolders.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn folder_size(&self, context: &Context<'_>, id: Uuid) -> FieldResult<i64> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .folder_size(id)
+            .await?)
+    }
+
+    /// The live folder that would stop this deleted folder from being restored,
+    /// because it now has the same name in the same place. Null when there is
+    /// none.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn folder_restore_conflict(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<Folder>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .folder_restore_conflict(id)
+            .await?)
+    }
+
+    /// The live image that would stop this deleted image from being restored,
+    /// because it now has the same filename in the same folder. Null when there
+    /// is none.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn image_restore_conflict(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<Image>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .image_restore_conflict(id)
             .await?)
     }
 }
@@ -1231,7 +1315,9 @@ impl Mutation {
     }
 
     /// Create an asset-library folder. A null `parentId` places it at the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn create_folder(
         &self,
         context: &Context<'_>,
@@ -1247,7 +1333,9 @@ impl Mutation {
 
     /// Record an image that has already been uploaded to S3. A null `folderId`
     /// places it at the root. The uploader is taken from the signed-in user.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn create_image(&self, context: &Context<'_>, image: NewImage) -> FieldResult<Image> {
         let uploaded_by = context.data_opt::<UserInfo>().map(|user| user.id);
         Ok(context
@@ -1258,7 +1346,9 @@ impl Mutation {
     }
 
     /// Rename a folder.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn rename_folder(
         &self,
         context: &Context<'_>,
@@ -1273,7 +1363,9 @@ impl Mutation {
     }
 
     /// Rename an image.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn rename_image(
         &self,
         context: &Context<'_>,
@@ -1289,7 +1381,9 @@ impl Mutation {
 
     /// Move a folder under a new parent. Descendants follow automatically since
     /// they reference the folder's id. A null `parentId` moves it to the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn move_folder(
         &self,
         context: &Context<'_>,
@@ -1304,7 +1398,9 @@ impl Mutation {
     }
 
     /// Move an image into another folder. A null `folderId` moves it to the root.
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn move_image(
         &self,
         context: &Context<'_>,
@@ -1320,7 +1416,9 @@ impl Mutation {
 
     /// Soft-delete a folder and its whole subtree (stamps `deleted_at` on the
     /// folder and all descendant folders and files; the rows stay for history).
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn delete_folder(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Folder> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -1330,12 +1428,38 @@ impl Mutation {
     }
 
     /// Soft-delete an image (stamps `deleted_at`; the row stays for history).
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
     async fn delete_image(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Image> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
             .delete_image(id)
+            .await?)
+    }
+
+    /// Take a folder out of the trash, along with everything deleted with it.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn restore_folder(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Folder> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .restore_folder(id)
+            .await?)
+    }
+
+    /// Take an image out of the trash.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Administrators))"
+    )]
+    async fn restore_image(&self, context: &Context<'_>, id: Uuid) -> FieldResult<Image> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .restore_image(id)
             .await?)
     }
 }

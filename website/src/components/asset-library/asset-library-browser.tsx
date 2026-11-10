@@ -10,6 +10,7 @@ interface AssetLibraryBrowserProps extends AssetSectionProps {
   viewMode: ViewMode
   fetching: boolean
   error?: CombinedError
+  emptyMessage: string
 }
 
 /**
@@ -32,7 +33,7 @@ export const AssetLibraryBrowser = (p: AssetLibraryBrowserProps) => {
       </p>
     )
   } else if (folders.length === 0 && images.length === 0) {
-    content = <p className={css.emptyMessage}>This folder is empty.</p>
+    content = <p className={css.emptyMessage}>{p.emptyMessage}</p>
   } else {
     const Layout = p.viewMode === "grid" ? AssetGrid : AssetList
     content = (

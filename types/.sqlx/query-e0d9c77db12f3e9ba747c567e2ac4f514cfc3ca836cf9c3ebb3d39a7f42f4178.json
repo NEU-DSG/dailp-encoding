@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Soft-delete a folder: stamp deleted_at rather than removing the row. $1 id\nupdate folders\nset deleted_at = now()\nwhere id = $1\nreturning id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n          size_bytes;\n",
+  "query": "-- Folders anywhere in the library whose name contains $1, case-insensitively.\n-- Includes soft-deleted ones, like the other listings - callers filter out\n-- `deleted_at` rows in code.\nselect id, parent_id, name, path::text as \"path!\", created_at, deleted_at\nfrom folders\nwhere position(lower($1) in lower(name)) > 0\norder by name;\n",
   "describe": {
     "columns": [
       {
@@ -32,16 +32,11 @@
         "ordinal": 5,
         "name": "deleted_at",
         "type_info": "Timestamp"
-      },
-      {
-        "ordinal": 6,
-        "name": "size_bytes",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -50,9 +45,8 @@
       false,
       null,
       false,
-      true,
-      false
+      true
     ]
   },
-  "hash": "fb7f77e8263cf235bc09a2ff788a7e11401c392774d0492dc8e088ad0871fb5d"
+  "hash": "e0d9c77db12f3e9ba747c567e2ac4f514cfc3ca836cf9c3ebb3d39a7f42f4178"
 }

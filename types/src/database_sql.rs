@@ -11,7 +11,8 @@ use std::str::FromStr;
 use user::UserUpdate;
 
 use crate::asset_library::{
-    Folder, FolderContents, Image, ImageScope, ImageVariant, NewImage, PageUsage, TrashContents,
+    Folder, FolderContents, Image, ImageScope, ImageUsage, ImageVariant, NewImage, PageUsage,
+    TrashContents, TRASH_RETENTION_DAYS,
 };
 use crate::collection::CollectionChapter;
 use crate::collection::{
@@ -67,6 +68,21 @@ fn folder_name_clash(name: &str) -> Error {
 /// slug caveat.
 fn image_name_clash(filename: &str) -> Error {
     anyhow::anyhow!("An image named \"{filename}\" already exists in that location.")
+}
+
+/// Raised when something would go live inside a folder that is in the trash,
+/// where no one can browse to it and it would be purged along with the folder.
+fn folder_in_trash() -> Error {
+    anyhow::anyhow!("The folder it would go in is in the trash.")
+}
+
+/// Raised when restoring something that has outlived the trash's retention
+/// period but has not been purged yet.
+fn trash_expired() -> Error {
+    anyhow::anyhow!(
+        "This has been in the trash longer than {TRASH_RETENTION_DAYS} days and can no longer \
+         be restored."
+    )
 }
 
 impl Database {
@@ -771,31 +787,54 @@ impl Database {
             .await?)
     }
 
-    /// Whether a live folder under `parent_id` already goes by `name`.
+    /// The live folder under `parent_id` that already goes by `name`, if any.
     ///
     /// Compared by slug, because that is what `folders_live_path` is built
     /// from: "Partner Logos" and "partner-logos" are one name as far as the
     /// index is concerned. `except` is the folder being renamed or moved, which
     /// is allowed to keep its own name.
-    async fn folder_name_taken(
+    async fn live_folder_named(
         &self,
         parent_id: Option<Uuid>,
         name: &str,
         except: Option<Uuid>,
-    ) -> Result<bool> {
+    ) -> Result<Option<Folder>> {
         let slug = crate::slugify_ltree(name);
-        Ok(self.list_folders(parent_id).await?.iter().any(|folder| {
-            folder.deleted_at.is_none()
-                && Some(folder.id) != except
-                && crate::slugify_ltree(&folder.name) == slug
-        }))
+        Ok(self
+            .list_folders(parent_id)
+            .await?
+            .into_iter()
+            .find(|folder| {
+                folder.deleted_at.is_none()
+                    && Some(folder.id) != except
+                    && crate::slugify_ltree(&folder.name) == slug
+            }))
+    }
+
+    /// Whether `id` is a folder that exists and is not in the trash. The root
+    /// (`None`) always is.
+    async fn folder_is_live(&self, id: Option<Uuid>) -> Result<bool> {
+        Ok(match id {
+            Some(id) => self
+                .folder_by_id(id)
+                .await?
+                .is_some_and(|folder| folder.deleted_at.is_none()),
+            None => true,
+        })
     }
 
     /// Create a folder. `parent_id` of `None` places it at the root. The path is
     /// the parent's path plus this folder's slug, built in SQL so the path and
     /// `parent_id` are always written together.
     pub async fn insert_folder(&self, parent_id: Option<Uuid>, name: &str) -> Result<Folder> {
-        if self.folder_name_taken(parent_id, name, None).await? {
+        if !self.folder_is_live(parent_id).await? {
+            return Err(folder_in_trash());
+        }
+        if self
+            .live_folder_named(parent_id, name, None)
+            .await?
+            .is_some()
+        {
             return Err(folder_name_clash(name));
         }
         // Parsing here rejects a bad label before it reaches Postgres.
@@ -815,8 +854,9 @@ impl Database {
             .await?
             .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
         if self
-            .folder_name_taken(folder.parent_id, name, Some(id))
+            .live_folder_named(folder.parent_id, name, Some(id))
             .await?
+            .is_some()
         {
             return Err(folder_name_clash(name));
         }
@@ -865,13 +905,17 @@ impl Database {
                 ));
             }
         }
+        if !self.folder_is_live(parent_id).await? {
+            return Err(folder_in_trash());
+        }
         let folder = self
             .folder_by_id(id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
         if self
-            .folder_name_taken(parent_id, &folder.name, Some(id))
+            .live_folder_named(parent_id, &folder.name, Some(id))
             .await?
+            .is_some()
         {
             return Err(folder_name_clash(&folder.name));
         }
@@ -884,15 +928,27 @@ impl Database {
 
     /// Soft-delete a folder and its whole subtree by stamping `deleted_at`; the
     /// rows stay for history. Returns the soft-deleted top folder. Already-deleted
-    /// descendants keep their original stamp.
+    /// descendants keep their original stamp, and a folder already in the trash
+    /// is returned as it is.
     pub async fn delete_folder(&self, id: Uuid) -> Result<Folder> {
         let mut tx = self.client.begin().await?;
 
         // Stamp the top folder first and grab it to return; the `deleted_at is
         // null` guard below then skips it while stamping the descendants.
-        let folder = query_file_as!(Folder, "queries/delete_folder.sql", id)
-            .fetch_one(&mut *tx)
-            .await?;
+        let folder = match query_file_as!(Folder, "queries/delete_folder.sql", id)
+            .fetch_optional(&mut *tx)
+            .await?
+        {
+            Some(folder) => folder,
+            // Already in the trash, e.g. inside a folder deleted earlier in the
+            // same bulk delete.
+            None => {
+                return self
+                    .folder_by_id(id)
+                    .await?
+                    .ok_or_else(|| anyhow::anyhow!("No folder with that id"))
+            }
+        };
 
         let folder_ids: Vec<Uuid> = query_file_as!(Folder, "queries/folder_subtree.sql", id)
             .fetch_all(&mut *tx)
@@ -908,7 +964,75 @@ impl Database {
             .await?;
 
         tx.commit().await?;
+        self.purge_expired_trash().await;
         Ok(folder)
+    }
+
+    /// The live folder that would stop a deleted folder from being restored,
+    /// because it now has the same name in the same place.
+    pub async fn folder_restore_conflict(&self, id: Uuid) -> Result<Option<Folder>> {
+        let folder = self
+            .folder_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
+        self.live_folder_named(folder.parent_id, &folder.name, None)
+            .await
+    }
+
+    /// Take a folder out of the trash, along with everything deleted with it.
+    /// Anything inside that was deleted on its own beforehand stays in the
+    /// trash. A folder that isn't in the trash is returned as it is.
+    pub async fn restore_folder(&self, id: Uuid) -> Result<Folder> {
+        let folder = self
+            .folder_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No folder with that id"))?;
+        let deleted_at = match folder.deleted_at {
+            Some(deleted_at) => deleted_at,
+            None => return Ok(folder),
+        };
+        if !self.folder_is_live(folder.parent_id).await? {
+            return Err(folder_in_trash());
+        }
+        if self
+            .live_folder_named(folder.parent_id, &folder.name, None)
+            .await?
+            .is_some()
+        {
+            return Err(folder_name_clash(&folder.name));
+        }
+
+        let mut tx = self.client.begin().await?;
+        let folder_ids: Vec<Uuid> = query_file_scalar!(
+            "queries/restore_folder_subtree.sql",
+            id,
+            TRASH_RETENTION_DAYS
+        )
+        .fetch_all(&mut *tx)
+        .await?;
+        if folder_ids.is_empty() {
+            return Err(trash_expired());
+        }
+        query_file!(
+            "queries/restore_images_in_folders.sql",
+            &folder_ids,
+            deleted_at
+        )
+        .execute(&mut *tx)
+        .await?;
+        tx.commit().await?;
+
+        Ok(Folder {
+            deleted_at: None,
+            ..folder
+        })
+    }
+
+    /// The total size in bytes of the images in a folder and its subfolders.
+    pub async fn folder_size(&self, id: Uuid) -> Result<i64> {
+        Ok(query_file_scalar!("queries/folder_size.sql", id)
+            .fetch_one(&self.client)
+            .await?)
     }
 
     /// Immediate subfolders of `parent_id` (`None` lists the root).
@@ -929,29 +1053,37 @@ impl Database {
             .await?)
     }
 
-    /// Whether a live image in `folder_id` already goes by `filename`.
+    /// The live image in `folder_id` that already goes by `filename`, if any.
     ///
     /// Compared exactly, unlike folders: `images_live_child_name` indexes the
     /// raw filename, so "Photo.jpg" and "photo.jpg" are two different images.
     /// `except` is the image being renamed or moved, which is allowed to keep
     /// its own name.
-    async fn image_name_taken(
+    async fn live_image_named(
         &self,
         folder_id: Option<Uuid>,
         filename: &str,
         except: Option<Uuid>,
-    ) -> Result<bool> {
-        Ok(self.list_images(folder_id).await?.iter().any(|image| {
-            image.deleted_at.is_none() && Some(image.id) != except && image.filename == filename
-        }))
+    ) -> Result<Option<Image>> {
+        Ok(self
+            .list_images(folder_id)
+            .await?
+            .into_iter()
+            .find(|image| {
+                image.deleted_at.is_none() && Some(image.id) != except && image.filename == filename
+            }))
     }
 
     /// Record an image that has already been uploaded to S3. `folder_id` of `None`
     /// places it at the root. `uploaded_by` is the acting user, when known.
     pub async fn insert_image(&self, image: NewImage, uploaded_by: Option<Uuid>) -> Result<Image> {
+        if !self.folder_is_live(image.folder_id).await? {
+            return Err(folder_in_trash());
+        }
         if self
-            .image_name_taken(image.folder_id, &image.filename, None)
+            .live_image_named(image.folder_id, &image.filename, None)
             .await?
+            .is_some()
         {
             return Err(image_name_clash(&image.filename));
         }
@@ -1001,8 +1133,9 @@ impl Database {
             .await?
             .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
         if self
-            .image_name_taken(image.folder_id, filename, Some(id))
+            .live_image_named(image.folder_id, filename, Some(id))
             .await?
+            .is_some()
         {
             return Err(image_name_clash(filename));
         }
@@ -1016,13 +1149,17 @@ impl Database {
     /// Move an image into another folder (`None` = root) by re-assigning its
     /// `folder_id`.
     pub async fn move_image(&self, id: Uuid, folder_id: Option<Uuid>) -> Result<Image> {
+        if !self.folder_is_live(folder_id).await? {
+            return Err(folder_in_trash());
+        }
         let image = self
             .image_by_id(id)
             .await?
             .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
         if self
-            .image_name_taken(folder_id, &image.filename, Some(id))
+            .live_image_named(folder_id, &image.filename, Some(id))
             .await?
+            .is_some()
         {
             return Err(image_name_clash(&image.filename));
         }
@@ -1034,10 +1171,83 @@ impl Database {
     }
 
     /// Soft-delete an image by stamping `deleted_at`; the row stays for history.
+    /// An image already in the trash is returned as it is.
     pub async fn delete_image(&self, id: Uuid) -> Result<Image> {
-        Ok(query_file_as!(Image, "queries/delete_image.sql", id)
-            .fetch_one(&self.client)
-            .await?)
+        let image = match query_file_as!(Image, "queries/delete_image.sql", id)
+            .fetch_optional(&self.client)
+            .await?
+        {
+            Some(image) => image,
+            // Already in the trash, e.g. inside a folder deleted earlier in the
+            // same bulk delete.
+            None => {
+                return self
+                    .image_by_id(id)
+                    .await?
+                    .ok_or_else(|| anyhow::anyhow!("No image with that id"))
+            }
+        };
+        self.purge_expired_trash().await;
+        Ok(image)
+    }
+
+    /// The live image that would stop a deleted image from being restored,
+    /// because it now has the same filename in the same folder.
+    pub async fn image_restore_conflict(&self, id: Uuid) -> Result<Option<Image>> {
+        let image = self
+            .image_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
+        self.live_image_named(image.folder_id, &image.filename, None)
+            .await
+    }
+
+    /// Take an image out of the trash. An image that isn't in the trash is
+    /// returned as it is.
+    pub async fn restore_image(&self, id: Uuid) -> Result<Image> {
+        let image = self
+            .image_by_id(id)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No image with that id"))?;
+        if image.deleted_at.is_none() {
+            return Ok(image);
+        }
+        if !self.folder_is_live(image.folder_id).await? {
+            return Err(folder_in_trash());
+        }
+        if self
+            .live_image_named(image.folder_id, &image.filename, None)
+            .await?
+            .is_some()
+        {
+            return Err(image_name_clash(&image.filename));
+        }
+        query_file_as!(Image, "queries/restore_image.sql", id, TRASH_RETENTION_DAYS)
+            .fetch_optional(&self.client)
+            .await?
+            .ok_or_else(trash_expired)
+    }
+
+    /// Live images that deleting these folders and images would send to the
+    /// trash, including everything inside the folders, each with the content
+    /// pages that refer to it. Images no page refers to are left out.
+    pub async fn images_in_use(
+        &self,
+        folder_ids: &[Uuid],
+        image_ids: &[Uuid],
+    ) -> Result<Vec<ImageUsage>> {
+        let images = query_file_as!(Image, "queries/images_to_delete.sql", folder_ids, image_ids)
+            .fetch_all(&self.client)
+            .await?;
+        let ids: Vec<Uuid> = images.iter().map(|image| image.id).collect();
+        let mut pages = self.pages_referenced_by_images(&ids).await?;
+        Ok(images
+            .into_iter()
+            .filter_map(|image| {
+                let pages = pages.remove(&image.id)?;
+                Some(ImageUsage { image, pages })
+            })
+            .collect())
     }
 
     /// Images directly inside `folder_id` (`None` lists the root).
@@ -1076,13 +1286,30 @@ impl Database {
     /// restores its whole subtree and children cannot be restored on their own.
     pub async fn list_trash(&self) -> Result<TrashContents> {
         Ok(TrashContents {
-            folders: query_file_as!(Folder, "queries/trash_folders.sql")
+            folders: query_file_as!(Folder, "queries/trash_folders.sql", TRASH_RETENTION_DAYS)
                 .fetch_all(&self.client)
                 .await?,
-            images: query_file_as!(Image, "queries/trash_images.sql")
+            images: query_file_as!(Image, "queries/trash_images.sql", TRASH_RETENTION_DAYS)
                 .fetch_all(&self.client)
                 .await?,
         })
+    }
+
+    /// Permanently remove whatever has been in the trash longer than
+    /// [`TRASH_RETENTION_DAYS`]. Runs after each delete.
+    async fn purge_expired_trash(&self) {
+        // Images first: a folder can't go while images still point at it.
+        let purge = async {
+            query_file!("queries/purge_expired_images.sql", TRASH_RETENTION_DAYS)
+                .execute(&self.client)
+                .await?;
+            query_file!("queries/purge_expired_folders.sql", TRASH_RETENTION_DAYS)
+                .execute(&self.client)
+                .await
+        };
+        if let Err(err) = purge.await {
+            warn!("Purging expired trash failed: {err}");
+        }
     }
 
     /// Ensure that a user exists in the database
@@ -3269,13 +3496,28 @@ impl Database {
         Ok(())
     }
 
-    /// Content pages whose body refers to `image_id`, by title.
-    pub async fn pages_referenced_by_image(&self, image_id: Uuid) -> Result<Vec<PageUsage>> {
-        Ok(
-            query_file_as!(PageUsage, "queries/pages_referenced_by_image.sql", image_id)
-                .fetch_all(&self.client)
-                .await?,
-        )
+    /// Content pages whose body refers to each of `image_ids`, by title. An
+    /// image no page refers to has no entry.
+    pub async fn pages_referenced_by_images(
+        &self,
+        image_ids: &[Uuid],
+    ) -> Result<HashMap<Uuid, Vec<PageUsage>>> {
+        let rows = query_file!("queries/pages_referenced_by_images.sql", image_ids)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(rows
+            .into_iter()
+            .map(|row| {
+                (
+                    row.image_id,
+                    PageUsage {
+                        page_id: row.page_id,
+                        path: row.path,
+                        title: row.title,
+                    },
+                )
+            })
+            .into_group_map())
     }
 
     /// Library images referred to by the body of the page at `path`, by filename.

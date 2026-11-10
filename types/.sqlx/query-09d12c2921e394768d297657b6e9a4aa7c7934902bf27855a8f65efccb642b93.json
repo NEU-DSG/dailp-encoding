@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- One folder by id, live or soft-deleted.\nselect id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n       size_bytes\nfrom folders\nwhere id = $1;\n",
+  "query": "-- Soft-delete a folder: stamp deleted_at rather than removing the row. $1 id\nupdate folders\nset deleted_at = now()\nwhere id = $1 and deleted_at is null\nreturning id, parent_id, name, path::text as \"path!\", created_at, deleted_at;\n",
   "describe": {
     "columns": [
       {
@@ -32,11 +32,6 @@
         "ordinal": 5,
         "name": "deleted_at",
         "type_info": "Timestamp"
-      },
-      {
-        "ordinal": 6,
-        "name": "size_bytes",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -50,9 +45,8 @@
       false,
       null,
       false,
-      true,
-      false
+      true
     ]
   },
-  "hash": "cc479f0a9281685dae78bbf7a552e159d42fb65b88988d37de51edad69e5402d"
+  "hash": "09d12c2921e394768d297657b6e9a4aa7c7934902bf27855a8f65efccb642b93"
 }

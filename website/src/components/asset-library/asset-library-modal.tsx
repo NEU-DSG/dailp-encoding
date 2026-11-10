@@ -13,8 +13,10 @@ import { AssetLibrarySidePanel } from "./asset-library-side-panel"
 import { AssetLibraryToolbar } from "./asset-library-toolbar"
 import * as css from "./asset-library.css"
 import { ContextMenu, useContextMenu } from "./context-menu"
+import { DeleteModal } from "./delete-modal"
 import { buildEmbed } from "./embed"
 import { EmbedModal } from "./embed-modal"
+import { isWithin, splitExtension } from "./format"
 import { MoveModal } from "./move-modal"
 import { NameModal } from "./name-modal"
 import { SelectionToolbar } from "./selection-toolbar"
@@ -22,16 +24,8 @@ import type { SelectedItem, ViewMode } from "./types"
 import { UploadPanel } from "./upload-panel"
 import { useImageUpload } from "./use-image-upload"
 import { useLibraryContents } from "./use-library-contents"
+import { useRestore } from "./use-restore"
 import { useSelection } from "./use-selection"
-
-// An image's extension is kept out of rename so it always matches its contents.
-// A leading dot (".hidden") is part of the name, not an extension.
-const splitExtension = (filename: string) => {
-  const dot = filename.lastIndexOf(".")
-  return dot > 0
-    ? { base: filename.slice(0, dot), extension: filename.slice(dot) }
-    : { base: filename, extension: "" }
-}
 
 interface AssetLibraryModalProps {
   // From `useDialogState` in the opening component.
@@ -63,9 +57,10 @@ export const AssetLibraryModal = ({
   const selection = useSelection()
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [search, setSearch] = useState("")
+  const [trash, setTrash] = useState(false)
 
   const currentPath = currentFolder?.path ?? ""
-  const contents = useLibraryContents(currentPath, search)
+  const contents = useLibraryContents(currentPath, search, trash)
 
   const upload = useImageUpload({
     folderId: currentFolder?.id ?? null,
@@ -97,12 +92,29 @@ export const AssetLibraryModal = ({
     setSearch("")
   }
 
+  const toggleTrash = () => {
+    setTrash(!trash)
+    // The two views offer different actions, so a selection can't carry over.
+    selection.reset()
+    setSearch("")
+  }
+
+  // A deleted or renamed folder no longer answers to its path, so browsing it
+  // would show an error, or another folder that has since taken the path.
+  const leaveIfInside = (folder: Dailp.FolderFieldsFragment) =>
+    setCurrentFolder((current) =>
+      current && isWithin(current.path, folder.path) ? null : current
+    )
+
   const renameDialog = useDialogState()
   const moveDialog = useDialogState()
+  const deleteDialog = useDialogState()
   const [, renameFolder] = Dailp.useRenameFolderMutation()
   const [, renameImage] = Dailp.useRenameImageMutation()
   const [, moveFolder] = Dailp.useMoveFolderMutation()
   const [, moveImage] = Dailp.useMoveImageMutation()
+  const [, deleteFolder] = Dailp.useDeleteFolderMutation()
+  const [, deleteImage] = Dailp.useDeleteImageMutation()
 
   // Held items carry stale names and parents once an action lands.
   const afterAction = () => {
@@ -143,6 +155,35 @@ export const AssetLibraryModal = ({
     if (failures.length) window.alert(failures.join("\n"))
     afterAction()
   }
+
+  const handleDelete = async () => {
+    const depth = (folder: Dailp.FolderFieldsFragment) =>
+      folder.path.split(".").length
+    const failures: string[] = []
+    // Outermost first, then images: what's inside a selected folder has to be
+    // stamped along with it to come back when that folder is restored.
+    const folders = selection.items
+      .flatMap((item) => (item.kind === "folder" ? [item.folder] : []))
+      .sort((a, b) => depth(a) - depth(b))
+    for (const folder of folders) {
+      const result = await deleteFolder({ id: folder.id })
+      if (result.error) failures.push(result.error.message)
+      else leaveIfInside(folder)
+    }
+    for (const item of selection.items) {
+      if (item.kind !== "image") continue
+      const result = await deleteImage({ id: item.image.id })
+      if (result.error) failures.push(result.error.message)
+    }
+    if (failures.length) window.alert(failures.join("\n"))
+    afterAction()
+  }
+
+  const restoring = useRestore({
+    onRenamedFolder: leaveIfInside,
+    onFinished: afterAction,
+  })
+  const handleRestore = () => restoring.restore(selection.items)
 
   const contextMenu = useContextMenu()
 
@@ -201,15 +242,20 @@ export const AssetLibraryModal = ({
           onToggleSelecting={selection.toggleSelecting}
           search={search}
           onSearchChange={setSearch}
+          trash={trash}
+          onToggleTrash={toggleTrash}
         />
 
         {/* Always shown: appearing on the first click would shift the grid
             under the second click of a double-click. */}
         <SelectionToolbar
           count={selection.items.length}
+          trash={trash}
           onClear={selection.clear}
           onRename={renameDialog.show}
           onMove={moveDialog.show}
+          onDelete={deleteDialog.show}
+          onRestore={handleRestore}
         />
 
         <UploadPanel
@@ -225,16 +271,19 @@ export const AssetLibraryModal = ({
             images={contents.images}
             fetching={contents.fetching}
             error={contents.error}
+            emptyMessage={
+              trash ? "The trash is empty." : "This folder is empty."
+            }
             viewMode={viewMode}
             isSelected={selection.isSelected}
             onSelect={selection.select}
             onContextMenu={openItemMenu}
-            onOpenFolder={openFolder}
-            onInsertImage={onInsert ? startEmbed : () => {}}
+            onOpenFolder={trash ? () => {} : openFolder}
+            onInsertImage={onInsert && !trash ? startEmbed : () => {}}
           />
           <AssetLibrarySidePanel
             selected={selection.items}
-            onInsertImage={onInsert && startEmbed}
+            onInsertImage={trash ? undefined : onInsert && startEmbed}
           />
         </div>
 
@@ -242,8 +291,11 @@ export const AssetLibraryModal = ({
         <ContextMenu
           menu={contextMenu.menu}
           count={selection.items.length}
+          trash={trash}
           onRename={renameDialog.show}
           onMove={moveDialog.show}
+          onDelete={deleteDialog.show}
+          onRestore={handleRestore}
         />
         <NameModal
           dialog={renameDialog}
@@ -258,6 +310,12 @@ export const AssetLibraryModal = ({
           startFolder={currentFolder}
           onConfirm={handleMove}
         />
+        <DeleteModal
+          dialog={deleteDialog}
+          items={selection.items}
+          onConfirm={handleDelete}
+        />
+        <NameModal {...restoring.prompt} />
         <EmbedModal dialog={embedDialog} onConfirm={handleEmbed} />
       </Dialog>
     </DialogBackdrop>

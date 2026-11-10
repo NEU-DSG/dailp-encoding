@@ -1,7 +1,8 @@
 import React from "react"
-import type * as Dailp from "src/graphql/dailp"
+import * as Dailp from "src/graphql/dailp"
 import * as css from "./asset-library.css"
 import { useFolderDisplay } from "./folder-item"
+import { formatBytes, formatDate } from "./format"
 import { useImageDisplay } from "./image-item"
 import type { SelectedItem } from "./types"
 
@@ -43,8 +44,17 @@ const PanelContent = ({ selected, onInsertImage }: SidePanelProps) => {
   )
 }
 
+const DeletedDate = (p: { deletedAt: string | null }) =>
+  p.deletedAt ? (
+    <>
+      <dt>Deleted</dt>
+      <dd>{formatDate(p.deletedAt)}</dd>
+    </>
+  ) : null
+
 const FolderPanel = (p: { folder: Parameters<typeof useFolderDisplay>[0] }) => {
   const display = useFolderDisplay(p.folder)
+  const [size] = Dailp.useFolderSizeQuery({ variables: { id: p.folder.id } })
   return (
     <>
       <h3 className={css.sectionHeading}>{display.label}</h3>
@@ -52,9 +62,12 @@ const FolderPanel = (p: { folder: Parameters<typeof useFolderDisplay>[0] }) => {
         <dt>Type</dt>
         <dd>{display.type}</dd>
         <dt>Size</dt>
-        <dd>{display.size}</dd>
+        <dd>
+          {size.fetching ? "Calculating…" : formatBytes(size.data?.folderSize)}
+        </dd>
         <dt>Created</dt>
         <dd>{display.created}</dd>
+        <DeletedDate deletedAt={p.folder.deletedAt} />
       </dl>
     </>
   )
@@ -82,6 +95,7 @@ const ImagePanel = (p: {
         <dd>{display.size}</dd>
         <dt>Created</dt>
         <dd>{display.created}</dd>
+        <DeletedDate deletedAt={p.image.deletedAt} />
       </dl>
       {p.onInsert && (
         <button type="button" className={css.insertButton} onClick={p.onInsert}>

@@ -16,10 +16,17 @@ export const GRAPHQL_URL_READ = process.env["DAILP_API_URL"] + "/graphql"
 export const GRAPHQL_URL_WRITE = process.env["DAILP_API_URL"] + "/graphql-edit"
 
 // Asset library listings are cached per path, and graphcache can't tell which
-// listing a created, renamed, moved or deleted item now belongs in. Drop them
-// all so each is refetched the next time it is shown.
+// listing a created, renamed, moved, deleted or restored item now belongs in, or
+// which folder sizes it changes. Drop them all so each is refetched the next time
+// it is shown.
 const invalidateAssetListings: UpdateResolver = (_result, _args, cache) => {
-  const listings = ["folderContents", "searchLibrary", "folderBreadcrumbs"]
+  const listings = [
+    "folderContents",
+    "searchLibrary",
+    "folderBreadcrumbs",
+    "listTrash",
+    "folderSize",
+  ]
   for (const field of cache.inspectFields("Query")) {
     if (listings.includes(field.fieldName)) {
       cache.invalidate("Query", field.fieldName, field.arguments)
@@ -45,6 +52,8 @@ export const sharedCache = cacheExchange({
       moveImage: invalidateAssetListings,
       deleteFolder: invalidateAssetListings,
       deleteImage: invalidateAssetListings,
+      restoreFolder: invalidateAssetListings,
+      restoreImage: invalidateAssetListings,
     },
   },
   resolvers: {
@@ -68,6 +77,9 @@ export const sharedCache = cacheExchange({
     WordSegment: () => null,
     DocumentPage: () => null,
     MenuItem: () => null,
+    TrashContents: () => null,
+    ImageUsage: () => null,
+    PageUsage: () => null,
     AnnotatedDoc: (data) => data["slug"] as string,
     AudioSlice: (data) => data["sliceId"] as string,
     DocumentCollection: (data) => data["slug"] as string,

@@ -6,6 +6,8 @@ select id, folder_id, created_at, deleted_at, uploaded_by, filename,
        scope as "scope: ImageScope"
 from images i
 where i.deleted_at is not null
+  -- Past the retention period: gone from the trash even before it's purged.
+  and i.deleted_at > now() - make_interval(days => $1::int)
   and not exists (
     select 1
     from folders parent

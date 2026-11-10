@@ -869,7 +869,6 @@ fragment FolderFields on Folder {
   path
   createdAt
   deletedAt
-  sizeBytes
 }
 
 fragment ImageFields on Image {
@@ -932,6 +931,35 @@ query ListTrash {
   }
 }
 
+query ImagesInUse($folderIds: [UUID!]!, $imageIds: [UUID!]!) {
+  imagesInUse(folderIds: $folderIds, imageIds: $imageIds) {
+    image {
+      ...ImageFields
+    }
+    pages {
+      pageId
+      path
+      title
+    }
+  }
+}
+
+query FolderSize($id: UUID!) {
+  folderSize(id: $id)
+}
+
+query FolderRestoreConflict($id: UUID!) {
+  folderRestoreConflict(id: $id) {
+    ...FolderFields
+  }
+}
+
+query ImageRestoreConflict($id: UUID!) {
+  imageRestoreConflict(id: $id) {
+    ...ImageFields
+  }
+}
+
 mutation CreateFolder($parentId: UUID, $name: String!) {
   createFolder(parentId: $parentId, name: $name) {
     ...FolderFields
@@ -976,6 +1004,18 @@ mutation DeleteFolder($id: UUID!) {
 
 mutation DeleteImage($id: UUID!) {
   deleteImage(id: $id) {
+    ...ImageFields
+  }
+}
+
+mutation RestoreFolder($id: UUID!) {
+  restoreFolder(id: $id) {
+    ...FolderFields
+  }
+}
+
+mutation RestoreImage($id: UUID!) {
+  restoreImage(id: $id) {
     ...ImageFields
   }
 }

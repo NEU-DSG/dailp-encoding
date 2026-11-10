@@ -5,9 +5,12 @@ import * as css from "./asset-library.css"
 
 interface SelectionToolbarProps {
   count: number
+  trash: boolean
   onClear: () => void
   onRename: () => void
   onMove: () => void
+  onDelete: () => void
+  onRestore: () => void
 }
 
 export const SelectionToolbar = (p: SelectionToolbarProps) => (
@@ -24,21 +27,42 @@ export const SelectionToolbar = (p: SelectionToolbarProps) => (
     </CleanButton>
     <span className={css.selectionCount}>{p.count} selected</span>
 
-    <CleanButton
-      type="button"
-      className={css.selectionAction}
-      onClick={p.onRename}
-      disabled={p.count !== 1}
-    >
-      Rename
-    </CleanButton>
-    <CleanButton
-      type="button"
-      className={css.selectionAction}
-      onClick={p.onMove}
-      disabled={p.count === 0}
-    >
-      Move
-    </CleanButton>
+    {p.trash ? (
+      <CleanButton
+        type="button"
+        className={css.selectionAction}
+        onClick={p.onRestore}
+        disabled={p.count === 0}
+      >
+        Restore
+      </CleanButton>
+    ) : (
+      <>
+        <CleanButton
+          type="button"
+          className={css.selectionAction}
+          onClick={p.onRename}
+          disabled={p.count !== 1}
+        >
+          Rename
+        </CleanButton>
+        <CleanButton
+          type="button"
+          className={css.selectionAction}
+          onClick={p.onMove}
+          disabled={p.count === 0}
+        >
+          Move
+        </CleanButton>
+        <CleanButton
+          type="button"
+          className={css.selectionAction}
+          onClick={p.onDelete}
+          disabled={p.count === 0}
+        >
+          Delete
+        </CleanButton>
+      </>
+    )}
   </div>
 )

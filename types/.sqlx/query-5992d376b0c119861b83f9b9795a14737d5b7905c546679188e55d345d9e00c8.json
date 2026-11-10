@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Soft-delete an image: stamp deleted_at rather than removing the row. $1 id\nupdate images\nset deleted_at = now()\nwhere id = $1\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, s3_url,\n          scope as \"scope: ImageScope\";\n",
+  "query": "-- Take an image out of the trash. $1 id, $2 retention in days: past it, the\n-- image can't come back, and no row is returned.\nupdate images\nset deleted_at = null\nwhere id = $1\n  and deleted_at > now() - make_interval(days => $2::int)\nreturning id, folder_id, created_at, deleted_at, uploaded_by, filename,\n          mime_type, size_bytes, width, height, s3_url,\n          scope as \"scope: ImageScope\";\n",
   "describe": {
     "columns": [
       {
@@ -76,7 +76,8 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Int4"
       ]
     },
     "nullable": [
@@ -94,5 +95,5 @@
       false
     ]
   },
-  "hash": "c0b4ecd6f483081464dd71255bffc3d1f6f301cd30c7a9c98b527aebb078f779"
+  "hash": "5992d376b0c119861b83f9b9795a14737d5b7905c546679188e55d345d9e00c8"
 }

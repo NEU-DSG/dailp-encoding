@@ -3,6 +3,10 @@ use async_graphql::{dataloader::DataLoader, Context, FieldResult};
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 
+/// How long deleted items stay restorable. Past this they drop out of the trash
+/// and are permanently removed.
+pub const TRASH_RETENTION_DAYS: i32 = 365;
+
 /// Where an image is meant to be used across the site.
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, sqlx::Type)]
 #[sqlx(type_name = "image_scope")]
@@ -29,8 +33,6 @@ pub struct Folder {
     pub created_at: NaiveDateTime,
     /// When this folder was soft-deleted, or null if it is still live
     pub deleted_at: Option<NaiveDateTime>,
-    /// Total size of this folder's contents, in bytes
-    pub size_bytes: i64,
 }
 
 /// A resized copy of an image, so a page can serve the smallest file a device
@@ -87,6 +89,16 @@ pub struct PageUsage {
     pub path: String,
     /// Display title of the page
     pub title: String,
+}
+
+/// A live image and the content pages that refer to it, so a delete can warn
+/// which pages would lose it.
+#[derive(Debug, Clone, async_graphql::SimpleObject)]
+pub struct ImageUsage {
+    /// The image
+    pub image: Image,
+    /// Pages whose body refers to the image
+    pub pages: Vec<PageUsage>,
 }
 
 #[async_graphql::ComplexObject]

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Soft-deleted folders at the outermost layer of the trash: those whose parent is\n-- the root or is still live. A folder inside another deleted folder is omitted,\n-- because restoring the outermost folder restores everything inside it.\nselect id, parent_id, name, path::text as \"path!\", created_at, deleted_at\nfrom folders f\nwhere f.deleted_at is not null\n  -- Past the retention period: gone from the trash even before it's purged.\n  and f.deleted_at > now() - make_interval(days => $1::int)\n  and not exists (\n    select 1\n    from folders parent\n    where parent.id = f.parent_id and parent.deleted_at is not null\n  )\norder by name;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true
+    ]
+  },
+  "hash": "2182c7be42466d9edf75e70134fa9175381118f37ce57eeb1d36c7dcd1e092ab"
+}

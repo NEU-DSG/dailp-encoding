@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Take the images that were deleted along with a folder out of the trash.\n-- $1 the restored folder ids, $2 the folder's deletion timestamp.\nupdate images\nset deleted_at = null\nwhere folder_id = any($1::uuid[]) and deleted_at = $2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "Timestamp"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6077626e309e15f223fcfd984731189277d73573c032ee57388689a0a529ef94"
+}

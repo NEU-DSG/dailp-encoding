@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { MdFolder } from "react-icons/md/index"
 import { Dialog, DialogBackdrop, DialogStateReturn } from "reakit"
 import { Button, CleanButton } from "src/components"
 import type * as Dailp from "src/graphql/dailp"
 import * as css from "./asset-library.css"
 import { Breadcrumbs } from "./breadcrumbs"
+import { isWithin } from "./format"
 import type { SelectedItem } from "./types"
 import { useLibraryContents } from "./use-library-contents"
 
@@ -18,7 +19,17 @@ interface MoveModalProps {
   onConfirm: (target: Folder | null) => void
 }
 
-export const MoveModal = ({
+export const MoveModal = (p: MoveModalProps) => (
+  <DialogBackdrop {...p.dialog} className={css.smallBackdrop}>
+    <Dialog {...p.dialog} className={css.smallDialog} aria-label="Move">
+      {/* Only mounted while open. A listing left running would refetch after
+          every action, and a reply overtaken by the next one would undo it. */}
+      {p.dialog.visible && <MovePicker {...p} />}
+    </Dialog>
+  </DialogBackdrop>
+)
+
+const MovePicker = ({
   dialog,
   items,
   startFolder,
@@ -29,22 +40,13 @@ export const MoveModal = ({
   // the only way to pick the root.
   const [picked, setPicked] = useState<Folder | null>(null)
 
-  useEffect(() => {
-    if (!dialog.visible) return
-    setLocation(startFolder)
-    setPicked(null)
-  }, [dialog.visible, startFolder])
-
   const { folders } = useLibraryContents(location?.path ?? "", "")
 
-  // Paths are ltree labels joined by ".", so a descendant is a prefix match.
   const movingPaths = items.flatMap((item) =>
     item.kind === "folder" ? [item.folder.path] : []
   )
   const isInvalid = (folder: Folder) =>
-    movingPaths.some(
-      (path) => folder.path === path || folder.path.startsWith(`${path}.`)
-    )
+    movingPaths.some((path) => isWithin(folder.path, path))
 
   const open = (folder: Folder | null) => {
     setLocation(folder)
@@ -60,52 +62,50 @@ export const MoveModal = ({
   }
 
   return (
-    <DialogBackdrop {...dialog} className={css.smallBackdrop}>
-      <Dialog {...dialog} className={css.smallDialog} aria-label="Move">
-        <h3 className={css.smallDialogTitle}>
-          Move {items.length} {items.length === 1 ? "item" : "items"}
-        </h3>
-        <Breadcrumbs path={location?.path ?? ""} onOpenFolder={open} />
+    <>
+      <h3 className={css.smallDialogTitle}>
+        Move {items.length} {items.length === 1 ? "item" : "items"}
+      </h3>
+      <Breadcrumbs path={location?.path ?? ""} onOpenFolder={open} />
 
-        <ul className={css.pickerList}>
-          {folders.length === 0 && (
-            <li className={css.emptyMessage}>No folders here.</li>
-          )}
-          {folders.map((folder) => (
-            <li key={folder.id}>
-              <button
-                type="button"
-                className={
-                  picked?.id === folder.id
-                    ? css.pickerItem.picked
-                    : css.pickerItem.idle
-                }
-                disabled={isInvalid(folder)}
-                aria-pressed={picked?.id === folder.id}
-                onClick={() => setPicked(folder)}
-                onDoubleClick={() => open(folder)}
-              >
-                <MdFolder size={20} aria-hidden />
-                {folder.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <ul className={css.pickerList}>
+        {folders.length === 0 && (
+          <li className={css.emptyMessage}>No folders here.</li>
+        )}
+        {folders.map((folder) => (
+          <li key={folder.id}>
+            <button
+              type="button"
+              className={
+                picked?.id === folder.id
+                  ? css.pickerItem.picked
+                  : css.pickerItem.idle
+              }
+              disabled={isInvalid(folder)}
+              aria-pressed={picked?.id === folder.id}
+              onClick={() => setPicked(folder)}
+              onDoubleClick={() => open(folder)}
+            >
+              <MdFolder size={20} aria-hidden />
+              {folder.name}
+            </button>
+          </li>
+        ))}
+      </ul>
 
-        <p className={css.pickerMessage}>
-          {targetInvalid
-            ? "A folder can't be moved into itself."
-            : `Move to "${target?.name ?? "Library"}" directory`}
-        </p>
-        <div className={css.smallDialogActions}>
-          <CleanButton type="button" onClick={dialog.hide}>
-            Cancel
-          </CleanButton>
-          <Button type="button" disabled={targetInvalid} onClick={confirm}>
-            Confirm
-          </Button>
-        </div>
-      </Dialog>
-    </DialogBackdrop>
+      <p className={css.pickerMessage}>
+        {targetInvalid
+          ? "A folder can't be moved into itself."
+          : `Move to "${target?.name ?? "Library"}" directory`}
+      </p>
+      <div className={css.smallDialogActions}>
+        <CleanButton type="button" onClick={dialog.hide}>
+          Cancel
+        </CleanButton>
+        <Button type="button" disabled={targetInvalid} onClick={confirm}>
+          Confirm
+        </Button>
+      </div>
+    </>
   )
 }

@@ -7,16 +7,23 @@ interface NameModalProps {
   dialog: DialogStateReturn
   title: string
   label: string
+  description?: string
   initialValue?: string
+  confirmLabel?: string
   onConfirm: (name: string) => void
 }
 
-/** Asks for a single name. Shared by creating a folder and renaming an item. */
+/**
+ * Asks for a single name. Shared by creating a folder, renaming an item, and
+ * renaming whatever is blocking a restore.
+ */
 export const NameModal = ({
   dialog,
   title,
   label,
+  description,
   initialValue = "",
+  confirmLabel = "Confirm",
   onConfirm,
 }: NameModalProps) => {
   const [value, setValue] = useState(initialValue)
@@ -46,6 +53,7 @@ export const NameModal = ({
       >
         <form onSubmit={submit}>
           <h3 className={css.smallDialogTitle}>{title}</h3>
+          {description && <p className={css.smallDialogText}>{description}</p>}
           <label className={css.smallDialogLabel}>
             {label}
             <input
@@ -60,7 +68,7 @@ export const NameModal = ({
               Cancel
             </CleanButton>
             <Button type="submit" disabled={!name}>
-              Confirm
+              {confirmLabel}
             </Button>
           </div>
         </form>

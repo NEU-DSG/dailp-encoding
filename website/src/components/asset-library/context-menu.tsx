@@ -33,15 +33,21 @@ export function useContextMenu() {
 interface ContextMenuProps {
   menu: MenuStateReturn
   count: number
+  trash: boolean
   onRename: () => void
   onMove: () => void
+  onDelete: () => void
+  onRestore: () => void
 }
 
 export const ContextMenu = ({
   menu,
   count,
+  trash,
   onRename,
   onMove,
+  onDelete,
+  onRestore,
 }: ContextMenuProps) => {
   const run = (action: () => void) => () => {
     menu.hide()
@@ -50,26 +56,51 @@ export const ContextMenu = ({
 
   return (
     <Menu {...menu} aria-label="Item actions" className={css.popupMenu}>
-      <MenuItem
-        {...menu}
-        as="button"
-        type="button"
-        className={css.popupMenuItem}
-        disabled={count !== 1}
-        onClick={run(onRename)}
-      >
-        Rename
-      </MenuItem>
-      <MenuItem
-        {...menu}
-        as="button"
-        type="button"
-        className={css.popupMenuItem}
-        disabled={count === 0}
-        onClick={run(onMove)}
-      >
-        Move
-      </MenuItem>
+      {trash ? (
+        <MenuItem
+          {...menu}
+          as="button"
+          type="button"
+          className={css.popupMenuItem}
+          disabled={count === 0}
+          onClick={run(onRestore)}
+        >
+          Restore
+        </MenuItem>
+      ) : (
+        <>
+          <MenuItem
+            {...menu}
+            as="button"
+            type="button"
+            className={css.popupMenuItem}
+            disabled={count !== 1}
+            onClick={run(onRename)}
+          >
+            Rename
+          </MenuItem>
+          <MenuItem
+            {...menu}
+            as="button"
+            type="button"
+            className={css.popupMenuItem}
+            disabled={count === 0}
+            onClick={run(onMove)}
+          >
+            Move
+          </MenuItem>
+          <MenuItem
+            {...menu}
+            as="button"
+            type="button"
+            className={css.popupMenuItem}
+            disabled={count === 0}
+            onClick={run(onDelete)}
+          >
+            Delete
+          </MenuItem>
+        </>
+      )}
     </Menu>
   )
 }

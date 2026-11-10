@@ -13,6 +13,7 @@ import {
 } from "src/style/constants"
 import { paddingX } from "src/style/utils"
 import { std } from "src/style/utils.css"
+import { link } from "../link.css"
 
 export const dashboardTab = style({
   borderRadius: 0,
@@ -120,3 +121,14 @@ export const noBullets = style({
 export const cardShadow = style({
   boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
 })
+
+export const linkButton = style([
+  link,
+  {
+    background: "none",
+    border: "none",
+    padding: 0,
+    font: "inherit",
+    cursor: "pointer",
+  },
+])

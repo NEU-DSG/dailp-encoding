@@ -737,8 +737,6 @@ export type Folder = {
   readonly parentId: Maybe<Scalars["UUID"]>
   /** Slugified path from the root, e.g. "partners.logos". */
   readonly path: Scalars["String"]
-  /** Total size of this folder's contents, in bytes */
-  readonly sizeBytes: Scalars["Int"]
 }
 
 /** Everything directly inside a single folder (one level) like the unix `ls` command. */
@@ -877,6 +875,18 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/**
+ * A live image and the content pages that refer to it, so a delete can warn
+ * which pages would lose it.
+ */
+export type ImageUsage = {
+  readonly __typename?: "ImageUsage"
+  /** The image */
+  readonly image: Image
+  /** Pages whose body refers to the image */
+  readonly pages: ReadonlyArray<PageUsage>
 }
 
 /**
@@ -1132,6 +1142,10 @@ export type Mutation = {
   readonly renameFolder: Folder
   /** Rename an image. */
   readonly renameImage: Image
+  /** Take a folder out of the trash, along with everything deleted with it. */
+  readonly restoreFolder: Folder
+  /** Take an image out of the trash. */
+  readonly restoreImage: Image
   /** Inverts associated collection's visiblity */
   readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
@@ -1251,6 +1265,14 @@ export type MutationRenameFolderArgs = {
 
 export type MutationRenameImageArgs = {
   filename: Scalars["String"]
+  id: Scalars["UUID"]
+}
+
+export type MutationRestoreFolderArgs = {
+  id: Scalars["UUID"]
+}
+
+export type MutationRestoreImageArgs = {
   id: Scalars["UUID"]
 }
 
@@ -1467,8 +1489,29 @@ export type Query = {
    * "partners.logos"; the empty string lists the root of the library.
    */
   readonly folderContents: FolderContents
+  /**
+   * The live folder that would stop this deleted folder from being restored,
+   * because it now has the same name in the same place. Null when there is
+   * none.
+   */
+  readonly folderRestoreConflict: Maybe<Folder>
+  /** The total size in bytes of the images in this folder and its subfolders. */
+  readonly folderSize: Scalars["Int"]
   /** Retrieves the IIIF image source URL of a document */
   readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
+  /**
+   * The live image that would stop this deleted image from being restored,
+   * because it now has the same filename in the same folder. Null when there
+   * is none.
+   */
+  readonly imageRestoreConflict: Maybe<Image>
+  /**
+   * Live images that deleting these folders and images would send to the
+   * trash, including everything inside the folders, each with the content
+   * pages that refer to it. Images no page refers to are left out, so an
+   * empty list means the delete breaks no page.
+   */
+  readonly imagesInUse: ReadonlyArray<ImageUsage>
   /**
    * Library images referred to by the body of the page at `path`, by
    * filename. Soft-deleted images are included, since a page still pointing
@@ -1583,8 +1626,25 @@ export type QueryFolderContentsArgs = {
   path: Scalars["String"]
 }
 
+export type QueryFolderRestoreConflictArgs = {
+  id: Scalars["UUID"]
+}
+
+export type QueryFolderSizeArgs = {
+  id: Scalars["UUID"]
+}
+
 export type QueryIiifSourceForDocumentMetadataArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type QueryImageRestoreConflictArgs = {
+  id: Scalars["UUID"]
+}
+
+export type QueryImagesInUseArgs = {
+  folderIds: ReadonlyArray<Scalars["UUID"]>
+  imageIds: ReadonlyArray<Scalars["UUID"]>
 }
 
 export type QueryImagesReferencedByPageArgs = {
@@ -3953,7 +4013,7 @@ export type ValidateTurnstileTokenMutation = {
 
 export type FolderFieldsFragment = { readonly __typename?: "Folder" } & Pick<
   Folder,
-  "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt" | "sizeBytes"
+  "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
 >
 
 export type ImageFieldsFragment = { readonly __typename?: "Image" } & Pick<
@@ -3988,13 +4048,7 @@ export type FolderContentsQuery = { readonly __typename?: "Query" } & {
     readonly folders: ReadonlyArray<
       { readonly __typename?: "Folder" } & Pick<
         Folder,
-        | "id"
-        | "parentId"
-        | "name"
-        | "path"
-        | "createdAt"
-        | "deletedAt"
-        | "sizeBytes"
+        "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
       >
     >
     readonly images: ReadonlyArray<
@@ -4033,13 +4087,7 @@ export type SearchLibraryQuery = { readonly __typename?: "Query" } & {
     readonly folders: ReadonlyArray<
       { readonly __typename?: "Folder" } & Pick<
         Folder,
-        | "id"
-        | "parentId"
-        | "name"
-        | "path"
-        | "createdAt"
-        | "deletedAt"
-        | "sizeBytes"
+        "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
       >
     >
     readonly images: ReadonlyArray<
@@ -4077,13 +4125,7 @@ export type FolderBreadcrumbsQuery = { readonly __typename?: "Query" } & {
   readonly folderBreadcrumbs: ReadonlyArray<
     { readonly __typename?: "Folder" } & Pick<
       Folder,
-      | "id"
-      | "parentId"
-      | "name"
-      | "path"
-      | "createdAt"
-      | "deletedAt"
-      | "sizeBytes"
+      "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
     >
   >
 }
@@ -4095,13 +4137,7 @@ export type ListTrashQuery = { readonly __typename?: "Query" } & {
     readonly folders: ReadonlyArray<
       { readonly __typename?: "Folder" } & Pick<
         Folder,
-        | "id"
-        | "parentId"
-        | "name"
-        | "path"
-        | "createdAt"
-        | "deletedAt"
-        | "sizeBytes"
+        "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
       >
     >
     readonly images: ReadonlyArray<
@@ -4131,6 +4167,99 @@ export type ListTrashQuery = { readonly __typename?: "Query" } & {
   }
 }
 
+export type ImagesInUseQueryVariables = Exact<{
+  folderIds: ReadonlyArray<Scalars["UUID"]> | Scalars["UUID"]
+  imageIds: ReadonlyArray<Scalars["UUID"]> | Scalars["UUID"]
+}>
+
+export type ImagesInUseQuery = { readonly __typename?: "Query" } & {
+  readonly imagesInUse: ReadonlyArray<
+    { readonly __typename?: "ImageUsage" } & {
+      readonly image: { readonly __typename?: "Image" } & Pick<
+        Image,
+        | "id"
+        | "folderId"
+        | "createdAt"
+        | "deletedAt"
+        | "uploadedBy"
+        | "filename"
+        | "mimeType"
+        | "sizeBytes"
+        | "width"
+        | "height"
+        | "s3Url"
+        | "scope"
+      > & {
+          readonly variants: ReadonlyArray<
+            { readonly __typename?: "ImageVariant" } & Pick<
+              ImageVariant,
+              "width" | "height" | "s3Url" | "mimeType"
+            >
+          >
+        }
+      readonly pages: ReadonlyArray<
+        { readonly __typename?: "PageUsage" } & Pick<
+          PageUsage,
+          "pageId" | "path" | "title"
+        >
+      >
+    }
+  >
+}
+
+export type FolderSizeQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type FolderSizeQuery = { readonly __typename?: "Query" } & Pick<
+  Query,
+  "folderSize"
+>
+
+export type FolderRestoreConflictQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type FolderRestoreConflictQuery = { readonly __typename?: "Query" } & {
+  readonly folderRestoreConflict: Maybe<
+    { readonly __typename?: "Folder" } & Pick<
+      Folder,
+      "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
+    >
+  >
+}
+
+export type ImageRestoreConflictQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type ImageRestoreConflictQuery = { readonly __typename?: "Query" } & {
+  readonly imageRestoreConflict: Maybe<
+    { readonly __typename?: "Image" } & Pick<
+      Image,
+      | "id"
+      | "folderId"
+      | "createdAt"
+      | "deletedAt"
+      | "uploadedBy"
+      | "filename"
+      | "mimeType"
+      | "sizeBytes"
+      | "width"
+      | "height"
+      | "s3Url"
+      | "scope"
+    > & {
+        readonly variants: ReadonlyArray<
+          { readonly __typename?: "ImageVariant" } & Pick<
+            ImageVariant,
+            "width" | "height" | "s3Url" | "mimeType"
+          >
+        >
+      }
+  >
+}
+
 export type CreateFolderMutationVariables = Exact<{
   parentId: InputMaybe<Scalars["UUID"]>
   name: Scalars["String"]
@@ -4139,13 +4268,7 @@ export type CreateFolderMutationVariables = Exact<{
 export type CreateFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly createFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    | "id"
-    | "parentId"
-    | "name"
-    | "path"
-    | "createdAt"
-    | "deletedAt"
-    | "sizeBytes"
+    "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
   >
 }
 
@@ -4186,13 +4309,7 @@ export type RenameFolderMutationVariables = Exact<{
 export type RenameFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly renameFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    | "id"
-    | "parentId"
-    | "name"
-    | "path"
-    | "createdAt"
-    | "deletedAt"
-    | "sizeBytes"
+    "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
   >
 }
 
@@ -4234,13 +4351,7 @@ export type MoveFolderMutationVariables = Exact<{
 export type MoveFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly moveFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    | "id"
-    | "parentId"
-    | "name"
-    | "path"
-    | "createdAt"
-    | "deletedAt"
-    | "sizeBytes"
+    "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
   >
 }
 
@@ -4281,13 +4392,7 @@ export type DeleteFolderMutationVariables = Exact<{
 export type DeleteFolderMutation = { readonly __typename?: "Mutation" } & {
   readonly deleteFolder: { readonly __typename?: "Folder" } & Pick<
     Folder,
-    | "id"
-    | "parentId"
-    | "name"
-    | "path"
-    | "createdAt"
-    | "deletedAt"
-    | "sizeBytes"
+    "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
   >
 }
 
@@ -4297,6 +4402,46 @@ export type DeleteImageMutationVariables = Exact<{
 
 export type DeleteImageMutation = { readonly __typename?: "Mutation" } & {
   readonly deleteImage: { readonly __typename?: "Image" } & Pick<
+    Image,
+    | "id"
+    | "folderId"
+    | "createdAt"
+    | "deletedAt"
+    | "uploadedBy"
+    | "filename"
+    | "mimeType"
+    | "sizeBytes"
+    | "width"
+    | "height"
+    | "s3Url"
+    | "scope"
+  > & {
+      readonly variants: ReadonlyArray<
+        { readonly __typename?: "ImageVariant" } & Pick<
+          ImageVariant,
+          "width" | "height" | "s3Url" | "mimeType"
+        >
+      >
+    }
+}
+
+export type RestoreFolderMutationVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type RestoreFolderMutation = { readonly __typename?: "Mutation" } & {
+  readonly restoreFolder: { readonly __typename?: "Folder" } & Pick<
+    Folder,
+    "id" | "parentId" | "name" | "path" | "createdAt" | "deletedAt"
+  >
+}
+
+export type RestoreImageMutationVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type RestoreImageMutation = { readonly __typename?: "Mutation" } & {
+  readonly restoreImage: { readonly __typename?: "Image" } & Pick<
     Image,
     | "id"
     | "folderId"
@@ -4544,7 +4689,6 @@ export const FolderFieldsFragmentDoc = gql`
     path
     createdAt
     deletedAt
-    sizeBytes
   }
 `
 export const ImageFieldsFragmentDoc = gql`
@@ -5828,6 +5972,78 @@ export function useListTrashQuery(
     ...options,
   })
 }
+export const ImagesInUseDocument = gql`
+  query ImagesInUse($folderIds: [UUID!]!, $imageIds: [UUID!]!) {
+    imagesInUse(folderIds: $folderIds, imageIds: $imageIds) {
+      image {
+        ...ImageFields
+      }
+      pages {
+        pageId
+        path
+        title
+      }
+    }
+  }
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useImagesInUseQuery(
+  options: Omit<Urql.UseQueryArgs<ImagesInUseQueryVariables>, "query">
+) {
+  return Urql.useQuery<ImagesInUseQuery, ImagesInUseQueryVariables>({
+    query: ImagesInUseDocument,
+    ...options,
+  })
+}
+export const FolderSizeDocument = gql`
+  query FolderSize($id: UUID!) {
+    folderSize(id: $id)
+  }
+`
+
+export function useFolderSizeQuery(
+  options: Omit<Urql.UseQueryArgs<FolderSizeQueryVariables>, "query">
+) {
+  return Urql.useQuery<FolderSizeQuery, FolderSizeQueryVariables>({
+    query: FolderSizeDocument,
+    ...options,
+  })
+}
+export const FolderRestoreConflictDocument = gql`
+  query FolderRestoreConflict($id: UUID!) {
+    folderRestoreConflict(id: $id) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useFolderRestoreConflictQuery(
+  options: Omit<Urql.UseQueryArgs<FolderRestoreConflictQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    FolderRestoreConflictQuery,
+    FolderRestoreConflictQueryVariables
+  >({ query: FolderRestoreConflictDocument, ...options })
+}
+export const ImageRestoreConflictDocument = gql`
+  query ImageRestoreConflict($id: UUID!) {
+    imageRestoreConflict(id: $id) {
+      ...ImageFields
+    }
+  }
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useImageRestoreConflictQuery(
+  options: Omit<Urql.UseQueryArgs<ImageRestoreConflictQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    ImageRestoreConflictQuery,
+    ImageRestoreConflictQueryVariables
+  >({ query: ImageRestoreConflictDocument, ...options })
+}
 export const CreateFolderDocument = gql`
   mutation CreateFolder($parentId: UUID, $name: String!) {
     createFolder(parentId: $parentId, name: $name) {
@@ -5938,5 +6154,34 @@ export const DeleteImageDocument = gql`
 export function useDeleteImageMutation() {
   return Urql.useMutation<DeleteImageMutation, DeleteImageMutationVariables>(
     DeleteImageDocument
+  )
+}
+export const RestoreFolderDocument = gql`
+  mutation RestoreFolder($id: UUID!) {
+    restoreFolder(id: $id) {
+      ...FolderFields
+    }
+  }
+  ${FolderFieldsFragmentDoc}
+`
+
+export function useRestoreFolderMutation() {
+  return Urql.useMutation<
+    RestoreFolderMutation,
+    RestoreFolderMutationVariables
+  >(RestoreFolderDocument)
+}
+export const RestoreImageDocument = gql`
+  mutation RestoreImage($id: UUID!) {
+    restoreImage(id: $id) {
+      ...ImageFields
+    }
+  }
+  ${ImageFieldsFragmentDoc}
+`
+
+export function useRestoreImageMutation() {
+  return Urql.useMutation<RestoreImageMutation, RestoreImageMutationVariables>(
+    RestoreImageDocument
   )
 }

@@ -991,10 +991,6 @@ type Folder {
 	When this folder was soft-deleted, or null if it is still live
 	"""
 	deletedAt: NaiveDateTime
-	"""
-	Total size of this folder's contents, in bytes
-	"""
-	sizeBytes: Int!
 }
 
 """
@@ -1191,6 +1187,21 @@ type ImageSource {
 	Base URL for the IIIF server
 	"""
 	url: String!
+}
+
+"""
+A live image and the content pages that refer to it, so a delete can warn
+which pages would lose it.
+"""
+type ImageUsage {
+	"""
+	The image
+	"""
+	image: Image!
+	"""
+	Pages whose body refers to the image
+	"""
+	pages: [PageUsage!]!
 }
 
 """
@@ -1610,6 +1621,14 @@ type Mutation {
 	Soft-delete an image (stamps `deleted_at`; the row stays for history).
 	"""
 	deleteImage(id: UUID!): Image!
+	"""
+	Take a folder out of the trash, along with everything deleted with it.
+	"""
+	restoreFolder(id: UUID!): Folder!
+	"""
+	Take an image out of the trash.
+	"""
+	restoreImage(id: UUID!): Image!
 }
 
 """
@@ -1942,6 +1961,29 @@ type Query {
 	at one is worth seeing rather than hiding.
 	"""
 	imagesReferencedByPage(path: String!): [Image!]!
+	"""
+	Live images that deleting these folders and images would send to the
+	trash, including everything inside the folders, each with the content
+	pages that refer to it. Images no page refers to are left out, so an
+	empty list means the delete breaks no page.
+	"""
+	imagesInUse(folderIds: [UUID!]!, imageIds: [UUID!]!): [ImageUsage!]!
+	"""
+	The total size in bytes of the images in this folder and its subfolders.
+	"""
+	folderSize(id: UUID!): Int!
+	"""
+	The live folder that would stop this deleted folder from being restored,
+	because it now has the same name in the same place. Null when there is
+	none.
+	"""
+	folderRestoreConflict(id: UUID!): Folder
+	"""
+	The live image that would stop this deleted image from being restored,
+	because it now has the same filename in the same folder. Null when there
+	is none.
+	"""
+	imageRestoreConflict(id: UUID!): Image
 }
 
 """

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Take folder $1 out of the trash, along with the folders deleted with it.\n-- $2 retention in days: past it, nothing is restored and no rows come back.\n--\n-- Deleting a folder stamps it and everything inside it with `now()` in one\n-- transaction, and `now()` is fixed for a transaction, so the items deleted\n-- together share one timestamp exactly. Anything inside that was deleted on its\n-- own beforehand has an older stamp and stays in the trash.\nwith top as (\n  select path, deleted_at from folders\n  where id = $1 and deleted_at > now() - make_interval(days => $2::int)\n)\nupdate folders f\nset deleted_at = null\nfrom top\nwhere f.path <@ top.path and f.deleted_at = top.deleted_at\nreturning f.id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e7e391bce99c0505d3b1ba1c87472262e4a3fee50dcce4ca209c9bc608fda343"
+}

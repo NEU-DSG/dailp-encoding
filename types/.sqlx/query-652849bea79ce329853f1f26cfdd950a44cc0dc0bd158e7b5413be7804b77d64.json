@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Permanently remove folders past the trash retention period. $1 retention in\n-- days. Run after the images in them are gone. A folder and its subfolders can\n-- go in one statement: the parent reference is only checked once it finishes.\ndelete from folders\nwhere deleted_at < now() - make_interval(days => $1::int);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "652849bea79ce329853f1f26cfdd950a44cc0dc0bd158e7b5413be7804b77d64"
+}

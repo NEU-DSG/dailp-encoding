@@ -10,5 +10,4 @@ values (
     else (select f.path from folders f where f.id = $1) || $3::ltree
   end
 )
-returning id, parent_id, name, path::text as "path!", created_at, deleted_at,
-          size_bytes;
+returning id, parent_id, name, path::text as "path!", created_at, deleted_at;

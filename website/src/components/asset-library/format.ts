@@ -29,3 +29,16 @@ export function formatMimeType(mimeType: string): string {
   const subtype = mimeType.split("/")[1]
   return subtype ? subtype.toUpperCase() : mimeType
 }
+
+// An image's extension is kept out of rename so it always matches its contents.
+// A leading dot (".hidden") is part of the name, not an extension.
+export const splitExtension = (filename: string) => {
+  const dot = filename.lastIndexOf(".")
+  return dot > 0
+    ? { base: filename.slice(0, dot), extension: filename.slice(dot) }
+    : { base: filename, extension: "" }
+}
+
+// Paths are ltree labels joined by ".", so a descendant is a prefix match.
+export const isWithin = (path: string, folderPath: string) =>
+  path === folderPath || path.startsWith(`${folderPath}.`)

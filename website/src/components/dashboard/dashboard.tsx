@@ -1,5 +1,12 @@
-import { Tab, TabList, TabPanel, useDialogState } from "reakit"
+import {
+  DialogDisclosure,
+  Tab,
+  TabList,
+  TabPanel,
+  useDialogState,
+} from "reakit"
 import { UserRole, useUserRole } from "src/auth"
+import { AssetLibraryModal } from "src/components/asset-library/asset-library-modal"
 import {
   DocumentFieldsFragment,
   useBookmarkedDocumentsQuery,
@@ -76,6 +83,10 @@ export const ActivityTab = () => {
 }
 
 export const AdminToolsTab = () => {
+  const curRole = useUserRole()
+  const canUseAssetLibrary =
+    curRole === UserRole.Admin || curRole === UserRole.Editor
+  const assetLibrary = useDialogState({ animated: true })
   return (
     <>
       <div>
@@ -108,6 +119,16 @@ export const AdminToolsTab = () => {
         {/* TODO allow creation of pages at /edit/new-page */}
         <Link href="/edit/?path=/new-page">New Page</Link>
       </div>
+
+      {canUseAssetLibrary && (
+        <div>
+          <h2>Project Management</h2>
+          <DialogDisclosure {...assetLibrary} className={css.linkButton}>
+            Asset Library
+          </DialogDisclosure>
+          <AssetLibraryModal dialog={assetLibrary} />
+        </div>
+      )}
     </>
   )
 }

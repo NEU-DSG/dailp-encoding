@@ -13,7 +13,6 @@ Folders form a tree; a folder with no parent sits at the root of the library.
 | `path`       | `ltree`            | Slugified path from the root, one label per ancestor. Ex: `partner_logos.archived`              |
 | `created_at` | `timestamp`        | When this folder was created                                                                    |
 | `deleted_at` | `timestamp?`       | When this folder was soft-deleted. `null` while it is live                                      |
-| `size_bytes` | `bigint`           | Total size of this folder's contents.                                                           |
 
 ## Names and paths
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "-- Soft-deleted images at the outermost layer of the trash: those whose folder is\n-- the root or is still live. An image inside a deleted folder is omitted, because\n-- restoring that folder restores everything inside it.\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images i\nwhere i.deleted_at is not null\n  and not exists (\n    select 1\n    from folders parent\n    where parent.id = i.folder_id and parent.deleted_at is not null\n  )\norder by filename;\n",
+  "query": "-- Live images that deleting folders $1 and images $2 would send to the trash:\n-- the images themselves, and every live image anywhere inside the folders.\n--\n-- The subtree follows `parent_id` because a folder in the trash can have the same\n-- path as a live one without being inside it, which `<@` can't tell apart.\nwith recursive subtree as (\n  select id from folders where id = any($1::uuid[]) and deleted_at is null\n  union\n  select child.id\n  from folders child\n  join subtree on child.parent_id = subtree.id\n  where child.deleted_at is null\n)\nselect id, folder_id, created_at, deleted_at, uploaded_by, filename,\n       mime_type, size_bytes, width, height, s3_url,\n       scope as \"scope: ImageScope\"\nfrom images\nwhere deleted_at is null\n  and (id = any($2::uuid[]) or folder_id in (select id from subtree))\norder by filename;\n",
   "describe": {
     "columns": [
       {
@@ -75,7 +75,10 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "UuidArray",
+        "UuidArray"
+      ]
     },
     "nullable": [
       false,
@@ -92,5 +95,5 @@
       false
     ]
   },
-  "hash": "ccd74442dea7fbc13512975cf051876e73000bfc060869ae1a8e16f57b19fa46"
+  "hash": "6373980e16d85eec88eccfcfab75f22ef6700eab8cce94130e002c57ca406b7f"
 }
