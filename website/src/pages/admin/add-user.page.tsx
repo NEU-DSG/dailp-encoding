@@ -1,7 +1,7 @@
 import React from "react"
 import { UserRole } from "src/auth"
+import { InviteForm } from "src/components/admin-tools/invite-form"
 import { AuthGuard } from "src/components/auth-guard"
-import { InviteForm } from "src/components/user-management/invite-form"
 import Layout from "src/layout"
 import * as css from "./add-user.css"
 

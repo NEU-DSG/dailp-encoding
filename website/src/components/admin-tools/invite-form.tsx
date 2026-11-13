@@ -1,19 +1,19 @@
 import React, { useState } from "react"
-import { Label } from "src/components"
-import {
-  UserGroup,
-  useAddUserMutation,
-  useAllUsersQuery,
-} from "src/graphql/dailp"
 import {
   CancelButton,
   CloseButton,
   ConfirmationDialog,
   EmptyDialog,
-  RoleDropdown,
+  Label,
   SubmitButton,
-} from "./change-dialog"
+} from "src/components"
+import {
+  UserGroup,
+  useAddUserMutation,
+  useAllUsersQuery,
+} from "src/graphql/dailp"
 import * as css from "./invite-form.css"
+import { RoleDropdown } from "./role-dropdown"
 
 export interface UserEntry {
   email: string
