@@ -1,6 +1,6 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { important, margin } from "polished"
-import { colors, hspace, radii, vspace } from "src/style/constants"
+import { colors, hspace, radii, vspace } from "src/style/design-tokens"
 import { hideOnPrint } from "src/style/utils.css"
 
 export const wide = style({ width: "100%" })

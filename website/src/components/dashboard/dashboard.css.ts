@@ -10,7 +10,7 @@ import {
   space,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { paddingX } from "src/style/utils"
 import { std } from "src/style/utils.css"
 
