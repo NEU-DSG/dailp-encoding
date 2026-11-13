@@ -2,9 +2,11 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link } from "src/components"
 import { CollectionAuthGuard } from "src/components/collection-auth-guard"
+import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute, collectionRoute } from "src/routes"
+import { mediaQueries } from "src/style/constants"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
@@ -33,6 +35,8 @@ const ChapterPage = (props: {
     },
     pause: !collectionSlug || !chapterSlug,
   })
+
+  const isDesktop = useMediaQuery(mediaQueries.medium)
 
   if (!props.collectionSlug) {
     return <>Loading...</>
@@ -84,6 +88,8 @@ const ChapterPage = (props: {
 
   const { document, wordpressId } = chapter
 
+  const wpPath = `/${props.collectionSlug}/${chapter.slug.replace(/_/g, "-")}`
+
   return (
     <CollectionAuthGuard isHidden={collection.isHidden}>
       <CWKWLayout>
@@ -121,12 +127,13 @@ const ChapterPage = (props: {
                   </Breadcrumbs>
                 </header>
                 {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
-                <DailpPageContents
-                  path={`/${props.collectionSlug}/${chapter.slug.replace(
-                    /_/g,
-                    "-"
-                  )}`}
-                />
+                {isDesktop ? (
+                  <DailpPageContents path={wpPath} />
+                ) : (
+                  <div className={chapterStyle.wordpressContentFix}>
+                    <DailpPageContents path={wpPath} />
+                  </div>
+                )}
               </>
             ) : null}
 
