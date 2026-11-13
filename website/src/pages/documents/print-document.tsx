@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
-import {
-  CancelButton,
-  Dropdown,
-  EmptyDialog,
-  SubmitButton,
-} from "src/components/user-management/change-dialog"
+import { CancelButton, EmptyDialog, SubmitButton } from "src/components"
+import { Dropdown } from "src/components/dialog"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { fonts } from "src/style/constants"

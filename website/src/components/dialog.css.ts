@@ -71,40 +71,6 @@ export const body = style({
   },
 })
 
-export const cancelButton = style({
-  width: "8.625rem",
-  height: "1.9375rem",
-  cursor: "pointer",
-  border: `${thickness.thin} solid #5c3b37`,
-  borderRadius: radii.large,
-  backgroundColor: "#ffffff",
-  font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
-})
-
-export const closeButton = style({
-  width: "2rem",
-  height: "1.5rem",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  backgroundColor: "#965f5a",
-  border: `${thickness.thin} solid #5c3b37`,
-  font: `normal 400 1rem/1.2 'Charis SIL'`,
-  color: "white",
-})
-
-export const submitButton = style({
-  width: "8.625rem",
-  height: "1.9375rem",
-  cursor: "pointer",
-  border: `${thickness.thin} solid #5c3b37`,
-  borderRadius: radii.large,
-  backgroundColor: "#415373",
-  color: "white",
-  font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
-})
-
 export const buttons = style({
   display: "flex",
   gap: space.medium,
@@ -146,20 +112,4 @@ export const dropdownSelect = style({
 
 globalStyle(`${dropdownSelect} option`, {
   textAlign: "center",
-})
-
-export const roleSelect = style({
-  width: "8rem",
-  height: "1.9375rem",
-  appearance: "none",
-  backgroundColor: "white",
-  border: `${thickness.thin} solid black`,
-  borderRadius: radii.large,
-  padding: "0 1.75rem 0 0.5rem",
-  font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpolygon points='0,0 10,0 5,6' fill='%239f4d43'/%3E%3C/svg%3E"), linear-gradient(to left, #f8eeed 1.75rem, white 1.75rem)`,
-  backgroundRepeat: "no-repeat, no-repeat",
-  backgroundPosition: "right 0.6rem center, 0 0",
-  backgroundSize: "auto, 100%",
-  cursor: "pointer",
 })
