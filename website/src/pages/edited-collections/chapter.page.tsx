@@ -88,7 +88,15 @@ const ChapterPage = (props: {
 
   const { document, wordpressId } = chapter
 
+  // Is this still relevant now that we're no longer using Wordpress?
   const wpPath = `/${props.collectionSlug}/${chapter.slug.replace(/_/g, "-")}`
+
+  const breadcrumbString = [
+    collection.title,
+    ...chapter.breadcrumbs.map((c) => c.name),
+  ]
+    .filter(Boolean)
+    .join(" / ")
 
   return (
     <CollectionAuthGuard isHidden={collection.isHidden}>
@@ -145,7 +153,7 @@ const ChapterPage = (props: {
                   rootPath={collectionRoute(props.collectionSlug)}
                   doc={document}
                 />
-                <TabSet doc={document} />
+                <TabSet doc={document} breadcrumbString={breadcrumbString} />
               </>
             ) : null}
 
