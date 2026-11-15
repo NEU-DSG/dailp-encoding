@@ -13,7 +13,9 @@ RUN cargo install cargo-watch --locked
 CMD ["cargo", "watch", \
      "-w", "graphql", \
      "-w", "types", \
-     "-x", "run -p dailp-graphql --bin dailp-graphql-dev"]
+     "-i", "**/schema.graphql", \
+     "-s", "cargo run --locked -p dailp-graphql --bin dailp-graphql-schema && \
+     cargo run --locked -p dailp-graphql --bin dailp-graphql-dev"]
 
 # building stage
 FROM base AS builder
@@ -25,7 +27,10 @@ COPY migration ./migration
 
 RUN cargo build --locked --release \
   -p dailp-graphql \
-  --bin dailp-graphql
+  --bin dailp-graphql \
+  --bin dailp-graphql-schema
+
+RUN ./target/release/dailp-graphql-schema
 
 
 # release image
