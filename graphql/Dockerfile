@@ -32,6 +32,12 @@ RUN cargo build --locked --release \
 
 RUN ./target/release/dailp-graphql-schema
 
+# export schema
+FROM scratch AS schema
+
+COPY --from=builder \
+    /workspace/graphql/schema.graphql \
+    /schema.graphql
 
 # release image
 FROM debian:bookworm-slim AS release
