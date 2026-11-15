@@ -85,7 +85,9 @@ async fn main() -> tide::Result<()> {
             .build())
     });
 
-    Ok(app.listen("127.0.0.1:8080").await?)
+    let bind_address =
+        std::env::var("GRAPHQL_SERVER_ADDRESS").unwrap_or("127.0.0.1:8080".to_string());
+    Ok(app.listen(bind_address).await?)
 }
 
 struct AuthedEndpoint {
