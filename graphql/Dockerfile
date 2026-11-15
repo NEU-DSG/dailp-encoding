@@ -6,18 +6,25 @@ WORKDIR /workspace
 # development setup
 FROM base AS dev
 
+ARG CARGO_WATCH_VERSION=8.5.3
+ARG SQLX_CLI_VERSION=0.7.4
+
+
 WORKDIR /workspace
 
-RUN cargo install cargo-watch --locked
+RUN cargo install cargo-watch --version "$CARGO_WATCH_VERSION" --locked \
+    && cargo install sqlx-cli --version "$SQLX_CLI_VERSION" --locked \
+    --no-default-features --features rustls,postgres
 
 CMD ["cargo", "watch", \
      "-w", "graphql", \
      "-w", "types", \
      "-i", "**/schema.graphql", \
-     "-s", "cargo run --locked -p dailp-graphql --bin dailp-graphql-schema && \
-     cargo run --locked -p dailp-graphql --bin dailp-graphql-dev"]
+     "-s", "sqlx migrate run --source /workspace/types/migrations && \
+     cargo run --locked -p dailp-graphql --bin dailp-graphql-schema && \
+     cargo run --locked -p dailp-graphql --bin dailp-graphql-local"]
 
-# building stage
+# building stage NOTE currently uses lambda here will transition to server
 FROM base AS builder
 
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
