@@ -13,7 +13,7 @@ RUN cargo install cargo-watch --locked
 CMD ["cargo", "watch", \
      "-w", "graphql", \
      "-w", "types", \
-     "-x", "run -p dailp-graphql --bin dailp-graphql"]
+     "-x", "run -p dailp-graphql --bin dailp-graphql-dev"]
 
 # building stage
 FROM base AS builder
