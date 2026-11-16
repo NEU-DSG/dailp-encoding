@@ -12,60 +12,60 @@ export const typography = new Typography({
 export const rhythm = typography.rhythm
 
 export const tagColors = {
-  story: palette.colors.lightBlue,
-  suggestion: palette.colors.bisqueOrange,
-  question: palette.colors.apostleGreen,
+  story: palette.colors.hexC3E0EE,
+  suggestion: palette.colors.hexF0D6C1,
+  question: palette.colors.hexC3EEDE,
 }
 
 export const color = {
   actionPrimary: {
-    base: palette.colors.cosmicNavyBlue,
-    hover: palette.colors.zenBlue,
+    base: palette.colors.hex405372,
+    hover: palette.colors.hex6F85A9,
   },
 
-  actionDanger: palette.colors.satinRed,
-  actionNeutral: palette.colors.sharkGray,
+  actionDanger: palette.colors.hexB72D3B,
+  actionNeutral: palette.colors.hex6C757D,
 
   actionMetadataEdit: {
-    base: palette.colors.newtonBlue,
-    hover: palette.colors.dartFrogBlue,
+    base: palette.colors.hex497CC7,
+    hover: palette.colors.hex3867AD,
   },
 
-  link: palette.colors.lagoonBlue,
+  link: palette.colors.hex4A90E2,
 
   border: {
-    default: palette.colors.smoothGray,
-    subtle: palette.colors.subtleWhite,
-    strong: palette.colors.chaliceGray,
+    default: palette.colors.hexCCCCCC,
+    subtle: palette.colors.hexEEEEEE,
+    strong: palette.colors.hexADADAD,
   },
 
   background: {
-    surface: palette.colors.white,
-    subtle: palette.colors.doctorGray,
-    overlayLight: palette.colors.silverGrayAlpha65,
-    overlayDark: palette.colors.blackAlpha20,
+    surface: palette.colors.hexFFFFFF,
+    subtle: palette.colors.hexF9F9F9,
+    overlayLight: palette.colors.hexCFCDCD_alpha65,
+    overlayDark: palette.colors.hex000000_alpha20,
   },
 
   text: {
-    primary: palette.colors.darkCharcoal,
-    secondary: palette.colors.boldGray,
-    muted: palette.colors.mediumGray,
+    primary: palette.colors.hex333333,
+    secondary: palette.colors.hex666666,
+    muted: palette.colors.hexAAAAAA,
   },
 
   status: {
-    successText: palette.colors.retroGreen,
-    successBg: palette.colors.honeydewGreen,
-    errorText: palette.colors.berryRed,
-    errorBg: palette.colors.blushPink,
+    successText: palette.colors.hex28A745,
+    successBg: palette.colors.hexF0FFF4,
+    errorText: palette.colors.hexB00020,
+    errorBg: palette.colors.hexFFEBEE,
   },
 
-  tagNewBg: palette.colors.seashellBlue,
-  tagNewText: palette.colors.grottoBlue,
+  tagNewBg: palette.colors.hexDFEFFE,
+  tagNewText: palette.colors.hex0771D4,
 
   badge: {
-    publishedBg: palette.colors.cosmicNavyBlue,
-    hiddenBorder: palette.colors.smoothGray,
-    hiddenText: palette.colors.boldGray,
+    publishedBg: palette.colors.hex405372,
+    hiddenBorder: palette.colors.hexCCCCCC,
+    hiddenText: palette.colors.hex666666,
   },
 }
 
@@ -92,14 +92,14 @@ export const borderStyle = {
 }
 
 export const shadow = {
-  dropdown: `${palette.shadowScale["2y8b"]} ${palette.colors.blackAlpha10}`,
-  modal: `${palette.shadowScale["8y32b"]} ${palette.colors.blackAlpha10}`,
-  button: `${palette.shadowScale["4y4b"]} ${palette.colors.blackAlpha30}`,
-  buttonHover: `${palette.shadowScale["4y8b"]} ${palette.colors.blackAlpha20}`,
-  card: `${palette.shadowScale["8y16b"]} ${palette.colors.blackAlpha20}`,
-  cardStrong: `${palette.shadowScale["8x8y4b"]} ${palette.colors.blackAlpha20}`,
-  actionButton: `${palette.shadowScale["3y6b"]} ${palette.colors.blackAlpha30}`,
-  actionButtonHover: `${palette.shadowScale["6y10b"]} ${palette.colors.blackAlpha40}`,
+  dropdown: `${palette.shadowScale["2y8b"]} ${palette.colors.hex000000_alpha10}`,
+  modal: `${palette.shadowScale["8y32b"]} ${palette.colors.hex000000_alpha10}`,
+  button: `${palette.shadowScale["4y4b"]} ${palette.colors.hex000000_alpha30}`,
+  buttonHover: `${palette.shadowScale["4y8b"]} ${palette.colors.hex000000_alpha20}`,
+  card: `${palette.shadowScale["8y16b"]} ${palette.colors.hex000000_alpha20}`,
+  cardStrong: `${palette.shadowScale["8x8y4b"]} ${palette.colors.hex000000_alpha20}`,
+  actionButton: `${palette.shadowScale["3y6b"]} ${palette.colors.hex000000_alpha30}`,
+  actionButtonHover: `${palette.shadowScale["6y10b"]} ${palette.colors.hex000000_alpha40}`,
 }
 
 export const transition = {
