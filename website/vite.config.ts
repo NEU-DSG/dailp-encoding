@@ -22,6 +22,10 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    host: process.env.DAILP_DEV_SERVER_HOST ?? "localhost",
+    strictPort: true,
+  },
   ssr: {
     noExternal: ["lodash", "react-markdown"],
   },
