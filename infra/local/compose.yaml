@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:14-bookworm
+    environment:
+      POSTGRES_USER: dailp
+      POSTGRES_PASSWORD: dailp-pass
+      POSTGRES_DB: dailp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dailp -d dailp"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+
+
+  graphql:
+    build:
+      context: ../..
+      dockerfile: graphql/Dockerfile
+      target: dev
+    environment:
+      DATABASE_URL: postgres://dailp:dailp-pass@postgres:5432/dailp
+      SQLX_OFFLINE: "false"
+      GRAPHQL_SERVER_ADDRESS: "0.0.0.0:8080"
+      RUST_LOG: info
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ../..:/workspace
+      - cargo_target:/workspace/target
+
+  website:
+    profiles: ["frontend"]
+    build:
+      context: ../..
+      dockerfile: website/Dockerfile
+      target: dev
+    environment:
+        DAILP_DEV_SERVER_HOST: "0.0.0.0"
+    ports:
+      - "127.0.0.1:${DAILP_WEB_PORT:-3001}:3001"
+    volumes:
+      - ../../website:/app/website
+      - website_node_modules:/app/website/node_modules
+      - ../../graphql:/app/graphql:ro
+
+volumes:
+  postgres_data:
+  cargo_target:
+  website_node_modules:
