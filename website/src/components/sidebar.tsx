@@ -11,14 +11,38 @@ import "src/style/global.css"
 import { colors } from "src/style/theme-contract.css"
 import * as css from "./sidebar.css"
 
+interface SidebarProps {
+  // When editing a TOC, want to make it apparent that this is a preview TOC, not a stanard one
+  isPreview?: boolean
+  // In the event (such as in editing a TOC) that we want custom content
+  alternateContent?: React.ReactNode
+}
+
 // Renders a sidebar on the left side of the screen containing a drawer.
-export const Sidebar = () => {
+export const Sidebar = ({
+  isPreview = false,
+  alternateContent,
+}: SidebarProps) => {
   const dialog = useDialog()
 
   // On load, make sure drawer appears for desktop screens.
   useEffect(() => {
     dialog.setVisible(true)
   }, [])
+
+  const stateClass = dialog.visible ? css.openNav : css.closedNav
+
+  const tabIcon = isPreview ? (
+    <span className={`${stateClass} ${css.previewTab}`}>
+      <p className={css.previewTabText}>
+        {dialog.visible ? "Close Preview" : "Open Preview"}
+      </p>
+    </span>
+  ) : dialog.visible ? (
+    <BsArrowBarLeft size={css.iconSize} className={stateClass} />
+  ) : (
+    <BsArrowBarRight size={css.iconSize} className={stateClass} />
+  )
 
   return (
     <>
@@ -28,18 +52,14 @@ export const Sidebar = () => {
         as="nav"
         aria-label="Table of Contents"
       >
-        <CollectionTOC />
+        {alternateContent ?? <CollectionTOC />}
       </Dialog>
       <DialogDisclosure
         {...dialog}
         className={css.desktopNav}
         aria-label="Open Table of Contents"
       >
-        {dialog.visible ? (
-          <BsArrowBarLeft size={css.iconSize} className={css.openNav} />
-        ) : (
-          <BsArrowBarRight size={css.iconSize} className={css.closedNav} />
-        )}
+        {tabIcon}
       </DialogDisclosure>
     </>
   )

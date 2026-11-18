@@ -1,0 +1,1 @@
+select id from creator where name = $1;

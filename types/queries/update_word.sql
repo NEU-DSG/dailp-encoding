@@ -16,8 +16,9 @@ update word set
         end,
     english_gloss =
         case
-            when $5::text[] != '{}' then $5[1]
+            when $5::text[] != '{}' and $5[1] is not null then $5[1]
             else english_gloss
         end
+
 where id = $1
 returning word.document_id;

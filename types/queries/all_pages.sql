@@ -1,0 +1,1 @@
+select page_id, title, content, path from page;

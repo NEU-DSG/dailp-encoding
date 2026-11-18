@@ -14,6 +14,7 @@ with t as (
       abstract_morpheme_tag on
         abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)
   where abbreviation_system.short_name = $1
+  or abbreviation_system.short_name like 'CUS'
 )
 
 select *

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from word_segment\nwhere word_id = $1; ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "df88a58e22c214bb2590294062faf1a28c50395c4746876536a6115fa8c24aad"
+}

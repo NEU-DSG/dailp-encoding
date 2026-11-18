@@ -1,0 +1,1 @@
+insert into menu (name, slug, items) values ($1, $2, $3);

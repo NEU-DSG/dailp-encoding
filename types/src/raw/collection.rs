@@ -7,12 +7,16 @@ use uuid::Uuid;
 pub struct EditedCollection {
     /// UUID for the collection
     pub title: String,
+    /// Description of the collection (optional)
+    pub description: Option<String>,
     /// Full title of the collection
     pub slug: String,
     /// ID of WordPress menu for navigating the collection
     pub wordpress_menu_id: Option<i64>,
     /// Chapters in the collection
     pub chapters: Vec<CollectionChapter>,
+    /// URL of the cover image for the collection
+    pub thumbnail_url: Option<String>,
 }
 
 /// Structure to represent a Chapter in an Edited Collection

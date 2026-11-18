@@ -6,15 +6,6 @@ generates:
       - typescript
       - typescript-operations
       - typescript-urql
-  ./src/graphql/wordpress/index.ts:
-    schema: https://wp.dailp.northeastern.edu/graphql
-    documents: src/graphql/wordpress/**/*.graphql
-    plugins:
-      - typescript
-      - typescript-operations
-      - typescript-urql
-    config:
-      urqlImportFrom: ./urql
 config:
   avoidOptionals: true
   useTypeImports: true

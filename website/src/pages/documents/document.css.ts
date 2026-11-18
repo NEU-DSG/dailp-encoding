@@ -174,9 +174,9 @@ export const morphemeDialogBackdrop = style({
 
 export const annotatedDocument = style({
   alignItems: "center",
-  "@media": {
-    [mediaQueries.medium]: paddingX(hspace.edge),
-  },
+  width: "72%",
+  marginLeft: "auto",
+  marginRight: "auto",
 })
 
 export const audioContainer = style([
@@ -186,6 +186,15 @@ export const audioContainer = style([
   },
   topMargin,
   bottomPadded,
+])
+
+export const documentAudioContainer = style([
+  {
+    display: "flex",
+    flexFlow: "row nowrap",
+    alignItems: "center",
+    //justifyContent: "space-between",
+  },
 ])
 
 export const hideOnPrint = style({

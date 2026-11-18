@@ -12,6 +12,7 @@ import { UserGroup } from "./graphql/dailp"
 
 type UserContextType = {
   user: CognitoUser | null
+  isAuthLoading: boolean
   operations: {
     createUser: (username: string, password: string) => void
     resetConfirmationCode: (email: string) => void
@@ -40,6 +41,7 @@ export const UserProvider = (props: { children: any }) => {
     // gets the last user that logged in via this user pool
     getCurrentUser()
   )
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
 
   function refreshToken(): Promise<CognitoUserSession | null> {
     if (!user) return Promise.resolve(null)
@@ -138,6 +140,7 @@ export const UserProvider = (props: { children: any }) => {
     // if there is an authenticated user present
     if (user != null) {
       const promise = refreshToken().then((result) => {
+        setIsAuthLoading(false)
         if (!result) return null
         const intervalLength =
           result.getAccessToken().getExpiration() * 1000 - Date.now()
@@ -151,6 +154,9 @@ export const UserProvider = (props: { children: any }) => {
           }
         })
       }
+    } else {
+      // No user, auth loading is complete
+      setIsAuthLoading(false)
     }
 
     return
@@ -286,6 +292,7 @@ export const UserProvider = (props: { children: any }) => {
     <UserContext.Provider
       value={{
         user,
+        isAuthLoading,
         operations: {
           createUser,
           resetConfirmationCode: resetConfirmationCode,
@@ -305,6 +312,11 @@ export const UserProvider = (props: { children: any }) => {
 export const useUser = () => {
   const context = useContext(UserContext)
   return context
+}
+
+export const useAuthLoading = () => {
+  const context = useContext(UserContext)
+  return context.isAuthLoading
 }
 
 // returns a jwt token
@@ -340,6 +352,7 @@ export enum UserRole {
   Reader = "READER",
   Contributor = "CONTRIBUTOR",
   Editor = "EDITOR",
+  Admin = "ADMIN",
 }
 
 export function useUserRole(): UserRole {
