@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetBucketLocation"],
+      "Resource": ["arn:aws:s3:::dailp-local-media-storage"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::dailp-local-media-storage/user-uploaded-audio/*",
+        "arn:aws:s3:::dailp-local-media-storage/user-uploaded-images/collection-thumbnails/*"
+      ]
+    }
+  ]
+}

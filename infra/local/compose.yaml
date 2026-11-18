@@ -14,7 +14,77 @@ services:
       retries: 30
       start_period: 10s
 
+  rustfs:
+    image: rustfs/rustfs:1.0.5
+    env_file:
+      - rustfs-admin.env
+    environment:
+      RUSTFS_REGION: us-east-1
+      RUSTFS_CORS_ALLOWED_ORIGINS: "*"
+      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: "*"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fsS
+        - --max-time
+        - "2"
+        - http://127.0.0.1:9000/health/ready
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
+  storage-init:
+    image: rustfs/rustfs:1.0.5
+    entrypoint: ["/bin/sh", "/bootstrap/setup-storage.sh"]
+    environment:
+      RC_CONFIG_DIR: /tmp/rc
+    env_file:
+      - rustfs-admin.env
+      - storage.env
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    volumes:
+      - ./setup-storage.sh:/bootstrap/setup-storage.sh:ro
+      - ./policies:/bootstrap/policies:ro
+
+  cognito:
+    image: jagregory/cognito-local:5.3.0
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "9229"
+    ports:
+      - "127.0.0.1:9229:9229"
+    volumes:
+      - cognito_data:/app/.cognito
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:9229/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  cognito-init:
+    image: amazon/aws-cli:2.27.41
+    profiles: ["frontend"]
+    entrypoint: ["/bin/sh", "/bootstrap/setup-cognito.sh"]
+    depends_on:
+      cognito:
+        condition: service_healthy
+    volumes:
+      - ./setup-cognito.sh:/bootstrap/setup-cognito.sh:ro
+      - cognito_config:/run/cognito
 
   graphql:
     build:
@@ -42,15 +112,28 @@ services:
       dockerfile: website/Dockerfile
       target: dev
     environment:
-        DAILP_DEV_SERVER_HOST: "0.0.0.0"
+      DAILP_DEV_SERVER_HOST: "0.0.0.0"
+      DAILP_COGNITO_ENDPOINT: "http://127.0.0.1:9229"
+      DAILP_COGNITO_SERVER_ENDPOINT: "http://cognito:9229"
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+      cognito-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:${DAILP_WEB_PORT:-3001}:3001"
     volumes:
       - ../../website:/app/website
       - website_node_modules:/app/website/node_modules
       - ../../graphql:/app/graphql:ro
+      - cognito_config:/run/cognito:ro
+    command: ["/bin/sh","-ec", "set -a; . /run/cognito/pool.env; exec yarn dev"]
+
 
 volumes:
   postgres_data:
+  rustfs_data:
   cargo_target:
   website_node_modules:
+  cognito_data:
+  cognito_config:
