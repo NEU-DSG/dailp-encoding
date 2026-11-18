@@ -61,34 +61,31 @@ const AccountActionsMenu = (p: { groups?: readonly Dailp.UserGroup[] }) => {
 }
 
 
-// the login button that appears in the header of the website
-export const LoginHeaderButton = (props?: { className?: string }) => {
-  // hide the login button on production while development of DAILP TI is ongoing
-  // FIXME remove this flag when DAILP TI launches in a stable form
-  if (deploymentEnvironment === Environment.Production) {
-    return null
-  }
-
+export const LoginHeaderButton = ({
+  className,
+}: { className?: string } = {}) => {
   const [isClient, setIsClient] = useState(false)
+  const token = useCredentials()
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  if (!isClient) {
-    return <div className={loginHeader}>Loading...</div> // or skeleton
+  // FIXME remove this flag when DAILP TI launches in a stable form
+  if (deploymentEnvironment === Environment.Production) {
+    return null
   }
 
-  // get the current user's auth token
-  const token = useCredentials()
+  if (!isClient) {
+    return <div className={loginHeader}>Loading...</div>
+  }
 
   return (
     <div className={loginHeader}>
-      {/* if an auth token exists, that means a user is logged in */}
       {token ? (
         <AccountMenu />
       ) : (
-        <Link href="/auth/login" className={props?.className}>
+        <Link href="/auth/login" className={className}>
           Log in
         </Link>
       )}
@@ -96,15 +93,16 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
   )
 }
 
-export const ConfirmLogout = (props?: { className?: string }) => {
+export const ConfirmLogout = ({ className }: { className?: string } = {}) => {
   const { operations } = useUser()
 
   return (
     <CleanButton
-      className={props?.className}
+      className={className}
       onClick={() => {
-        let confirmation = confirm("Are you sure you want to sign out?")
-        if (confirmation) operations.signOutUser()
+        if (window.confirm("Are you sure you want to sign out?")) {
+          operations.signOutUser()
+        }
       }}
     >
       Log out
