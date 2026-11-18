@@ -1,4 +1,12 @@
-export { Button, IconButton, CleanButton } from "./button"
+export {
+  Button,
+  IconButton,
+  CleanButton,
+  CancelButton,
+  CloseButton,
+  SubmitButton,
+} from "./button"
+export { EmptyDialog, ConfirmationDialog } from "./dialog"
 export { default as Link } from "./link"
 export { Select, Label } from "./select"
 export { AudioPlayer } from "./audio-player"
