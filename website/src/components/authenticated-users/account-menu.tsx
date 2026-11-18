@@ -1,7 +1,10 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
+import { useCredentials, useUser } from "src/auth"
+import { Environment, deploymentEnvironment } from "src/env"
+import { loginHeader } from "src/pages/auth/user-auth.css"
+import { CleanButton } from "../button"
 import * as Dailp from "src/graphql/dailp"
-import { ConfirmLogout } from "src/pages/auth/user-auth-layout"
 import Link from "../link"
 import { subtleButton } from "../subtle-button.css"
 import * as css from "./account-menu.css"
@@ -54,5 +57,57 @@ const AccountActionsMenu = (p: { groups?: readonly Dailp.UserGroup[] }) => {
         ))}
       </ol>
     </div>
+  )
+}
+
+
+// the login button that appears in the header of the website
+export const LoginHeaderButton = (props?: { className?: string }) => {
+  // hide the login button on production while development of DAILP TI is ongoing
+  // FIXME remove this flag when DAILP TI launches in a stable form
+  if (deploymentEnvironment === Environment.Production) {
+    return null
+  }
+
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) {
+    return <div className={loginHeader}>Loading...</div> // or skeleton
+  }
+
+  // get the current user's auth token
+  const token = useCredentials()
+
+  return (
+    <div className={loginHeader}>
+      {/* if an auth token exists, that means a user is logged in */}
+      {token ? (
+        <AccountMenu />
+      ) : (
+        <Link href="/auth/login" className={props?.className}>
+          Log in
+        </Link>
+      )}
+    </div>
+  )
+}
+
+export const ConfirmLogout = (props?: { className?: string }) => {
+  const { operations } = useUser()
+
+  return (
+    <CleanButton
+      className={props?.className}
+      onClick={() => {
+        let confirmation = confirm("Are you sure you want to sign out?")
+        if (confirmation) operations.signOutUser()
+      }}
+    >
+      Log out
+    </CleanButton>
   )
 }

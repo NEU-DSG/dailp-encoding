@@ -42,56 +42,7 @@ export const UserAuthPageTemplate = (props: {
   )
 }
 
-// the login button that appears in the header of the website
-export const LoginHeaderButton = (props?: { className?: string }) => {
-  // hide the login button on production while development of DAILP TI is ongoing
-  // FIXME remove this flag when DAILP TI launches in a stable form
-  if (deploymentEnvironment === Environment.Production) {
-    return null
-  }
 
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient) {
-    return <div className={loginHeader}>Loading...</div> // or skeleton
-  }
-
-  // get the current user's auth token
-  const token = useCredentials()
-
-  return (
-    <div className={loginHeader}>
-      {/* if an auth token exists, that means a user is logged in */}
-      {token ? (
-        <AccountMenu />
-      ) : (
-        <Link href="/auth/login" className={props?.className}>
-          Log in
-        </Link>
-      )}
-    </div>
-  )
-}
-
-export const ConfirmLogout = (props?: { className?: string }) => {
-  const { operations } = useUser()
-
-  return (
-    <CleanButton
-      className={props?.className}
-      onClick={() => {
-        let confirmation = confirm("Are you sure you want to sign out?")
-        if (confirmation) operations.signOutUser()
-      }}
-    >
-      Log out
-    </CleanButton>
-  )
-}
 
 /// User Auth page form components
 interface FormFieldsType {
@@ -131,8 +82,8 @@ export const FormFields = ({
 }
 
 /*
-A field for entering password with the ability to show or hide the password. 
-Visibility toggle follows Microsoft's password reveal pattern– 
+A field for entering password with the ability to show or hide the password.
+Visibility toggle follows Microsoft's password reveal pattern–
 when the password is hidden the user can click the eye button to show the password and
 when the password is shown the user can click the slashed eye button to hide the password.
 */
