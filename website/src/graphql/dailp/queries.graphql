@@ -868,6 +868,15 @@ mutation AddCollectionChapter($input: AddChapterInput!) {
   addCollectionChapter(input: $input)
 }
 
+mutation CreateCollectionChapter($input: CreateChapterInput!) {
+  createCollectionChapter(input: $input) {
+    id
+    title
+    slug
+    documentId
+  }
+}
+
 mutation UpdateMenu($menu: MenuUpdate!) {
   updateMenu(menu: $menu) {
     id

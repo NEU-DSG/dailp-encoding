@@ -34,7 +34,8 @@ const NewPage = () => {
     let regularizedPath = path
       .toLowerCase()
       .replace(/ /g, "-")
-      .replace(/[^a-z0-9-/]/g, "")
+      // `_` is kept: collection slugs like `willie_jumper_stories` use it
+      .replace(/[^a-z0-9-_/]/g, "")
     return regularizedPath.startsWith("/")
       ? regularizedPath
       : `/${regularizedPath}`
@@ -51,7 +52,8 @@ const NewPage = () => {
       setIsNew(false)
     } else {
       setIsNew(true)
-      setTitle("")
+      // A new chapter page opened from the TOC editor passes its title along
+      setTitle(location.search["title"] ?? "")
       setContent("")
     }
   }, [data])

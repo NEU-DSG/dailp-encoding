@@ -631,6 +631,21 @@ enum ContributorRole {
 	EDITOR
 }
 
+"""
+Input for creating a brand-new page chapter. It starts unassigned
+(index -1), so it appears in the TOC editor's list of chapters to place.
+"""
+input CreateChapterInput {
+	"""
+	The slug of the collection this chapter belongs to
+	"""
+	collectionSlug: String!
+	"""
+	The title of the chapter; its slug is derived from this
+	"""
+	title: String!
+}
+
 input CreateDocumentFromFormInput {
 	documentName: String!
 	rawTextLines: [[String!]!]!
@@ -1405,6 +1420,10 @@ type Mutation {
 	Adds the collection chapter to the TOC by updating index and chapter path, etc.
 	"""
 	addCollectionChapter(input: AddChapterInput!): UUID!
+	"""
+	Creates a new, empty page chapter that starts unassigned (index -1)
+	"""
+	createCollectionChapter(input: CreateChapterInput!): ChapterSlugInfo!
 	"""
 	Removes the provided chapter id from a TOC by setting its index to -1
 	"""

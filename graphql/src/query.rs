@@ -7,7 +7,7 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AddChapterInput, AnnotatedForm, CreateChapterInput, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
     AttachAudioToWordInput, ChapterSlugInfo, CollectionChapter, CollectionSection, Contributor,
     ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
     Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
@@ -1040,6 +1040,20 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .add_collection_chapter(input)
+            .await?)
+    }
+
+    /// Creates a new, empty page chapter that starts unassigned (index -1)
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn create_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        input: CreateChapterInput,
+    ) -> FieldResult<ChapterSlugInfo> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .create_collection_chapter(input)
             .await?)
     }
 

@@ -1,12 +1,17 @@
 import { createContext, useContext } from "react"
 import type { ChapterNode, DraftTarget, SectionKey } from "src/types/edit-toc"
 
+// Value of the "+ Create Chapter" option in the draft row's slug dropdown.
+// Can't collide with a real slug: slugs only contain [a-z0-9_].
+export const CREATE_CHAPTER = "+create"
+
 // Decided to create a context for the rows due to massive props being unmanagable
 export type EditTocContextValue = {
   draftTarget: DraftTarget | null // Null if no open draft or location if DraftTarget
   draftTitle: string
   draftSlug: string
   availableSlugs: string[] // Provided to ensure no repeat slugs
+  isCreating: boolean // True while a "+ Create Chapter" request is in flight
   onDraftTitleChange: (value: string) => void
   onDraftSlugChange: (value: string) => void
   onConfirmDraft: () => void // On "Add Chapter" click

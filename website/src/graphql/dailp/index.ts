@@ -497,6 +497,17 @@ export enum ContributorRole {
   Translator = "TRANSLATOR",
 }
 
+/**
+ * Input for creating a brand-new page chapter. It starts unassigned
+ * (index -1), so it appears in the TOC editor's list of chapters to place.
+ */
+export type CreateChapterInput = {
+  /** The slug of the collection this chapter belongs to */
+  readonly collectionSlug: Scalars["String"]
+  /** The title of the chapter; its slug is derived from this */
+  readonly title: Scalars["String"]
+}
+
 export type CreateDocumentFromFormInput = {
   readonly collectionId: Scalars["UUID"]
   readonly documentName: Scalars["String"]
@@ -984,6 +995,8 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
+  /** Creates a new, empty page chapter that starts unassigned (index -1) */
+  readonly createCollectionChapter: ChapterSlugInfo
   readonly createEditedCollection: Scalars["String"]
   /** Adds a new subject heading to the global list. */
   readonly createSubjectHeading: SubjectHeading
@@ -1045,6 +1058,10 @@ export type MutationAttachAudioToDocumentArgs = {
 
 export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
+}
+
+export type MutationCreateCollectionChapterArgs = {
+  input: CreateChapterInput
 }
 
 export type MutationCreateEditedCollectionArgs = {
@@ -3721,6 +3738,18 @@ export type AddCollectionChapterMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "addCollectionChapter">
 
+export type CreateCollectionChapterMutationVariables = Exact<{
+  input: CreateChapterInput
+}>
+
+export type CreateCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly createCollectionChapter: {
+    readonly __typename?: "ChapterSlugInfo"
+  } & Pick<ChapterSlugInfo, "id" | "title" | "slug" | "documentId">
+}
+
 export type UpdateMenuMutationVariables = Exact<{
   menu: MenuUpdate
 }>
@@ -5136,6 +5165,23 @@ export function useAddCollectionChapterMutation() {
     AddCollectionChapterMutation,
     AddCollectionChapterMutationVariables
   >(AddCollectionChapterDocument)
+}
+export const CreateCollectionChapterDocument = gql`
+  mutation CreateCollectionChapter($input: CreateChapterInput!) {
+    createCollectionChapter(input: $input) {
+      id
+      title
+      slug
+      documentId
+    }
+  }
+`
+
+export function useCreateCollectionChapterMutation() {
+  return Urql.useMutation<
+    CreateCollectionChapterMutation,
+    CreateCollectionChapterMutationVariables
+  >(CreateCollectionChapterDocument)
 }
 export const UpdateMenuDocument = gql`
   mutation UpdateMenu($menu: MenuUpdate!) {

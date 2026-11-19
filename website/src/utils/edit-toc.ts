@@ -14,6 +14,18 @@ export const idOf = (n: any): string => {
   return persistedId || clientId
 }
 
+// A string describing the TOC's shape (which chapters, in what order, under
+// which parent). Two states with equal signatures have nothing to save.
+export const tocSignature = (sections: ChaptersBySection): string => {
+  const describe = (nodes: ChapterNode[]): unknown[] =>
+    nodes.map((n) => [idOf(n), n.title, n.slug, describe(n.children)])
+  return JSON.stringify([
+    describe(sections.intro),
+    describe(sections.body),
+    describe(sections.credit),
+  ])
+}
+
 // Generate id for client id of chapter nodes with time and random number
 export const generateClientId = (): string =>
   `${Date.now()}-${Math.random().toString(36).slice(2)}`
