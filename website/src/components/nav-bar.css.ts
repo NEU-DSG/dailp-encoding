@@ -10,6 +10,8 @@ export const navBar = style({
   alignItems: "center",
   alignContent: "center",
   paddingLeft: "10px",
+  position: "relative",
+  zIndex: 1,
 })
 
 export const navLinks = style({
@@ -24,6 +26,7 @@ export const navLinks = style({
   marginLeft: "3rem",
   height: "100%",
   alignItems: "stretch",
+  width: "100%",
 })
 
 globalStyle(`${navLinks} > li > a`, {
@@ -55,11 +58,18 @@ export const navIcons = style({
   gap: "2.5rem",
   justifyContent: "flex-end",
   alignItems: "center",
-  fontSize: "1.6rem",
-  width: "100%",
+  marginLeft: "auto",
   paddingRight: "3rem",
   transition: "color 0.3s",
   cursor: "pointer",
+})
+
+export const navBarShadow = style({
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.15)",
+})
+
+globalStyle(`${navIcons} > i`, {
+  fontSize: "1.6rem",
 })
 
 globalStyle(`${navIcons} i:hover`, {
