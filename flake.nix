@@ -448,7 +448,7 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} plan
+          ${tf} plan -target=module.backups_bucket
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
@@ -458,7 +458,8 @@
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
           ${tfInit}
-          ${tf} apply -auto-approve
+          # ONLY apply the changes to the backups_bucket
+          ${tf} apply -target=module.backups_bucket -auto-approve
         '';
 
         apps.tf-output = mkBashApp "tf-output" ''
