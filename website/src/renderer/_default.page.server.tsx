@@ -141,3 +141,6 @@ const baseScript = escapeInject`
     }
   </script>
 `
+// if (${skipConsoleLog}) {
+//       console.log = function(){};
+//     }

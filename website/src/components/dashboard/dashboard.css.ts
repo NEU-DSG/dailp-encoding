@@ -83,7 +83,7 @@ export const dashboardHeader = style({
   left: 0,
   display: "flex",
   flexFlow: "column nowrap",
-  alignItems: "center",
+  alignItems: "left",
   top: 55,
   width: "100%",
   zIndex: layers.base,
@@ -119,4 +119,17 @@ export const noBullets = style({
 
 export const cardShadow = style({
   boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
+})
+
+export const dashboardLayout = style({
+  display: "flex",
+  gap: "2rem",
+  width: "100%",
+  minHeight: `calc(100vh - 200px)`,
+})
+
+export const mainContent = style({
+  paddingTop: vspace.large,
+  flex: 4,
+  minWidth: 0,
 })

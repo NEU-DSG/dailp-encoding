@@ -355,6 +355,13 @@ export enum UserRole {
   Admin = "ADMIN",
 }
 
+export const userRoleLabels: Record<UserRole, string> = {
+  [UserRole.Reader]: "Reader",
+  [UserRole.Contributor]: "Contributor",
+  [UserRole.Editor]: "Editor",
+  [UserRole.Admin]: "Administrator",
+}
+
 export function useUserRole(): UserRole {
   const groups = useCognitoUserGroups()
   if (groups.includes(UserGroup.Editors)) return UserRole.Editor
