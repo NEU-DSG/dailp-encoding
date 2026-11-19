@@ -14,6 +14,7 @@ import {
 } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
+import { withoutUnassigned } from "src/utils/edit-toc"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
 import chapterPageRoute from "./edited-collections/chapter.page.route"
@@ -39,13 +40,17 @@ export const DailpPageContents = (props: { path: string }) => {
     variables: { path: props.path },
   })
 
+  // The menu and collections below drive the publish menu, so always check the
+  // server: cached copies miss edits made elsewhere (e.g. in the TOC editor)
   const [{ data: menuData }] = useMenuBySlugQuery({
     variables: { slug: "default-nav" },
     pause: fetching, // Don't fetch menu until page query is complete
+    requestPolicy: "cache-and-network",
   })
 
   const [{ data: collectionData }] = useEditedCollectionsQuery({
     pause: fetching,
+    requestPolicy: "cache-and-network",
   })
 
   let collectionSlugs =
@@ -58,12 +63,13 @@ export const DailpPageContents = (props: { path: string }) => {
   const [{ data: collectionPagesData }] = useEditedCollectionQuery({
     variables: { slug: collectionSlug || "" },
     pause: fetching || !collectionSlug,
+    requestPolicy: "cache-and-network",
   })
 
-  const collectionPageChapters =
-    collectionPagesData?.editedCollection?.chapters?.filter(
-      (ch) => ch.contentType === ChapterContents.Page
-    )
+  // Only page chapters currently in the TOC (not removed/unassigned ones)
+  const collectionPageChapters = withoutUnassigned(
+    collectionPagesData?.editedCollection?.chapters ?? []
+  ).filter((ch) => ch.contentType === ChapterContents.Page)
   const page = data?.pageByPath
   const collectionSections = [
     CollectionSection.Intro,
@@ -93,8 +99,10 @@ export const DailpPageContents = (props: { path: string }) => {
   const userRole = useUserRole()
   const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
 
+  // collectionSlugs are dashed; the path may use underscores (willie_jumper_stories)
   const isInCollection =
-    collectionSlug && collectionSlugs.includes(collectionSlug)
+    collectionSlug &&
+    collectionSlugs.includes(collectionSlug.replaceAll("_", "-"))
   const isPublished = isInCollection || isInMenu(props.path)
 
   if (fetching) {

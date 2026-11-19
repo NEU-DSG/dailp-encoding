@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "--- Updates the chapter path, index, section, title, and optionally document id\r\n--- so that it is properly updated within the toc\r\nupdate collection_chapter\r\nset\r\n    chapter_path = $1,\r\n    index_in_parent = $2,\r\n    section = $3,\r\n    title = $4,\r\n    document_id = $5\r\nwhere id = $6\r\nreturning id",
+  "query": "--- Updates the chapter path, index, section, title, and optionally document id\r\n--- so that it is properly updated within the toc\r\nupdate collection_chapter\r\nset\r\n    chapter_path = $1,\r\n    index_in_parent = $2,\r\n    section = $3,\r\n    title = $4,\r\n    -- Keep the chapter's document when none is given, so re-adding a chapter\r\n    -- (e.g. a subchapter restored with its parent) never unlinks it\r\n    document_id = coalesce($5, document_id)\r\nwhere id = $6\r\nreturning id",
   "describe": {
     "columns": [
       {
@@ -39,5 +39,5 @@
       false
     ]
   },
-  "hash": "1eb8c4d5668c8b8302c25e05bd5c694139ef382302672021c5510729d84102b1"
+  "hash": "a8d01f9e1040072b8eb1e2715637156df0934a42e81c6ea3ba1260659a7e4d06"
 }

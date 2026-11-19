@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from "react"
 import { DialogStateReturn, useDialogState } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
+import { withoutUnassigned } from "src/utils/edit-toc"
 
 export type Chapter = {
   title: string
@@ -205,7 +206,8 @@ function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
 
   // Sort chapters by path length (depth) first, then by indexInParent within each depth
   // This ensures parents are processed before children, and siblings are in correct order
-  const sortedChapters = [...chapters].sort((a, b) => {
+  // Chapters removed from the TOC (index -1) and their subchapters are left out
+  const sortedChapters = withoutUnassigned(chapters).sort((a, b) => {
     const depthDiff = (a?.path.length ?? 0) - (b?.path.length ?? 0)
     if (depthDiff !== 0) return depthDiff
     return (a?.indexInParent ?? 0) - (b?.indexInParent ?? 0)

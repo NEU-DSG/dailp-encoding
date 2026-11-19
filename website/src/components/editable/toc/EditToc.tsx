@@ -56,16 +56,46 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   const [isResetting, setIsResetting] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
 
-  // Grabs all pending chapters to find which are available including from qeury
-  const pendingChapterSlugs = new Set([
-    ...utils.getPendingSlugs(chaptersBySection.intro),
-    ...utils.getPendingSlugs(chaptersBySection.body),
-    ...utils.getPendingSlugs(chaptersBySection.credit),
-  ])
+  // Every chapter currently in the TOC on screen, saved or pending
+  const onScreenChapters = [
+    ...utils.flattenChapters(chaptersBySection.intro),
+    ...utils.flattenChapters(chaptersBySection.body),
+    ...utils.flattenChapters(chaptersBySection.credit),
+  ]
+  const onScreenSlugs = new Set(onScreenChapters.map((ch) => ch.slug))
+  const onScreenIds = new Set(
+    onScreenChapters.flatMap((ch) => (ch.id ? [String(ch.id)] : []))
+  )
 
-  const availableSlugs = (slugData?.allChapterSlugs ?? [])
-    .map((s) => s.slug)
-    .filter((slug) => !pendingChapterSlugs.has(slug))
+  // Saved chapters removed on screen but not yet saved, so they can be re-added
+  const removedChapters = savedSections
+    ? [
+        ...utils.flattenChapters(savedSections.intro),
+        ...utils.flattenChapters(savedSections.body),
+        ...utils.flattenChapters(savedSections.credit),
+      ].filter((ch) => ch.id && !onScreenIds.has(String(ch.id)))
+    : []
+
+  // Unassigned chapters in the backend plus ones removed before saving
+  const availableSlugs = [
+    ...new Set([
+      ...(slugData?.allChapterSlugs ?? []).map((s) => s.slug),
+      ...removedChapters.map((ch) => ch.slug),
+    ]),
+  ].filter((slug) => !onScreenSlugs.has(slug))
+
+  // Backend ids for every chapter that can be (re-)added on save. A removed
+  // chapter isn't unassigned in the backend until save, so it isn't in
+  // slugData yet; documentId is only known for those that are.
+  const addableChapters = {
+    allChapterSlugs: (collection?.chapters ?? []).map((ch) => ({
+      id: ch.id,
+      slug: ch.slug,
+      documentId:
+        slugData?.allChapterSlugs.find((s) => s.id === ch.id)?.documentId ??
+        null,
+    })),
+  }
 
   useEffect(() => {
     if (collection?.chapters) {
@@ -192,7 +222,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       return
     }
 
-    if (!slugData?.allChapterSlugs.some((s) => s.slug === draftSlug)) {
+    if (!availableSlugs.includes(draftSlug)) {
       setErrorMessage("Slug must exist with an already existing document.")
       return
     }
@@ -214,6 +244,17 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       ? parent.children.length
       : chaptersBySection[sectionKey].length
 
+    // Bring back the chapter's subchapters too, except any already in the TOC
+    const existing = collection.chapters?.find((ch) => ch.slug === draftSlug)
+    const children = existing
+      ? utils.buildPendingSubtree(
+          existing.path,
+          collection.chapters ?? [],
+          new Set([...onScreenSlugs, draftSlug]),
+          sectionEnum
+        )
+      : []
+
     const newChapter: ChapterNode = {
       clientId: utils.generateClientId(),
       title: draftTitle,
@@ -221,7 +262,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       section: sectionEnum,
       indexInParent: sectionSize + 1,
       path: [],
-      children: [],
+      children,
       isNew: true,
     }
 
@@ -318,13 +359,9 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setIsSaving(true)
     try {
       // First unassign (index -1) every saved chapter that was removed on
-      // screen, including subchapters of a removed chapter
-      const onScreenIds = utils.savedChapterIds(chaptersBySection)
-      const removedIds = savedSections
-        ? [...utils.savedChapterIds(savedSections)].filter(
-            (id) => !onScreenIds.has(id)
-          )
-        : []
+      // screen, including subchapters of a removed chapter. Re-added ones are
+      // put back in place by addPendingChapters below.
+      const removedIds = removedChapters.map((ch) => String(ch.id))
       for (const id of removedIds) {
         const removed = await removeChapter({ chapterId: id })
         if (removed.error) {
@@ -348,7 +385,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         chaptersBySection.intro,
         CollectionSection.Intro,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (introResult.error) {
@@ -360,7 +397,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         chaptersBySection.body,
         CollectionSection.Body,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (bodyResult.error) {
@@ -372,7 +409,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         chaptersBySection.credit,
         CollectionSection.Credit,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (creditResult.error) {

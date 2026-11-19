@@ -6,6 +6,8 @@ set
     index_in_parent = $2,
     section = $3,
     title = $4,
-    document_id = $5
+    -- Keep the chapter's document when none is given, so re-adding a chapter
+    -- (e.g. a subchapter restored with its parent) never unlinks it
+    document_id = coalesce($5, document_id)
 where id = $6
 returning id
