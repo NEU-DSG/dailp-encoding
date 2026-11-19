@@ -1030,6 +1030,7 @@ impl Mutation {
     }
 
     /// Adds the collection chapter to the TOC by updating index and chapter path, etc.
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn add_collection_chapter(
         &self,
         context: &Context<'_>,
