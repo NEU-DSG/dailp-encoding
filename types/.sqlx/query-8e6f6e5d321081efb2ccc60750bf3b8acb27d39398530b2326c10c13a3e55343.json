@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update page\nset path = $2\nwhere path = $1\nreturning path\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "path",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8e6f6e5d321081efb2ccc60750bf3b8acb27d39398530b2326c10c13a3e55343"
+}
