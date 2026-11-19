@@ -1,18 +1,23 @@
 import { groupBy } from "lodash"
-import { set } from "lodash"
-import React, { ReactNode, useState } from "react"
+import React, { ReactNode } from "react"
 import {
   DragDropContext,
   Draggable,
   DropResult,
   Droppable,
 } from "react-beautiful-dnd"
+import { isMobile } from "react-device-detect"
 import {
   AiFillCaretDown,
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
-import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { FiDownload } from "react-icons/fi/index"
+import {
+  IoBookmarks,
+  IoEllipsisHorizontalCircle,
+  IoLockClosed,
+} from "react-icons/io5/index"
 import {
   MdDragIndicator,
   MdNotes,
@@ -24,10 +29,14 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { useMutation, useQuery } from "urql"
 import * as Dailp from "src/graphql/dailp"
-import { AudioPlayer } from "./components"
+import { UserRole, useUserRole } from "./auth"
+import { AudioPlayer, Button } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
-import { EditWordAudio } from "./components/edit-word-audio"
+import {
+  EditWordAudio,
+  UnpublishedWordAudio,
+} from "./components/edit-word-audio"
 import { RecordWordAudioPanel } from "./components/edit-word-audio/record"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditWordFeature } from "./edit-word-feature"
@@ -76,13 +85,17 @@ export const WordPanel = (p: {
   } else {
     setRomanizedSource("")
   }
-  // what should be used to render word features? eg, syllabary, commentary, etc.
+
+  const role = useUserRole()
+
   const PanelFeatureComponent =
     p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
 
-  // what should be used to render word audio, if present?
-  const PanelAudioComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordAudio : WordAudio
+  // Word audios now display for editors and contributors' own audios in view mode
+  const canSeeUnpublishedAudio =
+    role === UserRole.Editor ||
+    role === UserRole.Admin ||
+    role === UserRole.Contributor
 
   // Contains components rendering data of a word's phonetics.
   const phoneticsContent = (
@@ -157,17 +170,36 @@ export const WordPanel = (p: {
 
   return (
     <>
-      {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
-        <>
-          <CollapsiblePanel
-            title={"Audio"}
-            content={<PanelAudioComponent word={p.word} />}
-            icon={
-              <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-            }
-          />
-          <RecordWordAudioPanel word={p.word} />
-        </>
+      {p.word.editedAudio.length > 0 && (
+        <CollapsiblePanel
+          title={"Audio"}
+          content={
+            <EditWordAudio
+              word={p.word}
+              editable={p.panel === PanelType.EditWordPanel}
+            />
+          }
+          icon={
+            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
+      {canSeeUnpublishedAudio && (
+        <CollapsiblePanel
+          title={"Unpublished Audios"}
+          content={
+            <UnpublishedWordAudio
+              word={p.word}
+              editable={p.panel === PanelType.EditWordPanel}
+            />
+          }
+          icon={
+            <IoLockClosed size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
+      {p.panel === PanelType.EditWordPanel && (
+        <RecordWordAudioPanel word={p.word} />
       )}
       <CollapsiblePanel
         title={"Phonetics"}
@@ -179,11 +211,12 @@ export const WordPanel = (p: {
           />
         }
       />
+
       {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
       {(p.word.englishGloss.length > 0 ||
         p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
-          title={"English Gloss"}
+          title={"Translation"}
           content={englishGlossContent}
           icon={
             <IoBookmarks size={24} className={css.wordPanelButton.colpleft} />
@@ -213,17 +246,18 @@ export const WordPanel = (p: {
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
-
-      <CollapsiblePanel
-        title={"Discussion"}
-        content={discussionContent}
-        icon={
-          <MdOutlineComment
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
+      {p.panel === PanelType.WordPanel && (
+        <CollapsiblePanel
+          title={"Discussion"}
+          content={discussionContent}
+          icon={
+            <MdOutlineComment
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
     </>
   )
 }
@@ -319,9 +353,13 @@ const EditSegmentation = (p: {
                             index.toString(),
                             "morpheme",
                           ]}
+                          style={{ width: "100px" }}
                         />
                       </td>
-                      <td className={css.editGlossCells}>
+                      <td
+                        className={css.editGlossCells}
+                        style={{ maxWidth: "175px" }}
+                      >
                         {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
                         <EditWordPartGloss
                           // TODO: this key will need to be changed later since a morpheme can be changed
@@ -482,7 +520,7 @@ const EditWordPartGloss = (props: {
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditEnglishGloss = () => {
-  return <EditWordFeature feature={"englishGloss"} label="English Gloss" />
+  return <EditWordFeature feature={"englishGloss"} label="Translation" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
@@ -580,29 +618,29 @@ export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
   return (
     <>
       {p.word.editedAudio.map((audioTrack) => (
-        <AudioPlayer
-          contributor={
-            audioTrack.recordedBy?.displayName ?? "Unknown Contributor"
-          }
-          recordedAt={
-            audioTrack.recordedAt?.formattedDate
-              ? new Date(audioTrack.recordedAt.formattedDate)
-              : new Date()
-          }
-          audioUrl={audioTrack.resourceUrl}
-          slices={
-            audioTrack.startTime !== undefined &&
-            audioTrack.startTime !== null &&
-            audioTrack.endTime !== undefined &&
-            audioTrack.endTime !== null
-              ? {
-                  start: audioTrack.startTime,
-                  end: audioTrack.endTime,
-                }
-              : undefined
-          }
-          showProgress
-        />
+        <>
+          <AudioPlayer
+            contributor={audioTrack.recordedBy?.displayName}
+            recordedAt={
+              audioTrack.recordedAt?.formattedDate
+                ? new Date(audioTrack.recordedAt.formattedDate)
+                : new Date()
+            }
+            audioUrl={audioTrack.resourceUrl}
+            slices={
+              audioTrack.startTime !== undefined &&
+              audioTrack.startTime !== null &&
+              audioTrack.endTime !== undefined &&
+              audioTrack.endTime !== null
+                ? {
+                    start: audioTrack.startTime,
+                    end: audioTrack.endTime,
+                  }
+                : undefined
+            }
+            showProgress
+          />
+        </>
       ))}
     </>
   )

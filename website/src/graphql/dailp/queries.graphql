@@ -100,6 +100,10 @@ query DocumentContents(
   }
 }
 
+query IiifSourceForDocumentMetadata($documentId: UUID!) {
+  iiifSourceForDocumentMetadata(documentId: $documentId)
+}
+
 fragment AudioSliceFields on AudioSlice {
   sliceId
   index # if this is used as a caching key, we will have performance issues
@@ -108,6 +112,7 @@ fragment AudioSliceFields on AudioSlice {
   endTime
   includeInEditedCollection
   recordedBy {
+    id
     displayName
   }
   recordedAt {
@@ -162,6 +167,21 @@ fragment DocFormFields on AnnotatedDoc {
   }
 }
 
+query AllSubjectHeadings {
+  allSubjectHeadings {
+    id
+    name
+    status
+  }
+}
+
+mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+  createSubjectHeading(name: $name, status: $status) {
+    id
+    name
+    status
+  }
+}
 fragment ParagraphFormFields on DocumentParagraph {
   __typename
   id
@@ -204,6 +224,10 @@ fragment FormFields on AnnotatedForm {
   commentary
   ingestedAudioTrack {
     ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
   }
   editedAudio {
     ...AudioSliceFields
@@ -259,6 +283,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -267,6 +292,7 @@ query EditedCollection($slug: String!) {
     id
     title
     slug
+    isHidden
     chapters {
       id
       title
@@ -278,6 +304,14 @@ query EditedCollection($slug: String!) {
   }
 }
 
+mutation ToggleCollectionVisibility($collectionId: UUID!) {
+  toggleCollectionVisibility(collectionId: $collectionId) {
+    id
+    slug
+    isHidden
+  }
+}
+
 query WordSearch($query: String!) {
   wordSearch(query: $query) {
     source
@@ -285,10 +319,23 @@ query WordSearch($query: String!) {
     romanizedSource(system: LEARNER)
     englishGloss
     index
+    position {
+      index
+      pageNumber
+    }
     document {
+      title
       id
       slug
       isReference
+      collection {
+        name
+      }
+      editedCollection {
+        id
+        title
+        isHidden
+      }
     }
   }
 }
@@ -562,6 +609,12 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   curateWordAudio(input: $input) {
     # ...FormFields
     id
+    editedAudio {
+      ...AudioSliceFields
+    }
+    ingestedAudioTrack {
+      ...AudioSliceFields
+    }
     userContributedAudio {
       ...AudioSliceFields
       recordedBy {
@@ -705,6 +758,16 @@ mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
 }
 
+mutation UpdateCollectionChapterOrder(
+  $input: UpdateCollectionChapterOrderInput!
+) {
+  updateCollectionChapterOrder(input: $input)
+}
+
+mutation RemoveCollectionChapter($chapterId: UUID!) {
+  removeCollectionChapter(chapterId: $chapterId)
+}
+
 mutation updateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
@@ -788,6 +851,19 @@ query MenuBySlug($slug: String!) {
       }
     }
   }
+}
+
+query AllChapterSlugs($collectionSlug: String!) {
+  allChapterSlugs(collectionSlug: $collectionSlug) {
+    id
+    title
+    slug
+    documentId
+  }
+}
+
+mutation AddCollectionChapter($input: AddChapterInput!) {
+  addCollectionChapter(input: $input)
 }
 
 mutation UpdateMenu($menu: MenuUpdate!) {

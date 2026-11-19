@@ -5,6 +5,7 @@ import {
   colors,
   fonts,
   hspace,
+  radii,
   space,
   thickness,
   vspace,
@@ -71,4 +72,41 @@ export const cleanButton = style({
   outline: "none",
   cursor: "pointer",
   margin: 0,
+})
+
+// Buttons used in dialogs (cancel, submit, close).
+export const dialogButton = recipe({
+  base: {
+    cursor: "pointer",
+    border: `${thickness.thin} solid #5c3b37`,
+  },
+  variants: {
+    kind: {
+      cancel: {
+        width: "8.625rem",
+        height: "1.9375rem",
+        borderRadius: radii.large,
+        backgroundColor: "#ffffff",
+        font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
+      },
+      submit: {
+        width: "8.625rem",
+        height: "1.9375rem",
+        borderRadius: radii.large,
+        backgroundColor: "#415373",
+        color: "white",
+        font: `normal 400 0.9375rem/1.2 'Charis SIL'`,
+      },
+      close: {
+        width: "2rem",
+        height: "1.5rem",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#965f5a",
+        color: "white",
+        font: `normal 400 1rem/1.2 'Charis SIL'`,
+      },
+    },
+  },
 })

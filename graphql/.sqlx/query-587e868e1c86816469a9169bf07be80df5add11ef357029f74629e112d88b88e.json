@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert a document-local morpheme gloss if and only if there's no matching\n-- global gloss.\ninsert into morpheme_gloss (document_id, gloss)\nselect document_id, gloss from unnest($1::uuid[], $2::text[]) as input_data(document_id, gloss)\nwhere not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)\non conflict (coalesce(document_id, uuid_nil()), gloss) do nothing\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e"
+}

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update comment set\n    text_content =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else text_content\n        end,\n    comment_type = \n        case\n            when $3::comment_type_enum[] != '{}' and $3[1] is not null then $3[1]\n            else comment_type\n        end,\n    edited = $4\nwhere id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        {
+          "Custom": {
+            "name": "_comment_type_enum",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "comment_type_enum",
+                  "kind": {
+                    "Enum": [
+                      "Story",
+                      "Suggestion",
+                      "Question"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9fa592632c5e08225d16fdea92e255ee52d1ad39562f9c1f19876668148e36e3"
+}

@@ -1,5 +1,6 @@
 import "@fontsource/charis-sil/400.css"
 import "@fontsource/charis-sil/700.css"
+import "@fontsource/philosopher/400.css"
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
 import React from "react"

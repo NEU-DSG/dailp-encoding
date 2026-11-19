@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert the new set of spatial coverage IDs\ninsert into document_spatial_coverage (document_id, spatial_coverage_id)\nselect $1, unnest($2::uuid[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "111528602fe0b3526ee8b1f1738c90d4715021bd6e194e0839df3bc6480525b6"
+}

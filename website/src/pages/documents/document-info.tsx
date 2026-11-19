@@ -1,5 +1,5 @@
 import "@reach/dialog/styles.css"
-import React, { Fragment } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
@@ -21,7 +21,29 @@ import { EditingProvider, useEditing } from "./editing-context"
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
-export const DocumentInfo = ({ doc }: { doc: Document }) => {
+const alwaysIncludedFields = new Set([
+  "Title",
+  "Date Created",
+  "Creator",
+  "Contributors",
+  "Citation",
+])
+
+export const DocumentInfo = ({
+  doc,
+  selectedFields,
+}: {
+  doc: Document
+  selectedFields?: Set<string>
+}) => {
+  const showField = (key: string) =>
+    !selectedFields || alwaysIncludedFields.has(key) || selectedFields.has(key)
+  const empty = (label: string) => (
+    <>
+      <span className={styles.screenOnly}>{label}</span>
+      <span className={styles.printOnly}>--</span>
+    </>
+  )
   const [{ data }, reexecuteQuery] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })
@@ -30,7 +52,9 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const { isEditing, setIsEditing } = useEditing()
   const [, updateDocument] = Dailp.useUpdateDocumentMetadataMutation()
 
-  const [citation, setCitation] = React.useState<string>("")
+  const [citation, setCitation] = React.useState<string>(
+    "Format Not Yet Available."
+  )
 
   // Initialize citation format from localStorage
   const [citeFormat, setCiteFormat] = React.useState(() => {
@@ -41,6 +65,35 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   })
 
   const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
+
+  // Query IIIF link for format type of this document
+  const [{ data: iiifData }] = Dailp.useIiifSourceForDocumentMetadataQuery({
+    variables: { documentId: doc.id },
+    pause: !doc.id,
+  })
+
+  const [iiifFormat, setIiifFormat] = useState<string>(
+    "Format Not Yet Available."
+  )
+
+  // When URL is accessible, grab format type from IIIF url info.json
+  useEffect(() => {
+    if (!iiifData?.iiifSourceForDocumentMetadata) return
+
+    fetch(iiifData.iiifSourceForDocumentMetadata)
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Request failed: ${res.status} ${res.statusText}`)
+        return res.json()
+      })
+      .then((info) => {
+        const formats = info?.profile?.[1]?.formats
+        if (Array.isArray(formats) && formats.length > 0) {
+          setIiifFormat(formats[0])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [iiifData])
 
   // if (!docData) {
   //   return null
@@ -208,33 +261,41 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       </div>
 
       <div className={styles.infoSection}>
-        <div className={styles.field}>
-          <div className={styles.label}>TITLE</div>
-          <div className={styles.value}>
-            {docData.title || "Title Not Yet Available."}
+        {showField("Title") && (
+          <div className={styles.field}>
+            <div className={styles.label}>TITLE</div>
+            <div className={styles.value}>
+              {docData.title || "Title Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>DATE CREATED</div>
-          <div className={styles.value}>
-            {formatDate(docData.date) || "Date Not Available."}
+        {showField("Date Created") && (
+          <div className={styles.field}>
+            <div className={styles.label}>DATE CREATED</div>
+            <div className={styles.value}>
+              {formatDate(docData.date) || "Date Not Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>DOCUMENT TYPE</div>
-          <div className={styles.value}>
-            {docData.genre?.name || "Document Type Not Yet Available."}
+        {showField("Genre") && (
+          <div className={styles.field}>
+            <div className={styles.label}>DOCUMENT TYPE</div>
+            <div className={styles.value}>
+              {docData.genre?.name || "Document Type Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>FORMAT</div>
-          <div className={styles.value}>
-            {docData.format?.name || "Format Not Yet Available."}
+        {showField("Format") && (
+          <div className={styles.field}>
+            <div className={styles.label}>FORMAT</div>
+            <div className={styles.value}>
+              {docData.format?.name || iiifFormat}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* {docData.pages && (
           <div className={styles.field}>
@@ -243,30 +304,36 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         )} */}
 
-        <div className={styles.field}>
-          <div className={styles.label}>CREATOR</div>
-          <div className={styles.value}>
-            {formatArray(docData.creators) || "Creator(s) Not Available."}
-          </div>
-        </div>
-
-        <div className={styles.field}>
-          <div className={styles.label}>CONTRIBUTORS</div>
-          <div className={styles.value}>
-            {formatContributors() || "Contributors Not Yet Available."}
-          </div>
-        </div>
-
-        {docData.sources && docData.sources.length > 0 && (
+        {showField("Creator") && (
           <div className={styles.field}>
-            <div className={styles.label}>SOURCE</div>
+            <div className={styles.label}>CREATOR</div>
             <div className={styles.value}>
-              <a href={docData.sources[0]!.link} className={styles.link}>
-                {docData.sources[0]!.link}
-              </a>
+              {formatArray(docData.creators) || "Creator(s) Not Available."}
             </div>
           </div>
         )}
+
+        {showField("Contributors") && (
+          <div className={styles.field}>
+            <div className={styles.label}>CONTRIBUTORS</div>
+            <div className={styles.value}>
+              {formatContributors() || "Contributors Not Yet Available."}
+            </div>
+          </div>
+        )}
+
+        {showField("Source") &&
+          docData.sources &&
+          docData.sources.length > 0 && (
+            <div className={styles.field}>
+              <div className={styles.label}>SOURCE</div>
+              <div className={styles.value}>
+                <a href={docData.sources[0]!.link} className={styles.link}>
+                  {docData.sources[0]!.link}
+                </a>
+              </div>
+            </div>
+          )}
 
         {/* {docData.doi && (
           <div className={styles.field}>
@@ -279,37 +346,45 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           </div>
         )} */}
 
-        <div className={styles.field}>
-          <div className={styles.label}>KEYWORDS</div>
-          <div className={styles.value}>
-            {formatArray(docData.keywords) || "Keywords Not Yet Available."}
+        {showField("Keywords") && (
+          <div className={styles.field}>
+            <div className={styles.label}>KEYWORDS</div>
+            <div className={styles.value}>
+              {formatArray(docData.keywords) || "Keywords Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>SUBJECT HEADINGS</div>
-          <div className={styles.value}>
-            {formatArray(docData.subjectHeadings) ||
-              "Subject Headings Not Yet Available."}
+        {showField("Subject Headings") && (
+          <div className={styles.field}>
+            <div className={styles.label}>SUBJECT HEADINGS</div>
+            <div className={styles.value}>
+              {formatArray(docData.subjectHeadings) ||
+                "Subject Headings Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>LANGUAGES</div>
-          <div className={styles.value}>
-            {formatArray(docData.languages) || "Languages Not Yet Available."}
+        {showField("Languages") && (
+          <div className={styles.field}>
+            <div className={styles.label}>LANGUAGES</div>
+            <div className={styles.value}>
+              {formatArray(docData.languages) || "Languages Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.field}>
-          <div className={styles.label}>SPATIAL COVERAGE</div>
-          <div className={styles.value}>
-            {formatArray(docData.spatialCoverage) ||
-              "Spatial Coverage Not Yet Available."}
+        {showField("Spatial Coverage") && (
+          <div className={styles.field}>
+            <div className={styles.label}>SPATIAL COVERAGE</div>
+            <div className={styles.value}>
+              {formatArray(docData.spatialCoverage) ||
+                "Spatial Coverage Not Yet Available."}
+            </div>
           </div>
-        </div>
+        )}
 
-        <CitationField citation={citation} />
+        {showField("Citation") && <CitationField citation={citation} />}
       </div>
     </div>
   )

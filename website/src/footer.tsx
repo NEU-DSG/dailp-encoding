@@ -26,10 +26,10 @@ const Footer = () => {
               <div className={css.footerColumn}>
                 <h4 className={css.sectionTitle}>Tools</h4>
                 <nav className={css.toolsNav}>
-                  <Link href="/glossary" className={css.toolsLink}>
+                  <Link href="/tools/glossary/" className={css.toolsLink}>
                     Glossary of Terms
                   </Link>
-                  <Link href="/search" className={css.toolsLink}>
+                  <Link href="/tools/search/" className={css.toolsLink}>
                     Word Search
                   </Link>
                   <Link
@@ -46,14 +46,14 @@ const Footer = () => {
                   >
                     User Tutorials
                   </Link>
-                  <Link href="/support" className={css.toolsLink}>
+                  <Link href="/about/support/" className={css.toolsLink}>
                     Support
                   </Link>
                 </nav>
               </div>
 
               <p className={css.lastUpdated}>
-                Last Updated on {buildDate.toDateString()}
+                Last Updated on {buildDate ? buildDate.toDateString() : ""}
               </p>
             </div>
 
