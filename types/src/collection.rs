@@ -93,6 +93,16 @@ pub enum CollectionSection {
     Credit,
 }
 
+/// Enum to represent whether a chapter in a collection's table of contents is a page or a document
+#[derive(
+    async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, serde::Serialize, serde::Deserialize,
+)]
+pub enum ChapterContents {
+    Document,
+    Page,
+    Unknown,
+}
+
 #[async_graphql::ComplexObject]
 impl EditedCollection {
     /// URL slug for the collection, like "cwkw"
@@ -139,6 +149,17 @@ impl CollectionChapter {
             .loader()
             .chapter_breadcrumbs(self.path.clone())
             .await?)
+    }
+
+    async fn content_type(&self, context: &Context<'_>) -> FieldResult<ChapterContents> {
+        match (self.document_id.is_some(), self.wordpress_id.is_some()) {
+            (true, false) => Ok(ChapterContents::Document),
+            // Chapters created from the TOC editor have neither id: their
+            // content is the page stored at /{collection}/{chapter}.
+            (false, _) => Ok(ChapterContents::Page),
+            // having both ids is an impossible case as of 2/19/2026, but just to make sure
+            (true, true) => Ok(ChapterContents::Unknown),
+        }
     }
 }
 
@@ -197,6 +218,16 @@ pub struct UpdateCollectionChapterOrderInput {
 pub struct BatchUpsertChaptersInput {
     /// List of chapters to upsert
     pub chapters: Vec<UpsertChapterInput>,
+}
+
+/// Input for creating a brand-new page chapter. It starts unassigned
+/// (index -1), so it appears in the TOC editor's list of chapters to place.
+#[derive(async_graphql::InputObject)]
+pub struct CreateChapterInput {
+    /// The slug of the collection this chapter belongs to
+    pub collection_slug: String,
+    /// The title of the chapter; its slug is derived from this
+    pub title: String,
 }
 
 /// Input for adding a new chapter to a collection

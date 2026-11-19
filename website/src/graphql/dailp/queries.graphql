@@ -300,6 +300,7 @@ query EditedCollection($slug: String!) {
       section
       path
       slug
+      contentType
     }
   }
 }
@@ -519,6 +520,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     title
     wordpressId
     slug
+    contentType
     breadcrumbs {
       name
       slug
@@ -864,6 +866,15 @@ query AllChapterSlugs($collectionSlug: String!) {
 
 mutation AddCollectionChapter($input: AddChapterInput!) {
   addCollectionChapter(input: $input)
+}
+
+mutation CreateCollectionChapter($input: CreateChapterInput!) {
+  createCollectionChapter(input: $input) {
+    id
+    title
+    slug
+    documentId
+  }
 }
 
 mutation UpdateMenu($menu: MenuUpdate!) {

@@ -82,7 +82,7 @@ const ChapterPage = (props: {
     return <>Collection not found: {props.collectionSlug}</>
   }
 
-  const { document, wordpressId } = chapter
+  const { document } = chapter
 
   const breadcrumbString = [
     collection.title,
@@ -98,7 +98,8 @@ const ChapterPage = (props: {
         <main className={util.paddedCenterColumn}>
           <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
             {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-            {wordpressId && chapter.slug ? (
+            {/* Includes chapters created in the TOC editor, which have no wordpressId. */}
+            {!document && chapter.slug ? (
               <>
                 <header className={chapterStyle.docHeader}>
                   <Breadcrumbs aria-label="Breadcrumbs">

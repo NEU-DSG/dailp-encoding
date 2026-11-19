@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { Draggable, Droppable } from "react-beautiful-dnd"
 import { MdDragIndicator } from "react-icons/md/index"
-import { useEditToc } from "src/components/editable/toc/edit-toc-context"
+import {
+  CREATE_CHAPTER,
+  useEditToc,
+} from "src/components/editable/toc/edit-toc-context"
 import type { ChapterNode, SectionKey } from "src/types/edit-toc"
 import { idOf } from "src/utils/edit-toc"
 import * as css from "./EditToc.css"
@@ -12,11 +15,13 @@ export const DraftRow = () => {
     draftTitle,
     draftSlug,
     availableSlugs,
+    isCreating,
     onDraftTitleChange,
     onDraftSlugChange,
     onConfirmDraft,
     onCancelDraft,
   } = useEditToc()
+  const isCreateSelected = draftSlug === CREATE_CHAPTER
 
   return (
     <li className={css.chapterRow.draft}>
@@ -33,13 +38,12 @@ export const DraftRow = () => {
             value={draftSlug}
             onChange={(e) => onDraftSlugChange(e.target.value)}
             className={css.slugInput}
-            disabled={availableSlugs.length === 0}
+            disabled={isCreating}
           >
-            <option value="">
-              {availableSlugs.length === 0
-                ? "No unassigned chapters"
-                : "Select a slug..."}
+            <option value="" disabled hidden>
+              Select a slug...
             </option>
+            <option value={CREATE_CHAPTER}>+ Create Chapter</option>
             {availableSlugs.map((s) => (
               <option value={s} key={s}>
                 {s.replace(/_/g, "-")}
@@ -51,10 +55,14 @@ export const DraftRow = () => {
           <button
             type="button"
             onClick={onConfirmDraft}
-            disabled={availableSlugs.length === 0}
+            disabled={!draftSlug || isCreating}
             className={css.tocButton.primary}
           >
-            Add Chapter
+            {isCreating
+              ? "Creating..."
+              : isCreateSelected
+              ? "Create Chapter"
+              : "Add Chapter"}
           </button>
           <button
             type="button"

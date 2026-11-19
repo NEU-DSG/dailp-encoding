@@ -4,17 +4,68 @@ import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { DailpPageContents } from "src/pages/dailp.page"
-import { useLocation } from "src/renderer/PageShell"
+import { Page as ChapterPage } from "src/pages/edited-collections/chapter.page"
+import { CollectionProvider } from "src/pages/edited-collections/edited-collection-context"
+import {
+  PageContextProvider,
+  useLocation,
+  usePageContext,
+} from "src/renderer/PageShell"
 
 /* import { EditablePageContents } from "../templates/editable-page" */
+
+// Same shape as the chapter route, /collections/@collectionSlug/@chapterSlug
+const CHAPTER_PATH = /^\/collections\/([^/]+)\/([^/]+)\/?$/
 
 /**
  Handle client-only routes for pages that haven't been statically renderered
  yet, or those only available to authenticated users.
  */
 export const Page = () => {
-  const content = useHasMounted() ? <ClientPage /> : <NotFound />
-  return <Layout>{content}</Layout>
+  const hasMounted = useHasMounted()
+  if (!hasMounted) return <Layout>{<NotFound />}</Layout>
+
+  // Chapters created after the last deploy have no prerendered page, so the
+  // host serves this one instead. Render the chapter here in the browser.
+  const chapterMatch = window.location.pathname.match(CHAPTER_PATH)
+  if (chapterMatch) {
+    return (
+      <ClientChapterPage
+        collectionSlug={decodeURIComponent(chapterMatch[1]!)}
+        chapterSlug={decodeURIComponent(chapterMatch[2]!)}
+      />
+    )
+  }
+
+  return <Layout>{<ClientPage />}</Layout>
+}
+
+// The collection layout, sidebar, and collection context read the slugs from
+// the route params, which are empty on this page, so provide them here. The
+// shell's CollectionProvider already ran with no slug, so wrap a fresh one.
+const ClientChapterPage = (props: {
+  collectionSlug: string
+  chapterSlug: string
+}) => {
+  const pageContext = usePageContext()
+  return (
+    <PageContextProvider
+      pageContext={{
+        ...pageContext,
+        routeParams: {
+          collectionSlug: props.collectionSlug,
+          chapterSlug: props.chapterSlug,
+        },
+      }}
+    >
+      <CollectionProvider>
+        <ChapterPage
+          collectionSlug={props.collectionSlug}
+          chapterSlug={props.chapterSlug}
+        />
+      </CollectionProvider>
+    </PageContextProvider>
+  )
 }
 
 const ClientPage = () => {

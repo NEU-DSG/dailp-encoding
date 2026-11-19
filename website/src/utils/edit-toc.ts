@@ -14,6 +14,18 @@ export const idOf = (n: any): string => {
   return persistedId || clientId
 }
 
+// A string describing the TOC's shape (which chapters, in what order, under
+// which parent). Two states with equal signatures have nothing to save.
+export const tocSignature = (sections: ChaptersBySection): string => {
+  const describe = (nodes: ChapterNode[]): unknown[] =>
+    nodes.map((n) => [idOf(n), n.title, n.slug, describe(n.children)])
+  return JSON.stringify([
+    describe(sections.intro),
+    describe(sections.body),
+    describe(sections.credit),
+  ])
+}
+
 // Generate id for client id of chapter nodes with time and random number
 export const generateClientId = (): string =>
   `${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -89,7 +101,74 @@ export const updateChildren = (
 export const removeChapterFromSection = (
   chapters: ChapterNode[],
   chapterId: string
-): ChapterNode[] => chapters.filter((ch) => idOf(ch) !== chapterId)
+): ChapterNode[] =>
+  chapters
+    .filter((ch) => idOf(ch) !== chapterId)
+    // Recurse so subchapters can be removed too
+    .map((ch) => ({
+      ...ch,
+      children: removeChapterFromSection(ch.children, chapterId),
+    }))
+
+// Slugs come back in two forms: dashed from GraphQL `slug` fields
+// (`echota-funeral-notices`) and underscored from the database
+// (`echota_funeral_notices`, e.g. allChapterSlugs). Compare them with this.
+export const slugKey = (slug: string): string => slug.replace(/_/g, "-")
+
+// Drops unassigned chapters (index -1) and everything nested under them, so a
+// removed chapter's subchapters don't linger in the TOC on their own
+export const withoutUnassigned = <
+  T extends { indexInParent: number; path: readonly string[] }
+>(
+  chapters: readonly T[]
+): T[] => {
+  const unassignedPaths = new Set(
+    chapters.filter((c) => c.indexInParent === -1).map((c) => c.path.join("."))
+  )
+  return chapters.filter(
+    (c) =>
+      !c.path.some((_, i) =>
+        unassignedPaths.has(c.path.slice(0, i + 1).join("."))
+      )
+  )
+}
+
+// Every chapter in the tree, subchapters included
+export const flattenChapters = (nodes: ChapterNode[]): ChapterNode[] =>
+  nodes.flatMap((n) => [n, ...flattenChapters(n.children)])
+
+// Pending copies of the chapters nested under `rootPath`, so re-adding a
+// chapter brings its subchapters back with it. Slug keys in `exclude` (already in
+// the TOC) are skipped along with their own subchapters.
+export const buildPendingSubtree = (
+  rootPath: readonly string[],
+  allChapters: readonly {
+    title: string
+    slug: string
+    path: readonly string[]
+    indexInParent: number
+  }[],
+  exclude: Set<string>,
+  section: CollectionSection
+): ChapterNode[] =>
+  allChapters
+    .filter(
+      (c) =>
+        c.path.length === rootPath.length + 1 &&
+        rootPath.every((part, i) => c.path[i] === part) &&
+        !exclude.has(slugKey(c.slug))
+    )
+    .sort((a, b) => a.indexInParent - b.indexInParent)
+    .map((c) => ({
+      clientId: generateClientId(),
+      title: c.title,
+      slug: c.slug,
+      section,
+      indexInParent: 0, // Set by updateSectionIndices before saving
+      path: [],
+      children: buildPendingSubtree(c.path, allChapters, exclude, section),
+      isNew: true,
+    }))
 
 // Adds a given chapter to the bottom of list in section or as subchapter
 export const addChapterToSection = (
@@ -161,7 +240,7 @@ export const addPendingChapters = async (
     if (chapter.isNew && !chapter.id) {
       // Only unassigned/existing chapters can be added so protetive case if not true
       const existingChapter = slugData?.allChapterSlugs.find(
-        (s) => s.slug === chapter.slug
+        (s) => slugKey(s.slug) === slugKey(chapter.slug)
       )
 
       if (!existingChapter)
@@ -223,10 +302,12 @@ export const buildChaptersBySection = (
 ): ChaptersBySection => {
   if (!nodes) return { intro: [], body: [], credit: [] }
 
-  // Filter out unassigned chapters to not render and make sure they all have client ids
-  const usableNodes = (nodes ?? [])
-    .filter((n) => n.indexInParent !== -1)
-    .map((n) => ({ ...n, clientId: idOf(n) || generateClientId() }))
+  // Filter out unassigned chapters (and their subchapters) to not render and
+  // make sure they all have client ids
+  const usableNodes = withoutUnassigned(nodes ?? []).map((n) => ({
+    ...n,
+    clientId: idOf(n) || generateClientId(),
+  }))
 
   // Sort by depth to prevent subchapters showing up before parent which would issues
   const sortedUsableNodes = [...usableNodes].sort((a, b) => {

@@ -3,13 +3,19 @@ import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
-import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
+import {
+  useEditedCollectionsQuery,
+  usePageByPathQuery,
+  useUpsertPageMutation,
+} from "src/graphql/dailp"
 import Layout from "src/layout"
 import {
   useLocation,
   usePageContext,
   useRouteParams,
 } from "src/renderer/PageShell"
+import { chapterRoute } from "src/routes"
+import { slugKey } from "src/utils/edit-toc"
 
 const DISALLOWED_WORDS = [
   "admin",
@@ -34,7 +40,8 @@ const NewPage = () => {
     let regularizedPath = path
       .toLowerCase()
       .replace(/ /g, "-")
-      .replace(/[^a-z0-9-/]/g, "")
+      // `_` is kept: collection slugs like `willie_jumper_stories` use it
+      .replace(/[^a-z0-9-_/]/g, "")
     return regularizedPath.startsWith("/")
       ? regularizedPath
       : `/${regularizedPath}`
@@ -51,12 +58,33 @@ const NewPage = () => {
       setIsNew(false)
     } else {
       setIsNew(true)
-      setTitle("")
+      // A new chapter page opened from the TOC editor passes its title along
+      setTitle(location.search["title"] ?? "")
       setContent("")
     }
   }, [data])
 
   const [_, upsertPage] = useUpsertPageMutation()
+
+  // Collection slugs, to recognise chapter pages (/{collection}/{chapter})
+  const [{ data: collectionsData }] = useEditedCollectionsQuery()
+  const collectionSlugs = new Set(
+    collectionsData?.allEditedCollections.map((c) => slugKey(c.slug)) ?? []
+  )
+
+  // Where to show the page after saving. A collection chapter page is shown
+  // on its chapter route so it has the collection's layout around it.
+  const viewPathFor = (savedPath: string): string => {
+    const [first, second, ...rest] = savedPath.split("/").filter(Boolean)
+    // Dashed, like the collection's own links (see utils.slugKey)
+    const collectionSlug = first && slugKey(first)
+    if (collectionSlug && second && rest.length === 0) {
+      if (collectionSlugs.has(collectionSlug))
+        return chapterRoute(collectionSlug, slugKey(second))
+    }
+    return savedPath
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
@@ -93,7 +121,7 @@ const NewPage = () => {
         setError(res.error.message)
       } else {
         setError(null)
-        navigate(`${formatPath(path)}`)
+        navigate(viewPathFor(formatPath(path)))
       }
     })
   }

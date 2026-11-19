@@ -12,7 +12,8 @@ use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
 use crate::collection::{
-    AddChapterInput, CollectionSection, EditedCollection, UpdateCollectionChapterOrderInput,
+    AddChapterInput, CollectionSection, CreateChapterInput, EditedCollection,
+    UpdateCollectionChapterOrderInput,
 };
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};
@@ -2059,6 +2060,40 @@ impl Database {
 
         tx.commit().await?;
         Ok(chapter_id)
+    }
+
+    /// Creates a new, unassigned page chapter whose slug comes from its title.
+    pub async fn create_collection_chapter(
+        &self,
+        input: CreateChapterInput,
+    ) -> Result<ChapterSlugInfo> {
+        let collection_slug_for_path = input.collection_slug.replace("-", "_");
+        let chapter_slug = crate::slugs::slugify_ltree(&input.title);
+        if chapter_slug.is_empty() {
+            anyhow::bail!("The title must contain at least one letter or number.");
+        }
+        let chapter_path =
+            PgLTree::from_str(&format!("{}.{}", collection_slug_for_path, chapter_slug))?;
+
+        query_file_as!(
+            ChapterSlugInfo,
+            "queries/create_unassigned_chapter.sql",
+            input.title,
+            chapter_path,
+        )
+        .fetch_one(&self.client)
+        .await
+        .map_err(|err| match &err {
+            sqlx::Error::Database(db)
+                if db.constraint() == Some("slug_unique_within_collection") =>
+            {
+                anyhow::anyhow!(
+                    "A chapter with the slug \"{}\" already exists in this collection.",
+                    chapter_slug.replace("_", "-")
+                )
+            }
+            _ => err.into(),
+        })
     }
 
     pub async fn insert_edited_collection(

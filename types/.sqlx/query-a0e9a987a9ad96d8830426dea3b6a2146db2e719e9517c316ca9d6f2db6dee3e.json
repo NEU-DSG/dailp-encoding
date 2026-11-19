@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "--- Creates a new page chapter that is not yet placed in the TOC\n--- (index_in_parent = -1), so it shows up as an unassigned chapter.\ninsert into collection_chapter (title, index_in_parent, chapter_path)\nvalues ($1, -1, $2)\nreturning\n    id,\n    title,\n    slug,\n    document_id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "document_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "a0e9a987a9ad96d8830426dea3b6a2146db2e719e9517c316ca9d6f2db6dee3e"
+}

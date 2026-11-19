@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react"
 import { DragDropContext, Droppable } from "react-beautiful-dnd"
+import { Alert } from "src/components/alert"
 import ConfirmationPopup from "src/components/confirmation-popup"
-import { EditTocProvider } from "src/components/editable/toc/edit-toc-context"
+import {
+  CREATE_CHAPTER,
+  EditTocProvider,
+} from "src/components/editable/toc/edit-toc-context"
 import Sidebar from "src/components/sidebar"
 import * as Dailp from "src/graphql/dailp"
 import { CollectionSection } from "src/graphql/dailp"
@@ -26,6 +30,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
   const [, updateOrder] = Dailp.useUpdateCollectionChapterOrderMutation()
   const [, removeChapter] = Dailp.useRemoveCollectionChapterMutation()
   const [, addChapter] = Dailp.useAddCollectionChapterMutation()
+  const [, createChapter] = Dailp.useCreateCollectionChapterMutation()
 
   const [{ data: slugData }, refetchSlugs] = Dailp.useAllChapterSlugsQuery({
     variables: { collectionSlug: normalizedSlug },
@@ -39,31 +44,117 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       credit: [],
     }
   )
+  // The TOC as last saved, to tell whether there are unsaved changes
+  const [savedSections, setSavedSections] = useState<ChaptersBySection | null>(
+    null
+  )
   const [draftTarget, setDraftTarget] = useState<DraftTarget | null>(null)
   const [draftTitle, setDraftTitle] = useState("")
   const [draftSlug, setDraftSlug] = useState("")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
-  // Grabs all pending chapters to find which are available including from qeury
-  const pendingChapterSlugs = new Set([
-    ...utils.getPendingSlugs(chaptersBySection.intro),
-    ...utils.getPendingSlugs(chaptersBySection.body),
-    ...utils.getPendingSlugs(chaptersBySection.credit),
-  ])
+  // Every chapter currently in the TOC on screen, saved or pending
+  const onScreenChapters = [
+    ...utils.flattenChapters(chaptersBySection.intro),
+    ...utils.flattenChapters(chaptersBySection.body),
+    ...utils.flattenChapters(chaptersBySection.credit),
+  ]
+  // Slug keys (see utils.slugKey), since slugs come dashed or underscored
+  const onScreenSlugs = new Set(
+    onScreenChapters.map((ch) => utils.slugKey(ch.slug))
+  )
+  const onScreenIds = new Set(
+    onScreenChapters.flatMap((ch) => (ch.id ? [String(ch.id)] : []))
+  )
 
-  const availableSlugs = (slugData?.allChapterSlugs ?? [])
-    .map((s) => s.slug)
-    .filter((slug) => !pendingChapterSlugs.has(slug))
+  // Saved chapters removed on screen but not yet saved, so they can be re-added
+  const removedChapters = savedSections
+    ? [
+        ...utils.flattenChapters(savedSections.intro),
+        ...utils.flattenChapters(savedSections.body),
+        ...utils.flattenChapters(savedSections.credit),
+      ].filter((ch) => ch.id && !onScreenIds.has(String(ch.id)))
+    : []
+
+  // Unassigned chapters in the backend plus ones removed before saving, one
+  // entry per chapter whichever form its slug came in
+  const availableByKey = new Map<string, string>()
+  for (const slug of [
+    ...(slugData?.allChapterSlugs ?? []).map((s) => s.slug),
+    ...removedChapters.map((ch) => ch.slug),
+  ]) {
+    const key = utils.slugKey(slug)
+    if (!onScreenSlugs.has(key) && !availableByKey.has(key))
+      availableByKey.set(key, slug)
+  }
+  const availableSlugs = [...availableByKey.values()]
+
+  // Backend ids for every chapter that can be (re-)added on save, from both
+  // lists: unassigned chapters (slugData, refetched after "+ Create Chapter",
+  // so it includes newly created ones) and the collection loaded with the page
+  // (which has chapters removed on screen but not yet unassigned). documentId
+  // is only known for unassigned ones; the backend keeps it otherwise.
+  const unassignedChapters = slugData?.allChapterSlugs ?? []
+  const unassignedIds = new Set(unassignedChapters.map((s) => s.id))
+  const addableChapters = {
+    allChapterSlugs: [
+      ...unassignedChapters,
+      ...(collection?.chapters ?? [])
+        .filter((ch) => !unassignedIds.has(ch.id))
+        .map((ch) => ({ id: ch.id, slug: ch.slug, documentId: null })),
+    ],
+  }
 
   useEffect(() => {
-    if (collection?.chapters)
+    if (collection?.chapters) {
       // Build chapters if collection changes
-      setChaptersBySection(
-        utils.buildChaptersBySection(collection.chapters as any)
-      )
+      const built = utils.buildChaptersBySection(collection.chapters as any)
+      setChaptersBySection(built)
+      setSavedSections(built)
+    }
   }, [collection])
+
+  const hasUnsavedChanges =
+    savedSections !== null &&
+    utils.tocSignature(chaptersBySection) !== utils.tocSignature(savedSections)
+
+  // Ask the browser to confirm before closing, reloading, or leaving the page
+  // while there are unsaved changes
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = "" // Required by some browsers to show the prompt
+    }
+    // In-site links use client-side routing, which skips beforeunload, so
+    // confirm those clicks ourselves (capture phase, before the router acts)
+    const confirmLinkClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.("a[href]")
+      if (
+        !(link instanceof HTMLAnchorElement) ||
+        link.target === "_blank" ||
+        link.origin !== window.location.origin ||
+        e.button !== 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey
+      )
+        return
+      if (!window.confirm("You have unsaved changes. Leave without saving?")) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+    window.addEventListener("beforeunload", warn)
+    document.addEventListener("click", confirmLinkClick, true)
+    return () => {
+      window.removeEventListener("beforeunload", warn)
+      document.removeEventListener("click", confirmLinkClick, true)
+    }
+  }, [hasUnsavedChanges])
 
   if (!collection) return null
 
@@ -81,16 +172,68 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     setDraftSlug("")
   }
 
+  // Creates a new, unassigned (index -1) page chapter and opens its empty page
+  // in the editor. The draft row then preselects it, so clicking "Add Chapter"
+  // places it in the TOC.
+  const createDraftChapter = async () => {
+    const title = draftTitle.trim()
+    if (!title) {
+      setErrorMessage("A title is required to create a chapter.")
+      return
+    }
+
+    // Open the tab now, while still inside the click: browsers block
+    // window.open once we've awaited the request.
+    const editorTab = window.open("", "_blank")
+    setIsCreating(true)
+    setErrorMessage(null)
+    try {
+      const result = await createChapter({
+        input: { collectionSlug, title },
+      })
+      const created = result.data?.createCollectionChapter
+      if (result.error || !created) {
+        editorTab?.close()
+        setErrorMessage(
+          result.error?.graphQLErrors[0]?.message ??
+            "Failed to create the chapter."
+        )
+        return
+      }
+
+      refetchSlugs({ requestPolicy: "network-only" })
+      setDraftSlug(created.slug)
+
+      // Same path the chapter view reads the page from (chapter.page.tsx)
+      const pagePath = `/${collectionSlug}/${created.slug.replace(/_/g, "-")}`
+      const editorUrl = `/edit?path=${encodeURIComponent(
+        pagePath
+      )}&title=${encodeURIComponent(created.title)}`
+      if (editorTab) editorTab.location.href = editorUrl
+      else window.location.href = editorUrl
+    } catch (error: any) {
+      editorTab?.close()
+      setErrorMessage("Failed to create the chapter.")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   // Add draft as pending
   const confirmDraft = () => {
     if (!draftTarget) return
+
+    if (draftSlug === CREATE_CHAPTER) {
+      createDraftChapter()
+      return
+    }
 
     if (!draftTitle || !draftSlug) {
       setErrorMessage("Title and slug are required fields.")
       return
     }
 
-    if (!slugData?.allChapterSlugs.some((s) => s.slug === draftSlug)) {
+    if (!availableSlugs.includes(draftSlug)) {
       setErrorMessage("Slug must exist with an already existing document.")
       return
     }
@@ -112,6 +255,19 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       ? parent.children.length
       : chaptersBySection[sectionKey].length
 
+    // Bring back the chapter's subchapters too, except any already in the TOC
+    const existing = collection.chapters?.find(
+      (ch) => utils.slugKey(ch.slug) === utils.slugKey(draftSlug)
+    )
+    const children = existing
+      ? utils.buildPendingSubtree(
+          existing.path,
+          collection.chapters ?? [],
+          new Set([...onScreenSlugs, utils.slugKey(draftSlug)]),
+          sectionEnum
+        )
+      : []
+
     const newChapter: ChapterNode = {
       clientId: utils.generateClientId(),
       title: draftTitle,
@@ -119,7 +275,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       section: sectionEnum,
       indexInParent: sectionSize + 1,
       path: [],
-      children: [],
+      children,
       isNew: true,
     }
 
@@ -188,55 +344,19 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     })
   }
 
-  // Removes a given chapter row or pending row
-  const handleRemove = async (
+  // Removes a chapter row from the TOC on screen. Saved chapters are only
+  // unassigned in the backend when "Save Changes" is clicked (see handleSave),
+  // so "Reset" can bring them back.
+  const handleRemove = (
     section: SectionKey,
     id: string,
-    title: string,
-    isNew: boolean
+    _title: string,
+    _isNew: boolean
   ) => {
-    if (isNew) {
-      setChaptersBySection((prev) => ({
-        ...prev,
-        [section]: utils.removeChapterFromSection(prev[section], id),
-      }))
-      return
-    }
-
-    if (
-      !confirm(
-        `Remove "${title}" from the Table of Contents? (The chapter 
-        and document will not be deleted)`
-      )
-    )
-      return
-
-    setErrorMessage(null)
-    setIsSaving(true)
-    const savedState = chaptersBySection
-
-    // Remove from frontend
     setChaptersBySection((prev) => ({
       ...prev,
       [section]: utils.removeChapterFromSection(prev[section], id),
     }))
-
-    // Delete from backend, reverting to inital state on error
-    try {
-      const result = await removeChapter({ chapterId: id })
-      if (result.error) {
-        setChaptersBySection(savedState)
-        setErrorMessage("Delete failed due to an unexpected error.")
-      } else {
-        await refetchSlugs()
-        setErrorMessage(null)
-      }
-    } catch (error: any) {
-      setChaptersBySection(savedState)
-      setErrorMessage("Delete failed due to an unexpected error.")
-    } finally {
-      setIsSaving(false)
-    }
   }
 
   // Saves the current state: adds new chapters to backend and updates indices
@@ -251,12 +371,34 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
 
     setIsSaving(true)
     try {
+      // First unassign (index -1) every saved chapter that was removed on
+      // screen, including subchapters of a removed chapter. Re-added ones are
+      // put back in place by addPendingChapters below.
+      const removedIds = removedChapters.map((ch) => String(ch.id))
+      for (const id of removedIds) {
+        const removed = await removeChapter({ chapterId: id })
+        if (removed.error) {
+          setErrorMessage("Failed to remove a chapter. Please try again.")
+          return
+        }
+        // Keep the saved copy accurate even if a later step fails
+        setSavedSections((prev) =>
+          prev
+            ? {
+                intro: utils.removeChapterFromSection(prev.intro, id),
+                body: utils.removeChapterFromSection(prev.body, id),
+                credit: utils.removeChapterFromSection(prev.credit, id),
+              }
+            : prev
+        )
+      }
+
       // For each sesction, add pending chapters or throw on fail
       const introResult = await utils.addPendingChapters(
         chaptersBySection.intro,
         CollectionSection.Intro,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (introResult.error) {
@@ -268,7 +410,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         chaptersBySection.body,
         CollectionSection.Body,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (bodyResult.error) {
@@ -280,7 +422,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         chaptersBySection.credit,
         CollectionSection.Credit,
         addChapter,
-        slugData,
+        addableChapters,
         normalizedSlug
       )
       if (creditResult.error) {
@@ -314,18 +456,23 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         ),
       ]
 
-      if (chapters.length === 0) {
+      if (chapters.length === 0 && removedIds.length === 0) {
         setErrorMessage("No chapters to save.")
         return
       }
 
-      const result = await updateOrder({ input: { collectionSlug, chapters } })
-
-      if (result.error) {
-        setErrorMessage("Save failed due to an unexpected error.")
-        return
+      // Nothing left to order if every chapter was removed
+      if (chapters.length > 0) {
+        const result = await updateOrder({
+          input: { collectionSlug, chapters },
+        })
+        if (result.error) {
+          setErrorMessage("Save failed due to an unexpected error.")
+          return
+        }
       }
 
+      setSavedSections(updatedSections)
       await refetch()
       await refetchSlugs()
       setErrorMessage(null)
@@ -343,6 +490,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         draftTitle,
         draftSlug,
         availableSlugs,
+        isCreating,
         onDraftTitleChange: setDraftTitle,
         onDraftSlugChange: setDraftSlug,
         onConfirmDraft: confirmDraft,
@@ -356,6 +504,11 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         alternateContent={<PreviewToc chaptersBySection={chaptersBySection} />}
       />
       <div className={css.tocContainer}>
+        {hasUnsavedChanges && (
+          <Alert>
+            You have unsaved changes. Click "Save Changes" to keep them.
+          </Alert>
+        )}
         <h2 className={css.collectionTitle}>{collection.title}</h2>
         {errorMessage && <div className={css.errorBanner}>{errorMessage}</div>}
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -443,10 +596,8 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
           isPopupShowing={isResetting}
           toggleVisibility={() => setIsResetting((p) => !p)}
           action={() => {
-            if (collection?.chapters)
-              setChaptersBySection(
-                utils.buildChaptersBySection(collection.chapters as any)
-              )
+            // Back to the last saved TOC (which reflects immediate removals)
+            if (savedSections) setChaptersBySection(savedSections)
             cancelDraft()
           }}
         />
