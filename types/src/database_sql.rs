@@ -12,7 +12,8 @@ use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
 use crate::collection::{
-    AddChapterInput, CollectionSection, CreateChapterInput, EditedCollection, UpdateCollectionChapterOrderInput,
+    AddChapterInput, CollectionSection, CreateChapterInput, EditedCollection,
+    UpdateCollectionChapterOrderInput,
 };
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::doc_metadata::{Format, Genre, Keyword, Language, SpatialCoverage};

@@ -165,7 +165,6 @@ export const buildPendingSubtree = (
       isNew: true,
     }))
 
-
 // Adds a given chapter to the bottom of list in section or as subchapter
 export const addChapterToSection = (
   chapters: ChapterNode[],
