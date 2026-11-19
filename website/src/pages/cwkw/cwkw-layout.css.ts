@@ -105,3 +105,11 @@ export const loginHeader = style([
     },
   },
 ])
+
+export const navButtons = style([
+  {
+    display: "flex",
+    flexDirection: "row",
+    gap: "0.5em",
+  },
+])
