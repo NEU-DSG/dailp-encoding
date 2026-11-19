@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Move a folder under a new parent. $1 id, $2 new parent_id (null = root).\n-- `parent_id` changes on the folder itself, and every path in the subtree is\n-- rebuilt on the destination's prefix. The cycle guard runs before this, so the\n-- destination is never inside the subtree being moved.\nwith target as (\n  select\n    f.path as old_path,\n    case\n      when $2::uuid is null then subpath(f.path, nlevel(f.path) - 1)\n      else (select p.path from folders p where p.id = $2)\n             || subpath(f.path, nlevel(f.path) - 1)\n    end as new_path\n  from folders f\n  where f.id = $1\n),\nupdated as (\n  update folders f\n  set parent_id = case when f.id = $1 then $2 else f.parent_id end,\n      path = t.new_path || subpath(f.path, nlevel(t.old_path))\n  from target t\n  where f.path <@ t.old_path\n  returning f.*\n)\nselect id as \"id!\", parent_id, name as \"name!\", path::text as \"path!\",\n       created_at as \"created_at!\", deleted_at, size_bytes as \"size_bytes!\"\nfrom updated\nwhere id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "e2c92ceb476405e50f59daade4e6c8dae14e12b22ae4bdce4fb615dc288106ca"
+}

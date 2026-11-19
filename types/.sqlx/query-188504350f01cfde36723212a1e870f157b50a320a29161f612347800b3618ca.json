@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- True if folder $2 is $1 itself or one of $1's descendants.\n-- Used to reject folder moves that would create a cycle.\n-- With ltree this is a single ancestor test (`@>`)\nselect coalesce(\n  (select a.path @> b.path\n   from folders a, folders b\n   where a.id = $1 and b.id = $2),\n  false\n) as \"contained!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "contained!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "188504350f01cfde36723212a1e870f157b50a320a29161f612347800b3618ca"
+}

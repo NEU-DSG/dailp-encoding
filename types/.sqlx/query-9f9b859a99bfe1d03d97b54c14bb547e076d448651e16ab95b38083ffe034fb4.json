@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Rename a folder. $1 id, $2 new name, $3 new slug label.\n-- The folder's own path label changes, so every descendant's path is rebuilt on\n-- the new prefix: `subpath(path, nlevel(old))` is the part below the renamed\n-- folder, which is re-attached to the new prefix.\nwith target as (\n  select\n    path as old_path,\n    case\n      when nlevel(path) = 1 then $3::ltree\n      else subpath(path, 0, nlevel(path) - 1) || $3::ltree\n    end as new_path\n  from folders\n  where id = $1\n),\nupdated as (\n  update folders f\n  set name = case when f.id = $1 then $2 else f.name end,\n      path = t.new_path || subpath(f.path, nlevel(t.old_path))\n  from target t\n  where f.path <@ t.old_path\n  returning f.*\n)\nselect id as \"id!\", parent_id, name as \"name!\", path::text as \"path!\",\n       created_at as \"created_at!\", deleted_at, size_bytes as \"size_bytes!\"\nfrom updated\nwhere id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "9f9b859a99bfe1d03d97b54c14bb547e076d448651e16ab95b38083ffe034fb4"
+}
