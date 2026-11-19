@@ -100,6 +100,10 @@ query DocumentContents(
   }
 }
 
+query IiifSourceForDocumentMetadata($documentId: UUID!) {
+  iiifSourceForDocumentMetadata(documentId: $documentId)
+}
+
 fragment AudioSliceFields on AudioSlice {
   sliceId
   index # if this is used as a caching key, we will have performance issues
@@ -123,8 +127,60 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  keywords {
+    id
+    name
+    status
+  }
+  languages {
+    id
+    name
+    status
+  }
+  subjectHeadings {
+    id
+    name
+    status
+  }
+  spatialCoverage {
+    id
+    name
+    status
+  }
+  creators {
+    id
+    name
+  }
+  contributors {
+    id
+    name
+    role
+  }
+  format {
+    id
+    name
+  }
+  genre {
+    id
+    name
+  }
 }
 
+query AllSubjectHeadings {
+  allSubjectHeadings {
+    id
+    name
+    status
+  }
+}
+
+mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+  createSubjectHeading(name: $name, status: $status) {
+    id
+    name
+    status
+  }
+}
 fragment ParagraphFormFields on DocumentParagraph {
   __typename
   id
@@ -222,6 +278,7 @@ query EditedCollections {
       path
     }
     thumbnailUrl
+    isHidden
   }
 }
 
@@ -230,6 +287,7 @@ query EditedCollection($slug: String!) {
     id
     title
     slug
+    isHidden
     chapters {
       id
       title
@@ -238,6 +296,14 @@ query EditedCollection($slug: String!) {
       path
       slug
     }
+  }
+}
+
+mutation ToggleCollectionVisibility($collectionId: UUID!) {
+  toggleCollectionVisibility(collectionId: $collectionId) {
+    id
+    slug
+    isHidden
   }
 }
 
@@ -305,16 +371,53 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
+    format {
+      id
+      name
+      status
+    }
+    genre {
+      id
+      name
+      status
+    }
     date {
+      day
+      month
       year
     }
     contributors {
+      id
       name
       role
     }
     sources {
       name
       link
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
     }
   }
 }
@@ -622,11 +725,23 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
+    collectionSlug
+    chapterSlug
   }
 }
 
 mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
+}
+
+mutation UpdateCollectionChapterOrder(
+  $input: UpdateCollectionChapterOrderInput!
+) {
+  updateCollectionChapterOrder(input: $input)
+}
+
+mutation RemoveCollectionChapter($chapterId: UUID!) {
+  removeCollectionChapter(chapterId: $chapterId)
 }
 
 mutation updateUser($user: UserUpdate!) {
@@ -707,6 +822,12 @@ mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
 
+query AllPages {
+  allPages {
+    path
+  }
+}
+
 query pageByPath($path: String!) {
   pageByPath(path: $path) {
     title
@@ -737,6 +858,19 @@ query MenuBySlug($slug: String!) {
   }
 }
 
+query AllChapterSlugs($collectionSlug: String!) {
+  allChapterSlugs(collectionSlug: $collectionSlug) {
+    id
+    title
+    slug
+    documentId
+  }
+}
+
+mutation AddCollectionChapter($input: AddChapterInput!) {
+  addCollectionChapter(input: $input)
+}
+
 mutation UpdateMenu($menu: MenuUpdate!) {
   updateMenu(menu: $menu) {
     id
@@ -751,4 +885,8 @@ mutation UpdateMenu($menu: MenuUpdate!) {
       }
     }
   }
+}
+
+mutation ValidateTurnstileToken($token: String!) {
+  validateTurnstileToken(token: $token)
 }

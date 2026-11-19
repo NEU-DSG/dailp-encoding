@@ -4,5 +4,6 @@ select
     e.wordpress_menu_id,
     e.description,
     e.slug,
-    e.thumbnail_url
+    e.thumbnail_url,
+    e.is_hidden
 from edited_collection as e;

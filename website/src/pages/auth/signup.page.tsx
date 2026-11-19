@@ -1,9 +1,11 @@
-import React from "react"
+import { TurnstileInstance, TurnstileProps } from "@marsidev/react-turnstile"
+import React, { ForwardRefExoticComponent, useEffect, useState } from "react"
 import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
+import * as Dailp from "src/graphql/dailp"
 import {
   FormFields,
   FormSubmitButton,
@@ -14,6 +16,8 @@ import { centeredForm } from "./user-auth.css"
 
 const SignupPage = () => {
   const { createUser } = useUser().operations
+  const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  const [turnstileToken, setTurnstileToken] = useState("")
 
   const signupForm = useFormState({
     values: { email: "", password: "" },
@@ -26,9 +30,35 @@ const SignupPage = () => {
     },
     onSubmit: (values) => {
       console.log(`Submitted! email is ${values.email}`)
-      createUser(values.email, values.password)
+
+      if (!turnstileToken) {
+        throw { turnstileToken: "A turnstile token is required" }
+      }
+
+      validateTurnstileToken({
+        token: turnstileToken,
+      }).then((result) => {
+        if (result.data?.validateTurnstileToken) {
+          createUser(values.email, values.password)
+        } else {
+          throw { turnstileToken: "Invalid turnstile token" }
+        }
+      })
     },
   })
+
+  const [TurnstileClient, setTurnstileClient] =
+    useState<ForwardRefExoticComponent<
+      TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
+    > | null>(null)
+  const [siteKey, setSiteKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    import("@marsidev/react-turnstile").then((m) => {
+      setTurnstileClient(m.Turnstile)
+      setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
+    })
+  }, [])
 
   return (
     <UserAuthPageTemplate
@@ -58,6 +88,14 @@ const SignupPage = () => {
         <LoginLink />
 
         <FormSubmitButton form={signupForm} label="Sign Up" />
+        {TurnstileClient && siteKey && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <TurnstileClient
+              siteKey={siteKey}
+              onSuccess={(token) => setTurnstileToken(token)}
+            />
+          </div>
+        )}
       </Form>
     </UserAuthPageTemplate>
   )

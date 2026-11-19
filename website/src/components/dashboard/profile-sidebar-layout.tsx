@@ -12,7 +12,7 @@ export enum LayoutVariant {
 }
 
 export const ProfileSidebarLayout = ({ layout }: { layout: LayoutVariant }) => {
-  const { form, isEditing, setIsEditing } = useForm()
+  const { isEditing } = useForm()
 
   // Render profile sidebar
   const sidebar = isEditing ? <EditProfileSidebar /> : <ProfileSidebar />

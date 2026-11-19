@@ -1,0 +1,1 @@
+select id from spatial_coverage where name = $1;

@@ -23,6 +23,7 @@ import { useUserId } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
+import { CollectionAuthGuard } from "src/components/collection-auth-guard"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
@@ -49,6 +50,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { EditingProvider } from "./editing-context"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -93,13 +95,15 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   }
 
   return (
-    <Layout>
-      <Helmet title={doc?.title} />
-      <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc} />
-        <TabSet doc={doc} />
-      </main>
-    </Layout>
+    <CollectionAuthGuard isHidden={false}>
+      <Layout>
+        <Helmet title={doc?.title} />
+        <main className={css.annotatedDocument}>
+          <DocumentTitleHeader doc={doc} />
+          <TabSet doc={doc} />
+        </main>
+      </Layout>
+    </CollectionAuthGuard>
   )
 }
 export const Page = AnnotatedDocumentPage
@@ -124,13 +128,13 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   }, [])
 
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({
-    variables: { slug: doc.slug! },
-  })
-  const docData = data?.document
-  if (!docData) {
-    return null
-  }
+  // const [{ data }] = Dailp.useDocumentDetailsQuery({
+  //   variables: { slug: doc.slug! },
+  // })
+  // const docData = data?.document
+  // if (!docData) {
+  //   return null
+  // }
   let scrollTopClass = null
   switch (isScrollVisible) {
     case 0:
@@ -214,7 +218,9 @@ export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
         {/* Document Info Component */}
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
-          <DocumentInfo doc={doc} />
+          <EditingProvider>
+            <DocumentInfo doc={doc} />
+          </EditingProvider>
         </FormProviderDoc>
       </TabPanel>
     </>
@@ -579,8 +585,10 @@ export const DocumentTitleHeader = (p: {
                   )}
                 </div>
               ))}
-              <RecordDocumentAudioPanel document={p.doc} />
             </>
+          )}
+          {(role === UserRole.Editor || role === UserRole.Contributor) && (
+            <RecordDocumentAudioPanel document={p.doc} />
           )}
         </div>
       </div>

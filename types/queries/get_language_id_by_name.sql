@@ -1,0 +1,1 @@
+select id from language where name = $1;

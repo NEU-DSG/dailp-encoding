@@ -113,12 +113,19 @@ async fn parse_early_vocab(
         date: date_recorded,
         sources: Vec::new(),
         collection: Some(COLLECTION_NAME.to_owned()),
-        genre: None,
-        contributors: authors
-            .into_iter()
-            .skip(1)
-            .map(Contributor::new_author)
-            .collect(),
+        genre_id: None,
+        format_id: None,
+        creators_ids: None,
+        keywords_ids: None,
+        languages_ids: None,
+        subject_headings_ids: None,
+        contributors: None, // temporary fix
+        //contributors: authors
+        //.into_iter()
+        //.skip(1)
+        //.map(Contributor::new_author)
+        //.collect(),
+        spatial_coverage_ids: None,
         page_images: None,
         translation: None,
         is_reference: true,

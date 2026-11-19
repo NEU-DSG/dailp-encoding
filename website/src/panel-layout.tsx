@@ -13,6 +13,7 @@ import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
 import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditButton as WordEditButton } from "./edit-word-feature"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
@@ -291,7 +292,8 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      {token && // only show the option to leave a comment if the user is signed in
+      {!isEditing &&
+        token && // only show the option to leave a comment if the user is signed in
         (isCommenting ? (
           <SubtleButton
             type="button"

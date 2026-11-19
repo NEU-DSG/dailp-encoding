@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect\n  contributor.id,\n  input_data.doc_id,\n  input_data.contribution_role\nfrom\n  unnest(\n    $1::text[], $2::uuid[], $3::text[]\n  ) as input_data(full_name, doc_id, contribution_role)\n  inner join contributor on contributor.full_name = input_data.full_name\n-- If this document already has this contributor, move on.\non conflict do nothing\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "UuidArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0"
+}

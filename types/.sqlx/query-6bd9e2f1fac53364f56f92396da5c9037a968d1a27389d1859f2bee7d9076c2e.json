@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert the new set of keyword IDs\ninsert into document_keyword (document_id, keyword_id)\nselect $1, unnest($2::uuid[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6bd9e2f1fac53364f56f92396da5c9037a968d1a27389d1859f2bee7d9076c2e"
+}

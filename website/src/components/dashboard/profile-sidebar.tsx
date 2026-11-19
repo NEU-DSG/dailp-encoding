@@ -1,9 +1,11 @@
+import { useUserRole, userRoleLabels } from "src/auth"
 import * as Dailp from "src/graphql/dailp"
 import { EditButton } from "./edit-profile-sidebar"
 import * as css from "./profile-sidebar.css"
 
 export const ProfileSidebar = () => {
   const [{ data, fetching, error }] = Dailp.useCurrentUserQuery()
+  const role = useUserRole()
   const user = data?.currentUser
 
   // Loading state
@@ -51,7 +53,7 @@ export const ProfileSidebar = () => {
         <h2 className={css.displayName}>{user.displayName}</h2>
 
         <br />
-        {user.role && <p className={css.role}>Role: {user.role}</p>}
+        <p className={css.role}>Role: {userRoleLabels[role]}</p>
 
         {user.bio && (
           <>

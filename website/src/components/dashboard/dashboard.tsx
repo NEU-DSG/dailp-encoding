@@ -57,7 +57,8 @@ export const Dashboard = () => {
             <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
               Recent Activity
             </Tab>
-            {curRole == UserRole.Admin && (
+            {/* dennis todo: remove editor from this condition once we have a proper admin role*/}
+            {(curRole == UserRole.Admin || curRole == UserRole.Editor) && (
               <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
                 Admin tools
               </Tab>
@@ -104,29 +105,33 @@ export const AdminToolsTab = () => {
     <>
       <div>
         <h2>Manage Edited Collections</h2>
-        <Link href="#">Create New Collection</Link>
+        <Link href="/collections/new">Create New Collection</Link>
         <br />
-        <Link href="#">Edit Existing Collection</Link>
+        {/* <Link href="#">Edit Existing Collection</Link> */}
       </div>
       <br />
 
       <div>
         <h2>Manage Documents</h2>
-        <Link href="#">Create New Document(s)</Link>
+        <Link href="/documents/new">Create New Document(s)</Link>
       </div>
 
-      <br />
+      {/* <br />
       <div>
         <h2>Manage Users</h2>
         <Link href="#">Update Permissions for Existing User</Link>
         <br />
         <Link href="#">Manage Teams</Link>
       </div>
-      <br />
+      <br /> */}
 
       <div>
-        <h2>Create / Edit Main Menu</h2>
-        <Link href="#">Edit Main Menu</Link>
+        <h2>Content Management</h2>
+        {/* TODO move to /edit/menu */}
+        <Link href="/admin/edit-menu">Edit Main Menu</Link>
+        <br />
+        {/* TODO allow creation of pages at /edit/new-page */}
+        <Link href="/edit/?path=/new-page">New Page</Link>
       </div>
     </>
   )

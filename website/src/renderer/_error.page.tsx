@@ -3,6 +3,7 @@ import { useHasMounted } from "src/cms/routes"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
+import { DailpPageContents } from "src/pages/dailp.page"
 import { useLocation } from "src/renderer/PageShell"
 
 /* import { EditablePageContents } from "../templates/editable-page" */
@@ -18,19 +19,21 @@ export const Page = () => {
 
 const ClientPage = () => {
   const location = useLocation()
-  const [{ data, fetching }] = Dailp.useEditablePageQuery({
-    variables: { id: location.pathname },
+  const path = location.pathname.endsWith("/")
+    ? location.pathname.slice(0, -1)
+    : location.pathname
+
+  const [{ data, fetching }] = Dailp.usePageByPathQuery({
+    variables: {
+      path: path,
+    },
+    requestPolicy: "network-only",
   })
+
   if (fetching) {
     return null
-  } else if (data && data.page) {
-    return null
-    /* return (
-     *   <EditablePageContents
-     *     data={{ dailp: data }}
-     *     pageContext={{ id: window.location.pathname }}
-     *   />
-     * ) */
+  } else if (data && data.pageByPath) {
+    return <DailpPageContents path={path} />
   } else {
     return <NotFound />
   }

@@ -1,18 +1,23 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
+    async_graphql::InputType,
+    auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{CurrentUserUpdate, User, UserId, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
-    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    AddChapterInput, AnnotatedForm, AnnotatedSeg, ApprovalStatus, AttachAudioToDocumentInput,
+    AttachAudioToWordInput, ChapterSlugInfo, CollectionChapter, CollectionSection, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateDocumentAudioInput, CurateWordAudioInput,
+    Date, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate,
+    DocumentParagraph, PositionInDocument, SourceAttribution, SubjectHeading, TranslatedPage,
+    TranslatedSection, UpdateCollectionChapterOrderInput, UpdateContributorAttribution,
+    UpsertChapterInput, Uuid,
 };
+
 use itertools::{Itertools, Position};
+use log::info;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -22,6 +27,8 @@ use {
         ParagraphUpdate, WordsInDocument,
     },
 };
+
+use dailp_graphql::service_integrations::turnstile::OutboundRequest;
 
 /// Home for all read-only queries
 pub struct Query;
@@ -389,6 +396,15 @@ impl Query {
             .await?)
     }
 
+    /// Gets all dailp_user with their id, username, and role for now
+    async fn list_users(&self, context: &Context<'_>) -> FieldResult<Vec<User>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_users()
+            .await?)
+    }
+
     async fn abbreviation_id_from_short_name(
         &self,
         context: &Context<'_>,
@@ -406,6 +422,43 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .get_menu_by_slug(slug)
+            .await?)
+    }
+
+    /// Retrieves the IIIF image source URL of a document
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn iiif_source_for_document_metadata(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<Option<String>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .iiif_source_for_document_metadata(document_id)
+            .await?)
+    }
+
+    /// Fetch all available subject headings.
+    async fn all_subject_headings(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        Ok(db.all_subject_headings().await?)
+    }
+
+    /// Returns a chapter slug info for all unassigned chapters in a given chatper
+    async fn all_chapter_slugs(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+    ) -> FieldResult<Vec<ChapterSlugInfo>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_chapter_slugs(&collection_slug)
             .await?)
     }
 }
@@ -502,9 +555,7 @@ impl Mutation {
     }
 
     /// Mutation for adding/changing contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -518,9 +569,7 @@ impl Mutation {
     }
 
     ///Mutation for deleting contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn delete_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -534,7 +583,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -547,7 +596,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -562,7 +611,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -577,9 +626,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -730,7 +777,9 @@ impl Mutation {
 
     /// Attach audio that has already been uploaded to S3 to a particular word
     /// Assumes user requesting mutation recoreded the audio
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
     async fn attach_audio_to_word(
         &self,
         context: &Context<'_>,
@@ -754,7 +803,9 @@ impl Mutation {
 
     /// Attach audio that has already been uploaded to S3 to a particular document
     /// Assumes user requesting mutation recorded the audio
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
     async fn attach_audio_to_document(
         &self,
         context: &Context<'_>,
@@ -798,13 +849,20 @@ impl Mutation {
         input: CreateDocumentFromFormInput,
     ) -> FieldResult<AddDocumentPayload> {
         let title = input.document_name;
+        // Get info for the user currently signed in
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let user_profile_data = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&user.id)
+            .await?;
         let contributor = Contributor {
-            name: user.id.to_string(),
-            // defaulting to editor
-            role: Some(ContributorRole::Editor),
+            id: user.id,
+            name: user_profile_data.display_name,
+            // get users display name. TODO we should more rigorously check this value for errors
+            role: Some(ContributorRole::Transcriber), // TODO Ask Ellen, Cara, Shireen about this terminology
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
@@ -815,8 +873,8 @@ impl Mutation {
             link: input.source_url,
         };
         let mut sections = Vec::new();
-        for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
-            let translation = Some(eng_words.join(" "));
+        for (i, _raw_text_line) in input.raw_text_lines.iter().enumerate() {
+            let translation: Option<String> = Some(input.english_translation_lines[i].join(" "));
             let mut segs = Vec::new();
             for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
                 let form = AnnotatedForm {
@@ -826,7 +884,7 @@ impl Mutation {
                     simple_phonetics: None,
                     phonemic: None,
                     segments: None,
-                    english_gloss: vec![eng_words.get(j).cloned().unwrap_or_default()],
+                    english_gloss: vec![],
                     commentary: None,
                     line_break: None,
                     page_break: None,
@@ -856,8 +914,14 @@ impl Mutation {
             title: title.clone(),
             sources: vec![source],
             collection: None,
-            genre: None,
-            contributors: vec![contributor],
+            genre_id: None,
+            keywords_ids: None,
+            languages_ids: None,
+            subject_headings_ids: None,
+            creators_ids: None,
+            format_id: None,
+            contributors: Some(vec![contributor]),
+            spatial_coverage_ids: None,
             translation: None,
             page_images: None,
             date: Some(document_date),
@@ -870,8 +934,13 @@ impl Mutation {
             segments: Some(vec![page]),
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
+        let section = input.section.unwrap_or(CollectionSection::Body);
         let (document_id, _chapter_id) = database
-            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .insert_document_into_edited_collection(
+                annotated_doc.clone(),
+                input.collection_id,
+                section,
+            )
             .await?;
 
         // Update the annotated_doc with the correct document_id from the database
@@ -883,11 +952,15 @@ impl Mutation {
             .insert_document_contents(updated_annotated_doc)
             .await?;
 
+        let collection_slug = database.collection_slug_by_id(input.collection_id).await?;
+
         Ok(AddDocumentPayload {
             id: document_id.0,
             title,
             slug: short_name.clone(),
-            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
+            collection_slug: collection_slug
+                .ok_or_else(|| anyhow::format_err!("Failed to load collection"))?
+                .to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
     }
@@ -958,6 +1031,66 @@ impl Mutation {
             .to_string())
     }
 
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn upsert_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: UpsertChapterInput,
+    ) -> FieldResult<String> {
+        let chapter_id = input.id;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_collection_chapter(input)
+            .await?;
+        Ok(chapter_id.to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_collection_chapter_order(
+        &self,
+        context: &Context<'_>,
+        input: UpdateCollectionChapterOrderInput,
+    ) -> FieldResult<String> {
+        let collection_slug = input.collection_slug.clone();
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_collection_chapter_order(input)
+            .await?;
+        Ok(collection_slug)
+    }
+
+    /// Adds the collection chapter to the TOC by updating index and chapter path, etc.
+    async fn add_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        input: AddChapterInput,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_collection_chapter(input)
+            .await?)
+    }
+
+    /// Removes the provided chapter id from a TOC by setting its index to -1
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn remove_collection_chapter(
+        &self,
+        context: &Context<'_>,
+        chapter_id: Uuid,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .remove_collection_chapter(chapter_id)
+            .await?)
+    }
+
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
         Ok(context
@@ -974,6 +1107,65 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .update_menu(menu)
+            .await?)
+    }
+
+    /// Validates a token against CloudFlare Turnstile's SiteVerify API
+    async fn validate_turnstile_token(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<bool> {
+        let deployment_context = std::env::var("TF_STAGE").unwrap_or("local".to_string());
+        info!("Validating Turnstile in context {}", deployment_context);
+        let response = if deployment_context == "local" {
+            dailp_graphql::service_integrations::turnstile::validate_token(token)
+                .await
+                .map_err(|_| dailp::async_graphql::Error::new("Failed to validate Turnstile token"))
+        } else {
+            // This is a temporary change to prevent us from attempting to run a Lambda that we will
+            // not be able to call. Once we have the necessary trust policy in place, we can revert
+            // the commit that introduces this special case. (See git blame)
+            info!(
+                "We are configured for non-local Turnstile invocation but we do not yet have \"
+                  permission to invoke the outbound lambda. Defaulting to false."
+            );
+            Ok(false)
+        };
+        info!("Turnstile validation result: {:?}", response);
+        response
+    }
+
+    /// Adds a new subject heading to the global list.
+    async fn create_subject_heading(
+        &self,
+        context: &Context<'_>,
+        name: String,
+        status: ApprovalStatus,
+    ) -> FieldResult<SubjectHeading> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let new_heading = SubjectHeading {
+            id: Uuid::new_v4(),
+            name,
+            status,
+        };
+
+        db.insert_subject_heading(&new_heading).await?;
+
+        Ok(new_heading)
+    }
+
+    /// Inverts associated collection's visiblity
+    async fn toggle_collection_visibility(
+        &self,
+        context: &Context<'_>,
+        collection_id: Uuid,
+    ) -> FieldResult<EditedCollection> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .toggle_collection_visibility(collection_id)
             .await?)
     }
 }
@@ -994,6 +1186,7 @@ pub struct CreateDocumentFromFormInput {
     pub source_name: String,
     pub source_url: String,
     pub collection_id: Uuid,
+    pub section: Option<CollectionSection>,
 }
 
 #[derive(async_graphql::SimpleObject)]

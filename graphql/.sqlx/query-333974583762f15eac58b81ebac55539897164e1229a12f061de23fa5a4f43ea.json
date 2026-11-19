@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Delete a creator from a document\ndelete from document_creator\nwhere document_id = $1::uuid;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "333974583762f15eac58b81ebac55539897164e1229a12f061de23fa5a4f43ea"
+}

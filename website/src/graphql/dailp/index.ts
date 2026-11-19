@@ -35,6 +35,24 @@ export type Scalars = {
   UUID: any
 }
 
+/** Input for adding a new chapter to a collection */
+export type AddChapterInput = {
+  /** The slug of the collection this chapter belongs to */
+  readonly collectionSlug: Scalars["String"]
+  /** Optional document ID to link this chapter to an existing document */
+  readonly documentId: InputMaybe<Scalars["UUID"]>
+  /** id */
+  readonly id: Scalars["UUID"]
+  /** Optional parent chapter ID if this is a subchapter (defaults to top-level) */
+  readonly parentId: InputMaybe<Scalars["UUID"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+  /** The slug of the chapter (used in the URL path) */
+  readonly slug: Scalars["String"]
+  /** The title of the chapter */
+  readonly title: Scalars["String"]
+}
+
 export type AddDocumentPayload = {
   readonly __typename?: "AddDocumentPayload"
   readonly chapterSlug: Scalars["String"]
@@ -57,6 +75,8 @@ export type AnnotatedDoc = {
    * author, translators, and annotators
    */
   readonly contributors: ReadonlyArray<Contributor>
+  /** Creators of this document */
+  readonly creators: ReadonlyArray<Creator>
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
   /**
@@ -66,13 +86,15 @@ export type AnnotatedDoc = {
    */
   readonly editedAudio: ReadonlyArray<AudioSlice>
   readonly formCount: Scalars["Int"]
+  /** The format of the original artifact */
+  readonly format: Maybe<Format>
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
-  /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Scalars["String"]>
+  /** The genre of the document */
+  readonly genre: Maybe<Genre>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /** The audio for this document that was ingested from GoogleSheets, if there is any. */
@@ -82,6 +104,10 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Key terms associated with a document */
+  readonly keywords: ReadonlyArray<Keyword>
+  /** The languages present in this document */
+  readonly languages: ReadonlyArray<Language>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -93,6 +119,10 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /** The locations associated with this document */
+  readonly spatialCoverage: ReadonlyArray<SpatialCoverage>
+  /** Terms that that reflects Indigenous knowledge practices associated with a document */
+  readonly subjectHeadings: ReadonlyArray<SubjectHeading>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -219,6 +249,13 @@ export type AnnotatedFormUpdate = {
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
+
 /** Request to attach user-recorded audio to a document */
 export type AttachAudioToDocumentInput = {
   /**
@@ -267,6 +304,29 @@ export type AudioSlice = {
   readonly sliceId: Maybe<Scalars["String"]>
   /** The time (in seconds) in the parent track where this slice begins. */
   readonly startTime: Maybe<Scalars["Int"]>
+}
+
+/** Input for updating a single chapter's order */
+export type ChapterOrderInput = {
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The new index of this chapter within its parent (1-indexed) */
+  readonly indexInParent: Scalars["Int"]
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: CollectionSection
+}
+
+/** Struct of the chapter slug returned for parsing when editing a TOC */
+export type ChapterSlugInfo = {
+  readonly __typename?: "ChapterSlugInfo"
+  /** Related document ID for the chapter entry */
+  readonly documentId: Maybe<Scalars["UUID"]>
+  /** UUID of the grabbed slug's document */
+  readonly id: Scalars["UUID"]
+  /** Slug of this chapter */
+  readonly slug: Scalars["String"]
+  /** Title of the associated chapter */
+  readonly title: Scalars["String"]
 }
 
 /**
@@ -375,10 +435,17 @@ export type ContentBlock = Gallery | Markdown
 export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
+  /** UUID of the contributor */
+  readonly id: Scalars["UUID"]
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
   readonly role: Maybe<ContributorRole>
+}
+
+export type ContributorAttributionInput = {
+  readonly name: Scalars["String"]
+  readonly role: InputMaybe<ContributorRole>
 }
 
 /**
@@ -428,6 +495,7 @@ export type CreateDocumentFromFormInput = {
     ReadonlyArray<Scalars["String"]>
   >
   readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
+  readonly section: InputMaybe<CollectionSection>
   readonly sourceName: Scalars["String"]
   readonly sourceUrl: Scalars["String"]
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
@@ -441,6 +509,22 @@ export type CreateEditedCollectionInput = {
   readonly thumbnailUrl: Scalars["String"]
   /** The title of the collection */
   readonly title: Scalars["String"]
+}
+
+/** The creator of a document */
+export type Creator = {
+  readonly __typename?: "Creator"
+  /** UUID of the creator */
+  readonly id: Scalars["UUID"]
+  /** Name of the creator */
+  readonly name: Scalars["String"]
+}
+
+export type CreatorUpdate = {
+  /** UUID for the creator */
+  readonly id: Scalars["UUID"]
+  /** Name of the creator */
+  readonly name: Scalars["String"]
 }
 
 /** Request to update if a piece of document audio should be included in an edited collection */
@@ -539,8 +623,24 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The editors, translators, etc. of the document */
+  readonly contributors: InputMaybe<ReadonlyArray<ContributorAttributionInput>>
+  /** The creator(s) of the document */
+  readonly creators: InputMaybe<ReadonlyArray<CreatorUpdate>>
+  /** The format of the original artifact */
+  readonly format: InputMaybe<FormatUpdate>
+  /** Term that contextualizes the social practice surrounding the document */
+  readonly genre: InputMaybe<GenreUpdate>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The key terms associated with the document */
+  readonly keywords: InputMaybe<ReadonlyArray<KeywordUpdate>>
+  /** The languages present in the document */
+  readonly languages: InputMaybe<ReadonlyArray<LanguageUpdate>>
+  /** The physical locations associated with a document (e.g. where it was written, found) */
+  readonly spatialCoverage: InputMaybe<ReadonlyArray<SpatialCoverageUpdate>>
+  /** Terms that reflect Indigenous knowledge practices associated with the document */
+  readonly subjectHeadings: InputMaybe<ReadonlyArray<SubjectHeadingUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -613,6 +713,7 @@ export type EditedCollection = {
   readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
+  readonly isHidden: Scalars["Boolean"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
   /** Cover image URL */
@@ -621,6 +722,24 @@ export type EditedCollection = {
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
+}
+
+/** Stores the physical or digital medium associated with a document */
+export type Format = {
+  readonly __typename?: "Format"
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a format */
+  readonly status: ApprovalStatus
+}
+
+export type FormatUpdate = {
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
 }
 
 export type FormsInTime = {
@@ -634,6 +753,24 @@ export type FormsInTime = {
 export type Gallery = {
   readonly __typename?: "Gallery"
   readonly mediaUrls: ReadonlyArray<Scalars["String"]>
+}
+
+/** Stores the genre associated with a document */
+export type Genre = {
+  readonly __typename?: "Genre"
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a genre */
+  readonly status: ApprovalStatus
+}
+
+export type GenreUpdate = {
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
 }
 
 /**
@@ -673,6 +810,43 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Record to store a keyword associated with a document */
+export type Keyword = {
+  readonly __typename?: "Keyword"
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a keyword */
+  readonly status: ApprovalStatus
+}
+
+export type KeywordUpdate = {
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+}
+
+/** Stores a language associated with a document */
+export type Language = {
+  readonly __typename?: "Language"
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a language */
+  readonly status: ApprovalStatus
+}
+
+/** For updating languages */
+export type LanguageUpdate = {
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
 }
 
 /** Start of a new line */
@@ -794,6 +968,8 @@ export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
+  /** Adds the collection chapter to the TOC by updating index and chapter path, etc. */
+  readonly addCollectionChapter: Scalars["UUID"]
   /** Minimal mutation to add a document with only essential fields */
   readonly addDocument: AddDocumentPayload
   /**
@@ -813,6 +989,8 @@ export type Mutation = {
    */
   readonly attachAudioToWord: AnnotatedForm
   readonly createEditedCollection: Scalars["String"]
+  /** Adds a new subject heading to the global list. */
+  readonly createSubjectHeading: SubjectHeading
   /** Decide if a piece of document audio should be included in edited collection */
   readonly curateDocumentAudio: AnnotatedDoc
   /** Decide if a piece of word audio should be included in edited collection */
@@ -829,7 +1007,12 @@ export type Mutation = {
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  /** Removes the provided chapter id from a TOC by setting its index to -1 */
+  readonly removeCollectionChapter: Scalars["UUID"]
+  /** Inverts associated collection's visiblity */
+  readonly toggleCollectionVisibility: EditedCollection
   readonly updateAnnotation: Scalars["Boolean"]
+  readonly updateCollectionChapterOrder: Scalars["String"]
   /** Update a comment */
   readonly updateComment: CommentParent
   /** Mutation for adding/changing contributor attributions */
@@ -844,11 +1027,18 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  readonly upsertEditedCollection: Scalars["String"]
   readonly upsertPage: Scalars["String"]
+  /** Validates a token against CloudFlare Turnstile's SiteVerify API */
+  readonly validateTurnstileToken: Scalars["Boolean"]
 }
 
 export type MutationAddBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationAddCollectionChapterArgs = {
+  input: AddChapterInput
 }
 
 export type MutationAddDocumentArgs = {
@@ -865,6 +1055,11 @@ export type MutationAttachAudioToWordArgs = {
 
 export type MutationCreateEditedCollectionArgs = {
   input: CreateEditedCollectionInput
+}
+
+export type MutationCreateSubjectHeadingArgs = {
+  name: Scalars["String"]
+  status: ApprovalStatus
 }
 
 export type MutationCurateDocumentAudioArgs = {
@@ -897,8 +1092,20 @@ export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
 }
 
+export type MutationRemoveCollectionChapterArgs = {
+  chapterId: Scalars["UUID"]
+}
+
+export type MutationToggleCollectionVisibilityArgs = {
+  collectionId: Scalars["UUID"]
+}
+
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateCollectionChapterOrderArgs = {
+  input: UpdateCollectionChapterOrderInput
 }
 
 export type MutationUpdateCommentArgs = {
@@ -937,8 +1144,16 @@ export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
 }
 
+export type MutationUpsertEditedCollectionArgs = {
+  input: UpsertChapterInput
+}
+
 export type MutationUpsertPageArgs = {
   page: NewPageInput
+}
+
+export type MutationValidateTurnstileTokenArgs = {
+  token: Scalars["String"]
 }
 
 /** Input struct for a page. */
@@ -962,7 +1177,8 @@ export type Page = {
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
    */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly path: Scalars["String"]
   readonly title: Scalars["String"]
 }
 
@@ -1028,6 +1244,8 @@ export type PostCommentInput = {
 export type Query = {
   readonly __typename?: "Query"
   readonly abbreviationIdFromShortName: Scalars["UUID"]
+  /** Returns a chapter slug info for all unassigned chapters in a given chatper */
+  readonly allChapterSlugs: ReadonlyArray<ChapterSlugInfo>
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -1035,6 +1253,8 @@ export type Query = {
   readonly allEditedCollections: ReadonlyArray<EditedCollection>
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
+  /** Fetch all available subject headings. */
+  readonly allSubjectHeadings: ReadonlyArray<SubjectHeading>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
   /** Retrieves all documents that are bookmarked by the current user. */
@@ -1051,6 +1271,10 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Retrieves the IIIF image source URL of a document */
+  readonly iiifSourceForDocumentMetadata: Maybe<Scalars["String"]>
+  /** Gets all dailp_user with their id, username, and role for now */
+  readonly listUsers: ReadonlyArray<User>
   readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -1095,6 +1319,10 @@ export type QueryAbbreviationIdFromShortNameArgs = {
   shortName: Scalars["String"]
 }
 
+export type QueryAllChapterSlugsArgs = {
+  collectionSlug: Scalars["String"]
+}
+
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
 }
@@ -1122,6 +1350,10 @@ export type QueryDocumentByUuidArgs = {
 
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryIiifSourceForDocumentMetadataArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type QueryMenuBySlugArgs = {
@@ -1185,6 +1417,53 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** Stores a spatial coverage associated with a document */
+export type SpatialCoverage = {
+  readonly __typename?: "SpatialCoverage"
+  /** UUID for the place */
+  readonly id: Scalars["UUID"]
+  /** Name of the place */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a spatial coverage */
+  readonly status: ApprovalStatus
+}
+
+export type SpatialCoverageUpdate = {
+  /** UUID for the spatial coverage */
+  readonly id: Scalars["UUID"]
+  /** Name of the spatial coverage */
+  readonly name: Scalars["String"]
+}
+
+/**
+ * Record to store a subject heading that reflects Indigenous knowledge
+ * practices associated with a document
+ */
+export type SubjectHeading = {
+  readonly __typename?: "SubjectHeading"
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a subject heading */
+  readonly status: ApprovalStatus
+}
+
+export type SubjectHeadingUpdate = {
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+}
+
+/** Input for bulk updating collection chapter order */
+export type UpdateCollectionChapterOrderInput = {
+  /** Ordered list of chapters with their new indices */
+  readonly chapters: ReadonlyArray<ChapterOrderInput>
+  /** The slug of the collection */
+  readonly collectionSlug: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1193,6 +1472,24 @@ export type UpdateContributorAttribution = {
   readonly contributorId: Scalars["UUID"]
   /** The document to perfom this operation on */
   readonly documentId: Scalars["UUID"]
+}
+
+/** Input for upserting an edited collection */
+export type UpsertChapterInput = {
+  /** Description of the collection */
+  readonly description: InputMaybe<Scalars["String"]>
+  /** The id of the chapter */
+  readonly id: Scalars["UUID"]
+  /** The index of this chapter within its parent */
+  readonly indexInParent: InputMaybe<Scalars["Int"]>
+  /** The section of the collection, Intro | Body | Credit */
+  readonly section: InputMaybe<CollectionSection>
+  /** The slug of the collection */
+  readonly slug: InputMaybe<Scalars["String"]>
+  /** URL of the thumbnail image for the collection */
+  readonly thumbnailUrl: InputMaybe<Scalars["String"]>
+  /** The title of the collection */
+  readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -1218,6 +1515,7 @@ export type User = {
 
 /** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
+  Administrators = "ADMINISTRATORS",
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
   Readers = "READERS",
@@ -1717,6 +2015,14 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type IiifSourceForDocumentMetadataQueryVariables = Exact<{
+  documentId: Scalars["UUID"]
+}>
+
+export type IiifSourceForDocumentMetadataQuery = {
+  readonly __typename?: "Query"
+} & Pick<Query, "iiifSourceForDocumentMetadata">
+
 export type AudioSliceFieldsFragment = {
   readonly __typename?: "AudioSlice"
 } & Pick<
@@ -1742,7 +2048,70 @@ export type DocFormFieldsFragment = {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
+    readonly keywords: ReadonlyArray<
+      { readonly __typename?: "Keyword" } & Pick<
+        Keyword,
+        "id" | "name" | "status"
+      >
+    >
+    readonly languages: ReadonlyArray<
+      { readonly __typename?: "Language" } & Pick<
+        Language,
+        "id" | "name" | "status"
+      >
+    >
+    readonly subjectHeadings: ReadonlyArray<
+      { readonly __typename?: "SubjectHeading" } & Pick<
+        SubjectHeading,
+        "id" | "name" | "status"
+      >
+    >
+    readonly spatialCoverage: ReadonlyArray<
+      { readonly __typename?: "SpatialCoverage" } & Pick<
+        SpatialCoverage,
+        "id" | "name" | "status"
+      >
+    >
+    readonly creators: ReadonlyArray<
+      { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
+    >
+    readonly contributors: ReadonlyArray<
+      { readonly __typename?: "Contributor" } & Pick<
+        Contributor,
+        "id" | "name" | "role"
+      >
+    >
+    readonly format: Maybe<
+      { readonly __typename?: "Format" } & Pick<Format, "id" | "name">
+    >
+    readonly genre: Maybe<
+      { readonly __typename?: "Genre" } & Pick<Genre, "id" | "name">
+    >
   }
+
+export type AllSubjectHeadingsQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllSubjectHeadingsQuery = { readonly __typename?: "Query" } & {
+  readonly allSubjectHeadings: ReadonlyArray<
+    { readonly __typename?: "SubjectHeading" } & Pick<
+      SubjectHeading,
+      "id" | "name" | "status"
+    >
+  >
+}
+
+export type CreateSubjectHeadingMutationVariables = Exact<{
+  name: Scalars["String"]
+  status: ApprovalStatus
+}>
+
+export type CreateSubjectHeadingMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly createSubjectHeading: {
+    readonly __typename?: "SubjectHeading"
+  } & Pick<SubjectHeading, "id" | "name" | "status">
+}
 
 export type ParagraphFormFieldsFragment = {
   readonly __typename: "DocumentParagraph"
@@ -1974,7 +2343,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description" | "thumbnailUrl"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl" | "isHidden"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -1996,7 +2365,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "isHidden"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2008,6 +2377,18 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
         >
       }
   >
+}
+
+export type ToggleCollectionVisibilityMutationVariables = Exact<{
+  collectionId: Scalars["UUID"]
+}>
+
+export type ToggleCollectionVisibilityMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly toggleCollectionVisibility: {
+    readonly __typename?: "EditedCollection"
+  } & Pick<EditedCollection, "id" | "slug" | "isHidden">
 }
 
 export type WordSearchQueryVariables = Exact<{
@@ -2101,13 +2482,28 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
+        readonly format: Maybe<
+          { readonly __typename?: "Format" } & Pick<
+            Format,
+            "id" | "name" | "status"
+          >
+        >
+        readonly genre: Maybe<
+          { readonly __typename?: "Genre" } & Pick<
+            Genre,
+            "id" | "name" | "status"
+          >
+        >
         readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+          { readonly __typename?: "Date" } & Pick<
+            Date,
+            "day" | "month" | "year"
+          >
         >
         readonly contributors: ReadonlyArray<
           { readonly __typename?: "Contributor" } & Pick<
             Contributor,
-            "name" | "role"
+            "id" | "name" | "role"
           >
         >
         readonly sources: ReadonlyArray<
@@ -2115,6 +2511,33 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
             SourceAttribution,
             "name" | "link"
           >
+        >
+        readonly keywords: ReadonlyArray<
+          { readonly __typename?: "Keyword" } & Pick<
+            Keyword,
+            "id" | "name" | "status"
+          >
+        >
+        readonly languages: ReadonlyArray<
+          { readonly __typename?: "Language" } & Pick<
+            Language,
+            "id" | "name" | "status"
+          >
+        >
+        readonly subjectHeadings: ReadonlyArray<
+          { readonly __typename?: "SubjectHeading" } & Pick<
+            SubjectHeading,
+            "id" | "name" | "status"
+          >
+        >
+        readonly spatialCoverage: ReadonlyArray<
+          { readonly __typename?: "SpatialCoverage" } & Pick<
+            SpatialCoverage,
+            "id" | "name" | "status"
+          >
+        >
+        readonly creators: ReadonlyArray<
+          { readonly __typename?: "Creator" } & Pick<Creator, "id" | "name">
         >
       }
   >
@@ -3070,7 +3493,7 @@ export type AddDocumentMutationVariables = Exact<{
 export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
   readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
     AddDocumentPayload,
-    "id" | "title" | "slug"
+    "id" | "title" | "slug" | "collectionSlug" | "chapterSlug"
   >
 }
 
@@ -3081,6 +3504,22 @@ export type AddEditedCollectionMutationVariables = Exact<{
 export type AddEditedCollectionMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "createEditedCollection">
+
+export type UpdateCollectionChapterOrderMutationVariables = Exact<{
+  input: UpdateCollectionChapterOrderInput
+}>
+
+export type UpdateCollectionChapterOrderMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateCollectionChapterOrder">
+
+export type RemoveCollectionChapterMutationVariables = Exact<{
+  chapterId: Scalars["UUID"]
+}>
+
+export type RemoveCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "removeCollectionChapter">
 
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
@@ -3137,6 +3576,25 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type CurrentUserQueryVariables = Exact<{ [key: string]: never }>
+
+export type CurrentUserQuery = { readonly __typename?: "Query" } & {
+  readonly currentUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  > & {
+      readonly createdAt: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
@@ -3166,6 +3624,14 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   Mutation,
   "upsertPage"
 >
+
+export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllPagesQuery = { readonly __typename?: "Query" } & {
+  readonly allPages: ReadonlyArray<
+    { readonly __typename?: "Page" } & Pick<Page, "path">
+  >
+}
 
 export type PageByPathQueryVariables = Exact<{
   path: Scalars["String"]
@@ -3209,6 +3675,27 @@ export type MenuBySlugQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type AllChapterSlugsQueryVariables = Exact<{
+  collectionSlug: Scalars["String"]
+}>
+
+export type AllChapterSlugsQuery = { readonly __typename?: "Query" } & {
+  readonly allChapterSlugs: ReadonlyArray<
+    { readonly __typename?: "ChapterSlugInfo" } & Pick<
+      ChapterSlugInfo,
+      "id" | "title" | "slug" | "documentId"
+    >
+  >
+}
+
+export type AddCollectionChapterMutationVariables = Exact<{
+  input: AddChapterInput
+}>
+
+export type AddCollectionChapterMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "addCollectionChapter">
+
 export type UpdateMenuMutationVariables = Exact<{
   menu: MenuUpdate
 }>
@@ -3236,24 +3723,13 @@ export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
-export type CurrentUserQueryVariables = Exact<{ [key: string]: never }>
+export type ValidateTurnstileTokenMutationVariables = Exact<{
+  token: Scalars["String"]
+}>
 
-export type CurrentUserQuery = { readonly __typename?: "Query" } & {
-  readonly currentUser: { readonly __typename?: "User" } & Pick<
-    User,
-    | "id"
-    | "displayName"
-    | "avatarUrl"
-    | "bio"
-    | "organization"
-    | "location"
-    | "role"
-  > & {
-      readonly createdAt: Maybe<
-        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
-      >
-    }
-}
+export type ValidateTurnstileTokenMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "validateTurnstileToken">
 
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
@@ -3326,6 +3802,43 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    keywords {
+      id
+      name
+      status
+    }
+    languages {
+      id
+      name
+      status
+    }
+    subjectHeadings {
+      id
+      name
+      status
+    }
+    spatialCoverage {
+      id
+      name
+      status
+    }
+    creators {
+      id
+      name
+    }
+    contributors {
+      id
+      name
+      role
+    }
+    format {
+      id
+      name
+    }
+    genre {
+      id
+      name
     }
   }
 `
@@ -3531,6 +4044,57 @@ export function useDocumentContentsQuery(
     ...options,
   })
 }
+export const IiifSourceForDocumentMetadataDocument = gql`
+  query IiifSourceForDocumentMetadata($documentId: UUID!) {
+    iiifSourceForDocumentMetadata(documentId: $documentId)
+  }
+`
+
+export function useIiifSourceForDocumentMetadataQuery(
+  options: Omit<
+    Urql.UseQueryArgs<IiifSourceForDocumentMetadataQueryVariables>,
+    "query"
+  >
+) {
+  return Urql.useQuery<
+    IiifSourceForDocumentMetadataQuery,
+    IiifSourceForDocumentMetadataQueryVariables
+  >({ query: IiifSourceForDocumentMetadataDocument, ...options })
+}
+export const AllSubjectHeadingsDocument = gql`
+  query AllSubjectHeadings {
+    allSubjectHeadings {
+      id
+      name
+      status
+    }
+  }
+`
+
+export function useAllSubjectHeadingsQuery(
+  options?: Omit<Urql.UseQueryArgs<AllSubjectHeadingsQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    AllSubjectHeadingsQuery,
+    AllSubjectHeadingsQueryVariables
+  >({ query: AllSubjectHeadingsDocument, ...options })
+}
+export const CreateSubjectHeadingDocument = gql`
+  mutation CreateSubjectHeading($name: String!, $status: ApprovalStatus!) {
+    createSubjectHeading(name: $name, status: $status) {
+      id
+      name
+      status
+    }
+  }
+`
+
+export function useCreateSubjectHeadingMutation() {
+  return Urql.useMutation<
+    CreateSubjectHeadingMutation,
+    CreateSubjectHeadingMutationVariables
+  >(CreateSubjectHeadingDocument)
+}
 export const CollectionDocument = gql`
   query Collection($slug: String!) {
     collection(slug: $slug) {
@@ -3568,6 +4132,7 @@ export const EditedCollectionsDocument = gql`
         path
       }
       thumbnailUrl
+      isHidden
     }
   }
 `
@@ -3585,6 +4150,7 @@ export const EditedCollectionDocument = gql`
       id
       title
       slug
+      isHidden
       chapters {
         id
         title
@@ -3604,6 +4170,22 @@ export function useEditedCollectionQuery(
     query: EditedCollectionDocument,
     ...options,
   })
+}
+export const ToggleCollectionVisibilityDocument = gql`
+  mutation ToggleCollectionVisibility($collectionId: UUID!) {
+    toggleCollectionVisibility(collectionId: $collectionId) {
+      id
+      slug
+      isHidden
+    }
+  }
+`
+
+export function useToggleCollectionVisibilityMutation() {
+  return Urql.useMutation<
+    ToggleCollectionVisibilityMutation,
+    ToggleCollectionVisibilityMutationVariables
+  >(ToggleCollectionVisibilityDocument)
 }
 export const WordSearchDocument = gql`
   query WordSearch($query: String!) {
@@ -3710,16 +4292,53 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
+      format {
+        id
+        name
+        status
+      }
+      genre {
+        id
+        name
+        status
+      }
       date {
+        day
+        month
         year
       }
       contributors {
+        id
         name
         role
       }
       sources {
         name
         link
+      }
+      keywords {
+        id
+        name
+        status
+      }
+      languages {
+        id
+        name
+        status
+      }
+      subjectHeadings {
+        id
+        name
+        status
+      }
+      spatialCoverage {
+        id
+        name
+        status
+      }
+      creators {
+        id
+        name
       }
     }
   }
@@ -4229,6 +4848,8 @@ export const AddDocumentDocument = gql`
       id
       title
       slug
+      collectionSlug
+      chapterSlug
     }
   }
 `
@@ -4249,6 +4870,32 @@ export function useAddEditedCollectionMutation() {
     AddEditedCollectionMutation,
     AddEditedCollectionMutationVariables
   >(AddEditedCollectionDocument)
+}
+export const UpdateCollectionChapterOrderDocument = gql`
+  mutation UpdateCollectionChapterOrder(
+    $input: UpdateCollectionChapterOrderInput!
+  ) {
+    updateCollectionChapterOrder(input: $input)
+  }
+`
+
+export function useUpdateCollectionChapterOrderMutation() {
+  return Urql.useMutation<
+    UpdateCollectionChapterOrderMutation,
+    UpdateCollectionChapterOrderMutationVariables
+  >(UpdateCollectionChapterOrderDocument)
+}
+export const RemoveCollectionChapterDocument = gql`
+  mutation RemoveCollectionChapter($chapterId: UUID!) {
+    removeCollectionChapter(chapterId: $chapterId)
+  }
+`
+
+export function useRemoveCollectionChapterMutation() {
+  return Urql.useMutation<
+    RemoveCollectionChapterMutation,
+    RemoveCollectionChapterMutationVariables
+  >(RemoveCollectionChapterDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {
@@ -4316,6 +4963,33 @@ export function useUserByIdQuery(
     ...options,
   })
 }
+export const CurrentUserDocument = gql`
+  query CurrentUser {
+    currentUser {
+      id
+      displayName
+      createdAt {
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useCurrentUserQuery(
+  options?: Omit<Urql.UseQueryArgs<CurrentUserQueryVariables>, "query">
+) {
+  return Urql.useQuery<CurrentUserQuery, CurrentUserQueryVariables>({
+    query: CurrentUserDocument,
+    ...options,
+  })
+}
 export const AllCollectionsDocument = gql`
   query AllCollections {
     allCollections {
@@ -4360,6 +5034,22 @@ export function useUpsertPageMutation() {
   return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
     UpsertPageDocument
   )
+}
+export const AllPagesDocument = gql`
+  query AllPages {
+    allPages {
+      path
+    }
+  }
+`
+
+export function useAllPagesQuery(
+  options?: Omit<Urql.UseQueryArgs<AllPagesQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllPagesQuery, AllPagesQueryVariables>({
+    query: AllPagesDocument,
+    ...options,
+  })
 }
 export const PageByPathDocument = gql`
   query pageByPath($path: String!) {
@@ -4412,6 +5102,37 @@ export function useMenuBySlugQuery(
     ...options,
   })
 }
+export const AllChapterSlugsDocument = gql`
+  query AllChapterSlugs($collectionSlug: String!) {
+    allChapterSlugs(collectionSlug: $collectionSlug) {
+      id
+      title
+      slug
+      documentId
+    }
+  }
+`
+
+export function useAllChapterSlugsQuery(
+  options: Omit<Urql.UseQueryArgs<AllChapterSlugsQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllChapterSlugsQuery, AllChapterSlugsQueryVariables>({
+    query: AllChapterSlugsDocument,
+    ...options,
+  })
+}
+export const AddCollectionChapterDocument = gql`
+  mutation AddCollectionChapter($input: AddChapterInput!) {
+    addCollectionChapter(input: $input)
+  }
+`
+
+export function useAddCollectionChapterMutation() {
+  return Urql.useMutation<
+    AddCollectionChapterMutation,
+    AddCollectionChapterMutationVariables
+  >(AddCollectionChapterDocument)
+}
 export const UpdateMenuDocument = gql`
   mutation UpdateMenu($menu: MenuUpdate!) {
     updateMenu(menu: $menu) {
@@ -4435,30 +5156,15 @@ export function useUpdateMenuMutation() {
     UpdateMenuDocument
   )
 }
-export const CurrentUserDocument = gql`
-  query CurrentUser {
-    currentUser {
-      id
-      displayName
-      createdAt {
-        day
-        month
-        year
-      }
-      avatarUrl
-      bio
-      organization
-      location
-      role
-    }
+export const ValidateTurnstileTokenDocument = gql`
+  mutation ValidateTurnstileToken($token: String!) {
+    validateTurnstileToken(token: $token)
   }
 `
 
-export function useCurrentUserQuery(
-  options?: Omit<Urql.UseQueryArgs<CurrentUserQueryVariables>, "query">
-) {
-  return Urql.useQuery<CurrentUserQuery, CurrentUserQueryVariables>({
-    query: CurrentUserDocument,
-    ...options,
-  })
+export function useValidateTurnstileTokenMutation() {
+  return Urql.useMutation<
+    ValidateTurnstileTokenMutation,
+    ValidateTurnstileTokenMutationVariables
+  >(ValidateTurnstileTokenDocument)
 }

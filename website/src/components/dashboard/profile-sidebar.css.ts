@@ -294,3 +294,41 @@ export const chooseFileButton = style([
     width: "10rem",
   },
 ])
+
+export const avatarButtons = style({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: hspace.small,
+})
+
+export const dialogBackdrop = style({
+  position: "fixed",
+  inset: 0,
+  zIndex: layers.top,
+  backgroundColor: "rgba(0, 0, 0, 0.3)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+})
+
+export const dialog = style({
+  width: "min(90vw, 28rem)",
+  padding: space.large,
+  borderRadius: radii.large,
+  backgroundColor: colors.body,
+  color: colors.primary,
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+})
+
+export const dialogTitle = style({
+  fontSize: "1.25rem",
+  margin: `0 0 ${vspace.medium} 0`,
+})
+
+export const dialogActions = style({
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  gap: hspace.small,
+  marginTop: vspace.medium,
+})
