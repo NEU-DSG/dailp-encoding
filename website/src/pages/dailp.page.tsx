@@ -14,7 +14,7 @@ import {
 } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
-import { withoutUnassigned } from "src/utils/edit-toc"
+import { slugKey, withoutUnassigned } from "src/utils/edit-toc"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
 import chapterPageRoute from "./edited-collections/chapter.page.route"
@@ -104,6 +104,25 @@ export const DailpPageContents = (props: { path: string }) => {
     collectionSlug &&
     collectionSlugs.includes(collectionSlug.replaceAll("_", "-"))
   const isPublished = isInCollection || isInMenu(props.path)
+
+  // A collection page is only published once its chapter is placed in the
+  // collection's TOC (new chapters start unassigned, index -1)
+  // Compared with slugKey: GraphQL slugs are dashed, paths may use either form
+  const chapterSlug = props.path.split("/")[2]
+  const collectionChapters = collectionPagesData?.editedCollection?.chapters
+  const isChapterInToc =
+    !!chapterSlug &&
+    withoutUnassigned(collectionChapters ?? []).some(
+      (ch) => slugKey(ch.slug) === slugKey(chapterSlug)
+    )
+  const showUnpublishedChapterAlert =
+    isInCollection &&
+    collectionChapters !== undefined && // Wait for chapters to avoid a flash
+    !isChapterInToc &&
+    userRole === UserRole.Editor
+  const editTocHref = `/collections/edit-toc?collectionSlug=${slugKey(
+    collectionSlug ?? ""
+  )}`
 
   if (fetching) {
     return <p>Loading...</p>
@@ -226,6 +245,12 @@ export const DailpPageContents = (props: { path: string }) => {
           Page content found. Add it to the menu to view it. {props.path}
         </Alert>
       )}
+      {showUnpublishedChapterAlert && (
+        <Alert>
+          This chapter is unpublished. To publish it, add it to the table of
+          contents in <Link href={editTocHref}>Edit TOC</Link>.
+        </Alert>
+      )}
       <header>
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
@@ -233,29 +258,36 @@ export const DailpPageContents = (props: { path: string }) => {
           /* dropdown & publish button */
           userRole === UserRole.Editor && (
             <div>
-              <div>
-                <label>
-                  Set New Page Location:
-                  <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
+              {/* Publishing to collections is still in development, so the
+                  publish menu is hidden on collection pages for now.
+                  To restore it, remove the `!isInCollection &&` check. */}
+              {!isInCollection && (
+                <div>
+                  <label>
+                    Set New Page Location:
+                    <select
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                    >
+                      <option key={"None"} value="">
+                        None
+                      </option>
+                      {locationList}
+                    </select>
+                  </label>
+                  <button
+                    onClick={handlePublishClick}
+                    disabled={
+                      (isPublished && isLocationSelected) ||
+                      (!isPublished && !isLocationSelected)
+                    }
                   >
-                    <option key={"None"} value="">
-                      None
-                    </option>
-                    {locationList}
-                  </select>
-                </label>
-                <button
-                  onClick={handlePublishClick}
-                  disabled={
-                    (isPublished && isLocationSelected) ||
-                    (!isPublished && !isLocationSelected)
-                  }
-                >
-                  {isPublished && !isLocationSelected ? "Unpublish" : "Publish"}
-                </button>
-              </div>
+                    {isPublished && !isLocationSelected
+                      ? "Unpublish"
+                      : "Publish"}
+                  </button>
+                </div>
+              )}
               <Link href={`/edit?path=${props.path}`}>Edit</Link>
             </div>
           )

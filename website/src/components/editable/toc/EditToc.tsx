@@ -62,7 +62,10 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     ...utils.flattenChapters(chaptersBySection.body),
     ...utils.flattenChapters(chaptersBySection.credit),
   ]
-  const onScreenSlugs = new Set(onScreenChapters.map((ch) => ch.slug))
+  // Slug keys (see utils.slugKey), since slugs come dashed or underscored
+  const onScreenSlugs = new Set(
+    onScreenChapters.map((ch) => utils.slugKey(ch.slug))
+  )
   const onScreenIds = new Set(
     onScreenChapters.flatMap((ch) => (ch.id ? [String(ch.id)] : []))
   )
@@ -76,25 +79,33 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       ].filter((ch) => ch.id && !onScreenIds.has(String(ch.id)))
     : []
 
-  // Unassigned chapters in the backend plus ones removed before saving
-  const availableSlugs = [
-    ...new Set([
-      ...(slugData?.allChapterSlugs ?? []).map((s) => s.slug),
-      ...removedChapters.map((ch) => ch.slug),
-    ]),
-  ].filter((slug) => !onScreenSlugs.has(slug))
+  // Unassigned chapters in the backend plus ones removed before saving, one
+  // entry per chapter whichever form its slug came in
+  const availableByKey = new Map<string, string>()
+  for (const slug of [
+    ...(slugData?.allChapterSlugs ?? []).map((s) => s.slug),
+    ...removedChapters.map((ch) => ch.slug),
+  ]) {
+    const key = utils.slugKey(slug)
+    if (!onScreenSlugs.has(key) && !availableByKey.has(key))
+      availableByKey.set(key, slug)
+  }
+  const availableSlugs = [...availableByKey.values()]
 
-  // Backend ids for every chapter that can be (re-)added on save. A removed
-  // chapter isn't unassigned in the backend until save, so it isn't in
-  // slugData yet; documentId is only known for those that are.
+  // Backend ids for every chapter that can be (re-)added on save, from both
+  // lists: unassigned chapters (slugData, refetched after "+ Create Chapter",
+  // so it includes newly created ones) and the collection loaded with the page
+  // (which has chapters removed on screen but not yet unassigned). documentId
+  // is only known for unassigned ones; the backend keeps it otherwise.
+  const unassignedChapters = slugData?.allChapterSlugs ?? []
+  const unassignedIds = new Set(unassignedChapters.map((s) => s.id))
   const addableChapters = {
-    allChapterSlugs: (collection?.chapters ?? []).map((ch) => ({
-      id: ch.id,
-      slug: ch.slug,
-      documentId:
-        slugData?.allChapterSlugs.find((s) => s.id === ch.id)?.documentId ??
-        null,
-    })),
+    allChapterSlugs: [
+      ...unassignedChapters,
+      ...(collection?.chapters ?? [])
+        .filter((ch) => !unassignedIds.has(ch.id))
+        .map((ch) => ({ id: ch.id, slug: ch.slug, documentId: null })),
+    ],
   }
 
   useEffect(() => {
@@ -245,12 +256,14 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
       : chaptersBySection[sectionKey].length
 
     // Bring back the chapter's subchapters too, except any already in the TOC
-    const existing = collection.chapters?.find((ch) => ch.slug === draftSlug)
+    const existing = collection.chapters?.find(
+      (ch) => utils.slugKey(ch.slug) === utils.slugKey(draftSlug)
+    )
     const children = existing
       ? utils.buildPendingSubtree(
           existing.path,
           collection.chapters ?? [],
-          new Set([...onScreenSlugs, draftSlug]),
+          new Set([...onScreenSlugs, utils.slugKey(draftSlug)]),
           sectionEnum
         )
       : []

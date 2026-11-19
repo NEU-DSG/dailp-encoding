@@ -110,6 +110,11 @@ export const removeChapterFromSection = (
       children: removeChapterFromSection(ch.children, chapterId),
     }))
 
+// Slugs come back in two forms: dashed from GraphQL `slug` fields
+// (`echota-funeral-notices`) and underscored from the database
+// (`echota_funeral_notices`, e.g. allChapterSlugs). Compare them with this.
+export const slugKey = (slug: string): string => slug.replace(/_/g, "-")
+
 // Drops unassigned chapters (index -1) and everything nested under them, so a
 // removed chapter's subchapters don't linger in the TOC on their own
 export const withoutUnassigned = <
@@ -133,7 +138,7 @@ export const flattenChapters = (nodes: ChapterNode[]): ChapterNode[] =>
   nodes.flatMap((n) => [n, ...flattenChapters(n.children)])
 
 // Pending copies of the chapters nested under `rootPath`, so re-adding a
-// chapter brings its subchapters back with it. Slugs in `exclude` (already in
+// chapter brings its subchapters back with it. Slug keys in `exclude` (already in
 // the TOC) are skipped along with their own subchapters.
 export const buildPendingSubtree = (
   rootPath: readonly string[],
@@ -151,7 +156,7 @@ export const buildPendingSubtree = (
       (c) =>
         c.path.length === rootPath.length + 1 &&
         rootPath.every((part, i) => c.path[i] === part) &&
-        !exclude.has(c.slug)
+        !exclude.has(slugKey(c.slug))
     )
     .sort((a, b) => a.indexInParent - b.indexInParent)
     .map((c) => ({
@@ -235,7 +240,7 @@ export const addPendingChapters = async (
     if (chapter.isNew && !chapter.id) {
       // Only unassigned/existing chapters can be added so protetive case if not true
       const existingChapter = slugData?.allChapterSlugs.find(
-        (s) => s.slug === chapter.slug
+        (s) => slugKey(s.slug) === slugKey(chapter.slug)
       )
 
       if (!existingChapter)
