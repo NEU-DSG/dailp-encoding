@@ -290,64 +290,19 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
     })
   }
 
-  // Removes a given chapter row or pending row
-  const handleRemove = async (
+  // Removes a chapter row from the TOC on screen. Saved chapters are only
+  // unassigned in the backend when "Save Changes" is clicked (see handleSave),
+  // so "Reset" can bring them back.
+  const handleRemove = (
     section: SectionKey,
     id: string,
-    title: string,
-    isNew: boolean
+    _title: string,
+    _isNew: boolean
   ) => {
-    if (isNew) {
-      setChaptersBySection((prev) => ({
-        ...prev,
-        [section]: utils.removeChapterFromSection(prev[section], id),
-      }))
-      return
-    }
-
-    if (
-      !confirm(
-        `Remove "${title}" from the Table of Contents? (The chapter 
-        and document will not be deleted)`
-      )
-    )
-      return
-
-    setErrorMessage(null)
-    setIsSaving(true)
-    const savedState = chaptersBySection
-
-    // Remove from frontend
     setChaptersBySection((prev) => ({
       ...prev,
       [section]: utils.removeChapterFromSection(prev[section], id),
     }))
-
-    // Delete from backend, reverting to inital state on error
-    try {
-      const result = await removeChapter({ chapterId: id })
-      if (result.error) {
-        setChaptersBySection(savedState)
-        setErrorMessage("Delete failed due to an unexpected error.")
-      } else {
-        // Removal is saved immediately, so it isn't an unsaved change
-        setSavedSections((prev) =>
-          prev
-            ? {
-                ...prev,
-                [section]: utils.removeChapterFromSection(prev[section], id),
-              }
-            : prev
-        )
-        await refetchSlugs()
-        setErrorMessage(null)
-      }
-    } catch (error: any) {
-      setChaptersBySection(savedState)
-      setErrorMessage("Delete failed due to an unexpected error.")
-    } finally {
-      setIsSaving(false)
-    }
   }
 
   // Saves the current state: adds new chapters to backend and updates indices
@@ -362,6 +317,32 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
 
     setIsSaving(true)
     try {
+      // First unassign (index -1) every saved chapter that was removed on
+      // screen, including subchapters of a removed chapter
+      const onScreenIds = utils.savedChapterIds(chaptersBySection)
+      const removedIds = savedSections
+        ? [...utils.savedChapterIds(savedSections)].filter(
+            (id) => !onScreenIds.has(id)
+          )
+        : []
+      for (const id of removedIds) {
+        const removed = await removeChapter({ chapterId: id })
+        if (removed.error) {
+          setErrorMessage("Failed to remove a chapter. Please try again.")
+          return
+        }
+        // Keep the saved copy accurate even if a later step fails
+        setSavedSections((prev) =>
+          prev
+            ? {
+                intro: utils.removeChapterFromSection(prev.intro, id),
+                body: utils.removeChapterFromSection(prev.body, id),
+                credit: utils.removeChapterFromSection(prev.credit, id),
+              }
+            : prev
+        )
+      }
+
       // For each sesction, add pending chapters or throw on fail
       const introResult = await utils.addPendingChapters(
         chaptersBySection.intro,
@@ -425,16 +406,20 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
         ),
       ]
 
-      if (chapters.length === 0) {
+      if (chapters.length === 0 && removedIds.length === 0) {
         setErrorMessage("No chapters to save.")
         return
       }
 
-      const result = await updateOrder({ input: { collectionSlug, chapters } })
-
-      if (result.error) {
-        setErrorMessage("Save failed due to an unexpected error.")
-        return
+      // Nothing left to order if every chapter was removed
+      if (chapters.length > 0) {
+        const result = await updateOrder({
+          input: { collectionSlug, chapters },
+        })
+        if (result.error) {
+          setErrorMessage("Save failed due to an unexpected error.")
+          return
+        }
       }
 
       setSavedSections(updatedSections)

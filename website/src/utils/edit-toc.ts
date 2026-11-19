@@ -101,7 +101,28 @@ export const updateChildren = (
 export const removeChapterFromSection = (
   chapters: ChapterNode[],
   chapterId: string
-): ChapterNode[] => chapters.filter((ch) => idOf(ch) !== chapterId)
+): ChapterNode[] =>
+  chapters
+    .filter((ch) => idOf(ch) !== chapterId)
+    // Recurse so subchapters can be removed too
+    .map((ch) => ({
+      ...ch,
+      children: removeChapterFromSection(ch.children, chapterId),
+    }))
+
+// Backend ids of every saved chapter in the TOC, including subchapters
+export const savedChapterIds = (sections: ChaptersBySection): Set<string> => {
+  const ids = new Set<string>()
+  const collect = (nodes: ChapterNode[]) =>
+    nodes.forEach((n) => {
+      if (n.id) ids.add(String(n.id))
+      collect(n.children)
+    })
+  collect(sections.intro)
+  collect(sections.body)
+  collect(sections.credit)
+  return ids
+}
 
 // Adds a given chapter to the bottom of list in section or as subchapter
 export const addChapterToSection = (

@@ -21,8 +21,8 @@ export type EditTocContextValue = {
     section: SectionKey,
     id: string,
     title: string,
-    isNew: boolean // Remove when true vs delete when false
-  ) => void // On "Remove" or "Delete" click
+    isNew: boolean // Pending (unsaved) chapter vs saved chapter
+  ) => void // On "Remove" or "Delete" click; saved chapters are unassigned on "Save Changes"
 }
 
 const EditTocContext = createContext<EditTocContextValue | null>(null)
