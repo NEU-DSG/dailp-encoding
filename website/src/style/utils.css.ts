@@ -180,3 +180,16 @@ export const cardGroup = style({
     },
   },
 })
+
+export const contentImage = style({
+  maxWidth: "100%",
+  height: "auto",
+  cursor: "zoom-in",
+})
+
+export const contentVideo = style({
+  display: "block",
+  width: "100%",
+  maxWidth: "100%",
+  height: "auto",
+})

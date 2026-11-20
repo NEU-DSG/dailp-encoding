@@ -1,3 +1,10 @@
+import parse, {
+  DOMNode,
+  Element,
+  HTMLReactParserOptions,
+  attributesToProps,
+  domToReact,
+} from "html-react-parser"
 import React from "react"
 import { useState } from "react"
 import Markdown from "react-markdown"
@@ -11,10 +18,63 @@ import {
   usePageByPathQuery,
 } from "src/graphql/dailp"
 import * as Dailp from "src/graphql/dailp"
-import { edgePadded, fullWidth } from "src/style/utils.css"
+import {
+  contentImage,
+  contentVideo,
+  edgePadded,
+  fullWidth,
+} from "src/style/utils.css"
 import { Alert } from "../components/alert"
 import Layout from "../layout"
 import chapterPageRoute from "./edited-collections/chapter.page.route"
+
+// Custom rendering for images and videos in HTML page content
+const parseOptions: HTMLReactParserOptions = {
+  replace(node) {
+    if (!(node instanceof Element)) return undefined
+
+    if (node.name === "img") {
+      const props = attributesToProps(node.attribs)
+      return (
+        <img
+          {...props}
+          title="Click to view full size"
+          className={contentImage}
+          onClick={(e) => {
+            // Open image in new tab for full view
+            window.open(e.currentTarget.src, "_blank")
+          }}
+        />
+      )
+    } else if (node.name === "video") {
+      const props = attributesToProps(node.attribs)
+      return (
+        <video {...props} className={contentVideo} controls>
+          {domToReact(node.children as DOMNode[], parseOptions)}
+        </video>
+      )
+    } else if (
+      node.name === "div" &&
+      node.attribs["class"]?.includes("video")
+    ) {
+      const props = attributesToProps(node.attribs)
+      return (
+        <div
+          {...props}
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "100%",
+            overflow: "hidden",
+          }}
+        >
+          {domToReact(node.children as DOMNode[], parseOptions)}
+        </div>
+      )
+    }
+    return undefined
+  },
+}
 
 interface DailpPageProps {
   "*": string
@@ -190,7 +250,7 @@ export const DailpPageContents = (props: { path: string }) => {
           )}
         </header>
         {content.charAt(0) === "<" ? (
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          <div>{parse(content, parseOptions)}</div>
         ) : (
           <Markdown>{content}</Markdown>
         )}
@@ -241,7 +301,7 @@ export const DailpPageContents = (props: { path: string }) => {
         }
       </header>
       {content.charAt(0) === "<" ? (
-        <div dangerouslySetInnerHTML={{ __html: content }} />
+        <div>{parse(content, parseOptions)}</div>
       ) : (
         <Markdown>{content}</Markdown>
       )}
