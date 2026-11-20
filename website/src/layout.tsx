@@ -15,7 +15,7 @@ import Footer from "./footer"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
-import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
+import { LoginHeaderButton } from "src/components/authenticated-users/account-menu"
 import { PreferencesProvider } from "./preferences-context"
 import "./wordpress.css"
 

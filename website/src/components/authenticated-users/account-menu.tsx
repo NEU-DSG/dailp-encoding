@@ -1,7 +1,10 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
+import { useCredentials, useUser } from "src/auth"
+import { Environment, deploymentEnvironment } from "src/env"
+import { loginHeader } from "src/pages/auth/user-auth.css"
+import { CleanButton } from "../button"
 import * as Dailp from "src/graphql/dailp"
-import { ConfirmLogout } from "src/pages/auth/user-auth-layout"
 import Link from "../link"
 import { subtleButton } from "../subtle-button.css"
 import * as css from "./account-menu.css"
@@ -54,5 +57,55 @@ const AccountActionsMenu = (p: { groups?: readonly Dailp.UserGroup[] }) => {
         ))}
       </ol>
     </div>
+  )
+}
+
+
+export const LoginHeaderButton = ({
+  className,
+}: { className?: string } = {}) => {
+  const [isClient, setIsClient] = useState(false)
+  const token = useCredentials()
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // FIXME remove this flag when DAILP TI launches in a stable form
+  if (deploymentEnvironment === Environment.Production) {
+    return null
+  }
+
+  if (!isClient) {
+    return <div className={loginHeader}>Loading...</div>
+  }
+
+  return (
+    <div className={loginHeader}>
+      {token ? (
+        <AccountMenu />
+      ) : (
+        <Link href="/auth/login" className={className}>
+          Log in
+        </Link>
+      )}
+    </div>
+  )
+}
+
+export const ConfirmLogout = ({ className }: { className?: string } = {}) => {
+  const { operations } = useUser()
+
+  return (
+    <CleanButton
+      className={className}
+      onClick={() => {
+        if (window.confirm("Are you sure you want to sign out?")) {
+          operations.signOutUser()
+        }
+      }}
+    >
+      Log out
+    </CleanButton>
   )
 }
