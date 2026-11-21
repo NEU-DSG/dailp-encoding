@@ -1,6 +1,7 @@
 {
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+    go-toolchain.url = "github:NixOS/nixpkgs/nixos-25.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -23,10 +24,30 @@
   outputs = inputs:
     inputs.utils.lib.eachDefaultSystem (system:
       let
+
+        goPkgs = import inputs.go-toolchain {
+          inherit system;
+        };
+
         pkgs = import inputs.pkgs {
           inherit system;
           config.allowUnfree = true;
+
+          overlays = [
+            (final: prev: {
+              terraform = (
+                prev.callPackage
+                  "${inputs.pkgs}/pkgs/applications/networking/cluster/terraform"
+                  {
+                    buildGoModule = prev.buildGoModule.override {
+                      go = goPkgs.go_1_25;
+                    };
+                  }
+              ).terraform_1;
+            })
+          ];
         };
+
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
@@ -113,6 +134,7 @@
               zip -j $out/dailp-outbound.zip $out/bootstrap
             '';
           };
+
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
           inherit system;
           modules = [{imports = [./terraform/main.nix]; functions.package_path = "${dailpFunctions}";}];
