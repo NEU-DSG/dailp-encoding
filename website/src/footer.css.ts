@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts } from "./style/constants"
+import { fonts } from "./style/design-tokens"
 import { hideOnPrint } from "./style/utils.css"
 
 export const footer = style([hideOnPrint])

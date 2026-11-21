@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { fonts, radii, space } from "src/style/constants"
+import { fonts, radii, space } from "src/style/design-tokens"
 import { button } from "./button.css"
 
 export const collectionCard = style({

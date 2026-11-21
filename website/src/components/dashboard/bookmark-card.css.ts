@@ -8,7 +8,7 @@ import {
   space,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { media, onHover } from "src/style/utils"
 
 export const card = style([

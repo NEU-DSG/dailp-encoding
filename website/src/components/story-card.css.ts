@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { colors, fonts, radii } from "src/style/constants"
+import { colors, fonts, radii } from "src/style/design-tokens"
 
 export const storyCard = style({
   display: "flex",

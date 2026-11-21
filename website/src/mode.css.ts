@@ -5,7 +5,7 @@ import {
   mediaQueries,
   thickness,
   vspace,
-} from "src/style/constants"
+} from "src/style/design-tokens"
 import { marginY, paddingX } from "src/style/utils"
 import { fullWidth, hideOnPrint, paddingAround } from "src/style/utils.css"
 import { drawerBg } from "./menu.css"

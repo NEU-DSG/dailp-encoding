@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { colors, hspace, mediaQueries, vspace } from "src/style/constants"
+import { colors, hspace, mediaQueries, vspace } from "src/style/design-tokens"
 import { marginX } from "src/style/utils"
 import { hideOnPrint } from "src/style/utils.css"
 

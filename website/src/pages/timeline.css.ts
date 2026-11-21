@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { vspace } from "src/style/constants"
+import { vspace } from "src/style/design-tokens"
 
 export const underlined = style({
   borderBottom: "1px solid gray",

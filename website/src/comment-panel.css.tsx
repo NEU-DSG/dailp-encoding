@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { fonts, hspace, vspace } from "src/style/constants"
+import { fonts, hspace, vspace } from "src/style/design-tokens"
 import { marginX, marginY } from "./style/utils"
 
 export const commentButton = style([

@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { radii } from "src/style/constants"
+import { radii } from "src/style/design-tokens"
 import { colors } from "src/style/theme-contract.css"
 import { cleanButton } from "./button.css"
 
