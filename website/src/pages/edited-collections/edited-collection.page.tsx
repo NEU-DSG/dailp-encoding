@@ -12,6 +12,12 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DailpPageContents } from "../dailp.page"
 import { useChapters, useDialog } from "./edited-collection-context"
+import { WJSHomepage } from "./wjs-homepage"
+
+const WJS_SLUG = "willie-jumper-stories"
+
+const normalizeSlug = (slug?: string | null) =>
+  slug?.toLowerCase().replace(/_/g, "-") ?? ""
 
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
@@ -28,10 +34,10 @@ const EditedCollectionPage = () => {
 
   // Backup: Try to find collection with underscore/hyphen conversion
   if (!collection && dailp?.allEditedCollections) {
-    const alternativeSlug =
-      collectionSlug?.replace("-", "_") || collectionSlug?.replace("_", "-")
+    // Compare normalized slugs so every hyphen/underscore is converted, not
+    // just the first one, and both directions are covered.
     collection = dailp.allEditedCollections.find(
-      ({ slug }) => slug === alternativeSlug
+      ({ slug }) => normalizeSlug(slug) === normalizeSlug(collectionSlug)
     )
   }
 
@@ -70,6 +76,20 @@ const EditedCollectionPage = () => {
             </article>
           </main>
         </CWKWLayout>
+      </CollectionAuthGuard>
+    )
+  }
+
+  if (normalizeSlug(collection.slug) === WJS_SLUG) {
+    return (
+      <CollectionAuthGuard isHidden={collection.isHidden}>
+        <Helmet>
+          <title>{collection.title}</title>
+        </Helmet>
+        <WJSHomepage
+          collectionSlug={collection.slug}
+          firstChapterSlug={firstChapterSlug}
+        />
       </CollectionAuthGuard>
     )
   }
