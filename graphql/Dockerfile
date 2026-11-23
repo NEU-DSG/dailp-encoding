@@ -15,7 +15,9 @@ WORKDIR /workspace
 RUN cargo install cargo-watch --version "$CARGO_WATCH_VERSION" --locked \
     && cargo install sqlx-cli --version "$SQLX_CLI_VERSION" --locked \
     --no-default-features --features rustls,postgres
-
+    # In the dev stage, immediately before cargo watch:
+    #
+ENTRYPOINT ["/bin/sh", "-ec", "if [ -n \"${DAILP_COGNITO_SERVER_ENDPOINT:-}\" ]; then set -a; . /run/cognito/pool.env; set +a; fi; exec \"$@\"", "--"]
 CMD ["cargo", "watch", \
      "-w", "graphql", \
      "-w", "types", \

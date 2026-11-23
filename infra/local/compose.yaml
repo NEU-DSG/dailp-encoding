@@ -77,7 +77,6 @@ services:
 
   cognito-init:
     image: amazon/aws-cli:2.27.41
-    profiles: ["frontend"]
     entrypoint: ["/bin/sh", "/bootstrap/setup-cognito.sh"]
     depends_on:
       cognito:
@@ -86,12 +85,29 @@ services:
       - ./setup-cognito.sh:/bootstrap/setup-cognito.sh:ro
       - cognito_config:/run/cognito
 
+  cognito-users:
+    image: amazon/aws-cli:2.27.41
+    profiles: ["tools"]
+    entrypoint: ["/bin/bash", "/bootstrap/cognito-users.sh"]
+    environment:
+      DAILP_COGNITO_ENDPOINT: "http://cognito:9229"
+    depends_on:
+      cognito:
+        condition: service_healthy
+    volumes:
+      - ./cognito-users.sh:/bootstrap/cognito-users.sh:ro
+
   graphql:
     build:
       context: ../..
       dockerfile: graphql/Dockerfile
       target: dev
     environment:
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA"
+      TF_STAGE: "local"
+      DAILP_COGNITO_JWKS_PATH: "/run/cognito/jwks.json"
+      DAILP_COGNITO_SERVER_ENDPOINT: "http://cognito:9229"
+      DAILP_COGNITO_ISSUER_BASE: "http://0.0.0.0:9229"
       DATABASE_URL: postgres://dailp:dailp-pass@postgres:5432/dailp
       SQLX_OFFLINE: "false"
       GRAPHQL_SERVER_ADDRESS: "0.0.0.0:8080"
@@ -99,11 +115,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      cognito-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
       - ../..:/workspace
       - cargo_target:/workspace/target
+      - cognito_config:/run/cognito:ro
 
   website:
     profiles: ["frontend"]
@@ -111,7 +130,12 @@ services:
       context: ../..
       dockerfile: website/Dockerfile
       target: dev
+    env_file: [storage.env]
     environment:
+      TF_STAGE: "local"
+      TURNSTILE_SITE_KEY: "1x00000000000000000000AA"
+      DAILP_AWS_REGION: "us-east-1"
+      DAILP_API_URL: "http://127.0.0.1:8080"
       DAILP_DEV_SERVER_HOST: "0.0.0.0"
       DAILP_COGNITO_ENDPOINT: "http://127.0.0.1:9229"
       DAILP_COGNITO_SERVER_ENDPOINT: "http://cognito:9229"

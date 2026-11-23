@@ -24,6 +24,11 @@ if [ -z "$client_id" ] || [ "$client_id" = None ]; then
     --query 'UserPoolClient.ClientId')
 fi
 
+curl -fsS --max-time 5 \
+  "http://cognito:9229/$pool_id/.well-known/jwks.json" \
+  -o /run/cognito/jwks.json.tmp
+mv /run/cognito/jwks.json.tmp /run/cognito/jwks.json
+
 printf 'DAILP_USER_POOL=%s\nDAILP_USER_POOL_CLIENT=%s\n' \
   "$pool_id" "$client_id" > /run/cognito/pool.env.tmp
 mv /run/cognito/pool.env.tmp /run/cognito/pool.env
