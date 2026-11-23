@@ -1004,8 +1004,9 @@ impl Database {
         upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
+        let local = matches!(std::env::var("TF_STAGE").as_deref(), Ok("local"));
         // TODO adopt URL type
-        let is_url = |s: &String| s.starts_with("https://");
+        let is_url = |s: &str| s.starts_with("https://") || (local && s.starts_with("http://"));
 
         let url = if is_url(&upload.contributor_audio_url) {
             upload.contributor_audio_url.clone()
