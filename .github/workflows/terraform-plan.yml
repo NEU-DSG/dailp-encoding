@@ -3,6 +3,8 @@ name: Terraform Plan
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the main branch
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       dailp_env:
@@ -52,8 +54,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
-      TF_STAGE: ${{ inputs.dailp_env != 'dev' && ( inputs.dailp_env == 'uat' && 'uat' || 'prod') || 'dev' }}
+      TF_STAGE: ${{ inputs.dailp_env == 'uat' && 'uat' || inputs.dailp_env == 'prod' && 'prod' || 'dev' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -108,7 +109,7 @@ jobs:
           BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L
-      - name: Deploy back-end to AWS via terraform
+      - name: Check Terraform plan
         env:
           BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
