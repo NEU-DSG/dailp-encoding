@@ -29,6 +29,10 @@ const UserContext = createContext<UserContextType>({} as UserContextType)
 const userPool = new CognitoUserPool({
   UserPoolId: process.env["DAILP_USER_POOL"] ?? "",
   ClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
+  endpoint:
+    typeof window === "undefined"
+      ? process.env["DAILP_COGNITO_SERVER_ENDPOINT"]
+      : process.env["DAILP_COGNITO_ENDPOINT"],
 })
 
 /** Get the currently signed in user, if there is one. */
@@ -64,8 +68,8 @@ export const UserProvider = (props: { children: any }) => {
       case CognitoErrorName.CodeDeliveryFailure:
         alert(`We could not send a confirmation code to ${
           user?.getUsername() || userProvidedEmail
-        }. 
-          Please make sure you have typed the correct email. 
+        }.
+          Please make sure you have typed the correct email.
           If this issue persists, wait and try again later.`)
         break
       case CognitoErrorName.CodeExpired:
@@ -222,6 +226,14 @@ export const UserProvider = (props: { children: any }) => {
       Username: username.toLowerCase(),
       Pool: userPool,
     })
+
+    //TODO remove this and do proper switching for it
+    if (
+      process.env["TF_STAGE"] === "local" &&
+      process.env["DAILP_COGNITO_ENDPOINT"]
+    ) {
+      user.setAuthenticationFlowType("USER_PASSWORD_AUTH")
+    }
 
     const authDetails = new AuthenticationDetails({
       Username: username.toLowerCase(),
