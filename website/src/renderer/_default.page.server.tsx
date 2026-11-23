@@ -111,6 +111,7 @@ export const passToClient = [
  * Embed these environment variables into the client HTML.
  * So don't add any sensitive data.
  */
+const localEnv = process.env["TF_STAGE"] === "local" ? ["DAILP_COGNITO_ENDPOINT"] : []
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
@@ -121,6 +122,7 @@ const clientEnv = pick(process.env, [
   "AWS_REGION",
   "CF_URL",
   "TURNSTILE_SITE_KEY",
+  ...localEnv,
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))

@@ -60,6 +60,61 @@ $ dev-website
 If you run each of these commands in a separate shell, then you'll have a fully operational local test environment.
 If it's your first time running the project locally, your database is probably empty.
 With `dev-database` running, run the `dev-migrate-schema` and `dev-migrate-data` commands to structure your database and populate it with data from the DAILP spreadsheets.
+## Local development with Docker Compose 
+
+Run the entire stack 
+```sh 
+docker compose -f infra/local/compose.yaml up --profile frontend up --build
+```
+#### Manage user accounts with local cognito
+
+```sh
+# Create a local user (the script prompts for a password)
+docker compose -f infra/local/compose.yaml run --rm \
+  cognito-users create editor@example.test
+
+# Add the existing user to a group
+docker compose -f infra/local/compose.yaml run --rm \
+  cognito-users add-group editor@example.test Editors
+
+docker compose -f infra/local/compose.yaml run --rm \
+  cognito-users create contributor@example.test Contributors
+
+# Confirm the user created from the website 
+docker compose -f infra/local/compose.yaml run --rm \
+  cognito-users confirm editor@example.test
+```
+#### Endpoint Locations 
+The endpoints are 
+- Website: [http://127.0.0.1:3001](http://127.0.0.1:3001)
+- GraphQL Playground: [http://127.0.0.1:8080/graphql](http://127.0.0.1:8080/graphql)
+
+#### Signing up via website 
+
+Signing up for an account its easier to have the compose running in a background terminal,  
+and the logs will display the confirmation verification code.
+
+Once verified, you'll still need to confirm the user via the script and add them to the proper
+group.
+
+#### Local UI test collection with Docker Compose
+
+Start the frontend stack and wait for GraphQL to finish running the schema migrations:
+
+```sh
+docker compose -f infra/local/compose.yaml --profile frontend up -d
+```
+From the repo root, load the [local seed data](infra/local/seed.sql):
+
+```sh
+docker compose -f infra/local/compose.yaml exec -T postgres \
+  psql -X -U dailp -d dailp -v ON_ERROR_STOP=1 --single-transaction -f - \
+  < infra/local/seed.sql
+```
+This will create a smoke test collection that you can then use to test the UI with new chapters  
+and content. 
+
+This is a temporary measure until we unlock a better collection creation flow.
 
 ### Cleaning Up
 

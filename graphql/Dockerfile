@@ -15,7 +15,9 @@ WORKDIR /workspace
 RUN cargo install cargo-watch --version "$CARGO_WATCH_VERSION" --locked \
     && cargo install sqlx-cli --version "$SQLX_CLI_VERSION" --locked \
     --no-default-features --features rustls,postgres
-
+    # In the dev stage, immediately before cargo watch:
+    #
+ENTRYPOINT ["/bin/sh", "-ec", "if [ -n \"${DAILP_COGNITO_SERVER_ENDPOINT:-}\" ]; then set -a; . /run/cognito/pool.env; set +a; fi; exec \"$@\"", "--"]
 CMD ["cargo", "watch", \
      "-w", "graphql", \
      "-w", "types", \
@@ -24,7 +26,7 @@ CMD ["cargo", "watch", \
      cargo run --locked -p dailp-graphql --bin dailp-graphql-schema && \
      cargo run --locked -p dailp-graphql --bin dailp-graphql-local"]
 
-# building stage NOTE currently uses lambda here will transition to server
+# build standalone http server
 FROM base AS builder
 
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
@@ -32,9 +34,9 @@ COPY graphql ./graphql
 COPY types ./types
 COPY migration ./migration
 
-RUN cargo build --locked --release \
+RUN SQLX_OFFLINE=true cargo build --locked --release \
   -p dailp-graphql \
-  --bin dailp-graphql \
+  --bin dailp-graphql-local \
   --bin dailp-graphql-schema
 
 RUN ./target/release/dailp-graphql-schema
@@ -55,8 +57,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder \
-    /workspace/target/release/dailp-graphql \
-    /usr/local/bin/dailp-graphql
+    /workspace/target/release/dailp-graphql-local \
+    /usr/local/bin/dailp-graphql-server
 
+ENV GRAPHQL_SERVER_ADDRESS=0.0.0.0:8080
 EXPOSE 8080
-CMD ["/usr/local/bin/dailp-graphql"]
+CMD ["/usr/local/bin/dailp-graphql-server"]
