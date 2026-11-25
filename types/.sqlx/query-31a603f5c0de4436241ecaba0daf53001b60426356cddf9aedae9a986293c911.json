@@ -1,0 +1,63 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Resolve a live folder from its path, e.g. `partners.logos`. $1 = path text.\n-- Soft-deleted rows are excluded: a deleted folder frees its path for reuse, so\n-- only the live one is addressable.\nselect id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n       size_bytes\nfrom folders\nwhere path = $1::ltree and deleted_at is null;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "31a603f5c0de4436241ecaba0daf53001b60426356cddf9aedae9a986293c911"
+}

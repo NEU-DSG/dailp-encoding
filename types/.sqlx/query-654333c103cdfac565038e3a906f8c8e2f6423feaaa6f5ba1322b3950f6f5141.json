@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Create a folder. $1 parent_id (null = root), $2 name, $3 slug label.\n-- The path is the parent's path plus this folder's slug; a root folder's path\n-- is just its own label. deleted_at is left null: a new row is not deleted.\ninsert into folders (parent_id, name, path)\nvalues (\n  $1,\n  $2,\n  case\n    when $1::uuid is null then $3::ltree\n    else (select f.path from folders f where f.id = $1) || $3::ltree\n  end\n)\nreturning id, parent_id, name, path::text as \"path!\", created_at, deleted_at,\n          size_bytes;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "path!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 5,
+        "name": "deleted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "ltree",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "654333c103cdfac565038e3a906f8c8e2f6423feaaa6f5ba1322b3950f6f5141"
+}
