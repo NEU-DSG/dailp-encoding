@@ -1008,6 +1008,13 @@ export type Mutation = {
   readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updateMenu: Menu
   readonly updatePage: Scalars["Boolean"]
+  /**
+   * Move an existing page from `old_path` to `new_path` and save `menu`
+   * in the same transaction.
+   * Used when publishing a page under a menu so its URL reflects the
+   * menu header (e.g. `/melissa-torres` -> `/spotlights/melissa-torres`).
+   */
+  readonly updatePagePath: Menu
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
   /** Updates a dailp_user's information */
@@ -1112,6 +1119,12 @@ export type MutationUpdateMenuArgs = {
 
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdatePagePathArgs = {
+  menu: MenuUpdate
+  newPath: Scalars["String"]
+  oldPath: Scalars["String"]
 }
 
 export type MutationUpdateParagraphArgs = {
@@ -3636,6 +3649,35 @@ export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "upsertPage"
 >
 
+export type UpdatePagePathMutationVariables = Exact<{
+  oldPath: Scalars["String"]
+  newPath: Scalars["String"]
+  menu: MenuUpdate
+}>
+
+export type UpdatePagePathMutation = { readonly __typename?: "Mutation" } & {
+  readonly updatePagePath: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
+}
+
 export type AllPagesQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllPagesQuery = { readonly __typename?: "Query" } & {
@@ -3650,7 +3692,7 @@ export type PageByPathQueryVariables = Exact<{
 
 export type PageByPathQuery = { readonly __typename?: "Query" } & {
   readonly pageByPath: Maybe<
-    { readonly __typename?: "Page" } & Pick<Page, "title"> & {
+    { readonly __typename?: "Page" } & Pick<Page, "title" | "path"> & {
         readonly body: ReadonlyArray<
           | ({ readonly __typename: "Gallery" } & Pick<Gallery, "mediaUrls">)
           | ({ readonly __typename: "Markdown" } & Pick<Markdown, "content">)
@@ -5023,6 +5065,34 @@ export function useUpsertPageMutation() {
     UpsertPageDocument
   )
 }
+export const UpdatePagePathDocument = gql`
+  mutation UpdatePagePath(
+    $oldPath: String!
+    $newPath: String!
+    $menu: MenuUpdate!
+  ) {
+    updatePagePath(oldPath: $oldPath, newPath: $newPath, menu: $menu) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useUpdatePagePathMutation() {
+  return Urql.useMutation<
+    UpdatePagePathMutation,
+    UpdatePagePathMutationVariables
+  >(UpdatePagePathDocument)
+}
 export const AllPagesDocument = gql`
   query AllPages {
     allPages {
@@ -5043,6 +5113,7 @@ export const PageByPathDocument = gql`
   query pageByPath($path: String!) {
     pageByPath(path: $path) {
       title
+      path
       body {
         __typename
         ... on Markdown {

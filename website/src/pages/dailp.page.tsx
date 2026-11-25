@@ -1,6 +1,7 @@
 import React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Markdown from "react-markdown"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
 import { Link } from "src/components"
 import {
@@ -31,6 +32,60 @@ const DailpPage = (props: DailpPageProps) => (
 )
 
 export const Page = DailpPage
+
+type Menu = NonNullable<Dailp.MenuBySlugQuery["menuBySlug"]>
+
+/** Turns a menu label into a URL segment, e.g. "Stories & Voices" -> "stories-voices". */
+const slugify = (value: string) =>
+  value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
+const stripTrailingSlash = (value: string) =>
+  value.length > 1 && value.endsWith("/") ? value.slice(0, -1) : value
+
+/** Adds the menu header to the front of a path, unless it's already there. */
+const buildPublishedPath = (menuLabel: string, currentPath: string) => {
+  const prefix = `/${slugify(menuLabel)}`
+  const normalized = stripTrailingSlash(currentPath)
+  return normalized.startsWith(prefix + "/")
+    ? normalized
+    : `${prefix}${normalized}`
+}
+
+/** Removes the menu header from the front of a path, if it's there. */
+const buildUnpublishedPath = (menuLabel: string, currentPath: string) => {
+  const prefix = `/${slugify(menuLabel)}`
+  const normalized = stripTrailingSlash(currentPath)
+  return normalized.startsWith(prefix + "/") || normalized === prefix
+    ? normalized.slice(prefix.length) || "/"
+    : normalized
+}
+
+/** Label of the menu header that has this page as a sub-item. */
+const findParentMenuLabel = (menu: Menu | null | undefined, path: string) => {
+  const normalized = stripTrailingSlash(path)
+  const parent = menu?.items?.find((item) =>
+    item.items?.some(
+      (subItem) => stripTrailingSlash(subItem.path) === normalized
+    )
+  )
+  return parent?.label ?? null
+}
+
+/** Label of the menu entry this page is published under, either as a sub-item or as a top-level item. */
+const findCurrentMenuLabel = (menu: Menu | null | undefined, path: string) => {
+  const parent = findParentMenuLabel(menu, path)
+  if (parent) return parent
+  const normalized = stripTrailingSlash(path)
+  const topLevel = menu?.items?.find(
+    (item) => stripTrailingSlash(item.path) === normalized
+  )
+  return topLevel?.label ?? null
+}
 
 export const DailpPageContents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
@@ -84,7 +139,13 @@ export const DailpPageContents = (props: { path: string }) => {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const isLocationSelected = selectedLocation !== ""
   const userRole = useUserRole()
-  const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
+  const [, updatePagePath] = Dailp.useUpdatePagePathMutation()
+
+  // Default the dropdown to wherever the page is currently published.
+  useEffect(() => {
+    if (!menu) return
+    setSelectedLocation(findCurrentMenuLabel(menu, props.path) ?? "")
+  }, [menu, props.path])
 
   const isInCollection =
     collectionSlug && collectionSlugs.includes(collectionSlug)
@@ -98,10 +159,37 @@ export const DailpPageContents = (props: { path: string }) => {
     return <Alert>Page content not found. {props.path}</Alert>
   }
 
-  const handlePublishClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const action = isPublished && !isLocationSelected ? "unpublish" : "publish"
+  const currentLocation = findCurrentMenuLabel(menu, props.path)
+  const isTopLevelMenuPage =
+    currentLocation !== null && findParentMenuLabel(menu, props.path) === null
+
+  const handlePublishClick = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    action: "publish" | "unpublish"
+  ) => {
+    const verb =
+      action === "unpublish" ? "unpublish" : isPublished ? "move" : "publish"
+
+    const parentLabel = findParentMenuLabel(menu, props.path)
+    const isMove = action === "publish" && isPublished && parentLabel !== null
+
+    const sourcePath = parentLabel
+      ? buildUnpublishedPath(parentLabel, props.path)
+      : props.path
+
+    const targetPath =
+      action === "unpublish"
+        ? sourcePath
+        : buildPublishedPath(selectedLocation, sourcePath)
+
+    // Old URLs don't redirect yet, so let the editor know links will break.
+    const pathWarning =
+      !isInCollection && targetPath !== page.path
+        ? `\n\nThis page's URL will change from ${page.path} to ${targetPath}. ` +
+          `Links to ${page.path} (bookmarks, links in other pages, etc.) will stop working.`
+        : ""
     const confirm = window.confirm(
-      `Are you sure you want to ${action} this page?`
+      `Are you sure you want to ${verb} this page?${pathWarning}`
     )
     if (!confirm) {
       e.preventDefault()
@@ -124,31 +212,30 @@ export const DailpPageContents = (props: { path: string }) => {
 
       const updatedItems =
         menu?.items?.map((item) => {
-          if (action === "publish" && item.path === selectedLocation) {
-            const currentItems = item.items || []
+          const stripped =
+            action === "unpublish" || isMove
+              ? item.items?.filter(
+                  (subItem) =>
+                    stripTrailingSlash(subItem.path) !==
+                    stripTrailingSlash(props.path)
+                ) ?? null
+              : item.items ?? null
+
+          if (action === "publish" && item.label === selectedLocation) {
             return {
               ...item,
               items: [
-                ...currentItems,
+                ...(stripped ?? []),
                 {
                   label: page.title,
-                  path: props.path,
+                  path: targetPath,
                   items: [],
                 },
               ],
             }
           }
 
-          // looks through entire menu to get rid of all instances of selected page
-          if (action === "unpublish") {
-            return {
-              ...item,
-              items:
-                item.items?.filter((subItem) => subItem.path !== props.path) ||
-                null,
-            }
-          }
-          return item
+          return { ...item, items: stripped }
         }) || []
 
       const itemsInput = toMenuItemInput(updatedItems)
@@ -158,9 +245,26 @@ export const DailpPageContents = (props: { path: string }) => {
         items: itemsInput,
       }
 
-      updateMenu({ menu: menuUpdate })
-      // reset dropdown to "None" after action
-      setSelectedLocation("")
+      // Moves the page and saves the menu together, so a failure leaves both unchanged.
+      const res = await updatePagePath({
+        oldPath: page.path,
+        newPath: targetPath,
+        menu: menuUpdate,
+      })
+      if (res.error) {
+        const verb = isMove ? "move" : action
+        window.alert(
+          `Failed to ${verb} page: ${res.error.message.replace(
+            "[GraphQL] ",
+            ""
+          )}`
+        )
+        return
+      }
+
+      if (targetPath !== page.path) {
+        navigate(targetPath)
+      }
     }
   }
 
@@ -171,7 +275,7 @@ export const DailpPageContents = (props: { path: string }) => {
         </option>
       ))
     : menu?.items?.map((item) => (
-        <option key={item.label} value={item.path}>
+        <option key={item.label} value={item.label}>
           {item.label}
         </option>
       ))
@@ -212,29 +316,43 @@ export const DailpPageContents = (props: { path: string }) => {
           /* dropdown & publish button */
           userRole === UserRole.Editor && (
             <div>
-              <div>
-                <label>
-                  Set Page Location:
-                  <select
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
+              {props.path !== "/" && (
+                <div>
+                  <label>
+                    Set Page Location:
+                    <select
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                    >
+                      {!isPublished && (
+                        <option key={"None"} value="">
+                          None
+                        </option>
+                      )}
+                      {locationList}
+                    </select>
+                  </label>
+                  <button
+                    onClick={(e) => handlePublishClick(e, "publish")}
+                    disabled={
+                      !isLocationSelected ||
+                      (isPublished && selectedLocation === currentLocation) ||
+                      (isTopLevelMenuPage &&
+                        selectedLocation !== currentLocation)
+                    }
                   >
-                    <option key={"None"} value="">
-                      None
-                    </option>
-                    {locationList}
-                  </select>
-                </label>
-                <button
-                  onClick={handlePublishClick}
-                  disabled={
-                    (isPublished && isLocationSelected) ||
-                    (!isPublished && !isLocationSelected)
-                  }
-                >
-                  {isPublished && !isLocationSelected ? "Unpublish" : "Publish"}
-                </button>
-              </div>
+                    {isPublished ? "Move" : "Publish"}
+                  </button>
+                  {isPublished && (
+                    <button
+                      onClick={(e) => handlePublishClick(e, "unpublish")}
+                      disabled={isTopLevelMenuPage}
+                    >
+                      Unpublish
+                    </button>
+                  )}
+                </div>
+              )}
               <Link href={`/edit?path=${props.path}`}>Edit</Link>
             </div>
           )
