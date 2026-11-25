@@ -8,13 +8,15 @@ import { contributeAudioOptions } from "../contribute-audio-section.css"
 import { subtleButton } from "../subtle-button.css"
 import { ContributeAudioPanel } from "./contribute-audio-panel"
 
-export function UploadAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
+export function UploadAudioPanel(p: {
+  uploadTo: Dailp.FormFieldsFragment | Dailp.DocumentFieldsFragment
+}) {
   return (
     <ContributeAudioPanel
       panelTitle="Upload Audio"
       Icon={MdUploadFile}
       Component={UploadAudioContent}
-      word={p.word}
+      parent={p.uploadTo}
     />
   )
 }
